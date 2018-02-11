@@ -54,6 +54,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Internal\TitleScenePlugin.cs" />
     <Compile Include="Internal\ExitScenePlugin.cs" />
     <Compile Include="Internal\SliderPlugin.cs" />
     <Compile Include="IPatchPlugin.cs" />
