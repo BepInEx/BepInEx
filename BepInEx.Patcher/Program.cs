@@ -40,8 +40,8 @@ namespace BepInEx.Patcher
 
 
 
-            IPatchPlugin exitScene = new ExitScenePlugin();
-            exitScene.Patch(assembly);
+            //IPatchPlugin exitScene = new ExitScenePlugin();
+            //exitScene.Patch(assembly);
 
             //IPatchPlugin slider = new SliderPlugin();
             //slider.Patch(assembly);

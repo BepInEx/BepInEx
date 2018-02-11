@@ -47,6 +47,10 @@
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="TextMeshPro-1.0.55.56.0b12, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>M:\koikatu\KoikatuTrial_Data\Managed\TextMeshPro-1.0.55.56.0b12.dll</HintPath>
+    </Reference>
     <Reference Include="UnityEngine-original, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>M:\koikatu\KoikatuTrial_Data\Managed\UnityEngine-original.dll</HintPath>
@@ -66,7 +70,12 @@
     <Compile Include="ConsoleUtil\Extensions.cs" />
     <Compile Include="ConsoleUtil\SafeConsole.cs" />
     <Compile Include="Chainloader.cs" />
+    <Compile Include="Internal\DumpScenePlugin.cs" />
+    <Compile Include="Internal\TranslationPlugin.cs" />
+    <Compile Include="Internal\UnlockedInputPlugin.cs" />
+    <Compile Include="IUnityPlugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Utility.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
