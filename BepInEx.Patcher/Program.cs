@@ -44,7 +44,7 @@ namespace BepInEx.Patcher
             exitScene.Patch(assembly);
 
             IPatchPlugin slider = new SliderPlugin();
-            exitScene.Patch(assembly);
+            slider.Patch(assembly);
 
 
             InjectAssembly(unity, injected);
