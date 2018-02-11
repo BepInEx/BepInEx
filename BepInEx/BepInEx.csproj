@@ -57,7 +57,15 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Target.cs" />
+    <Compile Include="BepInComponent.cs" />
+    <Compile Include="ConsoleUtil\ConsoleEncoding\ConsoleEncoding.Buffers.cs" />
+    <Compile Include="ConsoleUtil\ConsoleEncoding\ConsoleEncoding.cs" />
+    <Compile Include="ConsoleUtil\ConsoleEncoding\ConsoleEncoding.PInvoke.cs" />
+    <Compile Include="ConsoleUtil\ConsoleMirror.cs" />
+    <Compile Include="ConsoleUtil\ConsoleWindow.cs" />
+    <Compile Include="ConsoleUtil\Extensions.cs" />
+    <Compile Include="ConsoleUtil\SafeConsole.cs" />
+    <Compile Include="Chainloader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

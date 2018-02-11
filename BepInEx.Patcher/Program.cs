@@ -43,11 +43,11 @@ namespace BepInEx.Patcher
             IPatchPlugin exitScene = new ExitScenePlugin();
             exitScene.Patch(assembly);
 
-            IPatchPlugin slider = new SliderPlugin();
-            slider.Patch(assembly);
+            //IPatchPlugin slider = new SliderPlugin();
+            //slider.Patch(assembly);
 
-            IPatchPlugin title = new TitleScenePlugin();
-            title.Patch(assembly);
+            //IPatchPlugin title = new TitleScenePlugin();
+            //title.Patch(assembly);
 
 
             InjectAssembly(assembly, unity, injected);
@@ -59,10 +59,7 @@ namespace BepInEx.Patcher
 
         static void InjectAssembly(AssemblyDefinition assembly, AssemblyDefinition unity, AssemblyDefinition injected)
         {
-            ILProcessor IL;
-
-            //Initialize
-            var originalInjectMethod = injected.MainModule.Types.First(x => x.Name == "Target").Methods.First(x => x.Name == "Initialize");
+            var originalInjectMethod = injected.MainModule.Types.First(x => x.Name == "Chainloader").Methods.First(x => x.Name == "Initialize");
 
             var injectMethod = unity.MainModule.Import(originalInjectMethod);
 
@@ -70,33 +67,10 @@ namespace BepInEx.Patcher
 
             foreach (var loadScene in sceneManager.Methods.Where(x => x.Name == "LoadScene"))
             {
-                IL = loadScene.Body.GetILProcessor();
+                ILProcessor IL = loadScene.Body.GetILProcessor();
 
                 IL.InsertBefore(loadScene.Body.Instructions[0], IL.Create(OpCodes.Call, injectMethod));
             }
-
-
-            //CustomInitializer
-            originalInjectMethod = injected.MainModule.Types.First(x => x.Name == "Target").Methods.First(x => x.Name == "InitializeCustomBase");
-
-            injectMethod = assembly.MainModule.Import(originalInjectMethod);
-
-            var customControl = assembly.MainModule.Types.First(x => x.Name == "CustomControl");
-
-            var customInitialize = customControl.Methods.First(x => x.Name == "Initialize");
-
-            IL = customInitialize.Body.GetILProcessor();
-
-            //IL.Replace(customInitialize.Body.Instructions[169], IL.Create(OpCodes.Call, customControl.Properties[4].GetMethod));
-            //IL.Append(IL.Create(OpCodes.Call, injectMethod));
-
-            IL.Replace(customInitialize.Body.Instructions[169], IL.Create(OpCodes.Call, injectMethod));
-
-            customInitialize.Body.Instructions[169].Offset = 0x01f0;
-
-            IL.Append(IL.Create(OpCodes.Ret));
-
-            //injected.MainModule.Import(assembly.MainModule.Types.First(x => x.Name == "CustomBase"));
         }
     }
 }
