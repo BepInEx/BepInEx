@@ -76,12 +76,11 @@ namespace BepInEx.Patcher
             });
 
 
-
-            //IPatchPlugin exitScene = new ExitScenePlugin();
-            //exitScene.Patch(assembly);
-
-
             InjectAssembly(assembly, unity, tm, injected);
+
+
+            IPatchPlugin exitScene = new ExitScenePlugin();
+            exitScene.Patch(assembly);
 
 
             assembly.Write(assemblyDLL);

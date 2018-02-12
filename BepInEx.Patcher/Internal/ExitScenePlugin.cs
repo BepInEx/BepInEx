@@ -17,7 +17,7 @@ namespace BepInEx.Patcher.Internal
 
 
             var IL = startExit.Body.GetILProcessor();
-            IL.Replace(startExit.Body.Instructions[26], IL.Create(OpCodes.Ldstr, "TL INJECT TEST - Harsh is still shit"));
+            IL.Replace(startExit.Body.Instructions[26], IL.Create(OpCodes.Ldstr, "Do you want to exit the character maker?"));
         }
     }
 }
