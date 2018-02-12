@@ -3,6 +3,7 @@ using Mono.Cecil;
 using Mono.Cecil.Cil;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,22 +12,45 @@ namespace BepInEx.Patcher
 {
     class Program
     {
-        const string originalDLL = @"M:\koikatu\KoikatuTrial_Data\Managed\Assembly-CSharp-original.dll";
-        const string outputDLL = @"M:\koikatu\KoikatuTrial_Data\Managed\Assembly-CSharp.dll";
-        
-        const string unityOriginalDLL = @"M:\koikatu\KoikatuTrial_Data\Managed\UnityEngine-original.dll";
-        const string unityOutputDLL = @"M:\koikatu\KoikatuTrial_Data\Managed\UnityEngine.dll";
-        
-        const string injectedDLL = @"M:\koikatu\KoikatuTrial_Data\Managed\BepInEx.dll";
-
-        const string referenceDir = @"M:\koikatu\KoikatuTrial_Data\Managed\";
+        static void Error(string message)
+        {
+            Console.WriteLine($"Error: {message}");
+            Console.WriteLine("Press any key to continue...");
+            Console.ReadKey();
+            Environment.Exit(1);
+        }
 
         static void Main(string[] args)
         {
+            string assemblyDLL = Path.GetFullPath("Assembly-CSharp.dll");
+            if (!File.Exists(assemblyDLL))
+                Error("\"Assembly-CSharp.dll\" not found.");
+
+            string assemblyOriginalDLL = Path.GetFullPath("Assembly-CSharp.dll.bak");
+            if (!File.Exists(assemblyOriginalDLL))
+                File.Copy(assemblyDLL, assemblyOriginalDLL);
+
+
+            string unityOutputDLL = Path.GetFullPath("UnityEngine.dll");
+            if (!File.Exists(unityOutputDLL))
+                Error("\"UnityEngine.dll\" not found.");
+
+            string unityOriginalDLL = Path.GetFullPath("UnityEngine.dll.bak");
+            if (!File.Exists(unityOriginalDLL))
+                File.Copy(unityOutputDLL, unityOriginalDLL);
+
+
+            string injectedDLL = Path.GetFullPath("BepInEx.dll");
+            if (!File.Exists(unityOutputDLL))
+                Error("\"BepInEx.dll\" not found.");
+
+            string referenceDir = Directory.GetCurrentDirectory();
+
+
             var defaultResolver = new DefaultAssemblyResolver();
             defaultResolver.AddSearchDirectory(referenceDir);
 
-            AssemblyDefinition assembly = AssemblyDefinition.ReadAssembly(originalDLL, new ReaderParameters {
+            AssemblyDefinition assembly = AssemblyDefinition.ReadAssembly(assemblyOriginalDLL, new ReaderParameters {
                 AssemblyResolver = defaultResolver
             });
             AssemblyDefinition unity = AssemblyDefinition.ReadAssembly(unityOriginalDLL, new ReaderParameters
@@ -53,7 +77,7 @@ namespace BepInEx.Patcher
             InjectAssembly(assembly, unity, injected);
 
 
-            assembly.Write(outputDLL);
+            assembly.Write(assemblyDLL);
             unity.Write(unityOutputDLL);
         }
 
