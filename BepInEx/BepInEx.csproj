@@ -73,6 +73,7 @@
     <Compile Include="Internal\DumpScenePlugin.cs" />
     <Compile Include="Internal\TranslationPlugin.cs" />
     <Compile Include="Internal\UnlockedInputPlugin.cs" />
+    <Compile Include="ITranslationPlugin.cs" />
     <Compile Include="IUnityPlugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utility.cs" />

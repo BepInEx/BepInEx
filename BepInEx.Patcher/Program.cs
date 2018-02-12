@@ -40,6 +40,15 @@ namespace BepInEx.Patcher
                 File.Copy(unityOutputDLL, unityOriginalDLL);
 
 
+            string tmOutputDLL = Path.GetFullPath("TextMeshPro-1.0.55.56.0b12.dll");
+            if (!File.Exists(tmOutputDLL))
+                Error("\"TextMeshPro-1.0.55.56.0b12.dll\" not found.");
+
+            string tmOriginalDLL = Path.GetFullPath("TextMeshPro-1.0.55.56.0b12.dll.bak");
+            if (!File.Exists(tmOriginalDLL))
+                File.Copy(tmOutputDLL, tmOriginalDLL);
+
+
             string injectedDLL = Path.GetFullPath("BepInEx.dll");
             if (!File.Exists(unityOutputDLL))
                 Error("\"BepInEx.dll\" not found.");
@@ -54,6 +63,10 @@ namespace BepInEx.Patcher
                 AssemblyResolver = defaultResolver
             });
             AssemblyDefinition unity = AssemblyDefinition.ReadAssembly(unityOriginalDLL, new ReaderParameters
+            {
+                AssemblyResolver = defaultResolver
+            });
+            AssemblyDefinition tm = AssemblyDefinition.ReadAssembly(tmOriginalDLL, new ReaderParameters
             {
                 AssemblyResolver = defaultResolver
             });
@@ -74,27 +87,63 @@ namespace BepInEx.Patcher
             //title.Patch(assembly);
 
 
-            InjectAssembly(assembly, unity, injected);
+            InjectAssembly(assembly, unity, tm, injected);
 
 
             assembly.Write(assemblyDLL);
             unity.Write(unityOutputDLL);
+            tm.Write(tmOutputDLL);
         }
 
-        static void InjectAssembly(AssemblyDefinition assembly, AssemblyDefinition unity, AssemblyDefinition injected)
+        static void InjectAssembly(AssemblyDefinition assembly, AssemblyDefinition unity, AssemblyDefinition tm, AssemblyDefinition injected)
         {
+            //Entry point
             var originalInjectMethod = injected.MainModule.Types.First(x => x.Name == "Chainloader").Methods.First(x => x.Name == "Initialize");
 
             var injectMethod = unity.MainModule.Import(originalInjectMethod);
 
             var sceneManager = unity.MainModule.Types.First(x => x.Name == "SceneManager");
 
+            ILProcessor IL;
+
             foreach (var loadScene in sceneManager.Methods.Where(x => x.Name == "LoadScene"))
             {
-                ILProcessor IL = loadScene.Body.GetILProcessor();
+                IL = loadScene.Body.GetILProcessor();
 
                 IL.InsertBefore(loadScene.Body.Instructions[0], IL.Create(OpCodes.Call, injectMethod));
             }
+
+            //Text loading
+            //originalInjectMethod = injected.MainModule.Types.First(x => x.Name == "Chainloader").Methods.First(x => x.Name == "TextLoadedHook");
+            //injectMethod = assembly.MainModule.Import(originalInjectMethod);
+
+            //TypeDefinition Data = assembly.MainModule.Types.First(x => x.Name == "Data");
+            //var constr = Data.Methods.First(x => x.Name == ".ctor");
+
+            //IL = constr.Body.GetILProcessor();
+
+            //var target = constr.Body.Instructions[0];
+            //IL.InsertBefore(target, IL.Create(OpCodes.Ldarg_1));
+            //IL.InsertBefore(target, IL.Create(OpCodes.Call, injectMethod));
+
+            originalInjectMethod = injected.MainModule.Types.First(x => x.Name == "Chainloader").Methods.First(x => x.Name == "TextLoadedHook");
+            injectMethod = tm.MainModule.Import(originalInjectMethod);
+
+            TypeDefinition tmpText = tm.MainModule.Types.First(x => x.Name == "TMP_Text"); //TextMeshProUGUI
+            var setText = tmpText.Methods.First(x => x.Name == "set_text");
+
+            IL = setText.Body.GetILProcessor();
+            
+            IL.InsertAfter(setText.Body.Instructions[11], IL.Create(OpCodes.Call, injectMethod));
+            //IL.InsertAfter(setText.Body.Instructions[3], IL.Create(OpCodes.Call, injectMethod));
+
+            //IL.Replace(setText.Body.Instructions[3], IL.Create(OpCodes.Ldloc_2));
+            //IL.Replace(setText.Body.Instructions[11], IL.Create(OpCodes.Ldloc_2));
+
+            //var target = setText.Body.Instructions[0];
+            //IL.InsertBefore(target, IL.Create(OpCodes.Ldarg_1));
+            //IL.InsertBefore(target, IL.Create(OpCodes.Call, injectMethod));
+            //IL.InsertBefore(target, IL.Create(OpCodes.Stloc_2));
         }
     }
 }

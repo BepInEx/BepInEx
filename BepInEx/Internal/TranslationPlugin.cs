@@ -9,7 +9,7 @@ using UnityEngine.SceneManagement;
 
 namespace BepInEx.Internal
 {
-    public class TranslationPlugin : IUnityPlugin
+    public class TranslationPlugin : ITranslationPlugin, IUnityPlugin
     {
         Dictionary<string, string> translations = new Dictionary<string, string>();
 
@@ -59,6 +59,17 @@ namespace BepInEx.Internal
                 if (translations.ContainsKey(gameObject.text))
                     gameObject.text = translations[gameObject.text];
             }
+        }
+
+        public bool TryTranslate(string input, out string output)
+        {
+            if (translations.ContainsKey(input))
+            {
+                output = translations[input];
+                return true;
+            }
+            output = null;
+            return false;
         }
     }
 }
