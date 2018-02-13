@@ -1,4 +1,5 @@
-﻿using System;
+﻿using BepInEx;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -8,39 +9,22 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace BepInEx.Internal
+namespace SceneDumper
 {
-    class DumpScenePlugin : IUnityPlugin
+    class SceneDumper : BaseUnityPlugin
     {
-        public void OnStart()
-        {
+        public override string Name => "Scene Dumper";
 
-        }
-
-        public void OnLevelFinishedLoading(Scene scene, LoadSceneMode mode)
-        {
-
-        }
-
-        public void OnFixedUpdate()
-        {
-
-        }
-
-        public void OnLateUpdate()
-        {
-
-        }
-
-        public void OnUpdate()
+        void OnUpdate()
         {
             if (UnityEngine.Event.current.Equals(Event.KeyboardEvent("f8")))
             {
-                //DumpScene();
+                DumpScene();
             }
         }
 
         static List<string> lines;
+
 
         public static void DumpScene()
         {
@@ -88,9 +72,9 @@ namespace BepInEx.Internal
             {
                 string text = ((TextMeshProUGUI)component).text;
 
-                if (!text.IsNullOrWhiteSpace()
+                if (text.Trim() != ""
                     && !text.Contains("Reset")
-                    && !Regex.Replace(text, @"[\d-]", string.Empty).IsNullOrWhiteSpace())
+                    && Regex.Replace(text, @"[\d-]", string.Empty).Trim() != "")
                 {
                     if (!lines.Contains(text))
                         lines.Add(text);

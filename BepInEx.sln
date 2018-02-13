@@ -1,13 +1,28 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27130.2027
+VisualStudioVersion = 15.0.26228.9
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BepInEx", "BepInEx\BepInEx.csproj", "{4FFBA620-F5ED-47F9-B90C-DAD1316FD9B9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BepInEx.Patcher", "BepInEx.Patcher\BepInEx.Patcher.csproj", "{DC89F18B-235B-4C01-AB31-AF40DCE5C4C7}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Plugins", "Plugins", "{FF8CE2C8-C185-4EA9-8D63-E2542F0C2FCF}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "BepInEx.Common", "BepInEx.Common\BepInEx.Common.shproj", "{D8DEEEF7-28F5-4F13-A004-C581CE051CDC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DynamicTranslationLoader", "Plugins\DynamicTranslationLoader\DynamicTranslationLoader.csproj", "{6FE9DE86-F466-49FD-BCCA-ADD512C8DCE8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InputUnlocker", "Plugins\InputUnlocker\InputUnlocker.csproj", "{379BA41B-9944-4B5A-8732-EEBAA7F05B04}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SceneDumper", "Plugins\SceneDumper\SceneDumper.csproj", "{C42BD13E-B5E4-4B73-B21B-E34B9DFA9108}"
+EndProject
 Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		BepInEx.Common\BepInEx.Common.projitems*{4ffba620-f5ed-47f9-b90c-dad1316fd9b9}*SharedItemsImports = 4
+		BepInEx.Common\BepInEx.Common.projitems*{d8deeef7-28f5-4f13-a004-c581ce051cdc}*SharedItemsImports = 13
+		BepInEx.Common\BepInEx.Common.projitems*{dc89f18b-235b-4c01-ab31-af40dce5c4c7}*SharedItemsImports = 4
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
@@ -21,9 +36,26 @@ Global
 		{DC89F18B-235B-4C01-AB31-AF40DCE5C4C7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DC89F18B-235B-4C01-AB31-AF40DCE5C4C7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DC89F18B-235B-4C01-AB31-AF40DCE5C4C7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6FE9DE86-F466-49FD-BCCA-ADD512C8DCE8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6FE9DE86-F466-49FD-BCCA-ADD512C8DCE8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6FE9DE86-F466-49FD-BCCA-ADD512C8DCE8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6FE9DE86-F466-49FD-BCCA-ADD512C8DCE8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{379BA41B-9944-4B5A-8732-EEBAA7F05B04}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{379BA41B-9944-4B5A-8732-EEBAA7F05B04}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{379BA41B-9944-4B5A-8732-EEBAA7F05B04}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{379BA41B-9944-4B5A-8732-EEBAA7F05B04}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C42BD13E-B5E4-4B73-B21B-E34B9DFA9108}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C42BD13E-B5E4-4B73-B21B-E34B9DFA9108}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C42BD13E-B5E4-4B73-B21B-E34B9DFA9108}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C42BD13E-B5E4-4B73-B21B-E34B9DFA9108}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{6FE9DE86-F466-49FD-BCCA-ADD512C8DCE8} = {FF8CE2C8-C185-4EA9-8D63-E2542F0C2FCF}
+		{379BA41B-9944-4B5A-8732-EEBAA7F05B04} = {FF8CE2C8-C185-4EA9-8D63-E2542F0C2FCF}
+		{C42BD13E-B5E4-4B73-B21B-E34B9DFA9108} = {FF8CE2C8-C185-4EA9-8D63-E2542F0C2FCF}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {55AC11EF-F568-4C79-A356-7ED9510145B1}

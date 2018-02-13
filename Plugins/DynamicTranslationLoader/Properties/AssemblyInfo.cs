@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("BepInEx")]
+[assembly: AssemblyTitle("BaseTranslationLoader")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("BepInEx")]
+[assembly: AssemblyProduct("BaseTranslationLoader")]
 [assembly: AssemblyCopyright("Copyright ©  2018")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("4ffba620-f5ed-47f9-b90c-dad1316fd9b9")]
+[assembly: Guid("6fe9de86-f466-49fd-bcca-add512c8dce8")]
 
 // Version information for an assembly consists of the following four values:
 //

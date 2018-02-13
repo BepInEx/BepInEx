@@ -1,4 +1,6 @@
-﻿using System;
+﻿using BepInEx;
+using BepInEx.Common;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -8,14 +10,16 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace BepInEx.Internal
+namespace DynamicTranslationLoader
 {
-    public class TranslationPlugin : ITranslationPlugin, IUnityPlugin
+    public class DynamicTranslator : BaseUnityPlugin
     {
         Dictionary<string, string> translations = new Dictionary<string, string>();
         List<string> untranslated = new List<string>();
 
-        public TranslationPlugin()
+        public override string Name => "Dynamic Translator";
+
+        public DynamicTranslator()
         {
             string[] translation = File.ReadAllLines(Utility.CombinePaths(Utility.ExecutingDirectory, "translation", "translation.txt"));
 
@@ -31,27 +35,12 @@ namespace BepInEx.Internal
             }
         }
 
-        public void OnStart()
-        {
-
-        }
-
-        public void OnLevelFinishedLoading(Scene scene, LoadSceneMode mode)
+        protected override void LevelFinishedLoading(Scene scene, LoadSceneMode mode)
         {
             Translate();
         }
 
-        public void OnFixedUpdate()
-        {
-            
-        }
-
-        public void OnLateUpdate()
-        {
-            
-        }
-
-        public void OnUpdate()
+        void OnUpdate()
         {
             if (UnityEngine.Event.current.Equals(Event.KeyboardEvent("f9")))
             {
@@ -74,7 +63,7 @@ namespace BepInEx.Internal
                     gameObject.text = translations[gameObject.text];
                 else
                     if (!untranslated.Contains(gameObject.text))
-                        untranslated.Add(gameObject.text);
+                    untranslated.Add(gameObject.text);
             }
         }
 
@@ -90,7 +79,7 @@ namespace BepInEx.Internal
                     && !text.Contains("Reset")
                     && !Regex.Replace(text, @"[\d-]", string.Empty).IsNullOrWhiteSpace()
                     && !translations.ContainsValue(text.Trim()))
-                        output += $"{text.Trim()}=\r\n";
+                    output += $"{text.Trim()}=\r\n";
 
             File.WriteAllText("dumped-tl.txt", output);
         }

@@ -4,45 +4,41 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{4FFBA620-F5ED-47F9-B90C-DAD1316FD9B9}</ProjectGuid>
+    <ProjectGuid>{6FE9DE86-F466-49FD-BCCA-ADD512C8DCE8}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>BepInEx</RootNamespace>
-    <AssemblyName>BepInEx</AssemblyName>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>DynamicTranslationLoader</RootNamespace>
+    <AssemblyName>DynamicTranslationLoader</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>D:\koikatu\KoikatuTrial_Data\Managed\</OutputPath>
+    <OutputPath>D:\koikatu\KoikatuTrial_Data\Managed\BepInEx\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>D:\koikatu\KoikatuTrial_Data\Managed\</OutputPath>
+    <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-  <PropertyGroup>
-    <StartupObject />
-  </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Assembly-CSharp-original, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>D:\koikatu\KoikatuTrial_Data\Managed\Assembly-CSharp-original.dll</HintPath>
+      <HintPath>D:\koikatu\KoikatuTrial_Data\Managed\Assembly-CSharp.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
     <Reference Include="TextMeshPro-1.0.55.56.0b12, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
@@ -50,34 +46,26 @@
       <HintPath>D:\koikatu\KoikatuTrial_Data\Managed\TextMeshPro-1.0.55.56.0b12.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="UnityEngine-original, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>D:\koikatu\KoikatuTrial_Data\Managed\UnityEngine-original.dll</HintPath>
+      <HintPath>D:\koikatu\KoikatuTrial_Data\Managed\UnityEngine.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="UnityEngine.UI, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="UnityEngine.UI">
       <HintPath>D:\koikatu\KoikatuTrial_Data\Managed\UnityEngine.UI.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BepInComponent.cs" />
-    <Compile Include="ConsoleUtil\ConsoleEncoding\ConsoleEncoding.Buffers.cs" />
-    <Compile Include="ConsoleUtil\ConsoleEncoding\ConsoleEncoding.cs" />
-    <Compile Include="ConsoleUtil\ConsoleEncoding\ConsoleEncoding.PInvoke.cs" />
-    <Compile Include="ConsoleUtil\ConsoleMirror.cs" />
-    <Compile Include="ConsoleUtil\ConsoleWindow.cs" />
-    <Compile Include="ConsoleUtil\Extensions.cs" />
-    <Compile Include="ConsoleUtil\SafeConsole.cs" />
-    <Compile Include="Chainloader.cs" />
-    <Compile Include="ITranslationPlugin.cs" />
-    <Compile Include="BaseUnityPlugin.cs" />
+    <Compile Include="DynamicTranslator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
+    <ProjectReference Include="..\..\BepInEx\BepInEx.csproj">
+      <Project>{4ffba620-f5ed-47f9-b90c-dad1316fd9b9}</Project>
+      <Name>BepInEx</Name>
+      <Private>False</Private>
+    </ProjectReference>
   </ItemGroup>
-  <Import Project="..\BepInEx.Common\BepInEx.Common.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

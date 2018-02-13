@@ -13,61 +13,31 @@ namespace BepInEx
     //Adapted from https://github.com/Eusth/IPA/blob/0df8b1ecb87fdfc9e169365cb4a8fd5a909a2ad6/IllusionInjector/PluginComponent.cs
     public class BepInComponent : MonoBehaviour
     {
-        IEnumerable<IUnityPlugin> Plugins;
+        List<BaseUnityPlugin> Plugins;
         private bool quitting = false;
 
-        public static BepInComponent Create()
+        public static GameObject Create()
         {
-            return new GameObject("BepInEx_Manager").AddComponent<BepInComponent>();
+            var obj = new GameObject("BepInEx_Manager");
+
+            var manager = obj.AddComponent<BepInComponent>();
+
+            manager.Plugins = new List<BaseUnityPlugin>();
+
+            foreach (Type t in Chainloader.Plugins)
+                manager.Plugins.Add((BaseUnityPlugin)obj.AddComponent(t));
+
+            return obj;
         }
 
         void Awake()
         {
             DontDestroyOnLoad(gameObject);
-
-            Plugins = Chainloader.Plugins;
         }
 
         void Start()
         {
             Console.WriteLine("Component ready");
-
-            foreach (IUnityPlugin plugin in Plugins)
-                plugin.OnStart();
-        }
-
-        void OnEnable()
-        {
-            SceneManager.sceneLoaded += LevelFinishedLoading;
-        }
-
-        void OnDisable()
-        {
-            SceneManager.sceneLoaded -= LevelFinishedLoading;
-        }
-
-        void Update()
-        {
-            foreach (IUnityPlugin plugin in Plugins)
-                plugin.OnUpdate();
-        }
-
-        void LateUpdate()
-        {
-            foreach (IUnityPlugin plugin in Plugins)
-                plugin.OnLateUpdate();
-        }
-
-        void FixedUpdate()
-        {
-            foreach (IUnityPlugin plugin in Plugins)
-                plugin.OnFixedUpdate();
-        }
-
-        void LevelFinishedLoading(Scene scene, LoadSceneMode mode)
-        {
-            foreach (IUnityPlugin plugin in Plugins)
-                plugin.OnLevelFinishedLoading(scene, mode);
         }
 
         void OnDestroy()

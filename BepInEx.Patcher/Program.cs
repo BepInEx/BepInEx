@@ -1,12 +1,12 @@
-﻿using BepInEx.Patcher.Internal;
+﻿using BepInEx.Common;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace BepInEx.Patcher
 {
@@ -39,6 +39,8 @@ namespace BepInEx.Patcher
             if (!File.Exists(unityOriginalDLL))
                 File.Copy(unityOutputDLL, unityOriginalDLL);
 
+            Assembly.LoadFile(unityOriginalDLL);
+
 
             string tmOutputDLL = Path.GetFullPath("TextMeshPro-1.0.55.56.0b12.dll");
             if (!File.Exists(tmOutputDLL))
@@ -47,6 +49,7 @@ namespace BepInEx.Patcher
             string tmOriginalDLL = Path.GetFullPath("TextMeshPro-1.0.55.56.0b12.dll.bak");
             if (!File.Exists(tmOriginalDLL))
                 File.Copy(tmOutputDLL, tmOriginalDLL);
+            
 
 
             string injectedDLL = Path.GetFullPath("BepInEx.dll");
@@ -77,11 +80,7 @@ namespace BepInEx.Patcher
 
 
             InjectAssembly(assembly, unity, tm, injected);
-
-
-            IPatchPlugin exitScene = new ExitScenePlugin();
-            exitScene.Patch(assembly);
-
+            
 
             assembly.Write(assemblyDLL);
             unity.Write(unityOutputDLL);

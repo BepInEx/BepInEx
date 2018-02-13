@@ -5,7 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 
-namespace BepInEx
+namespace BepInEx.Common
 {
     public static class Utility
     {
