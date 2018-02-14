@@ -39,8 +39,6 @@ namespace BepInEx.Patcher
             if (!File.Exists(unityOriginalDLL))
                 File.Copy(unityOutputDLL, unityOriginalDLL);
 
-            Assembly.LoadFile(unityOriginalDLL);
-
 
             string tmOutputDLL = Path.GetFullPath("TextMeshPro-1.0.55.56.0b12.dll");
             if (!File.Exists(tmOutputDLL))
@@ -104,18 +102,6 @@ namespace BepInEx.Patcher
 
                 IL.InsertBefore(loadScene.Body.Instructions[0], IL.Create(OpCodes.Call, injectMethod));
             }
-
-            //Text loading
-            originalInjectMethod = injected.MainModule.Types.First(x => x.Name == "Chainloader").Methods.First(x => x.Name == "TextLoadedHook");
-            injectMethod = tm.MainModule.Import(originalInjectMethod);
-
-            TypeDefinition tmpText = tm.MainModule.Types.First(x => x.Name == "TMP_Text");
-            var setText = tmpText.Methods.First(x => x.Name == "set_text");
-
-            IL = setText.Body.GetILProcessor();
-            
-            IL.InsertAfter(setText.Body.Instructions[11], IL.Create(OpCodes.Call, injectMethod));
-            //IL.InsertAfter(setText.Body.Instructions[3], IL.Create(OpCodes.Call, injectMethod));
         }
     }
 }

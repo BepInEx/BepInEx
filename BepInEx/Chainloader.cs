@@ -1,5 +1,6 @@
 ﻿using BepInEx.Common;
 using ChaCustom;
+using Harmony;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,8 +14,8 @@ namespace BepInEx
     public class Chainloader
     {
         static bool loaded = false;
-        public static IEnumerable<Type> Plugins;
-        public static GameObject managerObject;
+        public static IEnumerable<Type> Plugins { get; protected set; }
+        public static GameObject ManagerObject { get; protected set; }
 
         public static void Initialize()
         {
@@ -25,23 +26,14 @@ namespace BepInEx
             Console.WriteLine("Chainloader started");
 
             Plugins = LoadTypes<BaseUnityPlugin>(Utility.PluginsDirectory);
-            
+
             //UnityInjector.ConsoleUtil.ConsoleEncoding.ConsoleCodePage = 932;
             Console.WriteLine($"{Plugins.Count()} plugins loaded");
-
             
-            managerObject = BepInComponent.Create();
+            
+            ManagerObject = BepInComponent.Create();
 
             loaded = true;
-        }
-
-        public static string TextLoadedHook(string text)
-        {
-            //foreach (var plugin in TLPlugins)
-            //    if (plugin.TryTranslate(text, out string output))
-            //        return output;
-
-            return text;
         }
 
         public static ICollection<Type> LoadTypes<T>(string directory)

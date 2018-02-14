@@ -1,9 +1,11 @@
 ﻿using BepInEx;
 using BepInEx.Common;
+using Harmony;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using TMPro;
@@ -14,8 +16,8 @@ namespace DynamicTranslationLoader
 {
     public class DynamicTranslator : BaseUnityPlugin
     {
-        Dictionary<string, string> translations = new Dictionary<string, string>();
-        List<string> untranslated = new List<string>();
+        private static Dictionary<string, string> translations = new Dictionary<string, string>();
+        private static List<string> untranslated = new List<string>();
 
         public override string Name => "Dynamic Translator";
 
@@ -33,18 +35,27 @@ namespace DynamicTranslationLoader
 
                 translations[split[0]] = split[1];
             }
+            
+            var harmony = HarmonyInstance.Create("com.bepis.bepinex.dynamictranslationloader");
+            
+            MethodInfo original = AccessTools.Property(typeof(TMP_Text), "text").GetSetMethod();
+
+            HarmonyMethod prefix = new HarmonyMethod(typeof(DynamicTranslator).GetMethod("LabelTextHook"));
+
+
+            harmony.Patch(original, prefix, null);
         }
 
         protected override void LevelFinishedLoading(Scene scene, LoadSceneMode mode)
         {
-            Translate();
+            TranslateAll();
         }
 
         void OnUpdate()
         {
             if (UnityEngine.Event.current.Equals(Event.KeyboardEvent("f9")))
             {
-                Translate();
+                TranslateAll();
             }
             else if (UnityEngine.Event.current.Equals(Event.KeyboardEvent("f10")))
             {
@@ -53,7 +64,7 @@ namespace DynamicTranslationLoader
             }
         }
 
-        void Translate()
+        void TranslateAll()
         {
             foreach (TextMeshProUGUI gameObject in GameObject.FindObjectsOfType<TextMeshProUGUI>())
             {
@@ -84,19 +95,20 @@ namespace DynamicTranslationLoader
             File.WriteAllText("dumped-tl.txt", output);
         }
 
-        public bool TryTranslate(string input, out string output)
+        static string Translate(string input)
         {
             if (translations.ContainsKey(input))
-            {
-                output = translations[input];
-                return true;
-            }
-            output = null;
+                return translations[input];
 
             if (!untranslated.Contains(input))
                 untranslated.Add(input);
 
-            return false;
+            return input;
+        }
+
+        public static void LabelTextHook(ref string value)
+        {
+            value = Translate(value);
         }
     }
 }
