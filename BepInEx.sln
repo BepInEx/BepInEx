@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InputUnlocker", "Plugins\In
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SceneDumper", "Plugins\SceneDumper\SceneDumper.csproj", "{C42BD13E-B5E4-4B73-B21B-E34B9DFA9108}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ColorCorrector", "Plugins\ColorCorrector\ColorCorrector.csproj", "{6809B5DC-358C-45C5-B04C-0B7027596A8B}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		BepInEx.Common\BepInEx.Common.projitems*{4ffba620-f5ed-47f9-b90c-dad1316fd9b9}*SharedItemsImports = 4
@@ -48,6 +50,10 @@ Global
 		{C42BD13E-B5E4-4B73-B21B-E34B9DFA9108}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C42BD13E-B5E4-4B73-B21B-E34B9DFA9108}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C42BD13E-B5E4-4B73-B21B-E34B9DFA9108}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6809B5DC-358C-45C5-B04C-0B7027596A8B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6809B5DC-358C-45C5-B04C-0B7027596A8B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6809B5DC-358C-45C5-B04C-0B7027596A8B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6809B5DC-358C-45C5-B04C-0B7027596A8B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -56,6 +62,7 @@ Global
 		{6FE9DE86-F466-49FD-BCCA-ADD512C8DCE8} = {FF8CE2C8-C185-4EA9-8D63-E2542F0C2FCF}
 		{379BA41B-9944-4B5A-8732-EEBAA7F05B04} = {FF8CE2C8-C185-4EA9-8D63-E2542F0C2FCF}
 		{C42BD13E-B5E4-4B73-B21B-E34B9DFA9108} = {FF8CE2C8-C185-4EA9-8D63-E2542F0C2FCF}
+		{6809B5DC-358C-45C5-B04C-0B7027596A8B} = {FF8CE2C8-C185-4EA9-8D63-E2542F0C2FCF}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {55AC11EF-F568-4C79-A356-7ED9510145B1}
