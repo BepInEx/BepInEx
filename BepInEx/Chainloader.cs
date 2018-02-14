@@ -25,10 +25,18 @@ namespace BepInEx
             UnityInjector.ConsoleUtil.ConsoleWindow.Attach();
             Console.WriteLine("Chainloader started");
 
-            Plugins = LoadTypes<BaseUnityPlugin>(Utility.PluginsDirectory);
+            if (Directory.Exists(Utility.PluginsDirectory))
+            {
+                Plugins = LoadTypes<BaseUnityPlugin>(Utility.PluginsDirectory);
 
-            //UnityInjector.ConsoleUtil.ConsoleEncoding.ConsoleCodePage = 932;
-            Console.WriteLine($"{Plugins.Count()} plugins loaded");
+                //UnityInjector.ConsoleUtil.ConsoleEncoding.ConsoleCodePage = 932;
+                Console.WriteLine($"{Plugins.Count()} plugins loaded");
+            }
+            else
+            {
+                Plugins = new List<Type>();
+                Console.WriteLine("Plugins directory not found, skipping");
+            }
             
             
             ManagerObject = BepInComponent.Create();
