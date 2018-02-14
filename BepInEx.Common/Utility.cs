@@ -9,7 +9,7 @@ namespace BepInEx.Common
 {
     public static class Utility
     {
-        public static string ExecutingDirectory => Path.GetDirectoryName(Assembly.GetExecutingAssembly().CodeBase).Replace(@"file:\", "");
+        public static string ExecutingDirectory => Path.GetDirectoryName(Environment.CommandLine);
         public static string PluginsDirectory => Path.Combine(ExecutingDirectory, "BepInEx");
 
         //shamelessly stolen from Rei

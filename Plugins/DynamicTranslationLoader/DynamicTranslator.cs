@@ -23,7 +23,7 @@ namespace DynamicTranslationLoader
 
         public DynamicTranslator()
         {
-            string[] translation = File.ReadAllLines(Utility.CombinePaths(Utility.ExecutingDirectory, "translation", "translation.txt"));
+            string[] translation = File.ReadAllLines(Utility.CombinePaths(Utility.PluginsDirectory, "translation", "translation.txt"));
 
             for (int i = 0; i < translation.Length; i++)
             {
