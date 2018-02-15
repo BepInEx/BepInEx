@@ -53,11 +53,7 @@ namespace DynamicTranslationLoader
 
         void OnUpdate()
         {
-            if (UnityEngine.Event.current.Equals(Event.KeyboardEvent("f9")))
-            {
-                TranslateAll();
-            }
-            else if (UnityEngine.Event.current.Equals(Event.KeyboardEvent("f10")))
+            if (UnityEngine.Event.current.Equals(Event.KeyboardEvent("f10")))
             {
                 Dump();
                 Console.WriteLine($"Text dumped to \"{Path.GetFullPath("dumped-tl.txt")}\"");
