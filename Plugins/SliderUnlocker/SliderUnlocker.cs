@@ -113,71 +113,26 @@ namespace SliderUnlocker
         {
             if (!__result)
                 return;
-
-
+            
             rate = __state;
 
-            var dictInfo = (Dictionary < string, List<AnimationKeyInfo.AnmKeyInfo> > )
+            if (rate < 0f || rate > 1f)
+            {
+                var dictInfo = (Dictionary<string, List<AnimationKeyInfo.AnmKeyInfo>>)
                 (typeof(AnimationKeyInfo).GetField("dictInfo", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(__instance));
 
-            List<AnimationKeyInfo.AnmKeyInfo> list = dictInfo[name];
+                List<AnimationKeyInfo.AnmKeyInfo> list = dictInfo[name];
 
-            //if (flag[0])
-            //{
-            //    Vector3 min = list[0].pos;
-            //    Vector3 max = list[list.Count - 1].pos;
 
-            //    Vector3 diff = new Vector3(max.x - min.x,
-            //                                max.y - min.y,
-            //                                max.z - min.z);
+                if (flag[2])
+                {
+                    Vector3 min = list[0].scl;
+                    Vector3 max = list[list.Count - 1].scl;
 
-            //    value[0] = new Vector3(min.x + (diff.x * rate),
-            //                            min.y + (diff.y * rate),
-            //                            min.z + (diff.z * rate));
-            //}
-            //if (flag[1])
-            //{
-            //    //if (rate == 0f)
-            //    //{
-            //    //    value[1] = list[0].rot;
-            //    //}
-            //    //else if (rate == 1f)
-            //    //{
-            //    //    value[1] = list[list.Count - 1].rot;
-            //    //}
-            //    //else
-            //    //{
-            //    //    float num3 = (float)(list.Count - 1) * rate;
-            //    //    int num4 = Mathf.FloorToInt(num3);
-            //    //    float t2 = num3 - (float)num4;
-            //    //    value[1].x = Mathf.LerpAngle(list[num4].rot.x, list[num4 + 1].rot.x, t2);
-            //    //    value[1].y = Mathf.LerpAngle(list[num4].rot.y, list[num4 + 1].rot.y, t2);
-            //    //    value[1].z = Mathf.LerpAngle(list[num4].rot.z, list[num4 + 1].rot.z, t2);
-            //    //}
-
-            //    Vector3 min = list[0].rot;
-            //    Vector3 max = list[list.Count - 1].rot;
-
-            //    Vector3 diff = new Vector3(max.x - min.x,
-            //                                max.y - min.y,
-            //                                max.z - min.z);
-
-            //    value[1] = new Vector3(min.x + (diff.x * rate),
-            //                            min.y + (diff.y * rate),
-            //                            min.z + (diff.z * rate));
-            //}
-            if (flag[2])
-            {
-                Vector3 min = list[0].scl;
-                Vector3 max = list[list.Count - 1].scl;
-
-                Vector3 diff = new Vector3(max.x - min.x,
-                                            max.y - min.y,
-                                            max.z - min.z);
-
-                value[2] = new Vector3(min.x + (diff.x * rate),
-                                        min.y + (diff.y * rate),
-                                        min.z + (diff.z * rate));
+                    value[2] = new Vector3(min.x + ((max.x - min.x) * rate),
+                                            min.y + ((max.y - min.y) * rate),
+                                            min.z + ((max.z - min.z) * rate));
+                }
             }
         }
     }
