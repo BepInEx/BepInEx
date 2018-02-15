@@ -18,8 +18,6 @@ namespace SliderUnlocker
 
         public SliderUnlocker()
         {
-
-
             var harmony = HarmonyInstance.Create("com.bepis.bepinex.sliderunlocker");
 
             MethodInfo original = AccessTools.Method(typeof(CustomBase), "ConvertTextFromRate");
@@ -36,48 +34,32 @@ namespace SliderUnlocker
 
             harmony.Patch(original, null, postfix);
 
-            Console.WriteLine("test");
-
-            //foreach (var method in typeof(AnimationKeyInfo).GetMethods().Where(x => x.Name.Contains("GetInfo")))
-            //{typeof(AnimationKeyInfo).GetMethods().Where(x => x.Name == "GetInfo");
-            //    Console.WriteLine(method.GetParameters().Select(x => x.ParameterType.FullName).Aggregate((a, b) => $"{a};{b}"));
-            //}
 
 
-            original = typeof(AnimationKeyInfo).GetMethods().Where(x => x.Name.Contains("GetInfo")).ToArray()[1];
-
-            //original = AccessTools.Method(typeof(AnimationKeyInfo), "GetInfo"); //new Type[] { typeof(string), typeof(float), typeof(Vector3[]), typeof(bool[]) }
-
-            postfix = new HarmonyMethod(typeof(SliderUnlocker).GetMethod("GetInfoHook"));
+            original = AccessTools.Method(typeof(Mathf), "Clamp", new Type[] { typeof(float), typeof(float), typeof(float) });
+            
+            postfix = new HarmonyMethod(typeof(SliderUnlocker).GetMethod("MathfClampHook"));
 
             harmony.Patch(original, null, postfix);
 
-            Console.WriteLine("hooked");
+
+
+            original = typeof(AnimationKeyInfo).GetMethods().Where(x => x.Name.Contains("GetInfo")).ToArray()[1];
+            
+            var prefix = new HarmonyMethod(typeof(SliderUnlocker).GetMethod("GetInfoPreHook"));
+
+            postfix = new HarmonyMethod(typeof(SliderUnlocker).GetMethod("GetInfoPostHook"));
+
+            harmony.Patch(original, prefix, postfix);
         }
 
         protected override void LevelFinishedLoading(Scene scene, LoadSceneMode mode)
         {
             foreach (Slider gameObject in GameObject.FindObjectsOfType<Slider>())
             {
-                gameObject.maxValue = 2;
+                gameObject.maxValue = 2f;
             }
         }
-
-        //TypeDefinition customBase = assembly.MainModule.Types.First(x => x.Name == "CustomBase");
-
-        //var methods = customBase.Methods;
-
-        //var convertTextFromRate = methods.First(x => x.Name == "ConvertTextFromRate");
-
-        //var IL = convertTextFromRate.Body.GetILProcessor();
-        //IL.Replace(convertTextFromRate.Body.Instructions[0], IL.Create(OpCodes.Ldc_I4, -0));
-        //    IL.Replace(convertTextFromRate.Body.Instructions[2], IL.Create(OpCodes.Ldc_I4, 200));
-            
-        //    var convertRateFromText = methods.First(x => x.Name == "ConvertRateFromText");
-
-        //IL = convertRateFromText.Body.GetILProcessor();
-        //    IL.Replace(convertRateFromText.Body.Instructions[11], IL.Create(OpCodes.Ldc_I4, -0));
-        //    IL.Replace(convertRateFromText.Body.Instructions[13], IL.Create(OpCodes.Ldc_I4, 200));
 
 
         [HarmonyPostfix]
@@ -111,15 +93,29 @@ namespace SliderUnlocker
         }
 
         [HarmonyPostfix]
-        public static void GetInfoHook(AnimationKeyInfo __instance, bool __result, string name, float rate, ref Vector3[] value, bool[] flag)
+        public static void MathfClampHook(ref float __result, float value, float min, float max)
         {
+            if (min == 0f && max == 100f)
+                __result = value;
+        }
+
+        [HarmonyPrefix]
+        public static void GetInfoPreHook(ref float __state, string name, ref float rate, ref Vector3[] value, bool[] flag)
+        {
+            __state = rate;
+
             if (rate > 1)
-                Console.WriteLine(rate);
+                rate = 1f;
+        }
 
-            rate *= 2f;
-
+        [HarmonyPostfix]
+        public static void GetInfoPostHook(AnimationKeyInfo __instance, bool __result, float __state, string name, float rate, ref Vector3[] value, bool[] flag)
+        {
             if (!__result)
                 return;
+
+
+            rate = __state;
 
             var dictInfo = (Dictionary < string, List<AnimationKeyInfo.AnmKeyInfo> > )
                 (typeof(AnimationKeyInfo).GetField("dictInfo", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(__instance));
