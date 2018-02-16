@@ -52,20 +52,22 @@ namespace Screencap
 
         Texture2D RenderCamera(Camera cam)
         {
-            float oldaspect = cam.aspect;
-            cam.targetTexture = new RenderTexture(1024, 1024, 32); //((int)cam.pixelRect.width, (int)cam.pixelRect.height, 32);
-            cam.aspect = cam.targetTexture.width / (float)cam.targetTexture.height;
+            var go = new GameObject();
+            Camera renderCam = go.AddComponent<Camera>();
+            renderCam.CopyFrom(Camera.main);
+
+            renderCam.targetTexture = new RenderTexture(2048, 2048, 32); //((int)cam.pixelRect.width, (int)cam.pixelRect.height, 32);
+            renderCam.aspect = renderCam.targetTexture.width / (float)renderCam.targetTexture.height;
             RenderTexture currentRT = RenderTexture.active;
-            RenderTexture.active = cam.targetTexture;
-            
-            cam.Render();
-            Texture2D image = new Texture2D(cam.targetTexture.width, cam.targetTexture.height);
-            image.ReadPixels(new Rect(0, 0, cam.targetTexture.width, cam.targetTexture.height), 0, 0);
+            RenderTexture.active = renderCam.targetTexture;
+
+            renderCam.Render();
+            Texture2D image = new Texture2D(renderCam.targetTexture.width, renderCam.targetTexture.height);
+            image.ReadPixels(new Rect(0, 0, renderCam.targetTexture.width, renderCam.targetTexture.height), 0, 0);
             image.Apply();
             RenderTexture.active = currentRT;
-            Destroy(cam.targetTexture);
-            cam.targetTexture = null;
-            cam.aspect = oldaspect;
+            Destroy(renderCam.targetTexture);
+            Destroy(renderCam);
             return image;
         }
     }
