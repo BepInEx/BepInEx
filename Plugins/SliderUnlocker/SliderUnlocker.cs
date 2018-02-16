@@ -16,6 +16,8 @@ namespace SliderUnlocker
     {
         public override string Name => "Slider Unlocker";
 
+        private static FieldInfo akf_dictInfo = (typeof(AnimationKeyInfo).GetField("dictInfo", BindingFlags.NonPublic | BindingFlags.Instance));
+
         public SliderUnlocker()
         {
             var harmony = HarmonyInstance.Create("com.bepis.bepinex.sliderunlocker");
@@ -118,8 +120,7 @@ namespace SliderUnlocker
 
             if (rate < 0f || rate > 1f)
             {
-                var dictInfo = (Dictionary<string, List<AnimationKeyInfo.AnmKeyInfo>>)
-                (typeof(AnimationKeyInfo).GetField("dictInfo", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(__instance));
+                var dictInfo = (Dictionary<string, List<AnimationKeyInfo.AnmKeyInfo>>)akf_dictInfo.GetValue(__instance);
 
                 List<AnimationKeyInfo.AnmKeyInfo> list = dictInfo[name];
 
