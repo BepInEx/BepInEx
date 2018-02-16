@@ -22,39 +22,39 @@ namespace BepInEx.Patcher
 
         static void Main(string[] args)
         {
-            string assemblyDLL = Path.GetFullPath("Assembly-CSharp.dll");
+            string assemblyDLL = Path.GetFullPath(@"KoikatuTrial_Data\Managed\Assembly-CSharp.dll");
             if (!File.Exists(assemblyDLL))
                 Error("\"Assembly-CSharp.dll\" not found.");
 
-            string assemblyOriginalDLL = Path.GetFullPath("Assembly-CSharp.dll.bak");
+            string assemblyOriginalDLL = Path.GetFullPath(@"KoikatuTrial_Data\Managed\Assembly-CSharp.dll.bak");
             if (!File.Exists(assemblyOriginalDLL))
                 File.Copy(assemblyDLL, assemblyOriginalDLL);
 
 
-            string unityOutputDLL = Path.GetFullPath("UnityEngine.dll");
+            string unityOutputDLL = Path.GetFullPath(@"KoikatuTrial_Data\Managed\UnityEngine.dll");
             if (!File.Exists(unityOutputDLL))
                 Error("\"UnityEngine.dll\" not found.");
 
-            string unityOriginalDLL = Path.GetFullPath("UnityEngine.dll.bak");
+            string unityOriginalDLL = Path.GetFullPath(@"KoikatuTrial_Data\Managed\UnityEngine.dll.bak");
             if (!File.Exists(unityOriginalDLL))
                 File.Copy(unityOutputDLL, unityOriginalDLL);
 
 
-            string tmOutputDLL = Path.GetFullPath("TextMeshPro-1.0.55.56.0b12.dll");
+            string tmOutputDLL = Path.GetFullPath(@"KoikatuTrial_Data\Managed\TextMeshPro-1.0.55.56.0b12.dll");
             if (!File.Exists(tmOutputDLL))
                 Error("\"TextMeshPro-1.0.55.56.0b12.dll\" not found.");
 
-            string tmOriginalDLL = Path.GetFullPath("TextMeshPro-1.0.55.56.0b12.dll.bak");
+            string tmOriginalDLL = Path.GetFullPath(@"KoikatuTrial_Data\Managed\TextMeshPro-1.0.55.56.0b12.dll.bak");
             if (!File.Exists(tmOriginalDLL))
                 File.Copy(tmOutputDLL, tmOriginalDLL);
             
 
 
-            string injectedDLL = Path.GetFullPath("BepInEx.dll");
+            string injectedDLL = Path.GetFullPath(@"KoikatuTrial_Data\Managed\BepInEx.dll");
             if (!File.Exists(unityOutputDLL))
                 Error("\"BepInEx.dll\" not found.");
 
-            string referenceDir = Directory.GetCurrentDirectory();
+            string referenceDir = Path.GetFullPath(@"KoikatuTrial_Data\Managed");
 
 
             var defaultResolver = new DefaultAssemblyResolver();
