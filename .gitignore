@@ -286,3 +286,7 @@ __pycache__/
 *.btm.cs
 *.odx.cs
 *.xsd.cs
+lib/Assembly-CSharp.dll
+lib/TextMeshPro-1.0.55.56.0b12.dll
+lib/UnityEngine.dll
+lib/UnityEngine.UI.dll

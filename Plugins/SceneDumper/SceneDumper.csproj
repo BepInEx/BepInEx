@@ -37,15 +37,15 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
     <Reference Include="TextMeshPro-1.0.55.56.0b12">
-      <HintPath>D:\koikatu\KoikatuTrial_Data\Managed\TextMeshPro-1.0.55.56.0b12.dll</HintPath>
+      <HintPath>..\..\lib\TextMeshPro-1.0.55.56.0b12.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine">
-      <HintPath>D:\koikatu\KoikatuTrial_Data\Managed\UnityEngine.dll</HintPath>
+      <HintPath>..\..\lib\UnityEngine.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.UI">
-      <HintPath>D:\koikatu\KoikatuTrial_Data\Managed\UnityEngine.UI.dll</HintPath>
+      <HintPath>..\..\lib\UnityEngine.UI.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>
