@@ -1,6 +1,7 @@
 ﻿using BepInEx;
 using ChaCustom;
 using Harmony;
+using Illusion.Component.UI.ColorPicker;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,6 +18,12 @@ namespace SliderUnlocker
         public override string Name => "Slider Unlocker";
 
         private static FieldInfo akf_dictInfo = (typeof(AnimationKeyInfo).GetField("dictInfo", BindingFlags.NonPublic | BindingFlags.Instance));
+
+
+        private static FieldInfo akf_sliderR = (typeof(PickerSlider).GetField("sliderR", BindingFlags.NonPublic | BindingFlags.Instance));
+        private static FieldInfo akf_sliderG = (typeof(PickerSlider).GetField("sliderG", BindingFlags.NonPublic | BindingFlags.Instance));
+        private static FieldInfo akf_sliderB = (typeof(PickerSlider).GetField("sliderB", BindingFlags.NonPublic | BindingFlags.Instance));
+        private static FieldInfo akf_sliderA = (typeof(PickerSlider).GetField("sliderA", BindingFlags.NonPublic | BindingFlags.Instance));
 
         public SliderUnlocker()
         {
@@ -60,6 +67,26 @@ namespace SliderUnlocker
             foreach (Slider gameObject in GameObject.FindObjectsOfType<Slider>())
             {
                 gameObject.maxValue = 2f;
+            }
+
+            foreach (GameObject gameObject in Resources.FindObjectsOfTypeAll<GameObject>())
+            {
+                if (gameObject.name == "PickerSliderColor" ||
+                    gameObject.name == "menuSlider")
+                {
+                    foreach (Slider slider in gameObject.GetComponents<Slider>())
+                    {
+                        slider.maxValue = 1f;
+                    }
+                }
+            }
+
+            foreach (PickerSlider gameObject in GameObject.FindObjectsOfType<PickerSlider>())
+            {
+                ((Slider)akf_sliderA.GetValue(gameObject)).maxValue = 1f;
+                ((Slider)akf_sliderR.GetValue(gameObject)).maxValue = 1f;
+                ((Slider)akf_sliderG.GetValue(gameObject)).maxValue = 1f;
+                ((Slider)akf_sliderB.GetValue(gameObject)).maxValue = 1f;
             }
         }
 
