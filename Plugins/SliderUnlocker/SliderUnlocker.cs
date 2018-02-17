@@ -20,12 +20,6 @@ namespace SliderUnlocker
         public static float Minimum = -1.0f;
         public static float Maximum = 2.0f;
 
-
-        private static FieldInfo akf_sliderR = (typeof(PickerSlider).GetField("sliderR", BindingFlags.NonPublic | BindingFlags.Instance));
-        private static FieldInfo akf_sliderG = (typeof(PickerSlider).GetField("sliderG", BindingFlags.NonPublic | BindingFlags.Instance));
-        private static FieldInfo akf_sliderB = (typeof(PickerSlider).GetField("sliderB", BindingFlags.NonPublic | BindingFlags.Instance));
-        private static FieldInfo akf_sliderA = (typeof(PickerSlider).GetField("sliderA", BindingFlags.NonPublic | BindingFlags.Instance));
-
         public SliderUnlocker()
         {
             PatchMethods();
