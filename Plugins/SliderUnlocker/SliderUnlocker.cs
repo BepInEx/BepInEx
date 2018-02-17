@@ -28,12 +28,17 @@ namespace SliderUnlocker
 
         public SliderUnlocker()
         {
+            PatchMethods();
+        }
+
+        private void PatchMethods()
+        {
             var harmony = HarmonyInstance.Create("com.bepis.bepinex.sliderunlocker");
 
             MethodInfo original = AccessTools.Method(typeof(CustomBase), "ConvertTextFromRate");
 
             HarmonyMethod postfix = new HarmonyMethod(typeof(Hooks).GetMethod("ConvertTextFromRateHook"));
-            
+
             harmony.Patch(original, null, postfix);
 
 
@@ -47,7 +52,7 @@ namespace SliderUnlocker
 
 
             original = AccessTools.Method(typeof(Mathf), "Clamp", new Type[] { typeof(float), typeof(float), typeof(float) });
-            
+
             postfix = new HarmonyMethod(typeof(Hooks).GetMethod("MathfClampHook"));
 
             harmony.Patch(original, null, postfix);
@@ -66,7 +71,7 @@ namespace SliderUnlocker
 
 
             original = typeof(AnimationKeyInfo).GetMethods().Where(x => x.Name.Contains("GetInfo")).ToArray()[1];
-            
+
             prefix = new HarmonyMethod(typeof(Hooks).GetMethod("GetInfoPreHook"));
 
             postfix = new HarmonyMethod(typeof(Hooks).GetMethod("GetInfoPostHook"));
@@ -76,38 +81,50 @@ namespace SliderUnlocker
 
         protected override void LevelFinishedLoading(Scene scene, LoadSceneMode mode)
         {
-            foreach (Slider gameObject in GameObject.FindObjectsOfType<Slider>())
-            {
-                gameObject.minValue = Minimum;
-                gameObject.maxValue = Maximum;
-            }
+            SetAllSliders(scene, Minimum, Maximum);
+        }
 
-            foreach (GameObject gameObject in Resources.FindObjectsOfTypeAll<GameObject>())
-            {
-                if (gameObject.name.ToUpper().StartsWith("CVS"))
-                {
-                    Console.WriteLine(gameObject.name);
-                }
-            }
+        public void SetAllSliders(Scene scene, float minimum, float maximum)
+        {
+            List<object> cvsInstances = new List<object>();
 
-            foreach (GameObject gameObject in Resources.FindObjectsOfTypeAll<GameObject>())
+            Assembly illusion = typeof(CvsAccessory).Assembly;
+
+            foreach (Type type in illusion.GetTypes())
             {
-                if (gameObject.name == "PickerSliderColor" ||
-                    gameObject.name == "menuSlider")
+                if (type.Name.ToUpper().StartsWith("CVS") &&
+                    type.Name != "CvsDrawCtrl")
                 {
-                    foreach (Slider slider in gameObject.GetComponents<Slider>())
+                    cvsInstances.AddRange(GameObject.FindObjectsOfType(type));
+
+                    Console.WriteLine(type.Name);
+
+                    foreach(GameObject gameObject in Resources.FindObjectsOfTypeAll<GameObject>())
                     {
-                        slider.maxValue = 1f;
+                        cvsInstances.AddRange(gameObject.GetComponents(type));
                     }
                 }
-            }
 
-            foreach (PickerSlider gameObject in GameObject.FindObjectsOfType<PickerSlider>())
+            }
+                
+            foreach (object cvs in cvsInstances)
             {
-                ((Slider)akf_sliderA.GetValue(gameObject)).maxValue = 1f;
-                ((Slider)akf_sliderR.GetValue(gameObject)).maxValue = 1f;
-                ((Slider)akf_sliderG.GetValue(gameObject)).maxValue = 1f;
-                ((Slider)akf_sliderB.GetValue(gameObject)).maxValue = 1f;
+                if (cvs == null)
+                    continue;
+
+                Console.WriteLine(cvs.GetType().FullName);
+
+                var fields = cvs.GetType().GetFields(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
+                                    .Where(x => typeof(Slider).IsAssignableFrom(x.FieldType));
+
+                foreach (Slider slider in fields.Select(x => x.GetValue(cvs)))
+                {
+                    if (slider == null)
+                        continue;
+
+                    slider.minValue = minimum;
+                    slider.maxValue = maximum;
+                }
             }
         }
     }
