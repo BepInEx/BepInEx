@@ -87,7 +87,8 @@ namespace SliderUnlocker
             foreach (Type type in illusion.GetTypes())
             {
                 if (type.Name.ToUpper().StartsWith("CVS") &&
-                    type.Name != "CvsDrawCtrl")
+                    type != typeof(CvsDrawCtrl) &&
+                    type != typeof(CvsColor))
                 {
                     cvsInstances.AddRange(GameObject.FindObjectsOfType(type));
 
