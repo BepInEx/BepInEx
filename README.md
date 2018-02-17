@@ -1,6 +1,7 @@
 # BepInEx
-Koikatsu patcher
+Bepis Injector Extensible
+
+Koikatsu plugin framework
 
 ## Credits
-- Usagirei - Color Correction plugin, code for using the console and for being very helpful
-- Illusion Plugin Architecture (IPA) - Code for GameObject loading/framework
+- Usagirei - Color Correction plugin, code for using the console, unity scene dumper and for assisting with technical support
