@@ -57,6 +57,46 @@ namespace SliderUnlocker
                 rate = 0f;
         }
 
+        public static void GetInfoSingularPreHook(ref float __state, string name, ref float rate, ref Vector3 value, byte type)
+        {
+            __state = rate;
+
+            if (rate > 1)
+                rate = 1f;
+
+
+            if (rate < 0)
+                rate = 0f;
+        }
+
+        public static void GetInfoSingularPostHook(AnimationKeyInfo __instance, bool __result, float __state, string name, float rate, ref Vector3 value, byte type)
+        {
+            if (!__result)
+                return;
+
+            rate = __state;
+
+            if (rate < 0f || rate > 1f)
+            {
+                var dictInfo = (Dictionary<string, List<AnimationKeyInfo.AnmKeyInfo>>)akf_dictInfo.GetValue(__instance);
+
+                List<AnimationKeyInfo.AnmKeyInfo> list = dictInfo[name];
+
+                switch (type)
+                {
+                    case 0:
+                        value = SliderMath.CalculatePosition(list, rate);
+                        break;
+                    case 1:
+                        value = SliderMath.CalculateRotation(list, rate);
+                        break;
+                    default:
+                        value = SliderMath.CalculateScale(list, rate);
+                        break;
+                }
+            }
+        }
+
         public static void GetInfoPostHook(AnimationKeyInfo __instance, bool __result, float __state, string name, float rate, ref Vector3[] value, bool[] flag)
         {
             if (!__result)
@@ -71,14 +111,17 @@ namespace SliderUnlocker
                 List<AnimationKeyInfo.AnmKeyInfo> list = dictInfo[name];
 
 
+                if (flag[0])
+                {
+                    value[0] = SliderMath.CalculatePosition(list, rate);
+                }
+                if (flag[1])
+                {
+                    value[1] = SliderMath.CalculateRotation(list, rate);
+                }
                 if (flag[2])
                 {
-                    Vector3 min = list[0].scl;
-                    Vector3 max = list[list.Count - 1].scl;
-
-                    value[2] = new Vector3(min.x + ((max.x - min.x) * rate),
-                                            min.y + ((max.y - min.y) * rate),
-                                            min.z + ((max.z - min.z) * rate));
+                    value[2] = SliderMath.CalculateScale(list, rate);
                 }
             }
         }

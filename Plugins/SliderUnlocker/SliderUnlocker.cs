@@ -54,9 +54,20 @@ namespace SliderUnlocker
 
 
 
+
+            original = typeof(AnimationKeyInfo).GetMethods().Where(x => x.Name.Contains("GetInfo")).ToArray()[0];
+
+            var prefix = new HarmonyMethod(typeof(Hooks).GetMethod("GetInfoSingularPreHook"));
+
+            postfix = new HarmonyMethod(typeof(Hooks).GetMethod("GetInfoSingularPostHook"));
+
+            harmony.Patch(original, prefix, postfix);
+
+
+
             original = typeof(AnimationKeyInfo).GetMethods().Where(x => x.Name.Contains("GetInfo")).ToArray()[1];
             
-            var prefix = new HarmonyMethod(typeof(Hooks).GetMethod("GetInfoPreHook"));
+            prefix = new HarmonyMethod(typeof(Hooks).GetMethod("GetInfoPreHook"));
 
             postfix = new HarmonyMethod(typeof(Hooks).GetMethod("GetInfoPostHook"));
 
@@ -69,6 +80,14 @@ namespace SliderUnlocker
             {
                 gameObject.minValue = Minimum;
                 gameObject.maxValue = Maximum;
+            }
+
+            foreach (GameObject gameObject in Resources.FindObjectsOfTypeAll<GameObject>())
+            {
+                if (gameObject.name.ToUpper().StartsWith("CVS"))
+                {
+                    Console.WriteLine(gameObject.name);
+                }
             }
 
             foreach (GameObject gameObject in Resources.FindObjectsOfTypeAll<GameObject>())
