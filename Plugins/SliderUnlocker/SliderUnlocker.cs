@@ -17,7 +17,8 @@ namespace SliderUnlocker
     {
         public override string Name => "Slider Unlocker";
 
-        private static FieldInfo akf_dictInfo = (typeof(AnimationKeyInfo).GetField("dictInfo", BindingFlags.NonPublic | BindingFlags.Instance));
+        public static float Minimum = -1.0f;
+        public static float Maximum = 2.0f;
 
 
         private static FieldInfo akf_sliderR = (typeof(PickerSlider).GetField("sliderR", BindingFlags.NonPublic | BindingFlags.Instance));
@@ -31,7 +32,7 @@ namespace SliderUnlocker
 
             MethodInfo original = AccessTools.Method(typeof(CustomBase), "ConvertTextFromRate");
 
-            HarmonyMethod postfix = new HarmonyMethod(typeof(SliderUnlocker).GetMethod("ConvertTextFromRateHook"));
+            HarmonyMethod postfix = new HarmonyMethod(typeof(Hooks).GetMethod("ConvertTextFromRateHook"));
             
             harmony.Patch(original, null, postfix);
 
@@ -39,7 +40,7 @@ namespace SliderUnlocker
 
             original = AccessTools.Method(typeof(CustomBase), "ConvertRateFromText");
 
-            postfix = new HarmonyMethod(typeof(SliderUnlocker).GetMethod("ConvertRateFromTextHook"));
+            postfix = new HarmonyMethod(typeof(Hooks).GetMethod("ConvertRateFromTextHook"));
 
             harmony.Patch(original, null, postfix);
 
@@ -47,7 +48,7 @@ namespace SliderUnlocker
 
             original = AccessTools.Method(typeof(Mathf), "Clamp", new Type[] { typeof(float), typeof(float), typeof(float) });
             
-            postfix = new HarmonyMethod(typeof(SliderUnlocker).GetMethod("MathfClampHook"));
+            postfix = new HarmonyMethod(typeof(Hooks).GetMethod("MathfClampHook"));
 
             harmony.Patch(original, null, postfix);
 
@@ -55,9 +56,9 @@ namespace SliderUnlocker
 
             original = typeof(AnimationKeyInfo).GetMethods().Where(x => x.Name.Contains("GetInfo")).ToArray()[1];
             
-            var prefix = new HarmonyMethod(typeof(SliderUnlocker).GetMethod("GetInfoPreHook"));
+            var prefix = new HarmonyMethod(typeof(Hooks).GetMethod("GetInfoPreHook"));
 
-            postfix = new HarmonyMethod(typeof(SliderUnlocker).GetMethod("GetInfoPostHook"));
+            postfix = new HarmonyMethod(typeof(Hooks).GetMethod("GetInfoPostHook"));
 
             harmony.Patch(original, prefix, postfix);
         }
@@ -66,7 +67,8 @@ namespace SliderUnlocker
         {
             foreach (Slider gameObject in GameObject.FindObjectsOfType<Slider>())
             {
-                gameObject.maxValue = 2f;
+                gameObject.minValue = Minimum;
+                gameObject.maxValue = Maximum;
             }
 
             foreach (GameObject gameObject in Resources.FindObjectsOfTypeAll<GameObject>())
@@ -87,80 +89,6 @@ namespace SliderUnlocker
                 ((Slider)akf_sliderR.GetValue(gameObject)).maxValue = 1f;
                 ((Slider)akf_sliderG.GetValue(gameObject)).maxValue = 1f;
                 ((Slider)akf_sliderB.GetValue(gameObject)).maxValue = 1f;
-            }
-        }
-
-
-        [HarmonyPostfix]
-        public static void ConvertTextFromRateHook(ref string __result, int min, int max, float value)
-        {
-            if (min == 0 && max == 100)
-                __result = Math.Round(100 * value).ToString();
-        }
-
-        [HarmonyPostfix]
-        public static void ConvertRateFromTextHook(ref float __result, int min, int max, string buf)
-        {
-            if (min == 0 && max == 100)
-            {
-                if (buf.IsNullOrEmpty())
-                {
-                    __result = 0f;
-                }
-                else
-                {
-                    if (!float.TryParse(buf, out float val))
-                    {
-                        __result = 0f;
-                    }
-                    else
-                    {
-                        __result = val / 100;
-                    }
-                }
-            }
-        }
-
-        [HarmonyPostfix]
-        public static void MathfClampHook(ref float __result, float value, float min, float max)
-        {
-            if (min == 0f && max == 100f)
-                __result = value;
-        }
-
-        [HarmonyPrefix]
-        public static void GetInfoPreHook(ref float __state, string name, ref float rate, ref Vector3[] value, bool[] flag)
-        {
-            __state = rate;
-
-            if (rate > 1)
-                rate = 1f;
-        }
-
-        [HarmonyPostfix]
-        public static void GetInfoPostHook(AnimationKeyInfo __instance, bool __result, float __state, string name, float rate, ref Vector3[] value, bool[] flag)
-        {
-            if (!__result)
-                return;
-            
-            rate = __state;
-
-            if (rate < 0f || rate > 1f)
-            {
-                var dictInfo = (Dictionary<string, List<AnimationKeyInfo.AnmKeyInfo>>)akf_dictInfo.GetValue(__instance);
-
-                List<AnimationKeyInfo.AnmKeyInfo> list = dictInfo[name];
-
-
-                if (flag[2])
-                {
-                    Vector3 min = list[0].scl;
-                    Vector3 max = list[list.Count - 1].scl;
-
-                    value[2] = new Vector3(min.x + ((max.x - min.x) * rate),
-                                            min.y + ((max.y - min.y) * rate),
-                                            min.z + ((max.z - min.z) * rate));
-                }
             }
         }
     }
