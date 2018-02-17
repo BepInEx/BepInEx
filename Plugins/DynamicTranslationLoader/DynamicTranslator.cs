@@ -38,10 +38,17 @@ namespace DynamicTranslationLoader
             
             var harmony = HarmonyInstance.Create("com.bepis.bepinex.dynamictranslationloader");
             
+
             MethodInfo original = AccessTools.Property(typeof(TMP_Text), "text").GetSetMethod();
 
-            HarmonyMethod prefix = new HarmonyMethod(typeof(DynamicTranslator).GetMethod("LabelTextHook"));
+            HarmonyMethod prefix = new HarmonyMethod(typeof(Hooks).GetMethod("LabelTextHook"));
+            
+            harmony.Patch(original, prefix, null);
 
+
+            original = AccessTools.Method(typeof(TMP_Text), "SetText", new[] { typeof(string) });
+
+            prefix = new HarmonyMethod(typeof(Hooks).GetMethod("SetTextHook"));
 
             harmony.Patch(original, prefix, null);
         }
@@ -51,9 +58,9 @@ namespace DynamicTranslationLoader
             TranslateAll();
         }
 
-        void OnUpdate()
+        void Update()
         {
-            if (UnityEngine.Event.current.Equals(Event.KeyboardEvent("f10")))
+            if (UnityEngine.Input.GetKeyDown(UnityEngine.KeyCode.F10))
             {
                 Dump();
                 Console.WriteLine($"Text dumped to \"{Path.GetFullPath("dumped-tl.txt")}\"");
@@ -62,7 +69,7 @@ namespace DynamicTranslationLoader
 
         void TranslateAll()
         {
-            foreach (TextMeshProUGUI gameObject in GameObject.FindObjectsOfType<TextMeshProUGUI>())
+            foreach (TextMeshProUGUI gameObject in Resources.FindObjectsOfTypeAll<TextMeshProUGUI>())
             {
                 //gameObject.text = "Harsh is shit";
 
@@ -91,7 +98,7 @@ namespace DynamicTranslationLoader
             File.WriteAllText("dumped-tl.txt", output);
         }
 
-        static string Translate(string input)
+        public static string Translate(string input)
         {
             if (translations.ContainsKey(input))
                 return translations[input];
@@ -100,11 +107,6 @@ namespace DynamicTranslationLoader
                 untranslated.Add(input);
 
             return input;
-        }
-
-        public static void LabelTextHook(ref string value)
-        {
-            value = Translate(value);
         }
     }
 }
