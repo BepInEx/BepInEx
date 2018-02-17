@@ -97,8 +97,6 @@ namespace SliderUnlocker
                 {
                     cvsInstances.AddRange(GameObject.FindObjectsOfType(type));
 
-                    Console.WriteLine(type.Name);
-
                     foreach(GameObject gameObject in Resources.FindObjectsOfTypeAll<GameObject>())
                     {
                         cvsInstances.AddRange(gameObject.GetComponents(type));
@@ -111,8 +109,6 @@ namespace SliderUnlocker
             {
                 if (cvs == null)
                     continue;
-
-                Console.WriteLine(cvs.GetType().FullName);
 
                 var fields = cvs.GetType().GetFields(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
                                     .Where(x => typeof(Slider).IsAssignableFrom(x.FieldType));
