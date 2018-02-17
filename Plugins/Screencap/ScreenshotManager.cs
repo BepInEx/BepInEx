@@ -1,5 +1,6 @@
 ﻿using BepInEx;
 using BepInEx.Common;
+using Illusion.Game;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -42,6 +43,7 @@ namespace Screencap
         void TakeScreenshot(string filename)
         {
             UnityEngine.Application.CaptureScreenshot(filename);
+            Illusion.Game.Utils.Sound.Play(SystemSE.photo);
             Console.WriteLine($"Screenshot saved to {filename}");
         }
 
@@ -51,6 +53,7 @@ namespace Screencap
             var tex = RenderCamera(Camera.main);
             File.WriteAllBytes(filename, tex.EncodeToPNG());
             Destroy(tex);
+            Illusion.Game.Utils.Sound.Play(SystemSE.photo);
             Console.WriteLine($"Character screenshot saved to {filename}");
         }
 
