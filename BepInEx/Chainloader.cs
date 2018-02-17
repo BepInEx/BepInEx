@@ -30,7 +30,7 @@ namespace BepInEx
                 Plugins = LoadTypes<BaseUnityPlugin>(Utility.PluginsDirectory);
 
                 //UnityInjector.ConsoleUtil.ConsoleEncoding.ConsoleCodePage = 932;
-                Console.WriteLine($"{Plugins.Count()} plugins loaded");
+                Console.WriteLine($"{Plugins.Count()} plugins found");
             }
             else
             {

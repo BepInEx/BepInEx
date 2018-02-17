@@ -25,7 +25,12 @@ namespace BepInEx
             manager.Plugins = new List<BaseUnityPlugin>();
 
             foreach (Type t in Chainloader.Plugins)
-                manager.Plugins.Add((BaseUnityPlugin)obj.AddComponent(t));
+            {
+                var plugin = (BaseUnityPlugin)obj.AddComponent(t);
+                manager.Plugins.Add(plugin);
+                Console.WriteLine($"Loaded [{plugin.Name}]");
+            }
+                
 
             return obj;
         }
