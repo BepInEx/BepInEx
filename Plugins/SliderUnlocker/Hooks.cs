@@ -88,7 +88,11 @@ namespace SliderUnlocker
                         value = SliderMath.CalculatePosition(list, rate);
                         break;
                     case 1:
-                        value = SliderMath.CalculateRotation(list, rate);
+                        if (!name.StartsWith("cf_a_bust") &&
+                            !name.EndsWith("_size"))
+                        {
+                            value = SliderMath.CalculateRotation(list, rate);
+                        }
                         break;
                     default:
                         value = SliderMath.CalculateScale(list, rate);
@@ -117,7 +121,11 @@ namespace SliderUnlocker
                 }
                 if (flag[1])
                 {
-                    value[1] = SliderMath.CalculateRotation(list, rate);
+                    if (!name.StartsWith("cf_a_bust") &&
+                               !name.EndsWith("_size"))
+                    {
+                        value[1] = SliderMath.CalculateRotation(list, rate);
+                    }
                 }
                 if (flag[2])
                 {
