@@ -12,25 +12,29 @@ namespace Screencap
     public class ScreenshotManager : BaseUnityPlugin
     {
         public override string Name => "Screenshot Manager";
+        Event ScreenKeyEvent;
+        Event CharacterKeyEvent;
 
         private string screenshotDir = Utility.CombinePaths(Utility.ExecutingDirectory, "UserData", "cap");
 
         public ScreenshotManager()
         {
+            ScreenKeyEvent = Event.KeyboardEvent("f9");
+            CharacterKeyEvent = Event.KeyboardEvent("f11");
             if (!Directory.Exists(screenshotDir))
                 Directory.CreateDirectory(screenshotDir);
         }
 
         void LateUpdate()
         {
-            if (UnityEngine.Event.current.Equals(Event.KeyboardEvent("f9")))
+            if (UnityEngine.Event.current.Equals(ScreenKeyEvent))
             {
-                string filename = Path.Combine(screenshotDir, $"Koikatsu -{DateTime.Now.ToString("yyyy-mm-dd-HH-mm-ss")}.png");
+                string filename = Path.Combine(screenshotDir, $"Koikatsu -{DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss")}.png");
                 TakeScreenshot(filename);
             }
-            else if (UnityEngine.Event.current.Equals(Event.KeyboardEvent("f11")))
+            else if (UnityEngine.Event.current.Equals(CharacterKeyEvent))
             {
-                string filename = Path.Combine(screenshotDir, $"Koikatsu Char-{DateTime.Now.ToString("yyyy-mm-dd-HH-mm-ss")}.png");
+                string filename = Path.Combine(screenshotDir, $"Koikatsu Char-{DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss")}.png");
                 TakeCharScreenshot(filename);
             }
         }
