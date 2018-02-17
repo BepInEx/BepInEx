@@ -10,13 +10,20 @@ namespace ColorCorrector
 {
     public class ColorCorrector : BaseUnityPlugin
     {
-        public override string Name => "Color Corrector";
+        public override string Name => "Color Filter Remover";
         
         AmplifyColorEffect component;
 
         protected override void LevelFinishedLoading(Scene scene, LoadSceneMode mode)
         {
-            DisableEffects();
+            if (Camera.main != null && Camera.main?.gameObject != null)
+            {
+                var c = Camera.main.gameObject.GetComponent<AmplifyColorEffect>();
+                if (c != null)
+                {
+                    component = c;
+                }
+            }
         }
 
         void Update()
@@ -30,19 +37,6 @@ namespace ColorCorrector
         void ToggleEffects()
         {
             component.enabled = !component.enabled;
-        }
-
-        void DisableEffects()
-        {
-            if (Camera.main != null && Camera.main?.gameObject != null)
-            {
-                var c = Camera.main.gameObject.GetComponent<AmplifyColorEffect>();
-                if (c != null)
-                {
-                    component = c;
-                    component.enabled = false;
-                }
-            }
         }
     }
 }
