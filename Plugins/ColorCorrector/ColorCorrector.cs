@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityStandardAssets.ImageEffects;
 
 namespace ColorCorrector
 {
@@ -12,17 +13,15 @@ namespace ColorCorrector
     {
         public override string Name => "Color Filter Remover";
         
-        AmplifyColorEffect component;
+        AmplifyColorEffect amplifyComponent;
+        BloomAndFlares bloomComponent;
 
         protected override void LevelFinishedLoading(Scene scene, LoadSceneMode mode)
         {
             if (Camera.main != null && Camera.main?.gameObject != null)
             {
-                var c = Camera.main.gameObject.GetComponent<AmplifyColorEffect>();
-                if (c != null)
-                {
-                    component = c;
-                }
+                amplifyComponent = Camera.main.gameObject.GetComponent<AmplifyColorEffect>(); ;
+                bloomComponent = Camera.main.gameObject.GetComponent<BloomAndFlares>();
             }
         }
 
@@ -36,7 +35,10 @@ namespace ColorCorrector
 
         void ToggleEffects()
         {
-            component.enabled = !component.enabled;
+            amplifyComponent.enabled = !amplifyComponent.enabled;
+            bloomComponent.enabled = !bloomComponent.enabled;
+            Console.WriteLine($"Amplify Filter Enabled: {amplifyComponent.enabled}");
+            Console.WriteLine($"Bloom Filter Enabled: {bloomComponent.enabled}");
         }
     }
 }
