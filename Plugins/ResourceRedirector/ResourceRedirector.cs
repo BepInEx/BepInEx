@@ -1,5 +1,6 @@
 ﻿using BepInEx;
 using Harmony;
+using Illusion.Game;
 using System;
 using System.Collections;
 using System.Reflection;
@@ -69,10 +70,23 @@ namespace ResourceRedirector
                 Manager.Sound.Instance.SetParent(typeObjects[type], script, settingObjects[type]);
             }
 
-            if (true) //script.clip.StartsWith("bgm"))
+            if (script.clip.name.StartsWith("bgm"))
             {
-                string path = "file://" + BepInEx.Common.Utility.PluginsDirectory.Replace('\\', '/') + "/music.ogg";
-                Console.WriteLine(path);
+                string path;
+
+                switch ((BGM)int.Parse(script.clip.name.Remove(0, 4)))
+                {
+                    case BGM.Title:
+                    default:
+                        path = "file://" + BepInEx.Common.Utility.PluginsDirectory.Replace('\\', '/') + "/title.wav";
+                        break;
+                    case BGM.Custom:
+                        path = "file://" + BepInEx.Common.Utility.PluginsDirectory.Replace('\\', '/') + "/custom.wav";
+                        break;
+                }
+
+                
+                Console.WriteLine($"Loaded {path}");
                 WWW loadGachi = new WWW(path);
 
                 
@@ -85,6 +99,8 @@ namespace ResourceRedirector
                 script.audioSource.clip = clip;
 
                 f_clip.SetValue(script, clip, null);
+                
+                loadGachi.Dispose();
             }
         }
     }
