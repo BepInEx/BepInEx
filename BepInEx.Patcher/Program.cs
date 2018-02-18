@@ -22,15 +22,6 @@ namespace BepInEx.Patcher
 
         static void Main(string[] args)
         {
-            string assemblyDLL = Path.GetFullPath(@"KoikatuTrial_Data\Managed\Assembly-CSharp.dll");
-            if (!File.Exists(assemblyDLL))
-                Error("\"Assembly-CSharp.dll\" not found.");
-
-            string assemblyOriginalDLL = Path.GetFullPath(@"KoikatuTrial_Data\Managed\Assembly-CSharp.dll.bak");
-            if (!File.Exists(assemblyOriginalDLL))
-                File.Copy(assemblyDLL, assemblyOriginalDLL);
-
-
             string unityOutputDLL = Path.GetFullPath(@"KoikatuTrial_Data\Managed\UnityEngine.dll");
             if (!File.Exists(unityOutputDLL))
                 Error("\"UnityEngine.dll\" not found.");
@@ -38,17 +29,7 @@ namespace BepInEx.Patcher
             string unityOriginalDLL = Path.GetFullPath(@"KoikatuTrial_Data\Managed\UnityEngine.dll.bak");
             if (!File.Exists(unityOriginalDLL))
                 File.Copy(unityOutputDLL, unityOriginalDLL);
-
-
-            string tmOutputDLL = Path.GetFullPath(@"KoikatuTrial_Data\Managed\TextMeshPro-1.0.55.56.0b12.dll");
-            if (!File.Exists(tmOutputDLL))
-                Error("\"TextMeshPro-1.0.55.56.0b12.dll\" not found.");
-
-            string tmOriginalDLL = Path.GetFullPath(@"KoikatuTrial_Data\Managed\TextMeshPro-1.0.55.56.0b12.dll.bak");
-            if (!File.Exists(tmOriginalDLL))
-                File.Copy(tmOutputDLL, tmOriginalDLL);
             
-
 
             string injectedDLL = Path.GetFullPath(@"KoikatuTrial_Data\Managed\BepInEx.dll");
             if (!File.Exists(unityOutputDLL))
@@ -59,15 +40,8 @@ namespace BepInEx.Patcher
 
             var defaultResolver = new DefaultAssemblyResolver();
             defaultResolver.AddSearchDirectory(referenceDir);
-
-            AssemblyDefinition assembly = AssemblyDefinition.ReadAssembly(assemblyOriginalDLL, new ReaderParameters {
-                AssemblyResolver = defaultResolver
-            });
+            
             AssemblyDefinition unity = AssemblyDefinition.ReadAssembly(unityOriginalDLL, new ReaderParameters
-            {
-                AssemblyResolver = defaultResolver
-            });
-            AssemblyDefinition tm = AssemblyDefinition.ReadAssembly(tmOriginalDLL, new ReaderParameters
             {
                 AssemblyResolver = defaultResolver
             });
@@ -77,15 +51,12 @@ namespace BepInEx.Patcher
             });
 
 
-            InjectAssembly(assembly, unity, tm, injected);
+            InjectAssembly(unity, injected);
             
-
-            assembly.Write(assemblyDLL);
             unity.Write(unityOutputDLL);
-            tm.Write(tmOutputDLL);
         }
 
-        static void InjectAssembly(AssemblyDefinition assembly, AssemblyDefinition unity, AssemblyDefinition tm, AssemblyDefinition injected)
+        static void InjectAssembly(AssemblyDefinition unity, AssemblyDefinition injected)
         {
             //Entry point
             var originalInjectMethod = injected.MainModule.Types.First(x => x.Name == "Chainloader").Methods.First(x => x.Name == "Initialize");
