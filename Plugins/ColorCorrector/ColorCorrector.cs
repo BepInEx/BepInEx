@@ -13,11 +13,20 @@ namespace ColorCorrector
     {
         public override string Name => "Color Filter Remover";
 
-        private bool CorrectorEnabled
+        private bool SaturationEnabled
         {
-            get => bool.Parse(BepInEx.Config.GetEntry("colorcorrector-enabled", "False"));
-            set => BepInEx.Config.SetEntry("colorcorrector-enabled", value.ToString());
+            get => bool.Parse(BepInEx.Config.GetEntry("colorcorrector-saturationenabled", "True"));
+            set => BepInEx.Config.SetEntry("colorcorrector-saturationenabled", value.ToString());
         }
+
+        private bool BloomEnabled
+        {
+            get => bool.Parse(BepInEx.Config.GetEntry("colorcorrector-bloomenabled", "True"));
+            set => BepInEx.Config.SetEntry("colorcorrector-bloomenabled", value.ToString());
+        }
+
+        private Rect UI = new Rect(20, 20, 200, 100);
+        private bool showingUI = false;
         
         AmplifyColorEffect amplifyComponent;
         BloomAndFlares bloomComponent;
@@ -29,25 +38,47 @@ namespace ColorCorrector
                 amplifyComponent = Camera.main.gameObject.GetComponent<AmplifyColorEffect>();
                 bloomComponent = Camera.main.gameObject.GetComponent<BloomAndFlares>();
 
-                SetEffects(!CorrectorEnabled);
+                SetEffects(SaturationEnabled, BloomEnabled);
             }
+        }
+
+        void OnGUI()
+        {
+            if (showingUI)
+                UI = GUI.Window(0, UI, WindowFunction, "Filter settings");
+        }
+
+        void WindowFunction(int windowID)
+        {
+            bool satEnabled = GUI.Toggle(new Rect(10, 20, 180, 20), SaturationEnabled, " Saturation filter enabled");
+            bool bloomEnabled = GUI.Toggle(new Rect(10, 40, 180, 20), BloomEnabled, " Bloom filter enabled");
+
+            if (GUI.changed)
+            {
+                SaturationEnabled = satEnabled;
+                BloomEnabled = bloomEnabled;
+
+                SetEffects(satEnabled, bloomEnabled);
+            }
+
+            GUI.DragWindow();
         }
 
         void Update()
         {
             if (UnityEngine.Input.GetKeyDown(UnityEngine.KeyCode.F6))
             {
-                CorrectorEnabled = !CorrectorEnabled;
-                SetEffects(!CorrectorEnabled);
+                showingUI = !showingUI;
             }
         }
 
-        void SetEffects(bool filterEnabled)
+        void SetEffects(bool satEnabled, bool bloomEnabled)
         {
-            amplifyComponent.enabled = filterEnabled;
-            bloomComponent.enabled = filterEnabled;
-            Console.WriteLine($"Amplify Filter Enabled: {filterEnabled}");
-            Console.WriteLine($"Bloom Filter Enabled: {filterEnabled}");
+            if (amplifyComponent != null)
+                amplifyComponent.enabled = satEnabled;
+
+            if (bloomComponent != null)
+                bloomComponent.enabled = bloomEnabled;
         }
     }
 }
