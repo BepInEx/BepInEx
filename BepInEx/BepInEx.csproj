@@ -60,7 +60,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BepInComponent.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="ConsoleUtil\ConsoleEncoding\ConsoleEncoding.Buffers.cs" />
     <Compile Include="ConsoleUtil\ConsoleEncoding\ConsoleEncoding.cs" />
@@ -70,7 +69,6 @@
     <Compile Include="ConsoleUtil\Extensions.cs" />
     <Compile Include="ConsoleUtil\SafeConsole.cs" />
     <Compile Include="Chainloader.cs" />
-    <Compile Include="ITranslationPlugin.cs" />
     <Compile Include="BaseUnityPlugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

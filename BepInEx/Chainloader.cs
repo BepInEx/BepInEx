@@ -14,8 +14,8 @@ namespace BepInEx
     public class Chainloader
     {
         static bool loaded = false;
-        public static IEnumerable<Type> Plugins { get; protected set; }
-        public static GameObject ManagerObject { get; protected set; }
+        public static List<BaseUnityPlugin> Plugins { get; protected set; } = new List<BaseUnityPlugin>();
+        public static GameObject ManagerObject { get; protected set; } = new GameObject("BepInEx_Manager");
 
         public static void Initialize()
         {
@@ -25,26 +25,34 @@ namespace BepInEx
             UnityInjector.ConsoleUtil.ConsoleWindow.Attach();
             Console.WriteLine("Chainloader started");
 
+            UnityEngine.Object.DontDestroyOnLoad(ManagerObject);
+            
+
             if (Directory.Exists(Utility.PluginsDirectory))
             {
-                Plugins = LoadTypes<BaseUnityPlugin>(Utility.PluginsDirectory);
+                var pluginTypes = LoadTypes<BaseUnityPlugin>(Utility.PluginsDirectory);
 
                 //UnityInjector.ConsoleUtil.ConsoleEncoding.ConsoleCodePage = 932;
-                Console.WriteLine($"{Plugins.Count()} plugins found");
+                Console.WriteLine($"{pluginTypes.Count()} plugins found");
+
+
+                foreach (Type t in pluginTypes)
+                {
+                    var plugin = (BaseUnityPlugin)ManagerObject.AddComponent(t);
+                    Plugins.Add(plugin);
+                    Console.WriteLine($"Loaded [{plugin.Name}]");
+                }
             }
             else
             {
-                Plugins = new List<Type>();
                 Console.WriteLine("Plugins directory not found, skipping");
             }
-            
-            
-            ManagerObject = BepInComponent.Create();
+
 
             loaded = true;
         }
 
-        public static ICollection<Type> LoadTypes<T>(string directory)
+        public static List<Type> LoadTypes<T>(string directory)
         {
             List<Type> types = new List<Type>();
             Type pluginType = typeof(T);
