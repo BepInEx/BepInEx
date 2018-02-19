@@ -48,6 +48,7 @@
   <ItemGroup>
     <Compile Include="DeveloperConsole.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SceneDumper.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\BepInEx\BepInEx.csproj">

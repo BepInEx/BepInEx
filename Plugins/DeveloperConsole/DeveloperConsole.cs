@@ -90,6 +90,11 @@ namespace DeveloperConsole
                 }
             });
 
+            if (GUI.Button(new Rect(295, 20, 100, 20), "Dump scene"))
+            {
+                SceneDumper.DumpScene();
+            }
+
             GUI.DragWindow();
         }
     }
