@@ -2,6 +2,7 @@
 using BepInEx.Common;
 using Illusion.Game;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -30,8 +31,8 @@ namespace Screencap
         {
             if (UnityEngine.Event.current.Equals(ScreenKeyEvent))
             {
-                string filename = Path.Combine(screenshotDir, $"Koikatsu -{DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss")}.png");
-                TakeScreenshot(filename);
+                string filename = Path.Combine(screenshotDir, $"Koikatsu-{DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss")}.png");
+                StartCoroutine(TakeScreenshot(filename));
             }
             else if (UnityEngine.Event.current.Equals(CharacterKeyEvent))
             {
@@ -40,10 +41,14 @@ namespace Screencap
             }
         }
 
-        void TakeScreenshot(string filename)
+        IEnumerator TakeScreenshot(string filename)
         {
-            UnityEngine.Application.CaptureScreenshot(filename);
+            Application.CaptureScreenshot(filename);
             Illusion.Game.Utils.Sound.Play(SystemSE.photo);
+
+            while (!File.Exists(filename))
+                yield return new WaitForSeconds(0.01f);
+
             Chainloader.Log($"Screenshot saved to {filename}", true);
         }
 
