@@ -76,8 +76,7 @@ namespace DynamicTranslationLoader
                 if (translations.ContainsKey(gameObject.text))
                     gameObject.text = translations[gameObject.text];
                 else if (!untranslated.Contains(gameObject.text) &&
-                        !translations.ContainsValue(gameObject.text.Trim())
-                        && !gameObject.text.Contains("Reset"))
+                        !translations.ContainsValue(gameObject.text.Trim()))
                 {
                     untranslated.Add(gameObject.text);
                 }
@@ -93,7 +92,8 @@ namespace DynamicTranslationLoader
                 output += $"{kv.Key.Trim()}={kv.Value.Trim()}\r\n";
 
             foreach (var text in untranslated)
-                if(!Regex.Replace(text, @"[\d-]", string.Empty).IsNullOrWhiteSpace())
+                if(!Regex.Replace(text, @"[\d-]", string.Empty).IsNullOrWhiteSpace()
+                        && !text.Contains("Reset"))
                     output += $"{text.Trim()}=\r\n";
 
             File.WriteAllText("dumped-tl.txt", output);
