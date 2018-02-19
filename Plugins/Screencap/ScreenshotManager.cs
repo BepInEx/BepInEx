@@ -44,7 +44,7 @@ namespace Screencap
         {
             UnityEngine.Application.CaptureScreenshot(filename);
             Illusion.Game.Utils.Sound.Play(SystemSE.photo);
-            Console.WriteLine($"Screenshot saved to {filename}");
+            Chainloader.Log($"Screenshot saved to {filename}", true);
         }
 
         void TakeCharScreenshot(string filename)
@@ -54,7 +54,7 @@ namespace Screencap
             File.WriteAllBytes(filename, tex.EncodeToPNG());
             Destroy(tex);
             Illusion.Game.Utils.Sound.Play(SystemSE.photo);
-            Console.WriteLine($"Character screenshot saved to {filename}");
+            Chainloader.Log($"Character screenshot saved to {filename}", true);
         }
 
         Texture2D RenderCamera(Camera cam)

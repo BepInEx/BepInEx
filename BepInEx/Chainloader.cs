@@ -17,37 +17,50 @@ namespace BepInEx
         public static List<BaseUnityPlugin> Plugins { get; protected set; } = new List<BaseUnityPlugin>();
         public static GameObject ManagerObject { get; protected set; } = new GameObject("BepInEx_Manager");
 
+
+
+        public delegate void EntryLoggedEventHandler(string entry, bool show = false);
+
+        public static event EntryLoggedEventHandler EntryLogged;
+
+
+        public static void Log(string entry, bool show = false)
+        {
+            EntryLogged?.Invoke(entry, show);
+        }
+
+
         public static void Initialize()
         {
             if (loaded)
                 return;
 
-            UnityInjector.ConsoleUtil.ConsoleWindow.Attach();
-            Console.WriteLine("Chainloader started");
-
-            UnityEngine.Object.DontDestroyOnLoad(ManagerObject);
-            
-
-            if (Directory.Exists(Utility.PluginsDirectory))
+            try
             {
-                var pluginTypes = LoadTypes<BaseUnityPlugin>(Utility.PluginsDirectory);
+                UnityEngine.Object.DontDestroyOnLoad(ManagerObject);
 
-                //UnityInjector.ConsoleUtil.ConsoleEncoding.ConsoleCodePage = 932;
-                Console.WriteLine($"{pluginTypes.Count()} plugins found");
-
-
-                foreach (Type t in pluginTypes)
+                if (Directory.Exists(Utility.PluginsDirectory))
                 {
-                    var plugin = (BaseUnityPlugin)ManagerObject.AddComponent(t);
-                    Plugins.Add(plugin);
-                    Console.WriteLine($"Loaded [{plugin.Name}]");
+                    var pluginTypes = LoadTypes<BaseUnityPlugin>(Utility.PluginsDirectory);
+
+                    //Log($"{pluginTypes.Count()} plugins found");
+
+                    foreach (Type t in pluginTypes)
+                    {
+                        var plugin = (BaseUnityPlugin)ManagerObject.AddComponent(t);
+                        Plugins.Add(plugin);
+                        //Log($"Loaded [{plugin.Name}]");
+                    }
                 }
             }
-            else
+            catch (Exception ex)
             {
-                Console.WriteLine("Plugins directory not found, skipping");
-            }
+                UnityInjector.ConsoleUtil.ConsoleWindow.Attach();
+                //UnityInjector.ConsoleUtil.ConsoleEncoding.ConsoleCodePage = 932;
 
+                Console.WriteLine("Error occurred starting the game");
+                Console.WriteLine(ex.ToString());
+            }
 
             loaded = true;
         }

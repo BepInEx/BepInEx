@@ -45,7 +45,7 @@ namespace ColorCorrector
         void OnGUI()
         {
             if (showingUI)
-                UI = GUI.Window(0, UI, WindowFunction, "Filter settings");
+                UI = GUI.Window(Name.GetHashCode() + 0, UI, WindowFunction, "Filter settings");
         }
 
         void WindowFunction(int windowID)

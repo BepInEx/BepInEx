@@ -78,9 +78,9 @@ namespace ResourceRedirector
 
                 if (!File.Exists(path))
                     return;
-                
 
-                Console.WriteLine($"Loading {path}");
+
+                Chainloader.Log($"Loading {path}");
 
                 path = $"file://{path.Replace('\\', '/')}";
 
