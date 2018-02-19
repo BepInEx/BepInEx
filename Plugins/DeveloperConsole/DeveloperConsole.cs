@@ -23,9 +23,9 @@ namespace DeveloperConsole
             Chainloader.EntryLogged += (log, show) =>
             {
                 string current = $"{TotalLog}\r\n{log}";
-                if (current.Length > 400)
+                if (current.Length > 2000)
                 {
-                    current = current.Remove(0, 200);
+                    current = current.Remove(0, 1000);
                 }
                 TotalLog = current;
 
