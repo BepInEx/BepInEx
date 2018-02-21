@@ -14,5 +14,10 @@ namespace BepInEx.Common
 
         //shamelessly stolen from Rei
         public static string CombinePaths(params string[] parts) => parts.Aggregate(Path.Combine);
+
+        public static string ConvertToWWWFormat(string path)
+        {
+            return $"file://{path.Replace('\\', '/')}";
+        }
     }
 }

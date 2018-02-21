@@ -50,6 +50,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AssetLoader.cs" />
+    <Compile Include="Loaders\BGMLoader.cs" />
+    <Compile Include="Hooks.cs" />
+    <Compile Include="Loaders\IntroVoiceClipLoader.cs" />
     <Compile Include="ResourceRedirector.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

@@ -1,8 +1,10 @@
 ﻿using BepInEx;
+using BepInEx.Common;
 using Harmony;
 using Illusion.Game;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using UnityEngine;
@@ -12,104 +14,80 @@ namespace ResourceRedirector
 {
     public class ResourceRedirector : BaseUnityPlugin
     {
-        public override string Name => "Resource Redirector";
+        public override string Name => "Asset Emulator";
+
+        public static string EmulatedDir => Path.Combine(Utility.ExecutingDirectory, "abdata-emulated");
+
+        public static bool EmulationEnabled;
+
+
+
+        public delegate bool AssetHandler(string assetBundleName, string assetName, Type type, string manifestAssetBundleName, out AssetBundleLoadAssetOperation result);
+
+        public static List<AssetHandler> AssetResolvers = new List<AssetHandler>();
+
+
 
         public ResourceRedirector()
         {
-            var harmony = HarmonyInstance.Create("com.bepis.bepinex.resourceredirector");
+            Hooks.InstallHooks();
 
+            EmulationEnabled = Directory.Exists(EmulatedDir);
 
-
-            MethodInfo original = AccessTools.Method(typeof(AssetBundleManager), "LoadAsset", new[] { typeof(string), typeof(string), typeof(Type), typeof(string) });
-
-            HarmonyMethod postfix = new HarmonyMethod(typeof(ResourceRedirector).GetMethod("LoadAssetPostHook"));
-
-            harmony.Patch(original, null, postfix);
-
-
-
-
-            original = AccessTools.Method(typeof(AssetBundleManager), "LoadAllAsset", new[] { typeof(string), typeof(Type), typeof(string) });
-
-            postfix = new HarmonyMethod(typeof(ResourceRedirector).GetMethod("LoadAllAssetPostHook"));
-
-            harmony.Patch(original, null, postfix);
-
-
-
-            original = AccessTools.Method(typeof(Manager.Sound), "Bind");
-
-            var prefix = new HarmonyMethod(typeof(ResourceRedirector).GetMethod("BindPreHook"));
-
-            harmony.Patch(original, prefix, null);
+            AssetResolvers.Add(BGMLoader.HandleAsset);
         }
 
-        public static void LoadAssetPostHook(string assetBundleName, string assetName, Type type, string manifestAssetBundleName)
+        
+        public static AssetBundleLoadAssetOperation HandleAsset(string assetBundleName, string assetName, Type type, string manifestAssetBundleName, ref AssetBundleLoadAssetOperation __result)
         {
-            //Console.WriteLine($"{assetBundleName} : {assetName} : {type.FullName} : {manifestAssetBundleName ?? ""}");
-        }
-
-        public static void LoadAllAssetPostHook(string assetBundleName, Type type, string manifestAssetBundleName = null)
-        {
-            //Console.WriteLine($"{assetBundleName} : {type.FullName} : {manifestAssetBundleName ?? ""}");
-        }
-
-        public static FieldInfo f_typeObjects = typeof(Manager.Sound).GetField("typeObjects", BindingFlags.Instance | BindingFlags.NonPublic);
-        public static FieldInfo f_settingObjects = typeof(Manager.Sound).GetField("settingObjects", BindingFlags.Instance | BindingFlags.NonPublic);
-        public static PropertyInfo f_clip = typeof(LoadAudioBase).GetProperty("clip", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
-
-
-        public static void BindPreHook(ref LoadSound script)
-        {
-            if (script.clip.name.StartsWith("bgm"))
+            foreach (var handler in AssetResolvers)
             {
-                string path;
+                if (handler.Invoke(assetBundleName, assetName, type, manifestAssetBundleName, out AssetBundleLoadAssetOperation result))
+                    return result;
+            }
 
-                switch ((BGM)int.Parse(script.clip.name.Remove(0, 4)))
+            //emulate asset load
+            string dir = Path.Combine(EmulatedDir, assetBundleName.Replace('/', '\\').Replace(".unity3d", ""));
+
+            if (Directory.Exists(dir))
+            {
+                if (type == typeof(Texture2D))
                 {
-                    case BGM.Title:
-                    default:
-                        path = $"{BepInEx.Common.Utility.PluginsDirectory}\\title.wav";
-                        break;
-                    case BGM.Custom:
-                        path = $"{BepInEx.Common.Utility.PluginsDirectory}\\custom.wav";
-                        break;
+                    string path = Path.Combine(dir, $"{assetName}.png");
+
+                    if (!File.Exists(path))
+                        return __result;
+
+                    Chainloader.Log($"Loading emulated asset {path}");
+
+                    return new AssetBundleLoadAssetOperationSimulation(AssetLoader.LoadTexture(path));
                 }
-
-                if (!File.Exists(path))
-                    return;
-
-
-                Chainloader.Log($"Loading {path}");
-
-                path = $"file://{path.Replace('\\', '/')}";
-
-
-                if (script.audioSource == null)
+                else if (type == typeof(AudioClip))
                 {
-                    int type = (int)script.type;
+                    string path = Path.Combine(dir, $"{assetName}.wav");
 
-                    Transform[] typeObjects = (Transform[])f_typeObjects.GetValue(Manager.Game.Instance);
-                    GameObject[] settingObjects = (GameObject[])f_settingObjects.GetValue(Manager.Game.Instance);
+                    if (!File.Exists(path))
+                        return __result;
 
-                    Manager.Sound.Instance.SetParent(typeObjects[type], script, settingObjects[type]);
+                    Chainloader.Log($"Loading emulated asset {path}");
+
+                    return new AssetBundleLoadAssetOperationSimulation(AssetLoader.LoadAudioClip(path, AudioType.WAV));
                 }
-
-
-                using (WWW loadGachi = new WWW(path))
+                else if (type == typeof(TextAsset))
                 {
-                    AudioClip clip = loadGachi.GetAudioClipCompressed(false, AudioType.WAV);
+                    string path = Path.Combine(dir, $"{assetName}.bytes");
 
+                    if (!File.Exists(path))
+                        return __result;
 
-                    //force single threaded loading instead of using a coroutine
-                    while (!clip.isReadyToPlay) { }
+                    Chainloader.Log($"Loading emulated asset {path}");
 
-
-                    script.audioSource.clip = clip;
-
-                    f_clip.SetValue(script, clip, null);
+                    return new AssetBundleLoadAssetOperationSimulation(AssetLoader.LoadTextAsset(path));
                 }
             }
+
+            //otherwise return normal asset
+            return __result;
         }
     }
 }
