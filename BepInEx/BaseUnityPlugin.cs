@@ -9,21 +9,10 @@ namespace BepInEx
 {
     public abstract class BaseUnityPlugin : MonoBehaviour
     {
+        public abstract string ID { get; }
+
         public abstract string Name { get; }
 
-        protected virtual void OnEnable()
-        {
-            SceneManager.sceneLoaded += LevelFinishedLoading;
-        }
-
-        protected virtual void OnDisable()
-        {
-            SceneManager.sceneLoaded -= LevelFinishedLoading;
-        }
-
-        protected virtual void LevelFinishedLoading(Scene scene, LoadSceneMode mode)
-        {
-
-        }
+        public abstract Version Version { get; }
     }
 }

@@ -1,15 +1,14 @@
 ﻿using BepInEx;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using UnityEngine;
 
 namespace DeveloperConsole
 {
     public class DeveloperConsole : BaseUnityPlugin
     {
+        public override string ID => "developerconsole";
         public override string Name => "Developer Console";
+        public override Version Version => new Version("1.0.1");
 
         private Rect UI = new Rect(20, 20, 400, 200);
         bool showingUI = false;

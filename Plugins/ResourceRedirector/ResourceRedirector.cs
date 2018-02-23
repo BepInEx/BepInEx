@@ -1,20 +1,17 @@
 ﻿using BepInEx;
 using BepInEx.Common;
-using Harmony;
-using Illusion.Game;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace ResourceRedirector
 {
     public class ResourceRedirector : BaseUnityPlugin
     {
+        public override string ID => "resourceredirector";
         public override string Name => "Asset Emulator";
+        public override Version Version => new Version("1.3");
 
         public static string EmulatedDir => Path.Combine(Utility.ExecutingDirectory, "abdata-emulated");
 

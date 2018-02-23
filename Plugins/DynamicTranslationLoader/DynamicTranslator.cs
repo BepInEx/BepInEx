@@ -1,12 +1,9 @@
 ﻿using BepInEx;
 using BepInEx.Common;
-using Harmony;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Text;
 using System.Text.RegularExpressions;
 using TMPro;
 using UnityEngine;
@@ -16,10 +13,12 @@ namespace DynamicTranslationLoader
 {
     public class DynamicTranslator : BaseUnityPlugin
     {
+        public override string ID => "dynamictranslator";
+        public override string Name => "Dynamic Translator";
+        public override Version Version => new Version("1.2");
+
         private static Dictionary<string, string> translations = new Dictionary<string, string>();
         private static List<string> untranslated = new List<string>();
-
-        public override string Name => "Dynamic Translator";
 
         public DynamicTranslator()
         {
@@ -35,36 +34,25 @@ namespace DynamicTranslationLoader
 
                 translations[split[0]] = split[1];
             }
-            
-            var harmony = HarmonyInstance.Create("com.bepis.bepinex.dynamictranslationloader");
-            
 
-            MethodInfo original = AccessTools.Property(typeof(TMP_Text), "text").GetSetMethod();
-
-            HarmonyMethod prefix = new HarmonyMethod(typeof(Hooks).GetMethod("LabelTextHook"));
-            
-            harmony.Patch(original, prefix, null);
-
-
-            original = AccessTools.Method(typeof(TMP_Text), "SetText", new[] { typeof(string) });
-
-            prefix = new HarmonyMethod(typeof(Hooks).GetMethod("SetTextHook"));
-
-            harmony.Patch(original, prefix, null);
+            Hooks.InstallHooks();
         }
 
-        protected override void LevelFinishedLoading(Scene scene, LoadSceneMode mode)
+
+        void LevelFinishedLoading(Scene scene, LoadSceneMode mode)
         {
             TranslateAll();
         }
 
-        void Update()
+        public static string Translate(string input)
         {
-            if (UnityEngine.Input.GetKeyDown(UnityEngine.KeyCode.F10))
-            {
-                Dump();
-                Chainloader.Log($"Text dumped to \"{Path.GetFullPath("dumped-tl.txt")}\"", true);
-            }
+            if (translations.ContainsKey(input))
+                return translations[input];
+
+            if (!untranslated.Contains(input))
+                untranslated.Add(input);
+
+            return input;
         }
 
         void TranslateAll()
@@ -99,15 +87,25 @@ namespace DynamicTranslationLoader
             File.WriteAllText("dumped-tl.txt", output);
         }
 
-        public static string Translate(string input)
+        #region MonoBehaviour
+        void OnEnable()
         {
-            if (translations.ContainsKey(input))
-                return translations[input];
-
-            if (!untranslated.Contains(input))
-                untranslated.Add(input);
-
-            return input;
+            SceneManager.sceneLoaded += LevelFinishedLoading;
         }
+
+        void OnDisable()
+        {
+            SceneManager.sceneLoaded -= LevelFinishedLoading;
+        }
+
+        void Update()
+        {
+            if (UnityEngine.Input.GetKeyDown(UnityEngine.KeyCode.F10))
+            {
+                Dump();
+                Chainloader.Log($"Text dumped to \"{Path.GetFullPath("dumped-tl.txt")}\"", true);
+            }
+        }
+        #endregion
     }
 }

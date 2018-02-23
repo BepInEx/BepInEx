@@ -1,14 +1,63 @@
-﻿using System;
+﻿using ChaCustom;
+using Harmony;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using UnityEngine;
 
 namespace SliderUnlocker
 {
     public static class Hooks
     {
+        public static void InstallHooks()
+        {
+            var harmony = HarmonyInstance.Create("com.bepis.bepinex.sliderunlocker");
+
+            MethodInfo original = AccessTools.Method(typeof(CustomBase), "ConvertTextFromRate");
+
+            HarmonyMethod postfix = new HarmonyMethod(typeof(Hooks).GetMethod("ConvertTextFromRateHook"));
+
+            harmony.Patch(original, null, postfix);
+
+
+
+            original = AccessTools.Method(typeof(CustomBase), "ConvertRateFromText");
+
+            postfix = new HarmonyMethod(typeof(Hooks).GetMethod("ConvertRateFromTextHook"));
+
+            harmony.Patch(original, null, postfix);
+
+
+
+            original = AccessTools.Method(typeof(Mathf), "Clamp", new Type[] { typeof(float), typeof(float), typeof(float) });
+
+            postfix = new HarmonyMethod(typeof(Hooks).GetMethod("MathfClampHook"));
+
+            harmony.Patch(original, null, postfix);
+
+
+
+
+            original = typeof(AnimationKeyInfo).GetMethods().Where(x => x.Name.Contains("GetInfo")).ToArray()[0];
+
+            var prefix = new HarmonyMethod(typeof(Hooks).GetMethod("GetInfoSingularPreHook"));
+
+            postfix = new HarmonyMethod(typeof(Hooks).GetMethod("GetInfoSingularPostHook"));
+
+            harmony.Patch(original, prefix, postfix);
+
+
+
+            original = typeof(AnimationKeyInfo).GetMethods().Where(x => x.Name.Contains("GetInfo")).ToArray()[1];
+
+            prefix = new HarmonyMethod(typeof(Hooks).GetMethod("GetInfoPreHook"));
+
+            postfix = new HarmonyMethod(typeof(Hooks).GetMethod("GetInfoPostHook"));
+
+            harmony.Patch(original, prefix, postfix);
+        }
+
         private static FieldInfo akf_dictInfo = (typeof(AnimationKeyInfo).GetField("dictInfo", BindingFlags.NonPublic | BindingFlags.Instance));
 
         public static void ConvertTextFromRateHook(ref string __result, int min, int max, float value)
