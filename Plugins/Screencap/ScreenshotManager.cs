@@ -49,7 +49,7 @@ namespace Screencap
             while (!File.Exists(filename))
                 yield return new WaitForSeconds(0.01f);
 
-            Chainloader.Log($"Screenshot saved to {filename}", true);
+            BepInLogger.Log($"Screenshot saved to {filename}", true);
         }
 
         void TakeCharScreenshot(string filename)
@@ -59,7 +59,7 @@ namespace Screencap
             File.WriteAllBytes(filename, tex.EncodeToPNG());
             Destroy(tex);
             Illusion.Game.Utils.Sound.Play(SystemSE.photo);
-            Chainloader.Log($"Character screenshot saved to {filename}", true);
+            BepInLogger.Log($"Character screenshot saved to {filename}", true);
         }
 
         Texture2D RenderCamera(Camera cam)

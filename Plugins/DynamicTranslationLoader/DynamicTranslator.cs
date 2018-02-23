@@ -103,7 +103,7 @@ namespace DynamicTranslationLoader
             if (UnityEngine.Input.GetKeyDown(UnityEngine.KeyCode.F10))
             {
                 Dump();
-                Chainloader.Log($"Text dumped to \"{Path.GetFullPath("dumped-tl.txt")}\"", true);
+                BepInLogger.Log($"Text dumped to \"{Path.GetFullPath("dumped-tl.txt")}\"", true);
             }
         }
         #endregion

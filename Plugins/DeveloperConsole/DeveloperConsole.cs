@@ -19,7 +19,7 @@ namespace DeveloperConsole
 
         public DeveloperConsole()
         {
-            Chainloader.EntryLogged += (log, show) =>
+            BepInLogger.EntryLogged += (log, show) =>
             {
                 string current = $"{TotalLog}\r\n{log}";
                 if (current.Length > 2000)

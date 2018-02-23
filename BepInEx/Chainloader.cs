@@ -18,18 +18,6 @@ namespace BepInEx
         public static GameObject ManagerObject { get; protected set; } = new GameObject("BepInEx_Manager");
 
 
-
-        public delegate void EntryLoggedEventHandler(string entry, bool show = false);
-
-        public static event EntryLoggedEventHandler EntryLogged;
-
-
-        public static void Log(string entry, bool show = false)
-        {
-            EntryLogged?.Invoke(entry, show);
-        }
-
-
         public static void Initialize()
         {
             if (loaded)

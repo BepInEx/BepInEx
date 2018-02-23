@@ -55,7 +55,7 @@ namespace ResourceRedirector
                     if (!File.Exists(path))
                         return __result;
 
-                    Chainloader.Log($"Loading emulated asset {path}");
+                    BepInLogger.Log($"Loading emulated asset {path}");
 
                     return new AssetBundleLoadAssetOperationSimulation(AssetLoader.LoadTexture(path));
                 }
@@ -66,7 +66,7 @@ namespace ResourceRedirector
                     if (!File.Exists(path))
                         return __result;
 
-                    Chainloader.Log($"Loading emulated asset {path}");
+                    BepInLogger.Log($"Loading emulated asset {path}");
 
                     return new AssetBundleLoadAssetOperationSimulation(AssetLoader.LoadAudioClip(path, AudioType.WAV));
                 }
@@ -77,7 +77,7 @@ namespace ResourceRedirector
                     if (!File.Exists(path))
                         return __result;
 
-                    Chainloader.Log($"Loading emulated asset {path}");
+                    BepInLogger.Log($"Loading emulated asset {path}");
 
                     return new AssetBundleLoadAssetOperationSimulation(AssetLoader.LoadTextAsset(path));
                 }
