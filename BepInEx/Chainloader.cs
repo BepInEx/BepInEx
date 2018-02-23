@@ -1,23 +1,33 @@
 ﻿using BepInEx.Common;
-using ChaCustom;
-using Harmony;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Text;
 using UnityEngine;
 
 namespace BepInEx
 {
+    /// <summary>
+    /// The manager and loader for all plugins, and the entry point for BepInEx.
+    /// </summary>
     public class Chainloader
     {
-        static bool loaded = false;
+        /// <summary>
+        /// The loaded and initialized list of plugins.
+        /// </summary>
         public static List<BaseUnityPlugin> Plugins { get; protected set; } = new List<BaseUnityPlugin>();
+
+        /// <summary>
+        /// The GameObject that all plugins are attached to as components.
+        /// </summary>
         public static GameObject ManagerObject { get; protected set; } = new GameObject("BepInEx_Manager");
 
 
+        static bool loaded = false;
+
+        /// <summary>
+        /// The entry point for BepInEx, called on the very first LoadScene() from UnityEngine.
+        /// </summary>
         public static void Initialize()
         {
             if (loaded)
@@ -53,6 +63,12 @@ namespace BepInEx
             loaded = true;
         }
 
+        /// <summary>
+        /// Loads a list of types from a directory containing assemblies, that derive from a base type.
+        /// </summary>
+        /// <typeparam name="T">The specfiic base type to search for.</typeparam>
+        /// <param name="directory">The directory to search for assemblies.</param>
+        /// <returns>Returns a list of found derivative types.</returns>
         public static List<Type> LoadTypes<T>(string directory)
         {
             List<Type> types = new List<Type>();
