@@ -70,5 +70,18 @@ namespace SliderUnlocker
 
             return rot3 + vector2 * Mathf.Abs(rate - 1f);
         }
+
+        public static Vector3 SafeCalculateRotation(Vector3 original, string name, List<AnmKeyInfo> list, float rate)
+        {
+            if (!(name.StartsWith("cf_a_bust") && name.EndsWith("_size")) && //breast fix
+                        !(name.Contains("thigh") && name.Contains("01"))) //thigh fix
+            {
+                return CalculateRotation(list, rate);
+            }
+            else
+            {
+                return original;
+            }
+        }
     }
 }

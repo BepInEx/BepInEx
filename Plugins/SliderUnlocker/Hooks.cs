@@ -137,11 +137,7 @@ namespace SliderUnlocker
                         value = SliderMath.CalculatePosition(list, rate);
                         break;
                     case 1:
-                        if ((!name.StartsWith("cf_a_bust") && !name.EndsWith("_size")) || //breast fix
-                        !(name.Contains("thigh") && name.Contains("01"))) //thigh fix
-                        {
-                            value = SliderMath.CalculateRotation(list, rate);
-                        }
+                        value = SliderMath.SafeCalculateRotation(value, name, list, rate);
                         break;
                     default:
                         value = SliderMath.CalculateScale(list, rate);
@@ -170,11 +166,7 @@ namespace SliderUnlocker
                 }
                 if (flag[1])
                 {
-                    if (!(name.StartsWith("cf_a_bust") && name.EndsWith("_size")) && //breast fix
-                        !(name.Contains("thigh") && name.Contains("01"))) //thigh fix
-                    {
-                        value[1] = SliderMath.CalculateRotation(list, rate);
-                    }
+                    value[1] = SliderMath.SafeCalculateRotation(value[1], name, list, rate);
                 }
                 if (flag[2])
                 {
