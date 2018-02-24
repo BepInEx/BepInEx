@@ -46,6 +46,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AlphaShot.cs" />
+    <Compile Include="LegacyRenderer.cs" />
     <Compile Include="ScreenshotManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
