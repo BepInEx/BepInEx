@@ -104,9 +104,9 @@ namespace Screencap
                 default:
                     File.WriteAllBytes(filename, LegacyRenderer.RenderCamera(ResolutionX, ResolutionY, DownscalingRate, AntiAliasing));
                     break;
-                case 1: //alphashot
-                    File.WriteAllBytes(filename, AlphaShot.Capture(ResolutionX, ResolutionY, DownscalingRate, AntiAliasing));
-                    break;
+                //case 1: //alphashot
+                //    File.WriteAllBytes(filename, AlphaShot.Capture(ResolutionX, ResolutionY, DownscalingRate, AntiAliasing));
+                //    break;
             }
 
             Illusion.Game.Utils.Sound.Play(SystemSE.photo);
