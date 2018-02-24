@@ -17,7 +17,7 @@ namespace DeveloperConsole
         int showCounter = 0;
         string TotalShowingLog = "";
 
-        public DeveloperConsole()
+        void Awake()
         {
             BepInLogger.EntryLogged += (log, show) =>
             {

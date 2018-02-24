@@ -19,7 +19,7 @@ namespace SliderUnlocker
         public static float Minimum = -1.0f;
         public static float Maximum = 2.0f;
 
-        public SliderUnlocker()
+        void Awake()
         {
             Hooks.InstallHooks();
         }

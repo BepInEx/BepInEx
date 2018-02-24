@@ -58,7 +58,7 @@ namespace Screencap
         #endregion
 
 
-        public ScreenshotManager()
+        void Awake()
         {
             if (!Directory.Exists(screenshotDir))
                 Directory.CreateDirectory(screenshotDir);

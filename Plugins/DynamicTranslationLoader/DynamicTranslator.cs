@@ -20,7 +20,7 @@ namespace DynamicTranslationLoader
         private static Dictionary<string, string> translations = new Dictionary<string, string>();
         private static List<string> untranslated = new List<string>();
 
-        public DynamicTranslator()
+        void Awake()
         {
             string[] translation = File.ReadAllLines(Utility.CombinePaths(Utility.PluginsDirectory, "translation", "translation.txt"));
 

@@ -25,7 +25,7 @@ namespace ResourceRedirector
 
 
 
-        public ResourceRedirector()
+        void Awake()
         {
             Hooks.InstallHooks();
 
