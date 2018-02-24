@@ -36,14 +36,5 @@ namespace ResourceRedirector
 
             return tex;
         }
-
-        public static TextAsset LoadTextAsset(string path)
-        {
-            string newPath = $"{Application.dataPath}\\Resources\\{Path.GetFileName(path)}";
-
-            File.Copy(path, newPath, true);
-
-            return Resources.Load<TextAsset>(Path.GetFileNameWithoutExtension(path));
-        }
     }
 }

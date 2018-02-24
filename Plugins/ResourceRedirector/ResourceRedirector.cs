@@ -70,17 +70,6 @@ namespace ResourceRedirector
 
                     return new AssetBundleLoadAssetOperationSimulation(AssetLoader.LoadAudioClip(path, AudioType.WAV));
                 }
-                else if (type == typeof(TextAsset))
-                {
-                    string path = Path.Combine(dir, $"{assetName}.bytes");
-
-                    if (!File.Exists(path))
-                        return __result;
-
-                    BepInLogger.Log($"Loading emulated asset {path}");
-
-                    return new AssetBundleLoadAssetOperationSimulation(AssetLoader.LoadTextAsset(path));
-                }
             }
 
             //otherwise return normal asset
