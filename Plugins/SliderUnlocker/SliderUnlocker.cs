@@ -60,13 +60,8 @@ namespace SliderUnlocker
                 var fields = cvs.GetType().GetFields(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
                                     .Where(x => typeof(Slider).IsAssignableFrom(x.FieldType));
 
-                foreach (FieldInfo field in fields)
+                foreach (Slider slider in fields.Select(x => x.GetValue(cvs)))
                 {
-                    if (field.Name == "sldGlossPow")
-                        continue;
-
-                    Slider slider = (Slider)field.GetValue(cvs);
-
                     if (slider == null)
                         continue;
 
