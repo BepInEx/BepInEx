@@ -9,7 +9,7 @@ namespace ResourceRedirector
 {
     public class ResourceRedirector : BaseUnityPlugin
     {
-        public override string ID => "resourceredirector";
+        public override string ID => "com.bepis.bepinex.resourceredirector";
         public override string Name => "Asset Emulator";
         public override Version Version => new Version("1.3");
 

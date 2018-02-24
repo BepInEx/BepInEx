@@ -6,7 +6,7 @@ namespace DeveloperConsole
 {
     public class DeveloperConsole : BaseUnityPlugin
     {
-        public override string ID => "developerconsole";
+        public override string ID => "com.bepis.bepinex.developerconsole";
         public override string Name => "Developer Console";
         public override Version Version => new Version("1.0.1");
 

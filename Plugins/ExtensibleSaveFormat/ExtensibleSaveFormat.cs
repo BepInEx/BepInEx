@@ -8,7 +8,7 @@ namespace ExtensibleSaveFormat
 {
     public class ExtensibleSaveFormat : BaseUnityPlugin
     {
-        public override string ID => "extendedsave";
+        public override string ID => "com.bepis.bepinex.extendedsave";
 
         public override string Name => "Extensible Save Format";
 

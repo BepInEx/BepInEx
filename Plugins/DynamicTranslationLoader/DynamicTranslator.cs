@@ -13,7 +13,7 @@ namespace DynamicTranslationLoader
 {
     public class DynamicTranslator : BaseUnityPlugin
     {
-        public override string ID => "dynamictranslator";
+        public override string ID => "com.bepis.bepinex.dynamictranslator";
         public override string Name => "Dynamic Translator";
         public override Version Version => new Version("1.2");
 

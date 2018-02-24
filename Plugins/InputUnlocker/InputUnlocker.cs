@@ -7,7 +7,7 @@ namespace InputUnlocker
 {
     class InputUnlocker : BaseUnityPlugin
     {
-        public override string ID => "inputunlocker";
+        public override string ID => "com.bepis.bepinex.inputunlocker";
         public override string Name => "Input Length Unlocker";
         public override Version Version => new Version("1.0");
 

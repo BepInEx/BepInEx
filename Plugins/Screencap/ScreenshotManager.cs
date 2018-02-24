@@ -11,7 +11,7 @@ namespace Screencap
 {
     public class ScreenshotManager : BaseUnityPlugin
     {
-        public override string ID => "screenshotmanager";
+        public override string ID => "com.bepis.bepinex.screenshotmanager";
         public override string Name => "Screenshot Manager";
         public override Version Version => new Version("2.0");
 

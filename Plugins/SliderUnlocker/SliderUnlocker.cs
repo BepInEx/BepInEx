@@ -12,7 +12,7 @@ namespace SliderUnlocker
 {
     public class SliderUnlocker : BaseUnityPlugin
     {
-        public override string ID => "sliderunlocker";
+        public override string ID => "com.bepis.bepinex.sliderunlocker";
         public override string Name => "Slider Unlocker";
         public override Version Version => new Version("1.5");
 

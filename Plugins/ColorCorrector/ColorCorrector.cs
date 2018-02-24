@@ -8,7 +8,7 @@ namespace ColorCorrector
 {
     public class ColorCorrector : BaseUnityPlugin
     {
-        public override string ID => "colorcorrector";
+        public override string ID => "com.bepis.bepinex.colorcorrector";
         public override string Name => "Color Filter Remover";
         public override Version Version => new Version("1.2");
 
