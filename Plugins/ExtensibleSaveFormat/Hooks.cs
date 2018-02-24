@@ -35,6 +35,8 @@ namespace ExtensibleSaveFormat
             if (!__result)
                 return;
 
+            ExtensibleSaveFormat.writeEvent(__instance);
+
             if (!ExtensibleSaveFormat.TryGetExtendedFormat(__instance, out Dictionary<string, object> extendedData))
                 return;
 
@@ -66,6 +68,8 @@ namespace ExtensibleSaveFormat
 
             //initialize a new dictionary since it doesn't exist
             ExtensibleSaveFormat.internalDictionary[__instance] = new Dictionary<string, object>();
+
+            ExtensibleSaveFormat.readEvent(__instance);
         }
     }
 }

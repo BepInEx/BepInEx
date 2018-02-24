@@ -14,13 +14,32 @@ namespace ExtensibleSaveFormat
 
         public override Version Version => new Version("1.0");
 
-
-        internal static Dictionary<ChaFile, Dictionary<string, object>> internalDictionary = new Dictionary<ChaFile, Dictionary<string, object>>();
-
-        public ExtensibleSaveFormat()
+        void Awake()
         {
             Hooks.InstallHooks();
         }
+
+        internal static Dictionary<ChaFile, Dictionary<string, object>> internalDictionary = new Dictionary<ChaFile, Dictionary<string, object>>();
+
+        #region Events
+
+        public delegate void CardEventHandler(ChaFile file);
+
+        public static event CardEventHandler CardBeingSaved;
+
+        public static event CardEventHandler CardBeingLoaded;
+
+        internal static void writeEvent(ChaFile file)
+        {
+            CardBeingSaved?.Invoke(file);
+        }
+
+        internal static void readEvent(ChaFile file)
+        {
+            CardBeingLoaded?.Invoke(file);
+        }
+
+        #endregion
 
 
         public static bool TryGetExtendedFormat(ChaFile file, out Dictionary<string, object> extendedFormatData)
