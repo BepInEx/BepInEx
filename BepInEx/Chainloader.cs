@@ -64,6 +64,20 @@ namespace BepInEx
         }
 
         /// <summary>
+        /// Checks all plugins to see if a plugin with a certain ID is loaded.
+        /// </summary>
+        /// <param name="ID">The ID to check for.</param>
+        /// <returns></returns>
+        public static bool IsIDLoaded(string ID)
+        {
+            foreach (var plugin in Plugins)
+                if (plugin != null && plugin.enabled && plugin.ID == ID)
+                    return true;
+
+            return false;
+        }
+
+        /// <summary>
         /// Loads a list of types from a directory containing assemblies, that derive from a base type.
         /// </summary>
         /// <typeparam name="T">The specfiic base type to search for.</typeparam>
