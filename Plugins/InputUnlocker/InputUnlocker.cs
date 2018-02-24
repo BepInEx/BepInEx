@@ -15,7 +15,7 @@ namespace InputUnlocker
         {
             foreach (UnityEngine.UI.InputField gameObject in GameObject.FindObjectsOfType<UnityEngine.UI.InputField>())
             {
-                gameObject.characterLimit = 99;
+                gameObject.characterLimit = 999;
             }
         }
 
