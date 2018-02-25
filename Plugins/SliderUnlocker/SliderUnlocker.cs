@@ -36,17 +36,17 @@ namespace SliderUnlocker
 
             Assembly illusion = typeof(CvsAccessory).Assembly;
 
+            var sceneObjects = scene.GetRootGameObjects();
+
             foreach (Type type in illusion.GetTypes())
             {
                 if (type.Name.ToUpper().StartsWith("CVS") &&
                     type != typeof(CvsDrawCtrl) &&
                     type != typeof(CvsColor))
                 {
-                    cvsInstances.AddRange(GameObject.FindObjectsOfType(type));
-
-                    foreach(GameObject gameObject in Resources.FindObjectsOfTypeAll<GameObject>())
+                    foreach (var obj in sceneObjects)
                     {
-                        cvsInstances.AddRange(gameObject.GetComponents(type));
+                        cvsInstances.AddRange(obj.GetComponentsInChildren(type));
                     }
                 }
 

@@ -36,12 +36,14 @@ namespace DynamicTranslationLoader
             }
 
             Hooks.InstallHooks();
+
+            TranslateAll();
         }
 
 
         void LevelFinishedLoading(Scene scene, LoadSceneMode mode)
         {
-            TranslateAll();
+            TranslateScene(scene);
         }
 
         public static string Translate(string input)
@@ -49,8 +51,11 @@ namespace DynamicTranslationLoader
             if (translations.ContainsKey(input))
                 return translations[input];
 
-            if (!untranslated.Contains(input))
+            if (!untranslated.Contains(input) &&
+                !translations.ContainsValue(input.Trim()))
+            {
                 untranslated.Add(input);
+            }
 
             return input;
         }
@@ -61,15 +66,19 @@ namespace DynamicTranslationLoader
             {
                 //gameObject.text = "Harsh is shit";
 
-                if (translations.ContainsKey(gameObject.text))
-                    gameObject.text = translations[gameObject.text];
-                else if (!untranslated.Contains(gameObject.text) &&
-                        !translations.ContainsValue(gameObject.text.Trim()))
-                {
-                    untranslated.Add(gameObject.text);
-                }
-                            
+                gameObject.text = Translate(gameObject.text);
             }
+        }
+
+        void TranslateScene(Scene scene)
+        {
+            foreach (GameObject obj in scene.GetRootGameObjects())
+                foreach (TextMeshProUGUI gameObject in obj.GetComponentsInChildren<TextMeshProUGUI>(true))
+                {
+                    //gameObject.text = "Harsh is shit";
+
+                    gameObject.text = Translate(gameObject.text);
+                }
         }
 
         void Dump()
