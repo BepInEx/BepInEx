@@ -13,7 +13,7 @@ namespace DynamicTranslationLoader
 
             MethodInfo original = AccessTools.Property(typeof(TMP_Text), "text").GetSetMethod();
 
-            HarmonyMethod prefix = new HarmonyMethod(typeof(Hooks).GetMethod("LabelTextHook"));
+            HarmonyMethod prefix = new HarmonyMethod(typeof(Hooks).GetMethod("TextPropertyHook"));
 
             harmony.Patch(original, prefix, null);
 
@@ -23,9 +23,16 @@ namespace DynamicTranslationLoader
             prefix = new HarmonyMethod(typeof(Hooks).GetMethod("SetTextHook"));
 
             harmony.Patch(original, prefix, null);
+
+
+            original = AccessTools.Property(typeof(UnityEngine.UI.Text), "text").GetSetMethod();
+
+            prefix = new HarmonyMethod(typeof(Hooks).GetMethod("TextPropertyHook"));
+
+            harmony.Patch(original, prefix, null);
         }
 
-        public static void LabelTextHook(ref string value)
+        public static void TextPropertyHook(ref string value)
         {
             value = DynamicTranslator.Translate(value);
         }
