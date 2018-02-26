@@ -15,14 +15,14 @@ namespace ColorCorrector
         #region Config properties
         private bool SaturationEnabled
         {
-            get => bool.Parse(BepInEx.Config.GetEntry("colorcorrector-saturationenabled", "True"));
-            set => BepInEx.Config.SetEntry("colorcorrector-saturationenabled", value.ToString());
+            get => bool.Parse(this.GetEntry("saturation-enabled", "True"));
+            set => this.SetEntry("saturation-enabled", value.ToString());
         }
 
         private bool BloomEnabled
         {
-            get => bool.Parse(BepInEx.Config.GetEntry("colorcorrector-bloomenabled", "True"));
-            set => BepInEx.Config.SetEntry("colorcorrector-bloomenabled", value.ToString());
+            get => bool.Parse(this.GetEntry("bloom-enabled", "True"));
+            set => this.SetEntry("bloom-enabled", value.ToString());
         }
         #endregion
 

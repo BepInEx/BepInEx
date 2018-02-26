@@ -27,32 +27,32 @@ namespace Screencap
 
         private int ResolutionX
         {
-            get => int.Parse(BepInEx.Config.GetEntry("screenshotrenderer-resolution-x", "1024"));
-            set => BepInEx.Config.SetEntry("screenshotrenderer-resolution-x", value.ToString());
+            get => int.Parse(this.GetEntry("resolution-x", "1024"));
+            set => this.SetEntry("resolution-x", value.ToString());
         }
 
         private int ResolutionY
         {
-            get => int.Parse(BepInEx.Config.GetEntry("screenshotrenderer-resolution-y", "1024"));
-            set => BepInEx.Config.SetEntry("screenshotrenderer-resolution-y", value.ToString());
+            get => int.Parse(this.GetEntry("resolution-y", "1024"));
+            set => this.SetEntry("resolution-y", value.ToString());
         }
         
         private int AntiAliasing
         {
-            get => int.Parse(BepInEx.Config.GetEntry("screenshotrenderer-antialiasing", "4"));
-            set => BepInEx.Config.SetEntry("screenshotrenderer-antialiasing", value.ToString());
+            get => int.Parse(this.GetEntry("antialiasing", "4"));
+            set => this.SetEntry("antialiasing", value.ToString());
         }
 
         private int DownscalingRate
         {
-            get => int.Parse(BepInEx.Config.GetEntry("screenshotrenderer-downscalerate", "1"));
-            set => BepInEx.Config.SetEntry("screenshotrenderer-downscalerate", value.ToString());
+            get => int.Parse(this.GetEntry("downscalerate", "1"));
+            set => this.SetEntry("downscalerate", value.ToString());
         }
 
         private int RenderMethod
         {
-            get => int.Parse(BepInEx.Config.GetEntry("screenshotrenderer-rendermethod", "1"));
-            set => BepInEx.Config.SetEntry("screenshotrenderer-rendermethod", value.ToString());
+            get => int.Parse(this.GetEntry("rendermethod", "1"));
+            set => this.SetEntry("rendermethod", value.ToString());
         }
 
         #endregion

@@ -10,7 +10,7 @@ namespace BepInEx
     /// </summary>
     public static class Config
     {
-        private static Dictionary<string, string> cache = new Dictionary<string, string>();
+        private static Dictionary<string, Dictionary<string, string>> cache = new Dictionary<string, Dictionary<string, string>>();
 
         private static string configPath => Path.Combine(Utility.PluginsDirectory, "config.ini");
 
@@ -38,13 +38,31 @@ namespace BepInEx
         {
             cache.Clear();
 
-            foreach (string line in File.ReadAllLines(configPath))
-            {
-                string[] split = line.Split('=');
-                if (split.Length != 2)
-                    continue;
+            string currentSection = "";
 
-                cache[split[0]] = split[1];
+            foreach (string rawLine in File.ReadAllLines(configPath))
+            {
+                string line = rawLine.Trim();
+
+                int commentIndex = line.IndexOf("//");
+
+                if (commentIndex != -1) //trim comment
+                    line = line.Remove(commentIndex);
+
+                if (line.StartsWith("[") && line.EndsWith("]")) //section
+                {
+                    currentSection = line.Substring(1, line.Length - 2);
+                    continue;
+                }
+
+                string[] split = line.Split('='); //actual config line
+                if (split.Length != 2)
+                    continue; //empty/invalid line
+
+                if (!cache.ContainsKey(currentSection))
+                    cache[currentSection] = new Dictionary<string, string>();
+
+                cache[currentSection][split[0]] = split[1];
             }
         }
 
@@ -53,7 +71,16 @@ namespace BepInEx
         /// </summary>
         public static void SaveConfig()
         {
-            File.WriteAllLines(configPath, cache.Select(x => $"{x.Key}={x.Value}").ToArray());
+            using (StreamWriter writer = new StreamWriter(File.Create(configPath), System.Text.Encoding.UTF8))
+                foreach (var sectionKv in cache)
+                {
+                    writer.WriteLine($"[{sectionKv.Key}]");
+
+                    foreach (var entryKv in sectionKv.Value)
+                        writer.WriteLine($"{entryKv.Key}={entryKv.Value}");
+
+                    writer.WriteLine();
+                }
         }
 
         /// <summary>
@@ -62,9 +89,18 @@ namespace BepInEx
         /// <param name="key">The key to search for.</param>
         /// <param name="defaultValue">The default value to return if the key is not found.</param>
         /// <returns>The value of the key.</returns>
-        public static string GetEntry(string key, string defaultValue)
+        public static string GetEntry(string key, string defaultValue = "", string section = "")
         {
-            if (cache.TryGetValue(key, out string value))
+            if (section.IsNullOrWhiteSpace())
+                section = "Global";
+
+            Dictionary<string, string> subdict;
+
+            if (!cache.TryGetValue(section, out subdict))
+                return defaultValue;
+                
+
+            if (subdict.TryGetValue(key, out string value))
                 return value;
             else
                 return defaultValue;
@@ -75,12 +111,35 @@ namespace BepInEx
         /// </summary>
         /// <param name="key">The key to set the value to.</param>
         /// <param name="value">The value to set.</param>
-        public static void SetEntry(string key, string value)
+        public static void SetEntry(string key, string value, string section = "")
         {
-            cache[key] = value;
+            if (section.IsNullOrWhiteSpace())
+                section = "Global";
+
+            Dictionary<string, string> subdict;
+
+            if (!cache.TryGetValue(section, out subdict))
+            {
+                subdict = new Dictionary<string, string>();
+                cache[section] = subdict;
+            }
+
+            subdict[key] = value;
 
             if (SaveOnConfigSet)
                 SaveConfig();
         }
+
+        #region Extensions
+        public static string GetEntry(this BaseUnityPlugin plugin, string key, string defaultValue = "")
+        {
+            return GetEntry(key, defaultValue, plugin.ID);
+        }
+
+        public static void SetEntry(this BaseUnityPlugin plugin, string key, string value)
+        {
+            SetEntry(key, value, plugin.ID);
+        }
+        #endregion
     }
 }
