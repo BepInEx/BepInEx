@@ -59,27 +59,20 @@ namespace BepInEx.Patcher
         static void InjectAssembly(AssemblyDefinition unity, AssemblyDefinition injected)
         {
             //Entry point
-            var originalInjectMethod = injected.MainModule.Types.First(x => x.Name == "Chainloader")
-                .Methods.First(x => x.Name == "Initialize");
+            var originalInjectMethod = injected.MainModule.Types.First(x => x.Name == "Chainloader").Methods.First(x => x.Name == "Initialize");
 
             var injectMethod = unity.MainModule.Import(originalInjectMethod);
 
-            var sceneManager = unity.MainModule.Types.First(x => x.Name == "Application");
+            var sceneManager = unity.MainModule.Types.First(x => x.Name == "SceneManager");
 
-            var voidType = unity.MainModule.Import(typeof(void));
-            var cctor = new MethodDefinition(".cctor",
-                Mono.Cecil.MethodAttributes.Static
-                | Mono.Cecil.MethodAttributes.Private
-                | Mono.Cecil.MethodAttributes.HideBySig
-                | Mono.Cecil.MethodAttributes.SpecialName
-                | Mono.Cecil.MethodAttributes.RTSpecialName,
-                voidType);
+            ILProcessor IL;
 
-            var ilp = cctor.Body.GetILProcessor();
-            ilp.Append(ilp.Create(OpCodes.Call, injectMethod));
-            ilp.Append(ilp.Create(OpCodes.Ret));
+            foreach (var loadScene in sceneManager.Methods.Where(x => x.Name == "LoadScene"))
+            {
+                IL = loadScene.Body.GetILProcessor();
 
-            sceneManager.Methods.Add(cctor);
+                IL.InsertBefore(loadScene.Body.Instructions[0], IL.Create(OpCodes.Call, injectMethod));
+            }
         }
     }
 }
