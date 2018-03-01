@@ -47,46 +47,86 @@ namespace ResourceRedirector
 
         public static void LoadAssetPostHook(ref AssetBundleLoadAssetOperation __result, string assetBundleName, string assetName, Type type, string manifestAssetBundleName)
         {
-            //BepInLogger.Log($"{assetBundleName} : {assetName} : {type.FullName} : {manifestAssetBundleName ?? ""}");
+            try
+            {
+                //BepInLogger.Log($"{assetBundleName} : {assetName} : {type.FullName} : {manifestAssetBundleName ?? ""}");
 
-            __result = ResourceRedirector.HandleAsset(assetBundleName, assetName, type, manifestAssetBundleName, ref __result);
+                __result = ResourceRedirector.HandleAsset(assetBundleName, assetName, type, manifestAssetBundleName, ref __result);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("---" + nameof(LoadAssetPostHook) + "---");
+                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.StackTrace);
+                Console.WriteLine("---");
+            }
         }
 
         public static void LoadAssetBundlePostHook(string assetBundleName, bool isAsync, string manifestAssetBundleName)
         {
-            //BepInLogger.Log($"{assetBundleName} : {manifestAssetBundleName} : {isAsync}");
+            try
+            {
+                //BepInLogger.Log($"{assetBundleName} : {manifestAssetBundleName} : {isAsync}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("---" + nameof(LoadAssetBundlePostHook) + "---");
+                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.StackTrace);
+                Console.WriteLine("---");
+            }
         }
 
         public static void LoadAssetAsyncPostHook(ref AssetBundleLoadAssetOperation __result, string assetBundleName, string assetName, Type type, string manifestAssetBundleName)
         {
-            //BepInLogger.Log($"{assetBundleName} : {assetName} : {type.FullName} : {manifestAssetBundleName ?? ""}", true);
+            try
+            {
+                //BepInLogger.Log($"{assetBundleName} : {assetName} : {type.FullName} : {manifestAssetBundleName ?? ""}", true);
 
-            __result = ResourceRedirector.HandleAsset(assetBundleName, assetName, type, manifestAssetBundleName, ref __result);
+                __result = ResourceRedirector.HandleAsset(assetBundleName, assetName, type, manifestAssetBundleName, ref __result);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("---" + nameof(LoadAssetAsyncPostHook) + "---");
+                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.StackTrace);
+                Console.WriteLine("---");
+            }
         }
 
         public static void LoadAllAssetPostHook(ref AssetBundleLoadAssetOperation __result, string assetBundleName, Type type, string manifestAssetBundleName = null)
         {
-            //BepInLogger.Log($"{assetBundleName} : {type.FullName} : {manifestAssetBundleName ?? ""}");
-
-            if (assetBundleName == "sound/data/systemse/brandcall/00.unity3d" ||
-                assetBundleName == "sound/data/systemse/titlecall/00.unity3d")
+            try
             {
-                string dir = $"{BepInEx.Common.Utility.PluginsDirectory}\\introclips";
+                //BepInLogger.Log($"{assetBundleName} : {type.FullName} : {manifestAssetBundleName ?? ""}");
 
-                if (!Directory.Exists(dir))
-                    Directory.CreateDirectory(dir);
+                if (assetBundleName == "sound/data/systemse/brandcall/00.unity3d" ||
+                    assetBundleName == "sound/data/systemse/titlecall/00.unity3d")
+                {
+                    string dir = $"{BepInEx.Common.Utility.PluginsDirectory}\\introclips";
 
-                var files = Directory.GetFiles(dir, "*.wav");
+                    if (!Directory.Exists(dir))
+                        Directory.CreateDirectory(dir);
 
-                if (files.Length == 0)
-                    return;
+                    var files = Directory.GetFiles(dir, "*.wav");
 
-                List<UnityEngine.Object> loadedClips = new List<UnityEngine.Object>();
+                    if (files.Length == 0)
+                        return;
 
-                foreach (string path in files)
-                    loadedClips.Add(AssetLoader.LoadAudioClip(path, AudioType.WAV));
+                    List<UnityEngine.Object> loadedClips = new List<UnityEngine.Object>();
 
-                __result = new AssetBundleLoadAssetOperationSimulation(loadedClips.ToArray());
+                    foreach (string path in files)
+                        loadedClips.Add(AssetLoader.LoadAudioClip(path, AudioType.WAV));
+
+                    __result = new AssetBundleLoadAssetOperationSimulation(loadedClips.ToArray());
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("---" + nameof(LoadAllAssetPostHook) + "---");
+                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.StackTrace);
+                Console.WriteLine("---");
             }
         }
     }
