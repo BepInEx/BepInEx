@@ -1,7 +1,8 @@
 ﻿using BepInEx.Common;
+using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace BepInEx
 {
@@ -13,6 +14,17 @@ namespace BepInEx
         private static Dictionary<string, Dictionary<string, string>> cache = new Dictionary<string, Dictionary<string, string>>();
 
         private static string configPath => Path.Combine(Utility.PluginsDirectory, "config.ini");
+
+        private static Regex sanitizeKeyRegex = new Regex("[^a-zA-Z0-9]+");
+
+        private static void RaiseConfigReloaded()
+        {
+            var handler = ConfigReloaded;
+            if (handler != null)
+                handler.Invoke();
+        }
+
+        public static event Action ConfigReloaded;
 
         /// <summary>
         /// If enabled, writes the config to disk every time a value is set.
@@ -30,6 +42,31 @@ namespace BepInEx
                 SaveConfig();
             }
         }
+        
+        /// <summary>
+        /// Returns the value of the key if found, otherwise returns the default value.
+        /// </summary>
+        /// <param name="key">The key to search for.</param>
+        /// <param name="defaultValue">The default value to return if the key is not found.</param>
+        /// <returns>The value of the key.</returns>
+        public static string GetEntry(string key, string defaultValue = "", string section = "")
+        {
+            key = Sanitize(key);
+            if (section.IsNullOrWhiteSpace())
+                section = "Global";
+            else
+                section = Sanitize(section);
+
+            Dictionary<string, string> subdict;
+
+            if (!cache.TryGetValue(section, out subdict))
+                return defaultValue;
+
+            if (subdict.TryGetValue(key, out string value))
+                return value;
+            else
+                return defaultValue;
+        }
 
         /// <summary>
         /// Reloads the config from disk. Unwritten changes are lost.
@@ -44,10 +81,10 @@ namespace BepInEx
             {
                 string line = rawLine.Trim();
 
-                int commentIndex = line.IndexOf("//");
+                bool commentIndex = line.StartsWith("//");
 
-                if (commentIndex != -1) //trim comment
-                    line = line.Remove(commentIndex);
+                if (commentIndex) //trim comment
+                    continue;
 
                 if (line.StartsWith("[") && line.EndsWith("]")) //section
                 {
@@ -64,6 +101,8 @@ namespace BepInEx
 
                 cache[currentSection][split[0]] = split[1];
             }
+
+            RaiseConfigReloaded();
         }
 
         /// <summary>
@@ -84,37 +123,17 @@ namespace BepInEx
         }
 
         /// <summary>
-        /// Returns the value of the key if found, otherwise returns the default value.
-        /// </summary>
-        /// <param name="key">The key to search for.</param>
-        /// <param name="defaultValue">The default value to return if the key is not found.</param>
-        /// <returns>The value of the key.</returns>
-        public static string GetEntry(string key, string defaultValue = "", string section = "")
-        {
-            if (section.IsNullOrWhiteSpace())
-                section = "Global";
-
-            Dictionary<string, string> subdict;
-
-            if (!cache.TryGetValue(section, out subdict))
-                return defaultValue;
-                
-
-            if (subdict.TryGetValue(key, out string value))
-                return value;
-            else
-                return defaultValue;
-        }
-
-        /// <summary>
         /// Sets the value of the key in the config.
         /// </summary>
         /// <param name="key">The key to set the value to.</param>
         /// <param name="value">The value to set.</param>
         public static void SetEntry(string key, string value, string section = "")
         {
+            key = Sanitize(key);
             if (section.IsNullOrWhiteSpace())
                 section = "Global";
+            else
+                section = Sanitize(section);
 
             Dictionary<string, string> subdict;
 
@@ -129,8 +148,53 @@ namespace BepInEx
             if (SaveOnConfigSet)
                 SaveConfig();
         }
+       
+        /// <summary>
+        /// Returns wether a value is currently set.
+        /// </summary>
+        /// <param name="key">The key to check against</param>
+        /// <param name="section">The section to check in</param>
+        /// <returns>True if the key is present</returns>
+        public static bool HasEntry(string key, string section = "")
+        {
+            key = Sanitize(key);
+            if (section.IsNullOrWhiteSpace())
+                section = "Global";
+            else
+                section = Sanitize(section);
+
+            return cache.ContainsKey(section) && cache[section].ContainsKey(key);
+        }
+
+
+        /// <summary>
+        /// Removes a value from the config.
+        /// </summary>
+        /// <param name="key">The key to remove</param>
+        /// <param name="section">The section to remove from</param>
+        /// <returns>True if the key was removed</returns>
+        public static bool UnsetEntry(string key, string section = "")
+        {
+            key = Sanitize(key);
+            if (section.IsNullOrWhiteSpace())
+                section = "Global";
+            else
+                section = Sanitize(section);
+
+            if (!HasEntry(key, section))
+                return false;
+
+            cache[section].Remove(key);
+            return true;
+        }
+
+        public static string Sanitize(string key)
+        {
+            return sanitizeKeyRegex.Replace(key, "_");
+        }
 
         #region Extensions
+
         public static string GetEntry(this BaseUnityPlugin plugin, string key, string defaultValue = "")
         {
             return GetEntry(key, defaultValue, plugin.ID);
@@ -140,6 +204,11 @@ namespace BepInEx
         {
             SetEntry(key, value, plugin.ID);
         }
-        #endregion
+
+        public static bool HasEntry(this BaseUnityPlugin plugin, string key)
+        {
+            return HasEntry(key, plugin.ID);
+        }
+        #endregion Extensions
     }
 }
