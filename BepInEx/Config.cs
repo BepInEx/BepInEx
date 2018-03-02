@@ -81,7 +81,7 @@ namespace BepInEx
             {
                 string line = rawLine.Trim();
 
-                bool commentIndex = line.StartsWith("//");
+                bool commentIndex = line.StartsWith(";") || line.StartsWith("#");
 
                 if (commentIndex) //trim comment
                     continue;
