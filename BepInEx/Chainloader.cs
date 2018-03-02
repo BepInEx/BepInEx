@@ -41,13 +41,13 @@ namespace BepInEx
                 {
                     var pluginTypes = LoadTypes<BaseUnityPlugin>(Utility.PluginsDirectory);
 
-                    //Log($"{pluginTypes.Count()} plugins found");
+                    BepInLogger.Log($"{pluginTypes.Count} plugins found");
 
                     foreach (Type t in pluginTypes)
                     {
                         var plugin = (BaseUnityPlugin)ManagerObject.AddComponent(t);
                         Plugins.Add(plugin);
-                        //Log($"Loaded [{plugin.Name}]");
+                            BepInLogger.Log($"Loaded [{plugin.Name}]");
                     }
                 }
             }
