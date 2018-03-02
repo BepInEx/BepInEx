@@ -1,4 +1,6 @@
-﻿namespace BepInEx
+﻿using System.Runtime.CompilerServices;
+
+namespace BepInEx
 {
     /// <summary>
     /// A helper class to use for logging.
@@ -24,7 +26,18 @@
         /// <param name="show">Whether or not it should be dislpayed to the user.</param>
         public static void Log(string entry, bool show = false)
         {
+            UnityEngine.UnityLogWriter.WriteStringToUnityLog($"BEPIN - {entry}\r\n");
+
             EntryLogged?.Invoke(entry, show);
         }
+    }
+}
+
+namespace UnityEngine
+{
+    internal sealed class UnityLogWriter
+    {
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern void WriteStringToUnityLog(string s);
     }
 }
