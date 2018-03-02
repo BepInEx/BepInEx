@@ -45,9 +45,16 @@ namespace BepInEx
 
                     foreach (Type t in pluginTypes)
                     {
-                        var plugin = (BaseUnityPlugin)ManagerObject.AddComponent(t);
-                        Plugins.Add(plugin);
+                        try
+                        {
+                            var plugin = (BaseUnityPlugin)ManagerObject.AddComponent(t);
+                            Plugins.Add(plugin);
                             BepInLogger.Log($"Loaded [{plugin.Name}]");
+                        }
+                        catch (Exception ex)
+                        {
+                            BepInLogger.Log($"Error loading [{t.Name}] : {ex.Message}");
+                        }
                     }
                 }
             }
