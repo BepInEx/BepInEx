@@ -60,12 +60,18 @@ namespace BepInEx
             Dictionary<string, string> subdict;
 
             if (!cache.TryGetValue(section, out subdict))
+            {
+                SetEntry(key, defaultValue, section);
                 return defaultValue;
+            }
 
             if (subdict.TryGetValue(key, out string value))
                 return value;
             else
+            {
+                SetEntry(key, defaultValue, section);
                 return defaultValue;
+            }
         }
 
         /// <summary>
