@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
@@ -33,8 +34,18 @@ namespace BepInEx
             if (loaded)
                 return;
 
+            if (bool.Parse(Config.GetEntry("console", "false")))
+            {
+                UnityInjector.ConsoleUtil.ConsoleWindow.Attach();
+
+                if (bool.Parse(Config.GetEntry("console-shiftjis", "false")))
+                    UnityInjector.ConsoleUtil.ConsoleEncoding.ConsoleCodePage = 932;
+            }
+
             try
             {
+                BepInLogger.Log($"Chainloader started");
+
                 UnityEngine.Object.DontDestroyOnLoad(ManagerObject);
 
                 if (Directory.Exists(Utility.PluginsDirectory))
@@ -61,7 +72,6 @@ namespace BepInEx
             catch (Exception ex)
             {
                 UnityInjector.ConsoleUtil.ConsoleWindow.Attach();
-                //UnityInjector.ConsoleUtil.ConsoleEncoding.ConsoleCodePage = 932;
 
                 Console.WriteLine("Error occurred starting the game");
                 Console.WriteLine(ex.ToString());

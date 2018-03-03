@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Runtime.CompilerServices;
 
 namespace BepInEx
 {
@@ -27,6 +28,8 @@ namespace BepInEx
         public static void Log(string entry, bool show = false)
         {
             UnityEngine.UnityLogWriter.WriteStringToUnityLog($"BEPIN - {entry}\r\n");
+
+            Console.WriteLine(entry);
 
             EntryLogged?.Invoke(entry, show);
         }
