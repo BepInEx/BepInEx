@@ -52,7 +52,7 @@ namespace BepInEx
             if (!Exists)
                 return Default;
 
-            var strVal = Config.GetEntry(Key, Section);
+            var strVal = Config.GetEntry(Key, null, Section);
             return (T)_converter.ConvertFrom(strVal);
         }
 
