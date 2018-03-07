@@ -1,0 +1,67 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <!--                                                                                   -->
+    <!-- ILMerge project-specific settings. Almost never need to be set explicitly.       -->
+    <!-- for details, see http://research.microsoft.com/en-us/people/mbarnett/ilmerge.aspx -->
+    <!--                                                                                   -->
+    <!-- *** set this file to Type=None, CopyToOutput=Never ***                            -->
+
+    <!-- If True, all copy local dependencies will also be merged from referenced projects whether they are referenced in the current project explicitly or not -->
+    <ILMergeTransitive>false</ILMergeTransitive>
+
+    <!-- Extra ILMerge library paths (semicolon-separated). Dont put your package dependencies here, they will be added automagically -->
+    <ILMergeLibraryPath></ILMergeLibraryPath>
+
+    <!-- The solution NuGet package directory if not standard 'SOLUTION\packages' -->
+    <ILMergePackagesPath></ILMergePackagesPath>
+
+    <!-- The merge order file name if differs from standard 'ILMergeOrder.txt' -->
+    <ILMergeOrderFile></ILMergeOrderFile>
+
+    <!-- The strong key file name if not specified in the project -->
+    <ILMergeKeyFile></ILMergeKeyFile>
+
+    <!-- The assembly version if differs for the version of the main assembly -->
+    <ILMergeAssemblyVersion></ILMergeAssemblyVersion>
+
+    <!-- added in Version 1.0.4 -->
+    <ILMergeFileAlignment></ILMergeFileAlignment>
+
+    <!-- added in Version 1.0.4, default=none -->
+    <ILMergeAllowDuplicateType></ILMergeAllowDuplicateType>
+
+    <!-- If the <see cref="CopyAttributes"/> is also set, any assembly-level attributes names that have the same type are copied over into the target assembly -->
+    <ILMergeAllowMultipleAssemblyLevelAttributes></ILMergeAllowMultipleAssemblyLevelAttributes>
+
+    <!-- See ILMerge documentation -->
+    <ILMergeAllowZeroPeKind></ILMergeAllowZeroPeKind>
+
+    <!-- The assembly level attributes of each input assembly are copied over into the target assembly -->
+    <ILMergeCopyAttributes></ILMergeCopyAttributes>
+    
+    <!-- Creates a .pdb file for the output assembly and merges into it any .pdb files found for input assemblies, default=true -->
+    <ILMergeDebugInfo>false</ILMergeDebugInfo>
+
+    <!-- Target assembly will be delay signed -->
+    <ILMergeDelaySign></ILMergeDelaySign>
+
+    <!-- Types in assemblies other than the primary assembly have their visibility modified -->
+    <ILMergeInternalize></ILMergeInternalize>
+
+    <!-- The path name of the file that will be used to identify types that are not to have their visibility modified -->
+    <ILMergeInternalizeExcludeFile></ILMergeInternalizeExcludeFile>
+
+    <!-- XML documentation files are merged to produce an XML documentation file for the target assembly -->
+    <ILMergeXmlDocumentation></ILMergeXmlDocumentation>
+
+    <!-- External assembly references in the manifest of the target assembly will use full public keys (false) or public key tokens (true, default value) -->
+    <ILMergePublicKeyTokens></ILMergePublicKeyTokens>
+
+    <!-- Types with the same name are all merged into a single type in the target assembly -->
+    <ILMergeUnionMerge></ILMergeUnionMerge>
+
+    <!-- The version of the target framework, default 40 (works for 45 too) -->
+    <ILTargetPlatform>45</ILTargetPlatform>
+  </PropertyGroup>
+</Project>
