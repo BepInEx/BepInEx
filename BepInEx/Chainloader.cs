@@ -44,7 +44,7 @@ namespace BepInEx
 
             try
             {
-                BepInLogger.Log($"BepInEx {Assembly.GetEntryAssembly().GetName().Version}");
+                BepInLogger.Log($"BepInEx {Assembly.GetExecutingAssembly().GetName().Version}");
                 BepInLogger.Log($"Chainloader started");
 
                 UnityEngine.Object.DontDestroyOnLoad(ManagerObject);
@@ -53,9 +53,9 @@ namespace BepInEx
                 {
                     var pluginTypes = TypeLoader.LoadTypes<BaseUnityPlugin>(Utility.PluginsDirectory).ToList();
 
-                    pluginTypes = TopologicalSort(pluginTypes, x => TypeLoader.GetDependencies(x, pluginTypes)).ToList();
-
                     BepInLogger.Log($"{pluginTypes.Count} plugins found");
+
+                    pluginTypes = TopologicalSort(pluginTypes, x => TypeLoader.GetDependencies(x, pluginTypes)).ToList();
 
                     foreach (Type t in pluginTypes)
                     {
