@@ -39,13 +39,13 @@ namespace BepInEx
             SoftDependency = 2
         }
 
-        public string refGUID { get; protected set; }
+        public string DependencyGUID { get; protected set; }
 
         public DependencyFlags Flags { get; protected set; }
 
-        public BepInDependency(string refGUID, DependencyFlags Flags = DependencyFlags.HardDependency)
+        public BepInDependency(string DependencyGUID, DependencyFlags Flags = DependencyFlags.HardDependency)
         {
-            this.refGUID = refGUID;
+            this.DependencyGUID = DependencyGUID;
             this.Flags = Flags;
         }
     }
