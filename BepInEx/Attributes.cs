@@ -20,13 +20,13 @@ namespace BepInEx
         /// <summary>
         /// The specfic version of the plugin.
         /// </summary>
-        public string Version { get; protected set; }
+        public Version Version { get; protected set; }
 
         public BepInPlugin(string GUID, string Name, string Version)
         {
             this.GUID = GUID;
             this.Name = Name;
-            this.Version = Version;
+            this.Version = new Version(Version);
         }
     }
 
