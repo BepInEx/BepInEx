@@ -44,6 +44,7 @@ namespace BepInEx
 
             try
             {
+                BepInLogger.Log($"BepInEx {Assembly.GetEntryAssembly().GetName().Version}");
                 BepInLogger.Log($"Chainloader started");
 
                 UnityEngine.Object.DontDestroyOnLoad(ManagerObject);
