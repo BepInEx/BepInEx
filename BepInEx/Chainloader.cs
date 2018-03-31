@@ -55,7 +55,25 @@ namespace BepInEx
 
                     BepInLogger.Log($"{pluginTypes.Count} plugins found");
 
-                    pluginTypes = TopologicalSort(pluginTypes, x => TypeLoader.GetDependencies(x, pluginTypes)).ToList();
+                    Dictionary<Type, IEnumerable<Type>> dependencyDict = new Dictionary<Type, IEnumerable<Type>>();
+
+                    foreach (Type t in pluginTypes)
+                    {
+                        try
+                        {
+                            IEnumerable<Type> dependencies = TypeLoader.GetDependencies(t, pluginTypes);
+
+                            dependencyDict[t] = dependencies;
+                        }
+                        catch (MissingDependencyException)
+                        {
+                            var metadata = TypeLoader.GetMetadata(t);
+
+                            BepInLogger.Log($"Cannot load [{metadata.Name}] due to missing dependencies.");
+                        }
+                    }
+
+                    pluginTypes = TopologicalSort(dependencyDict.Keys, x => dependencyDict[x]).ToList();
 
                     foreach (Type t in pluginTypes)
                     {
