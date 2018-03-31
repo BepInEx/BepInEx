@@ -72,12 +72,25 @@ namespace BepInEx
                 Type dependencyType = AllPlugins.FirstOrDefault(x => GetMetadata(x)?.GUID == dependency.refGUID);
 
                 if (dependencyType == null)
-                    throw new Exception("Cannot find dependency type.");
+                    throw new MissingDependencyException("Cannot find dependency type.");
 
                 dependencyTypes.Add(dependencyType);
             }
 
             return dependencyTypes;
+        }
+    }
+
+    public class MissingDependencyException : Exception
+    {
+        public MissingDependencyException() : base()
+        {
+
+        }
+
+        public MissingDependencyException(string message) : base(message)
+        {
+
         }
     }
 }
