@@ -66,7 +66,7 @@ namespace BepInEx
                             var plugin = (BaseUnityPlugin)ManagerObject.AddComponent(t);
 
                             Plugins.Add(plugin);
-                            BepInLogger.Log($"Loaded [{plugin.Name}]");
+                            BepInLogger.Log($"Loaded [{metadata.Name} {metadata.Version}]");
                         }
                         catch (Exception ex)
                         {
