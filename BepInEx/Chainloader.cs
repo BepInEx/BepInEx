@@ -50,7 +50,9 @@ namespace BepInEx
 
                 if (Directory.Exists(Utility.PluginsDirectory))
                 {
-                    var pluginTypes = LoadTypes<BaseUnityPlugin>(Utility.PluginsDirectory);
+                    var pluginTypes = TypeLoader.LoadTypes<BaseUnityPlugin>(Utility.PluginsDirectory).ToList();
+
+                    pluginTypes = TopologicalSort(pluginTypes, x => TypeLoader.GetDependencies(x, pluginTypes)).ToList();
 
                     BepInLogger.Log($"{pluginTypes.Count} plugins found");
 
@@ -58,7 +60,10 @@ namespace BepInEx
                     {
                         try
                         {
+                            var metadata = TypeLoader.GetMetadata(t);
+
                             var plugin = (BaseUnityPlugin)ManagerObject.AddComponent(t);
+
                             Plugins.Add(plugin);
                             BepInLogger.Log($"Loaded [{plugin.Name}]");
                         }
@@ -80,58 +85,39 @@ namespace BepInEx
             loaded = true;
         }
 
-        /// <summary>
-        /// Checks all plugins to see if a plugin with a certain ID is loaded.
-        /// </summary>
-        /// <param name="ID">The ID to check for.</param>
-        /// <returns></returns>
-        public static bool IsIDLoaded(string ID)
+        protected static IEnumerable<TNode> TopologicalSort<TNode>(
+            IEnumerable<TNode> nodes,
+            Func<TNode, IEnumerable<TNode>> dependencySelector)
         {
-            foreach (var plugin in Plugins)
-                if (plugin != null && plugin.enabled && plugin.ID == ID)
-                    return true;
 
-            return false;
-        }
+            List<TNode> sorted_list = new List<TNode>();
 
-        /// <summary>
-        /// Loads a list of types from a directory containing assemblies, that derive from a base type.
-        /// </summary>
-        /// <typeparam name="T">The specfiic base type to search for.</typeparam>
-        /// <param name="directory">The directory to search for assemblies.</param>
-        /// <returns>Returns a list of found derivative types.</returns>
-        public static List<Type> LoadTypes<T>(string directory)
-        {
-            List<Type> types = new List<Type>();
-            Type pluginType = typeof(T);
+            HashSet<TNode> visited = new HashSet<TNode>();
+            HashSet<TNode> sorted = new HashSet<TNode>();
 
-            foreach (string dll in Directory.GetFiles(Path.GetFullPath(directory), "*.dll"))
+            foreach (TNode input in nodes)
+                Visit(input);
+
+            return sorted_list;
+
+            void Visit(TNode node)
             {
-                try
+                if (visited.Contains(node))
                 {
-                    AssemblyName an = AssemblyName.GetAssemblyName(dll);
-                    Assembly assembly = Assembly.Load(an);
-
-                    foreach (Type type in assembly.GetTypes())
-                    {
-                        if (type.IsInterface || type.IsAbstract)
-                        {
-                            continue;
-                        }
-                        else
-                        {
-                            if (type.BaseType == pluginType)
-                                types.Add(type);
-                        }
-                    }
+                    if (!sorted.Contains(node))
+                        throw new Exception("Cyclic Dependency");
                 }
-                catch (BadImageFormatException)
+                else
                 {
+                    visited.Add(node);
 
+                    foreach (var dep in dependencySelector(node))
+                        Visit(dep);
+
+                    sorted.Add(node);
+                    sorted_list.Add(node);
                 }
             }
-
-            return types;
         }
     }
 }
