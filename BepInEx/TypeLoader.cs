@@ -69,7 +69,7 @@ namespace BepInEx
 
             foreach (BepInDependency dependency in attributes)
             {
-                Type dependencyType = AllPlugins.FirstOrDefault(x => GetMetadata(x)?.GUID == dependency.refGUID);
+                Type dependencyType = AllPlugins.FirstOrDefault(x => GetMetadata(x)?.GUID == dependency.DependencyGUID);
 
                 if (dependencyType == null)
                     throw new MissingDependencyException("Cannot find dependency type.");
