@@ -1,5 +1,0 @@
-﻿{
-  "General": {
-    "OutputFile": "$(TargetDir)$(TargetFileName)"
-  }
-}
