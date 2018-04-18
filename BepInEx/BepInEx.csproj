@@ -58,6 +58,7 @@
     <Compile Include="ConsoleUtil\ConsoleMirror.cs" />
     <Compile Include="ConsoleUtil\ConsoleWindow.cs" />
     <Compile Include="ConsoleUtil\Extensions.cs" />
+    <Compile Include="ConsoleUtil\Kon.cs" />
     <Compile Include="ConsoleUtil\SafeConsole.cs" />
     <Compile Include="Chainloader.cs" />
     <Compile Include="BaseUnityPlugin.cs" />
