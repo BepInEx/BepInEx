@@ -8,6 +8,7 @@ namespace BepInEx
         private readonly Func<string, T> _strToObj;
         private readonly Func<T, string> _objToStr;
         private readonly string _defaultStr;
+        private readonly T _default;
 
         public string Key { get; protected set; }
 
@@ -33,6 +34,7 @@ namespace BepInEx
             _objToStr = (obj) => cvt.ConvertToInvariantString(obj);
 
             _defaultStr = _objToStr(@default);
+            _default = @default;
             Key = key;
         }
 
@@ -60,7 +62,7 @@ namespace BepInEx
         public ConfigWrapper(string key, BaseUnityPlugin plugin, Func<string, T> strToObj, Func<T, string> objToStr, T @default = default(T))
           : this(key, strToObj, objToStr, @default)
         {
-            Section = plugin.ID;
+            Section = TypeLoader.GetMetadata(plugin).GUID;
         }
 
         public ConfigWrapper(string key, string section, T @default = default(T))
@@ -82,14 +84,29 @@ namespace BepInEx
 
         protected virtual T GetValue()
         {
-            var strVal = Config.GetEntry(Key, _defaultStr, Section);
-            return _strToObj(strVal);
+            try
+            {
+                var strVal = Config.GetEntry(Key, _defaultStr, Section);
+                return _strToObj(strVal);
+            }
+            catch (Exception ex)
+            {
+                BepInLogger.Log("ConfigWrapper Get Converter Exception: " + ex.Message);
+                return _default;
+            }
         }
 
         protected virtual void SetValue(T value)
         {
-            var strVal = _objToStr(value);
-            Config.SetEntry(Key, strVal, Section);
+            try
+            {
+                var strVal = _objToStr(value);
+                Config.SetEntry(Key, strVal, Section);
+            }
+            catch (Exception ex)
+            {
+                BepInLogger.Log("ConfigWrapper Set Converter Exception: " + ex.Message);
+            }
         }
 
         public void Clear()
