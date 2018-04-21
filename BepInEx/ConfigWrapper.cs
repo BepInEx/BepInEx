@@ -3,6 +3,12 @@ using System.ComponentModel;
 
 namespace BepInEx
 {
+    public interface IConfigConverter<T>
+    {
+        string ConvertToString<T>(T value);
+        T ConvertFromString(string str);
+    }
+    
     public class ConfigWrapper<T>
     {
         private readonly Func<string, T> _strToObj;
@@ -53,6 +59,13 @@ namespace BepInEx
             Key = key;
         }
 
+        public ConfigWrapper(string key, IConfigConverter<T> converter, T @default = default(T))
+            : this(key, converter.ConvertFromString, converter.ConvertToString, @default)
+        {
+
+        }
+
+
         public ConfigWrapper(string key, BaseUnityPlugin plugin, T @default = default(T))
             : this(key, @default)
         {
@@ -65,6 +78,12 @@ namespace BepInEx
             Section = TypeLoader.GetMetadata(plugin).GUID;
         }
 
+        public ConfigWrapper(string key, BaseUnityPlugin plugin, IConfigConverter<T> converter, T @default = default(T))
+          : this(key, converter.ConvertFromString, converter.ConvertToString, @default)
+        {
+            Section = TypeLoader.GetMetadata(plugin).GUID;
+        }
+
         public ConfigWrapper(string key, string section, T @default = default(T))
             : this(key, @default)
         {
@@ -73,6 +92,12 @@ namespace BepInEx
 
         public ConfigWrapper(string key, string section, Func<string, T> strToObj, Func<T, string> objToStr, T @default = default(T))
            : this(key, strToObj, objToStr, @default)
+        {
+            Section = section;
+        }
+
+        public ConfigWrapper(string key, string section, IConfigConverter<T> converter, T @default = default(T))
+           : this(key, converter.ConvertFromString, converter.ConvertToString, @default)
         {
             Section = section;
         }
