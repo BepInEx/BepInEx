@@ -5,7 +5,7 @@ namespace BepInEx
 {
     public interface IConfigConverter<T>
     {
-        string ConvertToString<T>(T value);
+        string ConvertToString(T value);
         T ConvertFromString(string str);
     }
     
