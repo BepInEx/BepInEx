@@ -66,7 +66,9 @@ namespace BepInEx
             }
 
             if (subdict.TryGetValue(key, out string value))
+            {
                 return value;
+            }
             else
             {
                 SetEntry(key, defaultValue, section);
