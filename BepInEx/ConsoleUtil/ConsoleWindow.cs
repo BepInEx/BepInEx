@@ -26,13 +26,17 @@ namespace UnityInjector.ConsoleUtil
             // Store Current Window
             IntPtr currWnd = GetForegroundWindow();
 
-            if (!AllocConsole())
-                throw new Exception("AllocConsole() failed");
+            //Check for existing console before allocating
+            if (GetConsoleWindow() == IntPtr.Zero)
+                if (!AllocConsole())
+                    throw new Exception("AllocConsole() failed");
 
             // Restore Foreground
             SetForegroundWindow(currWnd);
 
-            _cOut = CreateFile("CONOUT$", 0x40000000, 2, IntPtr.Zero, 3, 0, IntPtr.Zero);
+            _cOut = CreateFile("CONOUT$", 0x80000000 | 0x40000000, 2, IntPtr.Zero, 3, 0, IntPtr.Zero);
+            BepInEx.ConsoleUtil.Kon.conOut = _cOut;
+
             if (!SetStdHandle(-11, _cOut))
                 throw new Exception("SetStdHandle() failed");
             Init();
@@ -65,13 +69,16 @@ namespace UnityInjector.ConsoleUtil
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern bool AllocConsole();
 
+        [DllImport("kernel32.dll")]
+        private static extern IntPtr GetConsoleWindow();
+
         [DllImport("kernel32.dll", ExactSpelling = true, SetLastError = true)]
         private static extern bool CloseHandle(IntPtr handle);
 
         [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         private static extern IntPtr CreateFile(
             string fileName,
-            int desiredAccess,
+            uint desiredAccess,
             int shareMode,
             IntPtr securityAttributes,
             int creationDisposition,

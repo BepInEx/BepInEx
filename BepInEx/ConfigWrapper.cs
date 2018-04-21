@@ -54,7 +54,7 @@ namespace BepInEx
         public ConfigWrapper(string key, BaseUnityPlugin plugin, T @default = default(T))
             : this(key, @default)
         {
-            Section = plugin.ID;
+            Section = TypeLoader.GetMetadata(plugin).GUID;
         }
 
         public ConfigWrapper(string key, BaseUnityPlugin plugin, Func<string, T> strToObj, Func<T, string> objToStr, T @default = default(T))
