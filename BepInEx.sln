@@ -1,11 +1,14 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27130.2036
+VisualStudioVersion = 15.0.27130.2027
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BepInEx", "BepInEx\BepInEx.csproj", "{4FFBA620-F5ED-47F9-B90C-DAD1316FD9B9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BepInEx.Patcher", "BepInEx.Patcher\BepInEx.Patcher.csproj", "{DC89F18B-235B-4C01-AB31-AF40DCE5C4C7}"
+	ProjectSection(ProjectDependencies) = postProject
+		{4FFBA620-F5ED-47F9-B90C-DAD1316FD9B9} = {4FFBA620-F5ED-47F9-B90C-DAD1316FD9B9}
+	EndProjectSection
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "BepInEx.Common", "BepInEx.Common\BepInEx.Common.shproj", "{D8DEEEF7-28F5-4F13-A004-C581CE051CDC}"
 EndProject

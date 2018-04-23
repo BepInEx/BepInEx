@@ -56,9 +56,9 @@ namespace BepInEx
 
 				UnityEngine.Object.DontDestroyOnLoad(ManagerObject);
 
-				if (Directory.Exists(Utility.PluginsDirectory))
+				if (Directory.Exists(Common.Utility.PluginsDirectory))
 				{
-					var pluginTypes = TypeLoader.LoadTypes<BaseUnityPlugin>(Utility.PluginsDirectory).ToList();
+					var pluginTypes = TypeLoader.LoadTypes<BaseUnityPlugin>(Common.Utility.PluginsDirectory).ToList();
 
 					BepInLogger.Log($"{pluginTypes.Count} plugins found");
 
