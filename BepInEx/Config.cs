@@ -1,5 +1,4 @@
-﻿using BepInEx.Common;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
@@ -13,7 +12,7 @@ namespace BepInEx
     {
         private static Dictionary<string, Dictionary<string, string>> cache = new Dictionary<string, Dictionary<string, string>>();
 
-        private static string configPath => Path.Combine(Utility.PluginsDirectory, "config.ini");
+        private static string configPath => Path.Combine(Common.Utility.PluginsDirectory, "config.ini");
 
         private static Regex sanitizeKeyRegex = new Regex("[^a-zA-Z0-9]+");
 

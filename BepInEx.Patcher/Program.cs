@@ -1,12 +1,8 @@
-﻿using BepInEx.Common;
-using Mono.Cecil;
+﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Text;
 
 namespace BepInEx.Patcher
 {
@@ -22,34 +18,33 @@ namespace BepInEx.Patcher
 
         static void Main(string[] args)
         {
-            string unityOutputDLL = Path.GetFullPath(@"KoikatuTrial_Data\Managed\UnityEngine.dll");
+            string managedDir = Environment.CurrentDirectory + @"\KoikatuTrial_Data\Managed";
+            if (!Directory.Exists(managedDir))
+                Error($"\"{managedDir}\" not found.");
+
+            string unityOutputDLL = Path.GetFullPath($"{managedDir}\\UnityEngine.dll");
             if (!File.Exists(unityOutputDLL))
                 Error("\"UnityEngine.dll\" not found.");
 
-            string unityOriginalDLL = Path.GetFullPath(@"KoikatuTrial_Data\Managed\UnityEngine.dll.bak");
+            string unityOriginalDLL = Path.GetFullPath($"{managedDir}\\UnityEngine.dll.bak");
             if (!File.Exists(unityOriginalDLL))
                 File.Copy(unityOutputDLL, unityOriginalDLL);
-            
 
-            string injectedDLL = Path.GetFullPath(@"KoikatuTrial_Data\Managed\BepInEx.dll");
-            if (!File.Exists(unityOutputDLL))
-                Error("\"BepInEx.dll\" not found.");
+            string harmony = Path.GetFullPath($"{managedDir}\\0Harmony.dll");
+            File.WriteAllBytes(harmony, Resources._0Harmony);
 
-            string referenceDir = Path.GetFullPath(@"KoikatuTrial_Data\Managed");
-
+            string injectedDLL = Path.GetFullPath($"{managedDir}\\BepInEx.dll");
+            File.WriteAllBytes(injectedDLL, Resources.BepInEx);
 
             var defaultResolver = new DefaultAssemblyResolver();
-            defaultResolver.AddSearchDirectory(referenceDir);
-            
-            AssemblyDefinition unity = AssemblyDefinition.ReadAssembly(unityOriginalDLL, new ReaderParameters
+            defaultResolver.AddSearchDirectory(managedDir);
+            var rp = new ReaderParameters
             {
                 AssemblyResolver = defaultResolver
-            });
-            AssemblyDefinition injected = AssemblyDefinition.ReadAssembly(injectedDLL, new ReaderParameters
-            {
-                AssemblyResolver = defaultResolver
-            });
+            };
 
+            AssemblyDefinition unity = AssemblyDefinition.ReadAssembly(unityOriginalDLL, rp);
+            AssemblyDefinition injected = AssemblyDefinition.ReadAssembly(injectedDLL, rp);
 
             InjectAssembly(unity, injected);
             
@@ -62,17 +57,17 @@ namespace BepInEx.Patcher
             var originalInjectMethod = injected.MainModule.Types.First(x => x.Name == "Chainloader")
                 .Methods.First(x => x.Name == "Initialize");
 
-            var injectMethod = unity.MainModule.Import(originalInjectMethod);
+            var injectMethod = unity.MainModule.ImportReference(originalInjectMethod);
 
             var sceneManager = unity.MainModule.Types.First(x => x.Name == "Application");
 
-            var voidType = unity.MainModule.Import(typeof(void));
+            var voidType = unity.MainModule.ImportReference(typeof(void));
             var cctor = new MethodDefinition(".cctor",
-                Mono.Cecil.MethodAttributes.Static
-                | Mono.Cecil.MethodAttributes.Private
-                | Mono.Cecil.MethodAttributes.HideBySig
-                | Mono.Cecil.MethodAttributes.SpecialName
-                | Mono.Cecil.MethodAttributes.RTSpecialName,
+                MethodAttributes.Static
+                | MethodAttributes.Private
+                | MethodAttributes.HideBySig
+                | MethodAttributes.SpecialName
+                | MethodAttributes.RTSpecialName,
                 voidType);
 
             var ilp = cctor.Body.GetILProcessor();
