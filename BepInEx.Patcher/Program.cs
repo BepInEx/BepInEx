@@ -18,37 +18,39 @@ namespace BepInEx.Patcher
 
         static void Main(string[] args)
         {
-            string managedDir = Environment.CurrentDirectory + @"\KoikatuTrial_Data\Managed";
-            if (!Directory.Exists(managedDir))
-                Error($"\"{managedDir}\" not found.");
-
-            string unityOutputDLL = Path.GetFullPath($"{managedDir}\\UnityEngine.dll");
-            if (!File.Exists(unityOutputDLL))
-                Error("\"UnityEngine.dll\" not found.");
-
-            string unityOriginalDLL = Path.GetFullPath($"{managedDir}\\UnityEngine.dll.bak");
-            if (!File.Exists(unityOriginalDLL))
-                File.Copy(unityOutputDLL, unityOriginalDLL);
-
-            string harmony = Path.GetFullPath($"{managedDir}\\0Harmony.dll");
-            File.WriteAllBytes(harmony, Resources._0Harmony);
-
-            string injectedDLL = Path.GetFullPath($"{managedDir}\\BepInEx.dll");
-            File.WriteAllBytes(injectedDLL, Resources.BepInEx);
-
-            var defaultResolver = new DefaultAssemblyResolver();
-            defaultResolver.AddSearchDirectory(managedDir);
-            var rp = new ReaderParameters
+            foreach (string exePath in Directory.GetFiles(Directory.GetCurrentDirectory()))
             {
-                AssemblyResolver = defaultResolver
-            };
 
-            AssemblyDefinition unity = AssemblyDefinition.ReadAssembly(unityOriginalDLL, rp);
-            AssemblyDefinition injected = AssemblyDefinition.ReadAssembly(injectedDLL, rp);
+                string managedDir = Environment.CurrentDirectory + $@"\{Path.GetFileNameWithoutExtension(exePath)}_Data\Managed";
+                string unityOutputDLL = Path.GetFullPath($"{managedDir}\\UnityEngine.dll");
 
-            InjectAssembly(unity, injected);
+                if (!Directory.Exists(managedDir) || !File.Exists(unityOutputDLL))
+                    continue;
+
+                string unityOriginalDLL = Path.GetFullPath($"{managedDir}\\UnityEngine.dll.bak");
+                if (!File.Exists(unityOriginalDLL))
+                    File.Copy(unityOutputDLL, unityOriginalDLL);
+
+                string harmony = Path.GetFullPath($"{managedDir}\\0Harmony.dll");
+                File.WriteAllBytes(harmony, Resources._0Harmony);
+
+                string injectedDLL = Path.GetFullPath($"{managedDir}\\BepInEx.dll");
+                File.WriteAllBytes(injectedDLL, Resources.BepInEx);
+
+                var defaultResolver = new DefaultAssemblyResolver();
+                defaultResolver.AddSearchDirectory(managedDir);
+                var rp = new ReaderParameters
+                {
+                    AssemblyResolver = defaultResolver
+                };
+
+                AssemblyDefinition unity = AssemblyDefinition.ReadAssembly(unityOriginalDLL, rp);
+                AssemblyDefinition injected = AssemblyDefinition.ReadAssembly(injectedDLL, rp);
+
+                InjectAssembly(unity, injected);
             
-            unity.Write(unityOutputDLL);
+                unity.Write(unityOutputDLL);
+            }
         }
 
         static void InjectAssembly(AssemblyDefinition unity, AssemblyDefinition injected)
