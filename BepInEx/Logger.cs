@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using BepInEx.ConsoleUtil;
 
 namespace BepInEx
 {
@@ -27,8 +28,31 @@ namespace BepInEx
         /// <param name="show">Whether or not it should be dislpayed to the user.</param>
         public static void Log(string entry, bool show = false)
         {
+            Log(entry, show, ConsoleColor.Gray);
+        }
+
+        /// <summary>
+        /// Logs an entry to the logger, and any listeners are notified of the entry.
+        /// </summary>
+        /// <param name="entry">The text element of the log itself. Uses .ToString().</param>
+        /// <param name="show">Whether or not it should be dislpayed to the user.</param>
+        /// <param name="color">The color of the text to show in the console.</param>
+        public static void Log(object entry, bool show, ConsoleColor color)
+        {
+            Log(entry.ToString(), show, color);
+        }
+
+        /// <summary>
+        /// Logs an entry to the logger, and any listeners are notified of the entry.
+        /// </summary>
+        /// <param name="entry">The text element of the log itself.</param>
+        /// <param name="show">Whether or not it should be dislpayed to the user.</param>
+        /// <param name="color">The color of the text to show in the console.</param>
+        public static void Log(string entry, bool show, ConsoleColor color)
+        {
             UnityEngine.UnityLogWriter.WriteStringToUnityLog($"BEPIN - {entry}\r\n");
 
+            Kon.ForegroundColor = color;
             Console.WriteLine(entry);
 
             EntryLogged?.Invoke(entry, show);
