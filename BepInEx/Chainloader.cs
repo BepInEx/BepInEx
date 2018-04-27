@@ -34,7 +34,10 @@ namespace BepInEx
 			if (loaded)
 				return;
 
-			if (bool.Parse(Config.GetEntry("console", "false")))
+		    if (!Directory.Exists(Common.Utility.PluginsDirectory))
+		        Directory.CreateDirectory(Utility.PluginsDirectory);
+
+			if (bool.Parse(Config.GetEntry("console", "false")) || bool.Parse(Config.GetEntry("console-shiftjis", "false")))
 			{
 				try
 				{
@@ -55,48 +58,46 @@ namespace BepInEx
 				BepInLogger.Log($"Chainloader started");
 
 				UnityEngine.Object.DontDestroyOnLoad(ManagerObject);
+                
 
-				if (Directory.Exists(Common.Utility.PluginsDirectory))
+				var pluginTypes = TypeLoader.LoadTypes<BaseUnityPlugin>(Common.Utility.PluginsDirectory).ToList();
+
+				BepInLogger.Log($"{pluginTypes.Count} plugins found");
+
+				Dictionary<Type, IEnumerable<Type>> dependencyDict = new Dictionary<Type, IEnumerable<Type>>();
+
+				foreach (Type t in pluginTypes)
 				{
-					var pluginTypes = TypeLoader.LoadTypes<BaseUnityPlugin>(Common.Utility.PluginsDirectory).ToList();
-
-					BepInLogger.Log($"{pluginTypes.Count} plugins found");
-
-					Dictionary<Type, IEnumerable<Type>> dependencyDict = new Dictionary<Type, IEnumerable<Type>>();
-
-					foreach (Type t in pluginTypes)
+					try
 					{
-						try
-						{
-							IEnumerable<Type> dependencies = TypeLoader.GetDependencies(t, pluginTypes);
+						IEnumerable<Type> dependencies = TypeLoader.GetDependencies(t, pluginTypes);
 
-							dependencyDict[t] = dependencies;
-						}
-						catch (MissingDependencyException)
-						{
-							var metadata = TypeLoader.GetMetadata(t);
-
-							BepInLogger.Log($"Cannot load [{metadata.Name}] due to missing dependencies.");
-						}
+						dependencyDict[t] = dependencies;
 					}
-
-					pluginTypes = TopologicalSort(dependencyDict.Keys, x => dependencyDict[x]).ToList();
-
-					foreach (Type t in pluginTypes)
+					catch (MissingDependencyException)
 					{
-						try
-						{
-							var metadata = TypeLoader.GetMetadata(t);
+						var metadata = TypeLoader.GetMetadata(t);
 
-							var plugin = (BaseUnityPlugin) ManagerObject.AddComponent(t);
+						BepInLogger.Log($"Cannot load [{metadata.Name}] due to missing dependencies.");
+					}
+				}
 
-							Plugins.Add(plugin);
-							BepInLogger.Log($"Loaded [{metadata.Name} {metadata.Version}]");
-						}
-						catch (Exception ex)
-						{
-							BepInLogger.Log($"Error loading [{t.Name}] : {ex.Message}");
-						}
+				pluginTypes = TopologicalSort(dependencyDict.Keys, x => dependencyDict[x]).ToList();
+
+				foreach (Type t in pluginTypes)
+				{
+					try
+					{
+						var metadata = TypeLoader.GetMetadata(t);
+
+						var plugin = (BaseUnityPlugin) ManagerObject.AddComponent(t);
+
+						Plugins.Add(plugin);
+						BepInLogger.Log($"Loaded [{metadata.Name} {metadata.Version}]");
+					}
+					catch (Exception ex)
+					{
+						BepInLogger.Log($"Error loading [{t.Name}] : {ex.Message}");
 					}
 				}
 			}
