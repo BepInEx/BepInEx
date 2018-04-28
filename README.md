@@ -1,7 +1,11 @@
 # BepInEx
 Bepis Injector Extensible
 
-Koikatsu plugin framework
+Unity plugin framework
+
+**[How to install](https://github.com/bbepis/BepInEx/wiki/How-to-install)**
+
+**[How to make a plugin](https://github.com/bbepis/BepInEx/wiki/How-to-make-a-plugin)**
 
 ## Alternate translations
 
