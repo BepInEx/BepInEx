@@ -35,5 +35,15 @@ namespace BepInEx.Common
         {
             return $"file://{path.Replace('\\', '/')}";
         }
+
+        /// <summary>
+        /// Indicates whether a specified string is null, empty, or consists only of white-space characters.
+        /// </summary>
+        /// <param name="self">The string to test.</param>
+        /// <returns>True if the value parameter is null or empty, or if value consists exclusively of white-space characters.</returns>
+        public static bool IsNullOrWhiteSpace(this string self)
+        {
+            return self == null || self.Trim().Length == 0;
+        }
     }
 }
