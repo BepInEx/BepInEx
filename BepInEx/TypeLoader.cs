@@ -82,7 +82,13 @@ namespace BepInEx
                 Type dependencyType = AllPlugins.FirstOrDefault(x => GetMetadata(x)?.GUID == dependency.DependencyGUID);
 
                 if (dependencyType == null)
+                {
+                    if ((dependency.Flags & BepInDependency.DependencyFlags.SoftDependency) != 0)
+                        continue; //skip on soft dependencies
+
                     throw new MissingDependencyException("Cannot find dependency type.");
+                }
+                    
 
                 dependencyTypes.Add(dependencyType);
             }
