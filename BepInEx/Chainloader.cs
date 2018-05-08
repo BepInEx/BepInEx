@@ -72,7 +72,7 @@ namespace BepInEx
 				        if (!filters.Any())
 				            return true;
 
-				        return filters.All(x => x.ProcessName.ToLower().Replace(".exe", "") == currentProcess);
+				        return filters.Any(x => x.ProcessName.ToLower().Replace(".exe", "") == currentProcess);
 				    })
 				    .ToList();
 
