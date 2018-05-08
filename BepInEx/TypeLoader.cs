@@ -40,7 +40,11 @@ namespace BepInEx
                         }
                     }
                 }
-                catch (BadImageFormatException) { }
+                catch (BadImageFormatException) { } //unmanaged DLL
+                catch (ReflectionTypeLoadException)
+                {
+                    BepInLogger.Log($"ERROR! Could not load \"{Path.GetFileName(dll)}\" as a plugin!");
+                } 
             }
 
             return types;
