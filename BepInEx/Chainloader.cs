@@ -1,6 +1,7 @@
 ﻿using BepInEx.Common;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -55,14 +56,27 @@ namespace BepInEx
 			try
 			{
 				BepInLogger.Log($"BepInEx {Assembly.GetExecutingAssembly().GetName().Version}");
-				BepInLogger.Log($"Chainloader started");
+				BepInLogger.Log("Chainloader started");
 
 				UnityEngine.Object.DontDestroyOnLoad(ManagerObject);
-                
 
-				var pluginTypes = TypeLoader.LoadTypes<BaseUnityPlugin>(Common.Utility.PluginsDirectory).ToList();
 
-				BepInLogger.Log($"{pluginTypes.Count} plugins found");
+			    string currentProcess = Process.GetCurrentProcess().ProcessName.ToLower();
+
+				var pluginTypes = TypeLoader.LoadTypes<BaseUnityPlugin>(Utility.PluginsDirectory)
+				    .Where(plugin =>
+				    {
+                        //Perform a filter for currently running process
+				        var filters = TypeLoader.GetAttributes<BepInProcess>(plugin);
+
+				        if (!filters.Any())
+				            return true;
+
+				        return filters.All(x => x.ProcessName.ToLower().Replace(".exe", "") == currentProcess);
+				    })
+				    .ToList();
+
+				BepInLogger.Log($"{pluginTypes.Count} plugins selected");
 
 				Dictionary<Type, IEnumerable<Type>> dependencyDict = new Dictionary<Type, IEnumerable<Type>>();
 

@@ -46,19 +46,29 @@ namespace BepInEx
             return types;
         }
 
-        public static BepInPlugin GetMetadata(object Plugin)
+        public static BepInPlugin GetMetadata(object plugin)
         {
-            return GetMetadata(Plugin.GetType());
+            return GetMetadata(plugin.GetType());
         }
 
-        public static BepInPlugin GetMetadata(Type PluginType)
+        public static BepInPlugin GetMetadata(Type pluginType)
         {
-            object[] attributes = PluginType.GetCustomAttributes(typeof(BepInPlugin), false);
+            object[] attributes = pluginType.GetCustomAttributes(typeof(BepInPlugin), false);
 
             if (attributes.Length == 0)
                 return null;
 
             return (BepInPlugin)attributes[0];
+        }
+
+        public static IEnumerable<T> GetAttributes<T>(object plugin) where T : Attribute
+        {
+            return GetAttributes<T>(plugin.GetType());
+        }
+
+        public static IEnumerable<T> GetAttributes<T>(Type pluginType) where T : Attribute
+        {
+            return pluginType.GetCustomAttributes(typeof(T), true).Cast<T>();
         }
 
         public static IEnumerable<Type> GetDependencies(Type Plugin, IEnumerable<Type> AllPlugins)
