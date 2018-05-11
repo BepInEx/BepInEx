@@ -16,6 +16,7 @@ namespace BepInEx.Patcher
             Console.WriteLine("Failed");
             Console.ResetColor();
             Console.WriteLine(message);
+            Console.WriteLine();
         }
 
         static void WriteSuccess()
@@ -33,6 +34,7 @@ namespace BepInEx.Patcher
                 Environment.Exit(PatchUnityExe(Path.GetDirectoryName(args[0]), args[0], out string message) ? 0 : 9999);
 
             bool hasFound = false;
+            bool hasFailure = false;
             int patchCount = 0;
 
             foreach (string exePath in Directory.GetFiles(Directory.GetCurrentDirectory()))
@@ -57,6 +59,7 @@ namespace BepInEx.Patcher
                 else
                 {
                     WriteError(message);
+                    hasFailure = true;
                 }
             }
 
@@ -67,7 +70,13 @@ namespace BepInEx.Patcher
             else
                 Console.WriteLine($"Patched {patchCount} assemblies!");
 
-            System.Threading.Thread.Sleep(2000);
+            if (hasFailure)
+            {
+                Console.WriteLine("Press any key to continue...");
+                Console.ReadKey();
+            }
+            else
+                System.Threading.Thread.Sleep(3000);
         }
 
         static bool PatchUnityExe(string managedDir, string unityOutputDLL, out string message)
@@ -76,10 +85,6 @@ namespace BepInEx.Patcher
 
             try
             {
-                string unityOriginalDLL = Path.GetFullPath($"{managedDir}\\UnityEngine.dll.bak");
-                if (!File.Exists(unityOriginalDLL))
-                    File.Copy(unityOutputDLL, unityOriginalDLL);
-
                 string harmony = Path.GetFullPath($"{managedDir}\\0Harmony.dll");
                 File.WriteAllBytes(harmony, EmbeddedResource.Get("BepInEx.Patcher.0Harmony.dll"));
 
@@ -93,11 +98,49 @@ namespace BepInEx.Patcher
                     AssemblyResolver = defaultResolver
                 };
 
-                using (AssemblyDefinition unity = AssemblyDefinition.ReadAssembly(unityOriginalDLL, rp))
+                string unityBackupDLL = Path.GetFullPath($"{managedDir}\\UnityEngine.dll.bak");
+                
+                //determine which assembly to use as a base
+                AssemblyDefinition unity = AssemblyDefinition.ReadAssembly(unityOutputDLL, rp);
+
+                if (!VerifyAssembly(unity, out message))
+                {
+                    //try and fall back to .bak if exists
+                    if (File.Exists(unityBackupDLL))
+                    {
+                        unity.Dispose();
+                        unity = AssemblyDefinition.ReadAssembly(unityBackupDLL, rp);
+
+                        if (!VerifyAssembly(unity, out message))
+                        {
+                            //can't use anything
+                            unity.Dispose();
+                            message += "\r\nThe backup is not usable.";
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        //can't use anything
+                        unity.Dispose();
+                        message += "\r\nNo backup exists.";
+                        return false;
+                    }
+                }
+                else
+                {
+                    //make a backup of the assembly
+                    File.Copy(unityOutputDLL, unityBackupDLL, true);
+                    unity.Dispose();
+                    unity = AssemblyDefinition.ReadAssembly(unityBackupDLL, rp);
+                }
+                
+                //patch
+                using (unity)
                 using (AssemblyDefinition injected = AssemblyDefinition.ReadAssembly(injectedDLL, rp))
                 {
                     InjectAssembly(unity, injected);
-            
+                    
                     unity.Write(unityOutputDLL);
                 }
             }
@@ -134,6 +177,25 @@ namespace BepInEx.Patcher
             ilp.Append(ilp.Create(OpCodes.Ret));
 
             sceneManager.Methods.Add(cctor);
+        }
+
+        static bool VerifyAssembly(AssemblyDefinition unity, out string message)
+        {
+            bool canPatch = true;
+            message = "";
+
+            //check if already patched
+            var sceneManager = unity.MainModule.Types.First(x => x.Name == "Application");
+
+            if (sceneManager.Methods.Any(x => x.Name == ".cctor"))
+            {
+                //already patched by bepin
+                canPatch = false;
+
+                message += "This assembly has already been patched by BepInEx.";
+            }
+
+            return canPatch;
         }
     }
 }
