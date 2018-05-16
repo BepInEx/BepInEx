@@ -29,15 +29,8 @@ namespace BepInEx
 
                     foreach (Type type in assembly.GetTypes())
                     {
-                        if (type.IsInterface || type.IsAbstract)
-                        {
-                            continue;
-                        }
-                        else
-                        {
-                            if (type.BaseType == pluginType)
-                                types.Add(type);
-                        }
+                        if (!type.IsInterface && !type.IsAbstract && type.BaseType == pluginType)
+                            types.Add(type);
                     }
                 }
                 catch (BadImageFormatException) { } //unmanaged DLL

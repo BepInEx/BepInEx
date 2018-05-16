@@ -96,7 +96,7 @@ namespace BepInEx
 					}
 				}
 
-				pluginTypes = TopologicalSort(dependencyDict.Keys, x => dependencyDict[x]).ToList();
+				pluginTypes = Utility.TopologicalSort(dependencyDict.Keys, x => dependencyDict[x]).ToList();
 
 				foreach (Type t in pluginTypes)
 				{
@@ -124,41 +124,6 @@ namespace BepInEx
 			}
 
 			loaded = true;
-		}
-
-		protected static IEnumerable<TNode> TopologicalSort<TNode>(
-			IEnumerable<TNode> nodes,
-			Func<TNode, IEnumerable<TNode>> dependencySelector)
-		{
-
-			List<TNode> sorted_list = new List<TNode>();
-
-			HashSet<TNode> visited = new HashSet<TNode>();
-			HashSet<TNode> sorted = new HashSet<TNode>();
-
-			foreach (TNode input in nodes)
-				Visit(input);
-
-			return sorted_list;
-
-			void Visit(TNode node)
-			{
-				if (visited.Contains(node))
-				{
-					if (!sorted.Contains(node))
-						throw new Exception("Cyclic Dependency");
-				}
-				else
-				{
-					visited.Add(node);
-
-					foreach (var dep in dependencySelector(node))
-						Visit(dep);
-
-					sorted.Add(node);
-					sorted_list.Add(node);
-				}
-			}
 		}
 	}
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -44,6 +45,72 @@ namespace BepInEx.Common
         public static bool IsNullOrWhiteSpace(this string self)
         {
             return self == null || self.Trim().Length == 0;
+        }
+
+        public static IEnumerable<TNode> TopologicalSort<TNode>(IEnumerable<TNode> nodes, Func<TNode, IEnumerable<TNode>> dependencySelector)
+        {
+            List<TNode> sorted_list = new List<TNode>();
+
+            HashSet<TNode> visited = new HashSet<TNode>();
+            HashSet<TNode> sorted = new HashSet<TNode>();
+
+            foreach (TNode input in nodes)
+                Visit(input);
+
+            return sorted_list;
+
+            void Visit(TNode node)
+            {
+                if (visited.Contains(node))
+                {
+                    if (!sorted.Contains(node))
+                        throw new Exception("Cyclic Dependency");
+                }
+                else
+                {
+                    visited.Add(node);
+
+                    foreach (var dep in dependencySelector(node))
+                        Visit(dep);
+
+                    sorted.Add(node);
+                    sorted_list.Add(node);
+                }
+            }
+        }
+
+        public static List<TNode> TopologicalSort<TNode>(List<TNode> nodes, Func<TNode, List<TNode>> dependencySelector)
+        {
+            List<TNode> sorted_list = new List<TNode>();
+
+            List<TNode> visited = new List<TNode>();
+            List<TNode> sorted = new List<TNode>();
+
+            foreach (TNode input in nodes)
+                Visit(input);
+
+            return sorted_list;
+
+            void Visit(TNode node)
+            {
+                if (visited.Contains(node))
+                {
+                    if (!sorted.Contains(node))
+                    {
+                        throw new Exception("Cyclic Dependency");
+                    }
+                }
+                else
+                {
+                    visited.Add(node);
+
+                    foreach (var dep in dependencySelector(node))
+                        Visit(dep);
+
+                    sorted.Add(node);
+                    sorted_list.Add(node);
+                }
+            }
         }
     }
 }
