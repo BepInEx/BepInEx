@@ -15,6 +15,8 @@ namespace BepInEx.Bootstrap
 
         internal static string CurrentExecutingAssemblyPath => Assembly.GetExecutingAssembly().CodeBase.Replace("file:///", "").Replace('/', '\\');
 
+        internal static string CurrentExecutingAssemblyDirectoryPath => Path.GetDirectoryName(CurrentExecutingAssemblyPath);
+
         internal static string GameName => Path.GetFileNameWithoutExtension(Process.GetCurrentProcess().ProcessName);
 
         internal static string GameRootPath => Path.GetDirectoryName(ExecutablePath);
@@ -25,6 +27,8 @@ namespace BepInEx.Bootstrap
         public static void Main(string[] args)
         {
             ExecutablePath = args[0];
+
+            AppDomain.CurrentDomain.AssemblyResolve += LocalResolve;
             
             try
             {
@@ -67,6 +71,14 @@ namespace BepInEx.Bootstrap
                     sceneManager.Methods.Add(cctor);
                 }
             }
+        }
+
+        static Assembly LocalResolve(object sender, ResolveEventArgs args)
+        {
+            if (args.Name == "0Harmony, Version=1.1.0.0, Culture=neutral, PublicKeyToken=null")
+                return Assembly.LoadFile(Path.Combine(CurrentExecutingAssemblyDirectoryPath, "0Harmony.dll"));
+
+            return null;
         }
     }
 }
