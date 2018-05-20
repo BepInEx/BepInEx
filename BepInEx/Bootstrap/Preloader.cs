@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using BepInEx.Common;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using MethodAttributes = Mono.Cecil.MethodAttributes;
@@ -24,7 +25,9 @@ namespace BepInEx.Bootstrap
 
         public static string GameRootPath => Path.GetDirectoryName(ExecutablePath);
 
-        public static string ManagedPath => Path.Combine(GameRootPath, Path.Combine($"{GameName}_Data", "Managed"));
+        public static string ManagedPath => Utility.CombinePaths(GameRootPath, $"{GameName}_Data", "Managed");
+
+        public static string PatcherPluginPath => Utility.CombinePaths(GameRootPath, "BepInEx", "patchers");
 
         #endregion
 
@@ -53,16 +56,77 @@ namespace BepInEx.Bootstrap
             
             try
             {
-                //AssemblyPatcher.AssemblyLoad += PatchEntrypoint;
-                
                 AddPatcher("UnityEngine.dll", PatchEntrypoint);
+
+                if (Directory.Exists(PatcherPluginPath))
+                    foreach (string assemblyPath in Directory.GetFiles(PatcherPluginPath, "*.dll"))
+                    {
+                        try
+                        {
+                            var assembly = Assembly.LoadFrom(assemblyPath); 
+
+                            foreach (var kv in GetPatcherMethods(assembly))
+                                foreach (var patcher in kv.Value)
+                                    AddPatcher(kv.Key, patcher);
+                        }
+                        catch (BadImageFormatException) { } //unmanaged DLL
+                        catch (ReflectionTypeLoadException) { } //invalid references
+                    }
 
                 AssemblyPatcher.PatchAll(ManagedPath, PatcherDictionary);
             }
             catch (Exception ex)
             {
-                //File.WriteAllText("B:\\test.txt", ex.ToString());
+                //TODO: some proper exception handling
             }
+        }
+
+        internal static IDictionary<string, IList<AssemblyPatcherDelegate>> GetPatcherMethods(Assembly assembly)
+        {
+            var patcherMethods = new Dictionary<string, IList<AssemblyPatcherDelegate>>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var type in assembly.GetExportedTypes())
+            {
+                if (type.IsInterface)
+                    continue;
+
+                PropertyInfo targetsProperty = type.GetProperty(
+                    "TargetDLLs", 
+                    BindingFlags.Public | BindingFlags.Static | BindingFlags.IgnoreCase,
+                    null,
+                    typeof(IEnumerable<string>),
+                    Type.EmptyTypes,
+                    null);
+
+                MethodInfo patcher = type.GetMethod(
+                    "Patch", 
+                    BindingFlags.Public | BindingFlags.Static | BindingFlags.IgnoreCase,
+                    null,
+                    CallingConventions.Any,
+                    new[] { typeof(AssemblyDefinition) },
+                    null);
+
+                if (targetsProperty == null || !targetsProperty.CanRead || patcher == null)
+                    continue;
+
+                AssemblyPatcherDelegate patchDelegate = (ass) => { patcher.Invoke(null, new object[] {ass}); };
+
+                IEnumerable<string> targets = (IEnumerable<string>)targetsProperty.GetValue(null, null);
+
+                foreach (string target in targets)
+                {
+                    if (patcherMethods.TryGetValue(target, out IList<AssemblyPatcherDelegate> patchers))
+                        patchers.Add(patchDelegate);
+                    else
+                    {
+                        patchers = new List<AssemblyPatcherDelegate>{ patchDelegate };
+
+                        patcherMethods[target] = patchers;
+                    }
+                }
+            }
+
+            return patcherMethods;
         }
 
         internal static void PatchEntrypoint(AssemblyDefinition assembly)
