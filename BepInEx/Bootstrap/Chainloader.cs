@@ -7,7 +7,7 @@ using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
-namespace BepInEx
+namespace BepInEx.Bootstrap
 {
 	/// <summary>
 	/// The manager and loader for all plugins, and the entry point for BepInEx.
@@ -67,7 +67,7 @@ namespace BepInEx
 				    .Where(plugin =>
 				    {
                         //Perform a filter for currently running process
-				        var filters = TypeLoader.GetAttributes<BepInProcess>(plugin);
+				        var filters = MetadataHelper.GetAttributes<BepInProcess>(plugin);
 
 				        if (!filters.Any())
 				            return true;
@@ -84,13 +84,13 @@ namespace BepInEx
 				{
 					try
 					{
-						IEnumerable<Type> dependencies = TypeLoader.GetDependencies(t, pluginTypes);
+						IEnumerable<Type> dependencies = MetadataHelper.GetDependencies(t, pluginTypes);
 
 						dependencyDict[t] = dependencies;
 					}
 					catch (MissingDependencyException)
 					{
-						var metadata = TypeLoader.GetMetadata(t);
+						var metadata = MetadataHelper.GetMetadata(t);
 
 						BepInLogger.Log($"Cannot load [{metadata.Name}] due to missing dependencies.");
 					}
@@ -102,7 +102,7 @@ namespace BepInEx
 				{
 					try
 					{
-						var metadata = TypeLoader.GetMetadata(t);
+						var metadata = MetadataHelper.GetMetadata(t);
 
 						var plugin = (BaseUnityPlugin) ManagerObject.AddComponent(t);
 

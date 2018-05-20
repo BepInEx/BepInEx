@@ -78,39 +78,5 @@ namespace BepInEx.Common
                 }
             }
         }
-
-        public static List<TNode> TopologicalSort<TNode>(List<TNode> nodes, Func<TNode, List<TNode>> dependencySelector)
-        {
-            List<TNode> sorted_list = new List<TNode>();
-
-            List<TNode> visited = new List<TNode>();
-            List<TNode> sorted = new List<TNode>();
-
-            foreach (TNode input in nodes)
-                Visit(input);
-
-            return sorted_list;
-
-            void Visit(TNode node)
-            {
-                if (visited.Contains(node))
-                {
-                    if (!sorted.Contains(node))
-                    {
-                        throw new Exception("Cyclic Dependency");
-                    }
-                }
-                else
-                {
-                    visited.Add(node);
-
-                    foreach (var dep in dependencySelector(node))
-                        Visit(dep);
-
-                    sorted.Add(node);
-                    sorted_list.Add(node);
-                }
-            }
-        }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -9,20 +10,40 @@ using MethodAttributes = Mono.Cecil.MethodAttributes;
 
 namespace BepInEx.Bootstrap
 {
-    internal static class Preloader
+    public static class Preloader
     {
+        #region Path Properties
+
         public static string ExecutablePath { get; private set; }
 
-        internal static string CurrentExecutingAssemblyPath => Assembly.GetExecutingAssembly().CodeBase.Replace("file:///", "").Replace('/', '\\');
+        public static string CurrentExecutingAssemblyPath => Assembly.GetExecutingAssembly().CodeBase.Replace("file:///", "").Replace('/', '\\');
 
-        internal static string CurrentExecutingAssemblyDirectoryPath => Path.GetDirectoryName(CurrentExecutingAssemblyPath);
+        public static string CurrentExecutingAssemblyDirectoryPath => Path.GetDirectoryName(CurrentExecutingAssemblyPath);
 
-        internal static string GameName => Path.GetFileNameWithoutExtension(Process.GetCurrentProcess().ProcessName);
+        public static string GameName => Path.GetFileNameWithoutExtension(Process.GetCurrentProcess().ProcessName);
 
-        internal static string GameRootPath => Path.GetDirectoryName(ExecutablePath);
+        public static string GameRootPath => Path.GetDirectoryName(ExecutablePath);
 
-        internal static string ManagedPath => Path.Combine(GameRootPath, Path.Combine($"{GameName}_Data", "Managed"));
+        public static string ManagedPath => Path.Combine(GameRootPath, Path.Combine($"{GameName}_Data", "Managed"));
 
+        #endregion
+
+
+        public static Dictionary<string, IList<AssemblyPatcherDelegate>> PatcherDictionary = new Dictionary<string, IList<AssemblyPatcherDelegate>>(StringComparer.OrdinalIgnoreCase);
+
+        public static void AddPatcher(string dllName, AssemblyPatcherDelegate patcher)
+        {
+            if (PatcherDictionary.TryGetValue(dllName, out IList<AssemblyPatcherDelegate> patcherList))
+                patcherList.Add(patcher);
+            else
+            {
+                patcherList = new List<AssemblyPatcherDelegate>();
+
+                patcherList.Add(patcher);
+
+                PatcherDictionary[dllName] = patcherList;
+            }
+        }
 
         public static void Main(string[] args)
         {
@@ -32,9 +53,11 @@ namespace BepInEx.Bootstrap
             
             try
             {
-                AssemblyPatcher.AssemblyLoad += PatchEntrypoint;
+                //AssemblyPatcher.AssemblyLoad += PatchEntrypoint;
+                
+                AddPatcher("UnityEngine.dll", PatchEntrypoint);
 
-                AssemblyPatcher.PatchAll(ManagedPath);
+                AssemblyPatcher.PatchAll(ManagedPath, PatcherDictionary);
             }
             catch (Exception ex)
             {
@@ -42,7 +65,7 @@ namespace BepInEx.Bootstrap
             }
         }
 
-        static void PatchEntrypoint(AssemblyDefinition assembly)
+        internal static void PatchEntrypoint(AssemblyDefinition assembly)
         {
             if (assembly.Name.Name == "UnityEngine")
             {
@@ -73,7 +96,7 @@ namespace BepInEx.Bootstrap
             }
         }
 
-        static Assembly LocalResolve(object sender, ResolveEventArgs args)
+        internal static Assembly LocalResolve(object sender, ResolveEventArgs args)
         {
             if (args.Name == "0Harmony, Version=1.1.0.0, Culture=neutral, PublicKeyToken=null")
                 return Assembly.LoadFile(Path.Combine(CurrentExecutingAssemblyDirectoryPath, "0Harmony.dll"));

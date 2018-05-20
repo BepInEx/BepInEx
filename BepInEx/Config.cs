@@ -205,17 +205,17 @@ namespace BepInEx
 
         public static string GetEntry(this BaseUnityPlugin plugin, string key, string defaultValue = "")
         {
-            return GetEntry(key, defaultValue, TypeLoader.GetMetadata(plugin).GUID);
+            return GetEntry(key, defaultValue, MetadataHelper.GetMetadata(plugin).GUID);
         }
 
         public static void SetEntry(this BaseUnityPlugin plugin, string key, string value)
         {
-            SetEntry(key, value, TypeLoader.GetMetadata(plugin).GUID);
+            SetEntry(key, value, MetadataHelper.GetMetadata(plugin).GUID);
         }
 
         public static bool HasEntry(this BaseUnityPlugin plugin, string key)
         {
-            return HasEntry(key, TypeLoader.GetMetadata(plugin).GUID);
+            return HasEntry(key, MetadataHelper.GetMetadata(plugin).GUID);
         }
         #endregion Extensions
     }
