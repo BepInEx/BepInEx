@@ -178,6 +178,11 @@ namespace BepInEx.Bootstrap
             if (args.Name == "0Harmony, Version=1.1.0.0, Culture=neutral, PublicKeyToken=null")
                 return Assembly.LoadFile(Path.Combine(CurrentExecutingAssemblyDirectoryPath, "0Harmony.dll"));
 
+            if (Utility.TryResolveDllAssembly(args.Name, CurrentExecutingAssemblyDirectoryPath, out var assembly) ||
+                Utility.TryResolveDllAssembly(args.Name, PatcherPluginPath, out assembly) ||
+                Utility.TryResolveDllAssembly(args.Name, PluginPath, out assembly))
+                return assembly;
+
             return null;
         }
     }

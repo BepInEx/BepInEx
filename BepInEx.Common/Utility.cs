@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 
 namespace BepInEx.Common
 {
@@ -77,6 +78,33 @@ namespace BepInEx.Common
                     sorted_list.Add(node);
                 }
             }
+        }
+
+        /// <summary>
+        /// Try to resolve and load the given assembly DLL.
+        /// </summary>
+        /// <param name="name">Name of the assembly. Follows the format of <see cref="AssemblyName" />.</param>
+        /// <param name="directory">Directory to search the assembly from.</param>
+        /// <param name="assembly">The loaded assembly.</param>
+        /// <returns>True, if the assembly was found and loaded. Otherwise, false.</returns>
+        public static bool TryResolveDllAssembly(string name, string directory, out Assembly assembly)
+        {
+            assembly = null;
+            string path = Path.Combine(directory, $"{new AssemblyName(name).Name}.dll");
+
+            if (!File.Exists(path))
+                return false;
+
+            try
+            {
+                assembly = Assembly.LoadFile(path);
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 }
