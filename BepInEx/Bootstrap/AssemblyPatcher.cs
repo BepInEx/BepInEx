@@ -60,19 +60,21 @@ namespace BepInEx.Bootstrap
             //call the patchers on the assemblies
             foreach (var assembly in sortedAssemblies)
             {
-                //skip if we aren't patching it
-                if (!patcherMethodDictionary.TryGetValue(Path.GetFileName(assemblyFilenames[assembly]), out IList<AssemblyPatcherDelegate> patcherMethods))
-                    continue;
+#if CECIL_10
+                using (assembly)
+#endif
+                {
+                    //skip if we aren't patching it
+                    if (!patcherMethodDictionary.TryGetValue(Path.GetFileName(assemblyFilenames[assembly]), out IList<AssemblyPatcherDelegate> patcherMethods))
+                        continue;
 
-                Patch(assembly, patcherMethods);
+                    Patch(assembly, patcherMethods);
+                }
             }
         }
 
         public static void Patch(AssemblyDefinition assembly, IEnumerable<AssemblyPatcherDelegate> patcherMethods)
         {
-#if CECIL_10
-            using (assembly)
-#endif
             using (MemoryStream assemblyStream = new MemoryStream())
             {
                 foreach (AssemblyPatcherDelegate method in patcherMethods)
