@@ -28,7 +28,9 @@ namespace BepInEx.Bootstrap
                 if (assembly.Name.Name == "System"
                     || assembly.Name.Name == "mscorlib") //mscorlib is already loaded into the appdomain so it can't be patched
                 {
+#if CECIL_10
                     assembly.Dispose();
+#endif
                     continue;
                 }
 
@@ -68,7 +70,9 @@ namespace BepInEx.Bootstrap
 
         public static void Patch(AssemblyDefinition assembly, IEnumerable<AssemblyPatcherDelegate> patcherMethods)
         {
+#if CECIL_10
             using (assembly)
+#endif
             using (MemoryStream assemblyStream = new MemoryStream())
             {
                 foreach (AssemblyPatcherDelegate method in patcherMethods)

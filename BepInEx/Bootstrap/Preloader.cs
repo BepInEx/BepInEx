@@ -27,6 +27,8 @@ namespace BepInEx.Bootstrap
 
         public static string ManagedPath => Utility.CombinePaths(GameRootPath, $"{GameName}_Data", "Managed");
 
+        public static string PluginPath => Utility.CombinePaths(GameRootPath, "BepInEx");
+
         public static string PatcherPluginPath => Utility.CombinePaths(GameRootPath, "BepInEx", "patchers");
 
         #endregion
@@ -87,42 +89,49 @@ namespace BepInEx.Bootstrap
 
             foreach (var type in assembly.GetExportedTypes())
             {
-                if (type.IsInterface)
-                    continue;
-
-                PropertyInfo targetsProperty = type.GetProperty(
-                    "TargetDLLs", 
-                    BindingFlags.Public | BindingFlags.Static | BindingFlags.IgnoreCase,
-                    null,
-                    typeof(IEnumerable<string>),
-                    Type.EmptyTypes,
-                    null);
-
-                MethodInfo patcher = type.GetMethod(
-                    "Patch", 
-                    BindingFlags.Public | BindingFlags.Static | BindingFlags.IgnoreCase,
-                    null,
-                    CallingConventions.Any,
-                    new[] { typeof(AssemblyDefinition) },
-                    null);
-
-                if (targetsProperty == null || !targetsProperty.CanRead || patcher == null)
-                    continue;
-
-                AssemblyPatcherDelegate patchDelegate = (ass) => { patcher.Invoke(null, new object[] {ass}); };
-
-                IEnumerable<string> targets = (IEnumerable<string>)targetsProperty.GetValue(null, null);
-
-                foreach (string target in targets)
+                try
                 {
-                    if (patcherMethods.TryGetValue(target, out IList<AssemblyPatcherDelegate> patchers))
-                        patchers.Add(patchDelegate);
-                    else
-                    {
-                        patchers = new List<AssemblyPatcherDelegate>{ patchDelegate };
+                    if (type.IsInterface)
+                        continue;
 
-                        patcherMethods[target] = patchers;
+                    PropertyInfo targetsProperty = type.GetProperty(
+                        "TargetDLLs", 
+                        BindingFlags.Public | BindingFlags.Static | BindingFlags.IgnoreCase,
+                        null,
+                        typeof(IEnumerable<string>),
+                        Type.EmptyTypes,
+                        null);
+
+                    MethodInfo patcher = type.GetMethod(
+                        "Patch", 
+                        BindingFlags.Public | BindingFlags.Static | BindingFlags.IgnoreCase,
+                        null,
+                        CallingConventions.Any,
+                        new[] { typeof(AssemblyDefinition) },
+                        null);
+
+                    if (targetsProperty == null || !targetsProperty.CanRead || patcher == null)
+                        continue;
+
+                    AssemblyPatcherDelegate patchDelegate = (ass) => { patcher.Invoke(null, new object[] {ass}); };
+
+                    IEnumerable<string> targets = (IEnumerable<string>)targetsProperty.GetValue(null, null);
+
+                    foreach (string target in targets)
+                    {
+                        if (patcherMethods.TryGetValue(target, out IList<AssemblyPatcherDelegate> patchers))
+                            patchers.Add(patchDelegate);
+                        else
+                        {
+                            patchers = new List<AssemblyPatcherDelegate>{ patchDelegate };
+
+                            patcherMethods[target] = patchers;
+                        }
                     }
+                }
+                catch (Exception ex)
+                {
+                    //TODO: add logging of exceptions
                 }
             }
 
@@ -133,7 +142,11 @@ namespace BepInEx.Bootstrap
         {
             if (assembly.Name.Name == "UnityEngine")
             {
+#if CECIL_10
                 using (AssemblyDefinition injected = AssemblyDefinition.ReadAssembly(CurrentExecutingAssemblyPath))
+#elif CECIL_9
+                AssemblyDefinition injected = AssemblyDefinition.ReadAssembly(CurrentExecutingAssemblyPath);
+#endif
                 {
                     var originalInjectMethod = injected.MainModule.Types.First(x => x.Name == "Chainloader")
                         .Methods.First(x => x.Name == "Initialize");
