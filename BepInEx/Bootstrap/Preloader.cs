@@ -31,6 +31,8 @@ namespace BepInEx.Bootstrap
 
         public static string PatcherPluginPath => Utility.CombinePaths(GameRootPath, "BepInEx", "patchers");
 
+        public static string PreloaderLog { get; private set; } = $"BepInEx {Assembly.GetExecutingAssembly().GetName().Version}\r\n";
+
         #endregion
 
 
@@ -52,12 +54,16 @@ namespace BepInEx.Bootstrap
 
         public static void Main(string[] args)
         {
-            ExecutablePath = args[0];
-
-            AppDomain.CurrentDomain.AssemblyResolve += LocalResolve;
-            
             try
             {
+                PreloaderLog += "Preloader started\r\n";
+
+                ExecutablePath = args[0];
+
+                AppDomain.CurrentDomain.AssemblyResolve += LocalResolve;
+
+
+
                 AddPatcher("UnityEngine.dll", PatchEntrypoint);
 
                 if (Directory.Exists(PatcherPluginPath))
@@ -79,7 +85,17 @@ namespace BepInEx.Bootstrap
             }
             catch (Exception ex)
             {
-                //TODO: some proper exception handling
+                PreloaderLog += $"FATAL ERROR: COULD NOT LOAD PATCHER!\r\n{ex}";
+
+                try
+                {
+                    UnityInjector.ConsoleUtil.ConsoleWindow.Attach();
+                    Console.Write(PreloaderLog);
+                }
+                finally
+                {
+                    File.WriteAllText(Path.Combine(CurrentExecutingAssemblyDirectoryPath, "fatalerror.log"), PreloaderLog);
+                }
             }
         }
 
@@ -131,9 +147,11 @@ namespace BepInEx.Bootstrap
                 }
                 catch (Exception ex)
                 {
-                    //TODO: add logging of exceptions
+                    PreloaderLog += $"Could not load patcher methods from {assembly.GetName().Name}";
                 }
             }
+
+            PreloaderLog += $"Loaded {patcherMethods.SelectMany(x => x.Value).Distinct().Count()} patcher methods from {assembly.GetName().Name}";
 
             return patcherMethods;
         }
