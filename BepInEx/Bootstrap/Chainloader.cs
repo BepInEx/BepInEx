@@ -55,7 +55,7 @@ namespace BepInEx.Bootstrap
 
 			try
 			{
-                BepInLogger.Log(Preloader.PreloaderLog);
+                BepInLogger.Log(Preloader.PreloaderLog.ToString());
 				BepInLogger.Log("Chainloader started");
 
 				UnityEngine.Object.DontDestroyOnLoad(ManagerObject);

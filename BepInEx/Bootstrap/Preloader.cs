@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using BepInEx.Common;
+using BepInEx.Logger;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using MethodAttributes = Mono.Cecil.MethodAttributes;
@@ -31,12 +32,12 @@ namespace BepInEx.Bootstrap
 
         public static string PatcherPluginPath => Utility.CombinePaths(GameRootPath, "BepInEx", "patchers");
 
-        public static string PreloaderLog { get; private set; } = $"BepInEx {Assembly.GetExecutingAssembly().GetName().Version}\r\n";
-
         #endregion
 
+        public static PreloaderTextWriter PreloaderLog { get; private set; }
 
         public static Dictionary<string, IList<AssemblyPatcherDelegate>> PatcherDictionary = new Dictionary<string, IList<AssemblyPatcherDelegate>>(StringComparer.OrdinalIgnoreCase);
+
 
         public static void AddPatcher(string dllName, AssemblyPatcherDelegate patcher)
         {
@@ -56,7 +57,11 @@ namespace BepInEx.Bootstrap
         {
             try
             {
-                PreloaderLog += "Preloader started\r\n";
+                PreloaderLog = new PreloaderTextWriter();
+
+                PreloaderLog.WriteLine($"BepInEx {Assembly.GetExecutingAssembly().GetName().Version}");
+                PreloaderLog.Log(LogLevel.Message, "Preloader started");
+
 
                 ExecutablePath = args[0];
 
@@ -71,7 +76,7 @@ namespace BepInEx.Bootstrap
                     {
                         try
                         {
-                            var assembly = Assembly.LoadFrom(assemblyPath); 
+                            var assembly = Assembly.LoadFrom(assemblyPath);
 
                             foreach (var kv in GetPatcherMethods(assembly))
                                 foreach (var patcher in kv.Value)
@@ -85,7 +90,10 @@ namespace BepInEx.Bootstrap
             }
             catch (Exception ex)
             {
-                PreloaderLog += $"FATAL ERROR: COULD NOT LOAD PATCHER!\r\n{ex}";
+                PreloaderLog.Log(LogLevel.Fatal, "Could not run preloader!");
+                PreloaderLog.Log(LogLevel.Fatal, ex);
+
+                PreloaderLog.Disable();
 
                 try
                 {
@@ -94,8 +102,13 @@ namespace BepInEx.Bootstrap
                 }
                 finally
                 {
-                    File.WriteAllText(Path.Combine(CurrentExecutingAssemblyDirectoryPath, "fatalerror.log"), PreloaderLog);
+                    File.WriteAllText(Path.Combine(GameRootPath, $"preloader_{DateTime.Now:yyyyMMdd_HHmmss_fff}.log"),
+                        PreloaderLog.ToString());
                 }
+            }
+            finally
+            {
+                PreloaderLog.Disable();
             }
         }
 
@@ -147,11 +160,11 @@ namespace BepInEx.Bootstrap
                 }
                 catch (Exception ex)
                 {
-                    PreloaderLog += $"Could not load patcher methods from {assembly.GetName().Name}";
+                    PreloaderLog.Log(LogLevel.Warning, $"Could not load patcher methods from {assembly.GetName().Name}");
                 }
             }
 
-            PreloaderLog += $"Loaded {patcherMethods.SelectMany(x => x.Value).Distinct().Count()} patcher methods from {assembly.GetName().Name}";
+            PreloaderLog.Log(LogLevel.Info, $"Loaded {patcherMethods.SelectMany(x => x.Value).Distinct().Count()} patcher methods from {assembly.GetName().Name}");
 
             return patcherMethods;
         }
