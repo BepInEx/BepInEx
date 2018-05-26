@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -14,7 +15,7 @@ namespace BepInEx.Common
         /// <summary>
         /// The directory that the Koikatsu .exe is being run from.
         /// </summary>
-        public static string ExecutingDirectory => Path.GetDirectoryName(Environment.CommandLine);
+        public static string ExecutingDirectory => Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
 
         /// <summary>
         /// The path that the plugins folder is located.
