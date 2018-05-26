@@ -57,16 +57,15 @@ namespace BepInEx.Bootstrap
         {
             try
             {
+                AppDomain.CurrentDomain.AssemblyResolve += LocalResolve;
+                ExecutablePath = args[0];
+
+
                 PreloaderLog = new PreloaderLogWriter();
                 PreloaderLog.Enabled = true;
 
                 PreloaderLog.WriteLine($"BepInEx {Assembly.GetExecutingAssembly().GetName().Version}");
                 PreloaderLog.Log(LogLevel.Message, "Preloader started");
-
-
-                ExecutablePath = args[0];
-
-                AppDomain.CurrentDomain.AssemblyResolve += LocalResolve;
 
 
 

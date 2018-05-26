@@ -13,7 +13,7 @@ namespace BepInEx.Common
     public static class Utility
     {
         /// <summary>
-        /// The directory that the Koikatsu .exe is being run from.
+        /// The directory that the game .exe is being run from.
         /// </summary>
         public static string ExecutingDirectory => Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
 
