@@ -58,6 +58,7 @@ namespace BepInEx.Bootstrap
             try
             {
                 PreloaderLog = new PreloaderLogWriter();
+                PreloaderLog.Enabled = true;
 
                 PreloaderLog.WriteLine($"BepInEx {Assembly.GetExecutingAssembly().GetName().Version}");
                 PreloaderLog.Log(LogLevel.Message, "Preloader started");
@@ -104,11 +105,13 @@ namespace BepInEx.Bootstrap
                 {
                     File.WriteAllText(Path.Combine(GameRootPath, $"preloader_{DateTime.Now:yyyyMMdd_HHmmss_fff}.log"),
                         PreloaderLog.ToString());
+
+                    PreloaderLog.Dispose();
                 }
             }
             finally
             {
-                PreloaderLog.Disable();
+                PreloaderLog.Enabled = false;
             }
         }
 
