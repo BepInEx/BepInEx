@@ -11,6 +11,8 @@ namespace BepInEx.Bootstrap
 
     public static class AssemblyPatcher
     {
+        private static bool DumpingEnabled => bool.TryParse(Config.GetEntry("preloader-dumpassemblies", "false"), out bool result) ? result : false;
+
         public static void PatchAll(string directory, Dictionary<string, IList<AssemblyPatcherDelegate>> patcherMethodDictionary)
         {
             //load all the requested assemblies
@@ -64,11 +66,27 @@ namespace BepInEx.Bootstrap
                 using (assembly)
 #endif
                 {
+                    string filename = Path.GetFileName(assemblyFilenames[assembly]);
+
                     //skip if we aren't patching it
-                    if (!patcherMethodDictionary.TryGetValue(Path.GetFileName(assemblyFilenames[assembly]), out IList<AssemblyPatcherDelegate> patcherMethods))
+                    if (!patcherMethodDictionary.TryGetValue(filename, out IList<AssemblyPatcherDelegate> patcherMethods))
                         continue;
 
                     Patch(assembly, patcherMethods);
+
+                    if (DumpingEnabled)
+                    {
+                        using (MemoryStream mem = new MemoryStream())
+                        {
+                            string dirPath = Path.Combine(Preloader.PluginPath, "DumpedAssemblies");
+
+                            if (!Directory.Exists(dirPath))
+                                Directory.CreateDirectory(dirPath);
+                            
+                            assembly.Write(mem);
+                            File.WriteAllBytes(Path.Combine(dirPath, filename), mem.ToArray());
+                        }
+                    }
                 }
             }
         }
