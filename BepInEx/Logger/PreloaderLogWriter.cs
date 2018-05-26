@@ -10,7 +10,7 @@ namespace BepInEx.Logger
         public StringBuilder StringBuilder = new StringBuilder();
 
         protected TextWriter stdout;
-        protected TextWriterTraceListener traceListener;
+        protected LoggerTraceListener traceListener;
 
         private bool _enabled = false;
         public bool Enabled {
@@ -27,7 +27,7 @@ namespace BepInEx.Logger
         public PreloaderLogWriter()
         {
             stdout = Console.Out;
-            traceListener = new TextWriterTraceListener(this, "Preloader");
+            traceListener = new LoggerTraceListener(this);
         }
 
         public void Enable()
@@ -62,15 +62,18 @@ namespace BepInEx.Logger
             StringBuilder.Append(value);
         }
 
-        public override void Close()
+        protected override void Dispose(bool disposing)
         {
             Disable();
             StringBuilder.Length = 0;
+
+            base.Dispose(disposing);
         }
 
         public override string ToString()
         {
             return StringBuilder.ToString().Trim();
+
         }
     }
 }

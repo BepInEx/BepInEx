@@ -70,6 +70,7 @@
     <Compile Include="Logger\BaseLogger.cs" />
     <Compile Include="Logger\LogLevel.cs" />
     <Compile Include="Logger\PreloaderLogWriter.cs" />
+    <Compile Include="Logger\LoggerTraceListener.cs" />
     <Compile Include="Logger\UnityLogWriter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Bootstrap\TypeLoader.cs" />
