@@ -5,10 +5,8 @@ using System.Text;
 
 namespace BepInEx.Logger
 {
-    public class PreloaderTextWriter : BaseLogger
+    public class PreloaderLogWriter : BaseLogger
     {
-        public override Encoding Encoding { get; } = new UTF8Encoding(true);
-
         public StringBuilder StringBuilder = new StringBuilder();
 
         protected TextWriter stdout;
@@ -26,7 +24,7 @@ namespace BepInEx.Logger
             }
         }
 
-        public PreloaderTextWriter()
+        public PreloaderLogWriter()
         {
             stdout = Console.Out;
             traceListener = new TextWriterTraceListener(this, "Preloader");

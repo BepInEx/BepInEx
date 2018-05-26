@@ -7,6 +7,7 @@ namespace BepInEx
     /// <summary>
     /// A helper class to use for logging.
     /// </summary>
+    [Obsolete("This class has been deprecated; please use the Logger static class and BaseLogger implementations", true)]
     public static class BepInLogger
     {
         /// <summary>
@@ -57,14 +58,5 @@ namespace BepInEx
 
             EntryLogged?.Invoke(entry, show);
         }
-    }
-}
-
-namespace UnityEngine
-{
-    internal sealed class UnityLogWriter
-    {
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        public static extern void WriteStringToUnityLog(string s);
     }
 }

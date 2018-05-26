@@ -34,7 +34,7 @@ namespace BepInEx.Bootstrap
 
         #endregion
 
-        public static PreloaderTextWriter PreloaderLog { get; private set; }
+        public static PreloaderLogWriter PreloaderLog { get; private set; }
 
         public static Dictionary<string, IList<AssemblyPatcherDelegate>> PatcherDictionary = new Dictionary<string, IList<AssemblyPatcherDelegate>>(StringComparer.OrdinalIgnoreCase);
 
@@ -57,7 +57,7 @@ namespace BepInEx.Bootstrap
         {
             try
             {
-                PreloaderLog = new PreloaderTextWriter();
+                PreloaderLog = new PreloaderLogWriter();
 
                 PreloaderLog.WriteLine($"BepInEx {Assembly.GetExecutingAssembly().GetName().Version}");
                 PreloaderLog.Log(LogLevel.Message, "Preloader started");
@@ -161,6 +161,7 @@ namespace BepInEx.Bootstrap
                 catch (Exception ex)
                 {
                     PreloaderLog.Log(LogLevel.Warning, $"Could not load patcher methods from {assembly.GetName().Name}");
+                    PreloaderLog.Log(LogLevel.Warning, $"{ex}");
                 }
             }
 
