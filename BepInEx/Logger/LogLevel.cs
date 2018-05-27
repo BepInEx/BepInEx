@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace BepInEx.Logger
 {
@@ -15,7 +12,6 @@ namespace BepInEx.Logger
         Message = 8,
         Info = 16,
         Debug = 32,
-
         All = Fatal | Error | Warning | Message | Info | Debug
     }
 }

@@ -53,6 +53,20 @@ namespace BepInEx.Bootstrap
             }
         }
 
+        private static bool TryGetConfigBool(string key, string defaultValue)
+        {
+            try
+            {
+                string result = Config.GetEntry(key, defaultValue);
+
+                return bool.Parse(result);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         public static void Main(string[] args)
         {
             try
@@ -61,7 +75,7 @@ namespace BepInEx.Bootstrap
                 ExecutablePath = args[0];
 
 
-                PreloaderLog = new PreloaderLogWriter();
+                PreloaderLog = new PreloaderLogWriter(TryGetConfigBool("preloader-logconsole", "false"));
                 PreloaderLog.Enabled = true;
 
                 PreloaderLog.WriteLine($"BepInEx {Assembly.GetExecutingAssembly().GetName().Version}");

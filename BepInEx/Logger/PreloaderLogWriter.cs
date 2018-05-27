@@ -7,7 +7,9 @@ namespace BepInEx.Logger
 {
     public class PreloaderLogWriter : BaseLogger
     {
-        public StringBuilder StringBuilder = new StringBuilder();
+        public StringBuilder StringBuilder { get; protected set; } = new StringBuilder();
+
+        public bool IsRedirectingConsole { get; protected set; }
 
         protected TextWriter stdout;
         protected LoggerTraceListener traceListener;
@@ -24,9 +26,13 @@ namespace BepInEx.Logger
             }
         }
 
-        public PreloaderLogWriter()
+        public PreloaderLogWriter(bool redirectConsole)
         {
-            stdout = Console.Out;
+            IsRedirectingConsole = redirectConsole;
+
+            if (IsRedirectingConsole)
+                stdout = Console.Out;
+
             traceListener = new LoggerTraceListener(this);
         }
 
@@ -35,7 +41,9 @@ namespace BepInEx.Logger
             if (Enabled)
                 return;
 
-            Console.SetOut(this);
+            if (IsRedirectingConsole)
+                Console.SetOut(this);
+
             Trace.Listeners.Add(traceListener);
 
             _enabled = true;
@@ -46,7 +54,9 @@ namespace BepInEx.Logger
             if (!Enabled)
                 return;
 
-            Console.SetOut(stdout);
+            if (IsRedirectingConsole)
+                Console.SetOut(stdout);
+
             Trace.Listeners.Remove(traceListener);
 
             _enabled = false;
@@ -73,7 +83,6 @@ namespace BepInEx.Logger
         public override string ToString()
         {
             return StringBuilder.ToString().Trim();
-
         }
     }
 }

@@ -95,7 +95,7 @@ namespace BepInEx.Logger
 
                 instance.Patch(
                     typeof(Trace).GetMethod("DoTrace", BindingFlags.Static | BindingFlags.NonPublic),
-                    new HarmonyMethod(typeof(TraceFixer).GetMethod("DoTraceReplacement", BindingFlags.Static | BindingFlags.Public)),
+                    new HarmonyMethod(typeof(TraceFixer).GetMethod(nameof(DoTraceReplacement), BindingFlags.Static | BindingFlags.Public)),
                     null);
             }
 
