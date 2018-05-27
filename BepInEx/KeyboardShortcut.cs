@@ -127,11 +127,11 @@ namespace BepInEx
         }
 
         /// <summary>
-        /// Check if the main key is currently held down (Input.GetKeyDown), and specified modifier keys are all pressed
+        /// Check if the main key is currently held down (Input.GetKey), and specified modifier keys are all pressed
         /// </summary>
         public bool IsPressed()
         {
-            return Input.GetKeyDown(Key) && ModifierKeyTest();
+            return Input.GetKey(Key) && ModifierKeyTest();
         }
 
         /// <summary>
