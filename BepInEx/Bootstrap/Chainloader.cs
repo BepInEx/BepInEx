@@ -4,8 +4,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
+using BepInEx.Logging;
 using UnityEngine;
+using UnityLogWriter = BepInEx.Logging.UnityLogWriter;
 
 namespace BepInEx.Bootstrap
 {
@@ -25,38 +26,32 @@ namespace BepInEx.Bootstrap
 		public static GameObject ManagerObject { get; protected set; } = new GameObject("BepInEx_Manager");
 
 
-		static bool loaded = false;
+		private static bool _loaded = false;
 
 		/// <summary>
 		/// The entry point for BepInEx, called on the very first LoadScene() from UnityEngine.
 		/// </summary>
 		public static void Initialize()
 		{
-			if (loaded)
+			if (_loaded)
 				return;
 
-		    if (!Directory.Exists(Common.Utility.PluginsDirectory))
+		    if (!Directory.Exists(Utility.PluginsDirectory))
 		        Directory.CreateDirectory(Utility.PluginsDirectory);
 
-			if (bool.Parse(Config.GetEntry("console", "false")) || bool.Parse(Config.GetEntry("console-shiftjis", "false")))
-			{
-				try
-				{
-					UnityInjector.ConsoleUtil.ConsoleWindow.Attach();
-
-					if (bool.Parse(Config.GetEntry("console-shiftjis", "false")))
-						UnityInjector.ConsoleUtil.ConsoleEncoding.ConsoleCodePage = 932;
-				}
-				catch
-				{
-					BepInLogger.Log("Failed to allocate console!", true);
-				}
-			}
+            Preloader.AllocateConsole();
 
 			try
 			{
-                BepInLogger.Log(Preloader.PreloaderLog.ToString());
-				BepInLogger.Log("Chainloader started");
+                UnityLogWriter unityLogWriter = new UnityLogWriter();
+
+			    if (Preloader.PreloaderLog != null)
+			        unityLogWriter.WriteToLog(Preloader.PreloaderLog.ToString());
+
+                Logger.SetLogger(unityLogWriter);
+
+                
+				Logger.Log(LogLevel.Message, "Chainloader started");
 
 				UnityEngine.Object.DontDestroyOnLoad(ManagerObject);
 
@@ -76,7 +71,7 @@ namespace BepInEx.Bootstrap
 				    })
 				    .ToList();
 
-				BepInLogger.Log($"{pluginTypes.Count} plugins selected");
+			    Logger.Log(LogLevel.Info, $"{pluginTypes.Count} plugins selected");
 
 				Dictionary<Type, IEnumerable<Type>> dependencyDict = new Dictionary<Type, IEnumerable<Type>>();
 
@@ -92,7 +87,7 @@ namespace BepInEx.Bootstrap
 					{
 						var metadata = MetadataHelper.GetMetadata(t);
 
-						BepInLogger.Log($"Cannot load [{metadata.Name}] due to missing dependencies.");
+					    Logger.Log(LogLevel.Info, $"Cannot load [{metadata.Name}] due to missing dependencies.");
 					}
 				}
 
@@ -107,11 +102,11 @@ namespace BepInEx.Bootstrap
 						var plugin = (BaseUnityPlugin) ManagerObject.AddComponent(t);
 
 						Plugins.Add(plugin);
-						BepInLogger.Log($"Loaded [{metadata.Name} {metadata.Version}]");
+					    Logger.Log(LogLevel.Info, $"Loaded [{metadata.Name} {metadata.Version}]");
 					}
 					catch (Exception ex)
 					{
-						BepInLogger.Log($"Error loading [{t.Name}] : {ex.Message}");
+					    Logger.Log(LogLevel.Info, $"Error loading [{t.Name}] : {ex.Message}");
 					}
 				}
 			}
@@ -123,7 +118,7 @@ namespace BepInEx.Bootstrap
 				Console.WriteLine(ex.ToString());
 			}
 
-			loaded = true;
+			_loaded = true;
 		}
 	}
 }

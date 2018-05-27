@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using BepInEx.Logging;
 
 namespace BepInEx
 {
@@ -116,7 +117,7 @@ namespace BepInEx
             }
             catch (Exception ex)
             {
-                BepInLogger.Log("ConfigWrapper Get Converter Exception: " + ex.Message);
+                Logger.Log(LogLevel.Error, "ConfigWrapper Get Converter Exception: " + ex.Message);
                 return _default;
             }
         }
@@ -130,7 +131,7 @@ namespace BepInEx
             }
             catch (Exception ex)
             {
-                BepInLogger.Log("ConfigWrapper Set Converter Exception: " + ex.Message);
+                Logger.Log(LogLevel.Error, "ConfigWrapper Set Converter Exception: " + ex.Message);
             }
         }
 

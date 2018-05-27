@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 
-namespace BepInEx.Logger
+namespace BepInEx.Logging
 {
     public class PreloaderLogWriter : BaseLogger
     {
@@ -65,11 +65,21 @@ namespace BepInEx.Logger
         public override void Write(char value)
         {
             StringBuilder.Append(value);
+
+            if (IsRedirectingConsole)
+                stdout.Write(value);
+            else
+                Console.Write(value);
         }
 
         public override void Write(string value)
         {
             StringBuilder.Append(value);
+
+            if (IsRedirectingConsole)
+                stdout.Write(value);
+            else
+                Console.Write(value);
         }
 
         protected override void Dispose(bool disposing)

@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.Text;
 
-namespace BepInEx.Logger
+namespace BepInEx.Logging
 {
     public abstract class BaseLogger : TextWriter
     {

@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using BepInEx.Common;
-using BepInEx.Logger;
+using BepInEx.Logging;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using MethodAttributes = Mono.Cecil.MethodAttributes;
@@ -67,19 +67,44 @@ namespace BepInEx.Bootstrap
             }
         }
 
+        internal static void AllocateConsole()
+        {
+            bool console = TryGetConfigBool("console", "false");
+            bool shiftjis = TryGetConfigBool("console-shiftjis", "false");
+
+            if (console)
+            {
+                try
+                {
+                    UnityInjector.ConsoleUtil.ConsoleWindow.Attach();
+
+                    if (shiftjis)
+                        UnityInjector.ConsoleUtil.ConsoleEncoding.ConsoleCodePage = 932;
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log(LogLevel.Error, "Failed to allocate console!");
+                    Logger.Log(LogLevel.Error, ex);
+                }
+            }
+        }
+
         public static void Main(string[] args)
         {
             try
             {
                 AppDomain.CurrentDomain.AssemblyResolve += LocalResolve;
                 ExecutablePath = args[0];
-
+                
+                AllocateConsole();
 
                 PreloaderLog = new PreloaderLogWriter(TryGetConfigBool("preloader-logconsole", "false"));
                 PreloaderLog.Enabled = true;
 
-                PreloaderLog.WriteLine($"BepInEx {Assembly.GetExecutingAssembly().GetName().Version}");
-                PreloaderLog.Log(LogLevel.Message, "Preloader started");
+                Logger.SetLogger(PreloaderLog);
+
+                Logger.CurrentLogger.WriteLine($"BepInEx {Assembly.GetExecutingAssembly().GetName().Version}");
+                Logger.Log(LogLevel.Message, "Preloader started");
 
 
 
@@ -104,8 +129,8 @@ namespace BepInEx.Bootstrap
             }
             catch (Exception ex)
             {
-                PreloaderLog.Log(LogLevel.Fatal, "Could not run preloader!");
-                PreloaderLog.Log(LogLevel.Fatal, ex);
+                Logger.Log(LogLevel.Fatal, "Could not run preloader!");
+                Logger.Log(LogLevel.Fatal, ex);
 
                 PreloaderLog.Disable();
 
@@ -121,10 +146,6 @@ namespace BepInEx.Bootstrap
 
                     PreloaderLog.Dispose();
                 }
-            }
-            finally
-            {
-                PreloaderLog.Enabled = false;
             }
         }
 
@@ -176,12 +197,12 @@ namespace BepInEx.Bootstrap
                 }
                 catch (Exception ex)
                 {
-                    PreloaderLog.Log(LogLevel.Warning, $"Could not load patcher methods from {assembly.GetName().Name}");
-                    PreloaderLog.Log(LogLevel.Warning, $"{ex}");
+                    Logger.Log(LogLevel.Warning, $"Could not load patcher methods from {assembly.GetName().Name}");
+                    Logger.Log(LogLevel.Warning, $"{ex}");
                 }
             }
 
-            PreloaderLog.Log(LogLevel.Info, $"Loaded {patcherMethods.SelectMany(x => x.Value).Distinct().Count()} patcher methods from {assembly.GetName().Name}");
+            Logger.Log(LogLevel.Info, $"Loaded {patcherMethods.SelectMany(x => x.Value).Distinct().Count()} patcher methods from {assembly.GetName().Name}");
 
             return patcherMethods;
         }

@@ -67,11 +67,12 @@
     <Compile Include="Bootstrap\Chainloader.cs" />
     <Compile Include="Contract\BaseUnityPlugin.cs" />
     <Compile Include="Deprecated\BepInLogger.cs" />
-    <Compile Include="Logger\BaseLogger.cs" />
-    <Compile Include="Logger\LogLevel.cs" />
-    <Compile Include="Logger\PreloaderLogWriter.cs" />
-    <Compile Include="Logger\LoggerTraceListener.cs" />
-    <Compile Include="Logger\UnityLogWriter.cs" />
+    <Compile Include="Logging\BaseLogger.cs" />
+    <Compile Include="Logging\Logger.cs" />
+    <Compile Include="Logging\LogLevel.cs" />
+    <Compile Include="Logging\PreloaderLogWriter.cs" />
+    <Compile Include="Logging\LoggerTraceListener.cs" />
+    <Compile Include="Logging\UnityLogWriter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Bootstrap\TypeLoader.cs" />
   </ItemGroup>

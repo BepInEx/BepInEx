@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 using Harmony;
 
-namespace BepInEx.Logger
+namespace BepInEx.Logging
 {
     public class LoggerTraceListener : TraceListener
     {

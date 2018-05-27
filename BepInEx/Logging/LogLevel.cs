@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace BepInEx.Logger
+namespace BepInEx.Logging
 {
     [Flags]
     public enum LogLevel

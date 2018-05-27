@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using BepInEx.Logging;
 
 namespace BepInEx.Bootstrap
 {
@@ -34,7 +35,7 @@ namespace BepInEx.Bootstrap
                 catch (BadImageFormatException) { } //unmanaged DLL
                 catch (ReflectionTypeLoadException)
                 {
-                    BepInLogger.Log($"ERROR! Could not load \"{Path.GetFileName(dll)}\" as a plugin!");
+                    Logger.Log(LogLevel.Error, $"Could not load \"{Path.GetFileName(dll)}\" as a plugin!");
                 }
             }
 
