@@ -50,8 +50,10 @@
     <Compile Include="ConsoleUtil\SafeConsole.cs" />
     <Compile Include="Chainloader.cs" />
     <Compile Include="BaseUnityPlugin.cs" />
+    <Compile Include="KeyboardShortcut.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SavedKeyboardShortcut.cs" />
     <Compile Include="TypeLoader.cs" />
   </ItemGroup>
   <Import Project="..\BepInEx.Common\BepInEx.Common.projitems" Label="Shared" />
