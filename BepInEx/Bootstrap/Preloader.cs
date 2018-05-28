@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using BepInEx.Common;
 using BepInEx.Logging;
 using Mono.Cecil;
@@ -80,6 +81,8 @@ namespace BepInEx.Bootstrap
 
                     if (shiftjis)
                         UnityInjector.ConsoleUtil.ConsoleEncoding.ConsoleCodePage = 932;
+                    else
+                        UnityInjector.ConsoleUtil.ConsoleEncoding.ConsoleCodePage = (uint)Encoding.UTF8.CodePage;
                 }
                 catch (Exception ex)
                 {
