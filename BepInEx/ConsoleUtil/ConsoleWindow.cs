@@ -47,18 +47,21 @@ namespace UnityInjector.ConsoleUtil
         {
             set
             {
-                if (value == null)
+                if (_attached)
                 {
-                    throw new ArgumentNullException(nameof(value));
-                }
-                if (value.Length > 24500)
-                {
-                    throw new InvalidOperationException("Console title too long");
-                }
+                    if (value == null)
+                    {
+                        throw new ArgumentNullException(nameof(value));
+                    }
+                    if (value.Length > 24500)
+                    {
+                        throw new InvalidOperationException("Console title too long");
+                    }
 
-                if (!SetConsoleTitle(value))
-                {
-                    throw new InvalidOperationException("Console title invalid");
+                    if (!SetConsoleTitle(value))
+                    {
+                        throw new InvalidOperationException("Console title invalid");
+                    }
                 }
             }
         }
