@@ -15,7 +15,7 @@ namespace BepInEx.Common
         /// <summary>
         /// The directory that the game .exe is being run from.
         /// </summary>
-        public static string ExecutingDirectory => Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
+        public static string ExecutingDirectory { get; } = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
 
         /// <summary>
         /// The path that the plugins folder is located.
