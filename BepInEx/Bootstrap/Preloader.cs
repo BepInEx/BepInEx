@@ -9,6 +9,7 @@ using BepInEx.Common;
 using BepInEx.Logging;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
+using UnityInjector.ConsoleUtil;
 using MethodAttributes = Mono.Cecil.MethodAttributes;
 
 namespace BepInEx.Bootstrap
@@ -98,15 +99,15 @@ namespace BepInEx.Bootstrap
             {
                 AppDomain.CurrentDomain.AssemblyResolve += LocalResolve;
                 ExecutablePath = args[0];
-                
+
                 AllocateConsole();
 
                 PreloaderLog = new PreloaderLogWriter(TryGetConfigBool("preloader-logconsole", "false"));
                 PreloaderLog.Enabled = true;
 
                 string consoleTile = $"BepInEx {Assembly.GetExecutingAssembly().GetName().Version} - {Process.GetCurrentProcess().ProcessName}";
-                Console.Title = consoleTile;
 
+                ConsoleWindow.Title = consoleTile;
 
                 Logger.SetLogger(PreloaderLog);
                 

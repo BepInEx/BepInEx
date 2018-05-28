@@ -43,6 +43,26 @@ namespace UnityInjector.ConsoleUtil
             _attached = true;
         }
 
+        public static string Title
+        {
+            set
+            {
+                if (value == null)
+                {
+                    throw new ArgumentNullException(nameof(value));
+                }
+                if (value.Length > 24500)
+                {
+                    throw new InvalidOperationException("Console title too long");
+                }
+
+                if (!SetConsoleTitle(value))
+                {
+                    throw new InvalidOperationException("Console title invalid");
+                }
+            }
+        }
+
         public static void Detach()
         {
             if (!_attached)
@@ -104,5 +124,8 @@ namespace UnityInjector.ConsoleUtil
 
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern bool SetStdHandle(int nStdHandle, IntPtr hConsoleOutput);
+        
+        [DllImport("kernel32.dll", BestFitMapping = true, CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern bool SetConsoleTitle(string title);
     }
 }

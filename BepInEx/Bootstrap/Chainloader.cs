@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using BepInEx.Logging;
 using UnityEngine;
+using UnityInjector.ConsoleUtil;
 using UnityLogWriter = BepInEx.Logging.UnityLogWriter;
 
 namespace BepInEx.Bootstrap
@@ -52,7 +53,7 @@ namespace BepInEx.Bootstrap
                 Logger.SetLogger(unityLogWriter);
 
 			    string consoleTile = $"BepInEx {Assembly.GetExecutingAssembly().GetName().Version} - {Application.productName}";
-			    Console.Title = consoleTile;
+			    ConsoleWindow.Title = consoleTile;
                 
 				Logger.Log(LogLevel.Message, "Chainloader started");
 
