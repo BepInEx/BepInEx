@@ -244,13 +244,17 @@ namespace BepInEx.Bootstrap
 
         internal static Assembly LocalResolve(object sender, ResolveEventArgs args)
         {
-            if (args.Name == "0Harmony, Version=1.1.0.0, Culture=neutral, PublicKeyToken=null")
-                return Assembly.LoadFile(Path.Combine(CurrentExecutingAssemblyDirectoryPath, "0Harmony.dll"));
+            AssemblyName assemblyName = new AssemblyName(args.Name);
 
-            if (Utility.TryResolveDllAssembly(args.Name, CurrentExecutingAssemblyDirectoryPath, out var assembly) ||
-                Utility.TryResolveDllAssembly(args.Name, PatcherPluginPath, out assembly) ||
-                Utility.TryResolveDllAssembly(args.Name, PluginPath, out assembly))
-                return assembly;
+            var foundAssembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(x => x.GetName().Name == assemblyName.Name);
+
+            if (foundAssembly != null)
+                return foundAssembly;
+
+            if (Utility.TryResolveDllAssembly(assemblyName, CurrentExecutingAssemblyDirectoryPath, out foundAssembly) ||
+                Utility.TryResolveDllAssembly(assemblyName, PatcherPluginPath, out foundAssembly) ||
+                Utility.TryResolveDllAssembly(assemblyName, PluginPath, out foundAssembly))
+                return foundAssembly;
 
             return null;
         }

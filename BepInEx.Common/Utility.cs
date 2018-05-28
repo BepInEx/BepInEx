@@ -84,14 +84,14 @@ namespace BepInEx.Common
         /// <summary>
         /// Try to resolve and load the given assembly DLL.
         /// </summary>
-        /// <param name="name">Name of the assembly. Follows the format of <see cref="AssemblyName" />.</param>
+        /// <param name="assemblyName">Name of the assembly, of the type <see cref="AssemblyName" />.</param>
         /// <param name="directory">Directory to search the assembly from.</param>
         /// <param name="assembly">The loaded assembly.</param>
         /// <returns>True, if the assembly was found and loaded. Otherwise, false.</returns>
-        public static bool TryResolveDllAssembly(string name, string directory, out Assembly assembly)
+        public static bool TryResolveDllAssembly(AssemblyName assemblyName, string directory, out Assembly assembly)
         {
             assembly = null;
-            string path = Path.Combine(directory, $"{new AssemblyName(name).Name}.dll");
+            string path = Path.Combine(directory, $"{assemblyName.Name}.dll");
 
             if (!File.Exists(path))
                 return false;
