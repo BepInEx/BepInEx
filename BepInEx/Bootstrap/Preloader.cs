@@ -132,7 +132,7 @@ namespace BepInEx.Bootstrap
                 Logger.Log(LogLevel.Fatal, "Could not run preloader!");
                 Logger.Log(LogLevel.Fatal, ex);
 
-                PreloaderLog.Disable();
+                PreloaderLog.Enabled = false;
 
                 try
                 {

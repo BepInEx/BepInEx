@@ -29,20 +29,20 @@ namespace BepInEx.Logging
         public PreloaderLogWriter(bool redirectConsole)
         {
             IsRedirectingConsole = redirectConsole;
-
-            if (IsRedirectingConsole)
-                stdout = Console.Out;
-
+            
+            stdout = Console.Out;
             traceListener = new LoggerTraceListener(this);
         }
 
         public void Enable()
         {
-            if (Enabled)
+            if (_enabled)
                 return;
 
             if (IsRedirectingConsole)
                 Console.SetOut(this);
+            else
+                Console.SetOut(TextWriter.Null);
 
             Trace.Listeners.Add(traceListener);
 
@@ -51,11 +51,10 @@ namespace BepInEx.Logging
 
         public void Disable()
         {
-            if (!Enabled)
+            if (!_enabled)
                 return;
-
-            if (IsRedirectingConsole)
-                Console.SetOut(stdout);
+            
+            Console.SetOut(stdout);
 
             Trace.Listeners.Remove(traceListener);
 
@@ -66,28 +65,23 @@ namespace BepInEx.Logging
         {
             StringBuilder.Append(value);
 
-            if (IsRedirectingConsole)
-                stdout.Write(value);
-            else
-                Console.Write(value);
+            stdout.Write(value);
         }
 
         public override void Write(string value)
         {
             StringBuilder.Append(value);
 
-            if (IsRedirectingConsole)
-                stdout.Write(value);
-            else
-                Console.Write(value);
+            stdout.Write(value);
         }
 
         protected override void Dispose(bool disposing)
         {
             Disable();
             StringBuilder.Length = 0;
-
-            base.Dispose(disposing);
+            
+            traceListener?.Dispose();
+            traceListener = null;
         }
 
         public override string ToString()
