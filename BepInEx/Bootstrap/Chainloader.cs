@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using BepInEx.Logging;
 using UnityEngine;
 using UnityLogWriter = BepInEx.Logging.UnityLogWriter;
@@ -46,10 +47,12 @@ namespace BepInEx.Bootstrap
                 UnityLogWriter unityLogWriter = new UnityLogWriter();
 
 			    if (Preloader.PreloaderLog != null)
-			        unityLogWriter.WriteToLog(Preloader.PreloaderLog.ToString());
+			        unityLogWriter.WriteToLog($"{Preloader.PreloaderLog}\r\n");
 
                 Logger.SetLogger(unityLogWriter);
 
+			    string consoleTile = $"BepInEx {Assembly.GetExecutingAssembly().GetName().Version} - {Application.productName}";
+			    Console.Title = consoleTile;
                 
 				Logger.Log(LogLevel.Message, "Chainloader started");
 

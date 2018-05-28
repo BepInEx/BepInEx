@@ -101,11 +101,14 @@ namespace BepInEx.Bootstrap
                 PreloaderLog = new PreloaderLogWriter(TryGetConfigBool("preloader-logconsole", "false"));
                 PreloaderLog.Enabled = true;
 
+                string consoleTile = $"BepInEx {Assembly.GetExecutingAssembly().GetName().Version} - {Process.GetCurrentProcess().ProcessName}";
+                Console.Title = consoleTile;
+
+
                 Logger.SetLogger(PreloaderLog);
-
-                Logger.CurrentLogger.WriteLine($"BepInEx {Assembly.GetExecutingAssembly().GetName().Version}");
+                
+                PreloaderLog.WriteLine(consoleTile);
                 Logger.Log(LogLevel.Message, "Preloader started");
-
 
 
                 AddPatcher("UnityEngine.dll", PatchEntrypoint);
