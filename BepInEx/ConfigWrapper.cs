@@ -15,6 +15,8 @@ namespace BepInEx
         private readonly Func<T, string> _objToStr;
         private readonly string _defaultStr;
         private readonly T _default;
+        private T _lastValue;
+        private bool _lastValueSet;
 
         public string Key { get; protected set; }
 
@@ -112,7 +114,13 @@ namespace BepInEx
             try
             {
                 var strVal = Config.GetEntry(Key, _defaultStr, Section);
-                return _strToObj(strVal);
+                var obj = _strToObj(strVal);
+
+                // Always update in case config was changed from outside
+                _lastValue = obj;
+                _lastValueSet = true;
+
+                return obj;
             }
             catch (Exception ex)
             {
@@ -125,8 +133,16 @@ namespace BepInEx
         {
             try
             {
+                // Always write just in case config was changed from outside
                 var strVal = _objToStr(value);
                 Config.SetEntry(Key, strVal, Section);
+
+                if (_lastValueSet && Equals(_lastValue, value)) return;
+
+                _lastValue = value;
+                _lastValueSet = true;
+
+                OnSettingChanged();
             }
             catch (Exception ex)
             {
@@ -137,6 +153,19 @@ namespace BepInEx
         public void Clear()
         {
             Config.UnsetEntry(Key, Section);
+
+            _lastValueSet = false;
+            OnSettingChanged();
+        }
+
+        /// <summary>
+        /// Fired when the setting is changed. Does not detect changes made outside from this object.
+        /// </summary>
+        public event EventHandler SettingChanged;
+
+        private void OnSettingChanged()
+        {
+            SettingChanged?.Invoke(this, EventArgs.Empty);
         }
     }
 }
