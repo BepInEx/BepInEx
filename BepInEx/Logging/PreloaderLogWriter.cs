@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using BepInEx.ConsoleUtil;
 
 namespace BepInEx.Logging
 {
@@ -59,6 +60,13 @@ namespace BepInEx.Logging
             Trace.Listeners.Remove(traceListener);
 
             _enabled = false;
+        }
+
+        public override void Log(LogLevel level, object entry)
+        {
+            Kon.ForegroundColor = level.GetConsoleColor();
+            base.Log(level, entry);
+            Kon.ForegroundColor = ConsoleColor.Gray;
         }
 
         public override void Write(char value)

@@ -6,8 +6,15 @@ namespace BepInEx
     {
         public static BaseLogger CurrentLogger { get; set; }
 
+        /// <summary>
+        /// The listener event for an entry being logged.
+        /// </summary>
+        public static event BaseLogger.EntryLoggedEventHandler EntryLogged;
+
         public static void Log(LogLevel level, object entry)
         {
+            EntryLogged?.Invoke(level, entry);
+
             CurrentLogger?.Log(level, entry);
         }
 

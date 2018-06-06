@@ -78,12 +78,12 @@ namespace BepInEx.Bootstrap
             {
                 try
                 {
-                    UnityInjector.ConsoleUtil.ConsoleWindow.Attach();
+                    ConsoleWindow.Attach();
 
                     if (shiftjis)
-                        UnityInjector.ConsoleUtil.ConsoleEncoding.ConsoleCodePage = 932;
+                        ConsoleEncoding.ConsoleCodePage = 932;
                     else
-                        UnityInjector.ConsoleUtil.ConsoleEncoding.ConsoleCodePage = (uint)Encoding.UTF8.CodePage;
+                        ConsoleEncoding.ConsoleCodePage = (uint)Encoding.UTF8.CodePage;
                 }
                 catch (Exception ex)
                 {
@@ -106,8 +106,8 @@ namespace BepInEx.Bootstrap
                 PreloaderLog.Enabled = true;
 
                 string consoleTile = $"BepInEx {Assembly.GetExecutingAssembly().GetName().Version} - {Process.GetCurrentProcess().ProcessName}";
-
                 ConsoleWindow.Title = consoleTile;
+                
 
                 Logger.SetLogger(PreloaderLog);
                 

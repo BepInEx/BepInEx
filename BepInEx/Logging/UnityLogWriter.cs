@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using BepInEx.ConsoleUtil;
 
 namespace BepInEx.Logging
 {
@@ -14,6 +15,13 @@ namespace BepInEx.Logging
         {
             Console.Write(value);
             WriteToLog(value);
+        }
+
+        public override void Log(LogLevel level, object entry)
+        {
+            Kon.ForegroundColor = level.GetConsoleColor();
+            base.Log(level, entry);
+            Kon.ForegroundColor = ConsoleColor.Gray;
         }
 
         public override void WriteLine(string value) => InternalWrite($"{value}\r\n");

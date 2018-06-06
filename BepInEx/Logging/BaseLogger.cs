@@ -23,14 +23,17 @@ namespace BepInEx.Logging
         
         public LogLevel DisplayedLevels = LogLevel.All;
 
-
+        private object logLockObj = new object();
 
         public virtual void Log(LogLevel level, object entry)
         {
             if ((DisplayedLevels & level) != LogLevel.None)
             {
-                EntryLogged?.Invoke(level, entry);
-                WriteLine($"[{level}] {entry}");
+                lock (logLockObj)
+                {
+                    EntryLogged?.Invoke(level, entry);
+                    WriteLine($"[{level}] {entry}");
+                }
             }
         }
 
