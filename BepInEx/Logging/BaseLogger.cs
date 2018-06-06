@@ -18,7 +18,7 @@ namespace BepInEx.Logging
         /// <summary>
         /// The listener event for an entry being logged.
         /// </summary>
-        public static event EntryLoggedEventHandler EntryLogged;
+        public event EntryLoggedEventHandler EntryLogged;
 
         
         public LogLevel DisplayedLevels = LogLevel.All;
