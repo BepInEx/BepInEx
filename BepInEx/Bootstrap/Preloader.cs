@@ -80,10 +80,13 @@ namespace BepInEx.Bootstrap
                 {
                     ConsoleWindow.Attach();
 
+                    uint encoding = (uint) Encoding.UTF8.CodePage;
+
                     if (shiftjis)
-                        ConsoleEncoding.ConsoleCodePage = 932;
-                    else
-                        ConsoleEncoding.ConsoleCodePage = (uint)Encoding.UTF8.CodePage;
+                        encoding = 932;
+
+                    ConsoleEncoding.ConsoleCodePage = encoding;
+                    Console.OutputEncoding = ConsoleEncoding.GetEncoding(encoding);
                 }
                 catch (Exception ex)
                 {
