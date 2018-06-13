@@ -224,7 +224,7 @@ namespace BepInEx.Bootstrap
 		            }
 
 		            MethodInfo finalizeMethod = type.GetMethod(
-			            "Finalize",
+			            "Finish",
 			            BindingFlags.Public | BindingFlags.Static | BindingFlags.IgnoreCase,
 			            null,
 			            CallingConventions.Any,
