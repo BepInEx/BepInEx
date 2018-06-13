@@ -243,7 +243,7 @@ namespace BepInEx.Bootstrap
                 }
             }
 
-            Logger.Log(LogLevel.Info, $"Loaded {patcherMethods.SelectMany(x => x.Value).Distinct().Count()} patcher methods from {assembly.GetName().Name}");
+            Logger.Log(LogLevel.Info, $"Loaded {patcherMethods.Select(x => x.Key).Distinct().Count()} patcher methods from {assembly.GetName().Name}");
 
             return patcherMethods;
         }
