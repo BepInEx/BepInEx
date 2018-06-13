@@ -3,8 +3,14 @@ using System.Text;
 
 namespace BepInEx.Logging
 {
+	/// <summary>
+	/// The base implementation of a logging class.
+	/// </summary>
     public abstract class BaseLogger : TextWriter
     {
+		/// <summary>
+		/// The encoding that the underlying text writer should use. Defaults to UTF-8 BOM.
+		/// </summary>
         public override Encoding Encoding { get; } = new UTF8Encoding(true);
 
 
@@ -20,11 +26,18 @@ namespace BepInEx.Logging
         /// </summary>
         public event EntryLoggedEventHandler EntryLogged;
 
-        
-        public LogLevel DisplayedLevels = LogLevel.All;
+        /// <summary>
+		/// A filter which is used to specify which log levels are not ignored by the logger.
+		/// </summary>
+        public LogLevel DisplayedLevels { get; set; } = LogLevel.All;
 
         private object logLockObj = new object();
 
+		/// <summary>
+		/// Logs an entry to the Logger instance.
+		/// </summary>
+		/// <param name="level">The level of the entry.</param>
+		/// <param name="entry">The textual value of the entry.</param>
         public virtual void Log(LogLevel level, object entry)
         {
             if ((DisplayedLevels & level) != LogLevel.None)
@@ -37,6 +50,10 @@ namespace BepInEx.Logging
             }
         }
 
+		/// <summary>
+		/// Logs an entry to the Logger instance, with a <see cref="LogLevel"/> of Message.
+		/// </summary>
+		/// <param name="entry">The text value of this log entry.</param>
         public virtual void Log(object entry)
         {
             Log(LogLevel.Message, entry);

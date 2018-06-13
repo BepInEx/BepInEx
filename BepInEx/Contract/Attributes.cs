@@ -100,13 +100,26 @@ namespace BepInEx
 
     #region MetadataHelper
 
+	/// <summary>
+	/// Helper class to use for retrieving metadata about a plugin, defined as attributes.
+	/// </summary>
     public static class MetadataHelper
     {
+		/// <summary>
+		/// Retrieves the BepInPlugin metadata from a plugin instance.
+		/// </summary>
+		/// <param name="plugin">The plugin instance.</param>
+		/// <returns>The BepInPlugin metadata of the plugin instance.</returns>
         public static BepInPlugin GetMetadata(object plugin)
         {
             return GetMetadata(plugin.GetType());
         }
-
+		
+	    /// <summary>
+	    /// Retrieves the BepInPlugin metadata from a plugin type.
+	    /// </summary>
+	    /// <param name="plugin">The plugin type.</param>
+	    /// <returns>The BepInPlugin metadata of the plugin type.</returns>
         public static BepInPlugin GetMetadata(Type pluginType)
         {
             object[] attributes = pluginType.GetCustomAttributes(typeof(BepInPlugin), false);
@@ -117,16 +130,34 @@ namespace BepInEx
             return (BepInPlugin)attributes[0];
         }
 
+		/// <summary>
+		/// Gets the specified attributes of an instance, if they exist.
+		/// </summary>
+		/// <typeparam name="T">The attribute type to retrieve.</typeparam>
+		/// <param name="plugin">The plugin instance.</param>
+		/// <returns>The attributes of the instance, if existing.</returns>
         public static IEnumerable<T> GetAttributes<T>(object plugin) where T : Attribute
         {
             return GetAttributes<T>(plugin.GetType());
         }
-
+		
+	    /// <summary>
+	    /// Gets the specified attributes of a type, if they exist.
+	    /// </summary>
+	    /// <typeparam name="T">The attribute type to retrieve.</typeparam>
+	    /// <param name="plugin">The plugin type.</param>
+	    /// <returns>The attributes of the type, if existing.</returns>
         public static IEnumerable<T> GetAttributes<T>(Type pluginType) where T : Attribute
         {
             return pluginType.GetCustomAttributes(typeof(T), true).Cast<T>();
         }
 
+		/// <summary>
+		/// Retrieves the dependencies of the specified plugin type.
+		/// </summary>
+		/// <param name="Plugin">The plugin type.</param>
+		/// <param name="AllPlugins">All currently loaded plugin types.</param>
+		/// <returns>A list of all plugin types that the specified plugin type depends upon.</returns>
         public static IEnumerable<Type> GetDependencies(Type Plugin, IEnumerable<Type> AllPlugins)
         {
             object[] attributes = Plugin.GetCustomAttributes(typeof(BepInDependency), true);
@@ -153,6 +184,9 @@ namespace BepInEx
         }
     }
 
+	/// <summary>
+	/// An exception which is thrown when a plugin's dependencies cannot be found.
+	/// </summary>
     public class MissingDependencyException : Exception
     {
         public MissingDependencyException(string message) : base(message)

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -7,16 +8,33 @@ using Mono.Cecil;
 
 namespace BepInEx.Bootstrap
 {
+	/// <summary>
+	/// Delegate used in patching assemblies.
+	/// </summary>
+	/// <param name="assembly">The assembly that is being patched.</param>
     public delegate void AssemblyPatcherDelegate(ref AssemblyDefinition assembly);
 
+	/// <summary>
+	/// Worker class which is used for loading and patching entire folders of assemblies, or alternatively patching and loading assemblies one at a time.
+	/// </summary>
     public static class AssemblyPatcher
     {
+		/// <summary>
+		/// Configuration value of whether assembly dumping is enabled or not.
+		/// </summary>
         private static bool DumpingEnabled => bool.TryParse(Config.GetEntry("preloader-dumpassemblies", "false"), out bool result) ? result : false;
 
-        public static void PatchAll(string directory, Dictionary<AssemblyPatcherDelegate, IEnumerable<string>> patcherMethodDictionary)
+		/// <summary>
+		/// Patches and loads an entire directory of assemblies.
+		/// </summary>
+		/// <param name="directory">The directory to load assemblies from.</param>
+		/// <param name="patcherMethodDictionary">The dictionary of patchers and their targeted assembly filenames which they are patching.</param>
+        public static void PatchAll(string directory, IDictionary<AssemblyPatcherDelegate, IEnumerable<string>> patcherMethodDictionary, IEnumerable<Action> Initializers = null, IEnumerable<Action> Finalizers = null)
         {
 			//run all initializers
-			Preloader.Initializers.ForEach(x => x.Invoke());
+			if (Initializers != null)
+				foreach (Action init in Initializers)
+					init.Invoke();
 
             //load all the requested assemblies
             List<AssemblyDefinition> assemblies = new List<AssemblyDefinition>();
@@ -102,17 +120,27 @@ namespace BepInEx.Bootstrap
 				sortedAssemblies[i].Dispose();
 #endif
             }
-
 			
-	        //run all initializers
-	        Preloader.Initializers.ForEach(x => x.Invoke());
+	        //run all finalizers
+	        if (Finalizers != null)
+		        foreach (Action finalizer in Finalizers)
+			        finalizer.Invoke();
         }
 
+		/// <summary>
+		/// Patches an individual assembly, without loading it.
+		/// </summary>
+		/// <param name="assembly">The assembly definition to apply the patch to.</param>
+		/// <param name="patcherMethod">The patcher to use to patch the assembly definition.</param>
         public static void Patch(ref AssemblyDefinition assembly, AssemblyPatcherDelegate patcherMethod)
         {
 	        patcherMethod.Invoke(ref assembly);
         }
 
+		/// <summary>
+		/// Loads an individual assembly defintion into the CLR.
+		/// </summary>
+		/// <param name="assembly">The assembly to load.</param>
 	    public static void Load(AssemblyDefinition assembly)
 	    {
 		    using (MemoryStream assemblyStream = new MemoryStream())

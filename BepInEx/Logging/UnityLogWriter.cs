@@ -4,8 +4,15 @@ using BepInEx.ConsoleUtil;
 
 namespace BepInEx.Logging
 {
+	/// <summary>
+	/// Logs entries using Unity specific outputs.
+	/// </summary>
     public class UnityLogWriter : BaseLogger
     {
+		/// <summary>
+		/// Writes a string specifically to the game output log.
+		/// </summary>
+		/// <param name="value">The value to write.</param>
         public void WriteToLog(string value)
         {
             UnityEngine.UnityLogWriter.WriteStringToUnityLog(value);
@@ -17,6 +24,11 @@ namespace BepInEx.Logging
             WriteToLog(value);
         }
 
+	    /// <summary>
+	    /// Logs an entry to the Logger instance.
+	    /// </summary>
+	    /// <param name="level">The level of the entry.</param>
+	    /// <param name="entry">The textual value of the entry.</param>
         public override void Log(LogLevel level, object entry)
         {
             Kon.ForegroundColor = level.GetConsoleColor();

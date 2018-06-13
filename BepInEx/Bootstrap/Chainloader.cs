@@ -13,7 +13,7 @@ using UnityLogWriter = BepInEx.Logging.UnityLogWriter;
 namespace BepInEx.Bootstrap
 {
 	/// <summary>
-	/// The manager and loader for all plugins, and the entry point for BepInEx.
+	/// The manager and loader for all plugins, and the entry point for BepInEx plugin system.
 	/// </summary>
 	public class Chainloader
 	{
@@ -31,7 +31,7 @@ namespace BepInEx.Bootstrap
 		private static bool _loaded = false;
 
 		/// <summary>
-		/// The entry point for BepInEx, called on the very first LoadScene() from UnityEngine.
+		/// The entry point for the BepInEx plugin system, called on the very first LoadScene() from UnityEngine.
 		/// </summary>
 		public static void Initialize()
 		{

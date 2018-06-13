@@ -6,6 +6,9 @@ using BepInEx.Logging;
 
 namespace BepInEx.Bootstrap
 {
+	/// <summary>
+	/// Provides methods for loading specified types from an assembly.
+	/// </summary>
     public static class TypeLoader
     {
         /// <summary>

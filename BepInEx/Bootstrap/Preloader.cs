@@ -14,41 +14,91 @@ using MethodAttributes = Mono.Cecil.MethodAttributes;
 
 namespace BepInEx.Bootstrap
 {
+	/// <summary>
+	/// The main entrypoint of BepInEx, and initializes all patchers and the chainloader.
+	/// </summary>
     public static class Preloader
     {
         #region Path Properties
 
+		/// <summary>
+		/// The path of the currently executing program BepInEx is encapsulated in.
+		/// </summary>
         public static string ExecutablePath { get; private set; }
 
-        public static string CurrentExecutingAssemblyPath => Assembly.GetExecutingAssembly().CodeBase.Replace("file:///", "").Replace('/', '\\');
+		/// <summary>
+		/// The path to the core BepInEx DLL.
+		/// </summary>
+        public static string CurrentExecutingAssemblyPath { get; } = typeof(Preloader).Assembly.CodeBase.Replace("file:///", "").Replace('/', '\\');
 
-        public static string CurrentExecutingAssemblyDirectoryPath => Path.GetDirectoryName(CurrentExecutingAssemblyPath);
+		/// <summary>
+		/// The directory that the core BepInEx DLLs reside in.
+		/// </summary>
+	    public static string CurrentExecutingAssemblyDirectoryPath { get; } = Path.GetDirectoryName(CurrentExecutingAssemblyPath);
 
-        public static string GameName => Path.GetFileNameWithoutExtension(Process.GetCurrentProcess().ProcessName);
+		/// <summary>
+		/// The name of the currently executing process.
+		/// </summary>
+        public static string ProcessName { get; } = Path.GetFileNameWithoutExtension(Process.GetCurrentProcess().ProcessName);
 
-        public static string GameRootPath => Path.GetDirectoryName(ExecutablePath);
+		/// <summary>
+		/// The directory that the currently executing process resides in.
+		/// </summary>
+        public static string GameRootPath { get; } = Path.GetDirectoryName(ExecutablePath);
 
-        public static string ManagedPath => Utility.CombinePaths(GameRootPath, $"{GameName}_Data", "Managed");
+		/// <summary>
+		/// The path to the Managed folder of the currently running Unity game.
+		/// </summary>
+        public static string ManagedPath { get; } = Utility.CombinePaths(GameRootPath, $"{ProcessName}_Data", "Managed");
 
-        public static string PluginPath => Utility.CombinePaths(GameRootPath, "BepInEx");
+		/// <summary>
+		/// The path to the main BepInEx folder.
+		/// </summary>
+        public static string PluginPath { get; } = Utility.CombinePaths(GameRootPath, "BepInEx");
 
-        public static string PatcherPluginPath => Utility.CombinePaths(GameRootPath, "BepInEx", "patchers");
+		/// <summary>
+		/// The path to the patcher plugin folder which resides in the BepInEx folder.
+		/// </summary>
+        public static string PatcherPluginPath { get; } = Utility.CombinePaths(GameRootPath, "BepInEx", "patchers");
 
         #endregion
 
+		/// <summary>
+		/// The log writer that is specific to the preloader.
+		/// </summary>
         public static PreloaderLogWriter PreloaderLog { get; private set; }
 
+		/// <summary>
+		/// The dictionary of currently loaded patchers. The key is the patcher delegate that will be used to patch, and the value is a list of filenames of assemblies that the patcher is targeting.
+		/// </summary>
         public static Dictionary<AssemblyPatcherDelegate, IEnumerable<string>> PatcherDictionary { get; } = new Dictionary<AssemblyPatcherDelegate, IEnumerable<string>>();
 		
+		/// <summary>
+		/// The list of initializers that were loaded from the patcher contract.
+		/// </summary>
 	    public static List<Action> Initializers { get; } = new List<Action>();
+	    /// <summary>
+	    /// The list of finalizers that were loaded from the patcher contract.
+	    /// </summary>
 	    public static List<Action> Finalizers { get; } = new List<Action>();
 
 
+		/// <summary>
+		/// Adds the patcher to the patcher dictionary.
+		/// </summary>
+		/// <param name="dllNames">The list of DLL filenames to be patched.</param>
+		/// <param name="patcher">The method that will perform the patching.</param>
         public static void AddPatcher(IEnumerable<string> dllNames, AssemblyPatcherDelegate patcher)
         {
 	        PatcherDictionary[patcher] = dllNames;
         }
 
+		/// <summary>
+		/// Safely retrieves a boolean value from the config. Returns false if not able to retrieve safely.
+		/// </summary>
+		/// <param name="key">The key to retrieve from the config.</param>
+		/// <param name="defaultValue">The default value to both return and set if the key does not exist in the config.</param>
+		/// <returns>The value of the key if found in the config, or the default value specified if not found, or false if it was unable to safely retrieve the value from the config.</returns>
         private static bool SafeGetConfigBool(string key, string defaultValue)
         {
             try
@@ -63,6 +113,9 @@ namespace BepInEx.Bootstrap
             }
         }
 
+		/// <summary>
+		/// Allocates a console window for use by BepInEx safely.
+		/// </summary>
         internal static void AllocateConsole()
         {
             bool console = SafeGetConfigBool("console", "false");
@@ -90,6 +143,10 @@ namespace BepInEx.Bootstrap
             }
         }
 
+		/// <summary>
+		/// The main entrypoint of BepInEx, called from Doorstop.
+		/// </summary>
+		/// <param name="args">The arguments passed in from Doorstop. First argument is the path of the currently executing process.</param>
         public static void Main(string[] args)
         {
             try
@@ -152,6 +209,11 @@ namespace BepInEx.Bootstrap
             }
         }
 
+		/// <summary>
+		/// Scans the assembly for classes that use the patcher contract, and returns a dictionary of the patch methods.
+		/// </summary>
+		/// <param name="assembly">The assembly to scan.</param>
+		/// <returns>A dictionary of delegates which will be used to patch the targeted assemblies.</returns>
         internal static Dictionary<AssemblyPatcherDelegate, IEnumerable<string>> GetPatcherMethods(Assembly assembly)
         {
             var patcherMethods = new Dictionary<AssemblyPatcherDelegate, IEnumerable<string>>();
@@ -248,6 +310,10 @@ namespace BepInEx.Bootstrap
             return patcherMethods;
         }
 
+		/// <summary>
+		/// Inserts BepInEx's own chainloader entrypoint into UnityEngine.
+		/// </summary>
+		/// <param name="assembly">The assembly that will be attempted to be patched.</param>
         internal static void PatchEntrypoint(ref AssemblyDefinition assembly)
         {
             if (assembly.Name.Name == "UnityEngine")
@@ -283,6 +349,15 @@ namespace BepInEx.Bootstrap
             }
         }
 
+		/// <summary>
+		/// A handler for <see cref="AppDomain"/>.AssemblyResolve to perform some special handling.
+		/// <para>
+		/// It attempts to check currently loaded assemblies (ignoring the version), and then checks the BepInEx/core path, BepInEx/patchers path and the BepInEx folder, all in that order.
+		/// </para>
+		/// </summary>
+		/// <param name="sender"></param>
+		/// <param name="args"></param>
+		/// <returns></returns>
         internal static Assembly LocalResolve(object sender, ResolveEventArgs args)
         {
             AssemblyName assemblyName = new AssemblyName(args.Name);

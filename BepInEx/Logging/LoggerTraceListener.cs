@@ -6,9 +6,16 @@ using Harmony;
 
 namespace BepInEx.Logging
 {
+	/// <summary>
+	/// A trace listener that writes to an underlying <see cref="BaseLogger"/> instance.
+	/// </summary>
+	/// <inheritdoc cref="TraceListener"/>
     public class LoggerTraceListener : TraceListener
     {
-        public BaseLogger Logger;
+		/// <summary>
+		/// The logger instance that is being written to.
+		/// </summary>
+        public BaseLogger Logger { get; }
 
         static LoggerTraceListener()
         {
@@ -18,17 +25,26 @@ namespace BepInEx.Logging
             }
             catch { } //ignore everything, if it's thrown an exception, we're using an assembly that has already fixed this
         }
-
+		
+		/// <param name="logger">The logger instance to write to.</param>
         public LoggerTraceListener(BaseLogger logger)
         {
             Logger = logger;
         }
-
+		
+		/// <summary>
+		/// Writes a message to the underlying <see cref="BaseLogger"/> instance.
+		/// </summary>
+		/// <param name="message">The message to write.</param>
         public override void Write(string message)
         {
             Logger.Write(message);
         }
-
+		
+	    /// <summary>
+	    /// Writes a message and a newline to the underlying <see cref="BaseLogger"/> instance.
+	    /// </summary>
+	    /// <param name="message">The message to write.</param>
         public override void WriteLine(string message)
         {
             Logger.WriteLine(message);
@@ -64,6 +80,9 @@ namespace BepInEx.Logging
             Logger.Log(level, $"{source} : {message}");
         }
 
+		/// <summary>
+		/// This exists because the Mono implementation of <see cref="Trace"/> is/was broken, and would call Write directly instead of calling TraceEvent. This class fixes that with a <see cref="Harmony"/> hook.
+		/// </summary>
         private static class TraceFixer
         {
             private static Type TraceImplType;
