@@ -7,7 +7,7 @@ using Mono.Cecil;
 
 namespace BepInEx.Bootstrap
 {
-    public delegate void AssemblyPatcherDelegate(AssemblyDefinition assembly);
+    public delegate void AssemblyPatcherDelegate(ref AssemblyDefinition assembly);
 
     public static class AssemblyPatcher
     {
@@ -57,46 +57,44 @@ namespace BepInEx.Bootstrap
             }
 
             //sort the assemblies so load the assemblies that are dependant upon first
-            IEnumerable<AssemblyDefinition> sortedAssemblies = Utility.TopologicalSort(assemblies, x => assemblyDependencyDict[x]);
+            AssemblyDefinition[] sortedAssemblies = Utility.TopologicalSort(assemblies, x => assemblyDependencyDict[x]).ToArray();
 
             //call the patchers on the assemblies
-            foreach (var assembly in sortedAssemblies)
-            {
-#if CECIL_10
-                using (assembly)
-#endif
+			for (int i = 0; i < sortedAssemblies.Length; i++)
+			{
+                string filename = Path.GetFileName(assemblyFilenames[sortedAssemblies[i]]);
+
+                //skip if we aren't patching it
+                if (!patcherMethodDictionary.TryGetValue(filename, out IList<AssemblyPatcherDelegate> patcherMethods))
+                    continue;
+
+                Patch(ref sortedAssemblies[i], patcherMethods);
+
+                if (DumpingEnabled)
                 {
-                    string filename = Path.GetFileName(assemblyFilenames[assembly]);
-
-                    //skip if we aren't patching it
-                    if (!patcherMethodDictionary.TryGetValue(filename, out IList<AssemblyPatcherDelegate> patcherMethods))
-                        continue;
-
-                    Patch(assembly, patcherMethods);
-
-                    if (DumpingEnabled)
+                    using (MemoryStream mem = new MemoryStream())
                     {
-                        using (MemoryStream mem = new MemoryStream())
-                        {
-                            string dirPath = Path.Combine(Preloader.PluginPath, "DumpedAssemblies");
+                        string dirPath = Path.Combine(Preloader.PluginPath, "DumpedAssemblies");
 
-                            if (!Directory.Exists(dirPath))
-                                Directory.CreateDirectory(dirPath);
+                        if (!Directory.Exists(dirPath))
+                            Directory.CreateDirectory(dirPath);
                             
-                            assembly.Write(mem);
-                            File.WriteAllBytes(Path.Combine(dirPath, filename), mem.ToArray());
-                        }
+	                    sortedAssemblies[i].Write(mem);
+                        File.WriteAllBytes(Path.Combine(dirPath, filename), mem.ToArray());
                     }
                 }
+#if CECIL_10
+				sortedAssemblies[i].Dispose();
+#endif
             }
         }
 
-        public static void Patch(AssemblyDefinition assembly, IEnumerable<AssemblyPatcherDelegate> patcherMethods)
+        public static void Patch(ref AssemblyDefinition assembly, IEnumerable<AssemblyPatcherDelegate> patcherMethods)
         {
             using (MemoryStream assemblyStream = new MemoryStream())
             {
                 foreach (AssemblyPatcherDelegate method in patcherMethods)
-                    method.Invoke(assembly);
+                    method.Invoke(ref assembly);
 
                 assembly.Write(assemblyStream);
                 Assembly.Load(assemblyStream.ToArray());

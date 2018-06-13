@@ -165,31 +165,51 @@ namespace BepInEx.Bootstrap
 
             foreach (var type in assembly.GetExportedTypes())
             {
-                try
-                {
-                    if (type.IsInterface)
+	            try
+	            {
+		            if (type.IsInterface)
+			            continue;
+
+		            PropertyInfo targetsProperty = type.GetProperty(
+			            "TargetDLLs",
+			            BindingFlags.Public | BindingFlags.Static | BindingFlags.IgnoreCase,
+			            null,
+			            typeof(IEnumerable<string>),
+			            Type.EmptyTypes,
+			            null);
+
+					//first try get the ref patcher method
+		            MethodInfo patcher = type.GetMethod(
+			            "Patch",
+			            BindingFlags.Public | BindingFlags.Static | BindingFlags.IgnoreCase,
+			            null,
+			            CallingConventions.Any,
+			            new[] {typeof(AssemblyDefinition).MakeByRefType()},
+			            null);
+
+		            if (patcher == null) //otherwise try getting the non-ref patcher method
+		            {
+			            patcher = type.GetMethod(
+				            "Patch",
+				            BindingFlags.Public | BindingFlags.Static | BindingFlags.IgnoreCase,
+				            null,
+				            CallingConventions.Any,
+				            new[] {typeof(AssemblyDefinition)},
+				            null);
+		            }
+
+		            if (targetsProperty == null || !targetsProperty.CanRead || patcher == null)
                         continue;
 
-                    PropertyInfo targetsProperty = type.GetProperty(
-                        "TargetDLLs", 
-                        BindingFlags.Public | BindingFlags.Static | BindingFlags.IgnoreCase,
-                        null,
-                        typeof(IEnumerable<string>),
-                        Type.EmptyTypes,
-                        null);
+                    AssemblyPatcherDelegate patchDelegate = (ref AssemblyDefinition ass) =>
+                    {
+						//we do the array fuckery here to get the ref result out
+	                    object[] args = { ass };
 
-                    MethodInfo patcher = type.GetMethod(
-                        "Patch", 
-                        BindingFlags.Public | BindingFlags.Static | BindingFlags.IgnoreCase,
-                        null,
-                        CallingConventions.Any,
-                        new[] { typeof(AssemblyDefinition) },
-                        null);
+	                    patcher.Invoke(null, args);
 
-                    if (targetsProperty == null || !targetsProperty.CanRead || patcher == null)
-                        continue;
-
-                    AssemblyPatcherDelegate patchDelegate = (ass) => { patcher.Invoke(null, new object[] {ass}); };
+	                    ass = (AssemblyDefinition)args[0];
+                    };
 
                     IEnumerable<string> targets = (IEnumerable<string>)targetsProperty.GetValue(null, null);
 
@@ -217,7 +237,7 @@ namespace BepInEx.Bootstrap
             return patcherMethods;
         }
 
-        internal static void PatchEntrypoint(AssemblyDefinition assembly)
+        internal static void PatchEntrypoint(ref AssemblyDefinition assembly)
         {
             if (assembly.Name.Name == "UnityEngine")
             {
