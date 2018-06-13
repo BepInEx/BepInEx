@@ -38,24 +38,15 @@ namespace BepInEx.Bootstrap
 
         public static PreloaderLogWriter PreloaderLog { get; private set; }
 
-        public static Dictionary<string, IList<AssemblyPatcherDelegate>> PatcherDictionary = new Dictionary<string, IList<AssemblyPatcherDelegate>>(StringComparer.OrdinalIgnoreCase);
+        public static Dictionary<AssemblyPatcherDelegate, IEnumerable<string>> PatcherDictionary = new Dictionary<AssemblyPatcherDelegate, IEnumerable<string>>();
 
 
-        public static void AddPatcher(string dllName, AssemblyPatcherDelegate patcher)
+        public static void AddPatcher(IEnumerable<string> dllNames, AssemblyPatcherDelegate patcher)
         {
-            if (PatcherDictionary.TryGetValue(dllName, out IList<AssemblyPatcherDelegate> patcherList))
-                patcherList.Add(patcher);
-            else
-            {
-                patcherList = new List<AssemblyPatcherDelegate>();
-
-                patcherList.Add(patcher);
-
-                PatcherDictionary[dllName] = patcherList;
-            }
+	        PatcherDictionary[patcher] = dllNames;
         }
 
-        private static bool TryGetConfigBool(string key, string defaultValue)
+        private static bool SafeGetConfigBool(string key, string defaultValue)
         {
             try
             {
@@ -71,8 +62,8 @@ namespace BepInEx.Bootstrap
 
         internal static void AllocateConsole()
         {
-            bool console = TryGetConfigBool("console", "false");
-            bool shiftjis = TryGetConfigBool("console-shiftjis", "false");
+            bool console = SafeGetConfigBool("console", "false");
+            bool shiftjis = SafeGetConfigBool("console-shiftjis", "false");
 
             if (console)
             {
@@ -105,7 +96,7 @@ namespace BepInEx.Bootstrap
 
                 AllocateConsole();
 
-                PreloaderLog = new PreloaderLogWriter(TryGetConfigBool("preloader-logconsole", "false"));
+                PreloaderLog = new PreloaderLogWriter(SafeGetConfigBool("preloader-logconsole", "false"));
                 PreloaderLog.Enabled = true;
 
                 string consoleTile = $"BepInEx {Assembly.GetExecutingAssembly().GetName().Version} - {Process.GetCurrentProcess().ProcessName}";
@@ -118,7 +109,7 @@ namespace BepInEx.Bootstrap
                 Logger.Log(LogLevel.Message, "Preloader started");
 
 
-                AddPatcher("UnityEngine.dll", PatchEntrypoint);
+                AddPatcher(new [] { "UnityEngine.dll" }, PatchEntrypoint);
 
                 if (Directory.Exists(PatcherPluginPath))
                     foreach (string assemblyPath in Directory.GetFiles(PatcherPluginPath, "*.dll"))
@@ -128,8 +119,7 @@ namespace BepInEx.Bootstrap
                             var assembly = Assembly.LoadFrom(assemblyPath);
 
                             foreach (var kv in GetPatcherMethods(assembly))
-                                foreach (var patcher in kv.Value)
-                                    AddPatcher(kv.Key, patcher);
+                                AddPatcher(kv.Value, kv.Key);
                         }
                         catch (BadImageFormatException) { } //unmanaged DLL
                         catch (ReflectionTypeLoadException) { } //invalid references
@@ -159,9 +149,9 @@ namespace BepInEx.Bootstrap
             }
         }
 
-        internal static IDictionary<string, IList<AssemblyPatcherDelegate>> GetPatcherMethods(Assembly assembly)
+        internal static Dictionary<AssemblyPatcherDelegate, IEnumerable<string>> GetPatcherMethods(Assembly assembly)
         {
-            var patcherMethods = new Dictionary<string, IList<AssemblyPatcherDelegate>>(StringComparer.OrdinalIgnoreCase);
+            var patcherMethods = new Dictionary<AssemblyPatcherDelegate, IEnumerable<string>>();
 
             foreach (var type in assembly.GetExportedTypes())
             {
@@ -213,18 +203,8 @@ namespace BepInEx.Bootstrap
 
                     IEnumerable<string> targets = (IEnumerable<string>)targetsProperty.GetValue(null, null);
 
-                    foreach (string target in targets)
-                    {
-                        if (patcherMethods.TryGetValue(target, out IList<AssemblyPatcherDelegate> patchers))
-                            patchers.Add(patchDelegate);
-                        else
-                        {
-                            patchers = new List<AssemblyPatcherDelegate>{ patchDelegate };
-
-                            patcherMethods[target] = patchers;
-                        }
-                    }
-                }
+		            patcherMethods[patchDelegate] = targets;
+	            }
                 catch (Exception ex)
                 {
                     Logger.Log(LogLevel.Warning, $"Could not load patcher methods from {assembly.GetName().Name}");

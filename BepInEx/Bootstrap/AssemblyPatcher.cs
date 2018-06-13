@@ -13,7 +13,7 @@ namespace BepInEx.Bootstrap
     {
         private static bool DumpingEnabled => bool.TryParse(Config.GetEntry("preloader-dumpassemblies", "false"), out bool result) ? result : false;
 
-        public static void PatchAll(string directory, Dictionary<string, IList<AssemblyPatcherDelegate>> patcherMethodDictionary)
+        public static void PatchAll(string directory, Dictionary<AssemblyPatcherDelegate, IEnumerable<string>> patcherMethodDictionary)
         {
             //load all the requested assemblies
             List<AssemblyDefinition> assemblies = new List<AssemblyDefinition>();
@@ -59,16 +59,26 @@ namespace BepInEx.Bootstrap
             //sort the assemblies so load the assemblies that are dependant upon first
             AssemblyDefinition[] sortedAssemblies = Utility.TopologicalSort(assemblies, x => assemblyDependencyDict[x]).ToArray();
 
+	        List<string> sortedAssemblyFilenames = sortedAssemblies.Select(x => assemblyFilenames[x]).ToList();
+
             //call the patchers on the assemblies
+	        foreach (var patcherMethod in patcherMethodDictionary)
+	        {
+		        foreach (string assemblyFilename in patcherMethod.Value)
+		        {
+			        int index = sortedAssemblyFilenames.FindIndex(x => x == assemblyFilename);
+
+			        if (index < 0)
+				        continue;
+
+					Patch(ref sortedAssemblies[index], patcherMethod.Key);
+		        }
+	        }
+
+
 			for (int i = 0; i < sortedAssemblies.Length; i++)
 			{
                 string filename = Path.GetFileName(assemblyFilenames[sortedAssemblies[i]]);
-
-                //skip if we aren't patching it
-                if (!patcherMethodDictionary.TryGetValue(filename, out IList<AssemblyPatcherDelegate> patcherMethods))
-                    continue;
-
-                Patch(ref sortedAssemblies[i], patcherMethods);
 
                 if (DumpingEnabled)
                 {
@@ -83,22 +93,26 @@ namespace BepInEx.Bootstrap
                         File.WriteAllBytes(Path.Combine(dirPath, filename), mem.ToArray());
                     }
                 }
+
+				Load(sortedAssemblies[i]);
 #if CECIL_10
 				sortedAssemblies[i].Dispose();
 #endif
             }
         }
 
-        public static void Patch(ref AssemblyDefinition assembly, IEnumerable<AssemblyPatcherDelegate> patcherMethods)
+        public static void Patch(ref AssemblyDefinition assembly, AssemblyPatcherDelegate patcherMethod)
         {
-            using (MemoryStream assemblyStream = new MemoryStream())
-            {
-                foreach (AssemblyPatcherDelegate method in patcherMethods)
-                    method.Invoke(ref assembly);
-
-                assembly.Write(assemblyStream);
-                Assembly.Load(assemblyStream.ToArray());
-            }
+	        patcherMethod.Invoke(ref assembly);
         }
+
+	    public static void Load(AssemblyDefinition assembly)
+	    {
+		    using (MemoryStream assemblyStream = new MemoryStream())
+		    {
+			    assembly.Write(assemblyStream);
+			    Assembly.Load(assemblyStream.ToArray());
+		    }
+	    }
     }
 }
