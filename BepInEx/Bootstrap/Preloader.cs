@@ -38,7 +38,10 @@ namespace BepInEx.Bootstrap
 
         public static PreloaderLogWriter PreloaderLog { get; private set; }
 
-        public static Dictionary<AssemblyPatcherDelegate, IEnumerable<string>> PatcherDictionary = new Dictionary<AssemblyPatcherDelegate, IEnumerable<string>>();
+        public static Dictionary<AssemblyPatcherDelegate, IEnumerable<string>> PatcherDictionary { get; } = new Dictionary<AssemblyPatcherDelegate, IEnumerable<string>>();
+		
+	    public static List<Action> Initializers { get; } = new List<Action>();
+	    public static List<Action> Finalizers { get; } = new List<Action>();
 
 
         public static void AddPatcher(IEnumerable<string> dllNames, AssemblyPatcherDelegate patcher)
@@ -191,19 +194,47 @@ namespace BepInEx.Bootstrap
 		            if (targetsProperty == null || !targetsProperty.CanRead || patcher == null)
                         continue;
 
-                    AssemblyPatcherDelegate patchDelegate = (ref AssemblyDefinition ass) =>
-                    {
-						//we do the array fuckery here to get the ref result out
-	                    object[] args = { ass };
+		            AssemblyPatcherDelegate patchDelegate = (ref AssemblyDefinition ass) =>
+		            {
+			            //we do the array fuckery here to get the ref result out
+			            object[] args = { ass };
 
-	                    patcher.Invoke(null, args);
+			            patcher.Invoke(null, args);
 
-	                    ass = (AssemblyDefinition)args[0];
-                    };
+			            ass = (AssemblyDefinition)args[0];
+		            };
 
-                    IEnumerable<string> targets = (IEnumerable<string>)targetsProperty.GetValue(null, null);
+		            IEnumerable<string> targets = (IEnumerable<string>)targetsProperty.GetValue(null, null);
 
 		            patcherMethods[patchDelegate] = targets;
+
+
+
+		            MethodInfo initMethod = type.GetMethod(
+			            "Initialize",
+			            BindingFlags.Public | BindingFlags.Static | BindingFlags.IgnoreCase,
+			            null,
+			            CallingConventions.Any,
+			            Type.EmptyTypes,
+			            null);
+
+		            if (initMethod != null)
+		            {
+						Initializers.Add(() => initMethod.Invoke(null, null));
+		            }
+
+		            MethodInfo finalizeMethod = type.GetMethod(
+			            "Finalize",
+			            BindingFlags.Public | BindingFlags.Static | BindingFlags.IgnoreCase,
+			            null,
+			            CallingConventions.Any,
+			            Type.EmptyTypes,
+			            null);
+
+		            if (finalizeMethod != null)
+		            {
+			            Finalizers.Add(() => finalizeMethod.Invoke(null, null));
+		            }
 	            }
                 catch (Exception ex)
                 {

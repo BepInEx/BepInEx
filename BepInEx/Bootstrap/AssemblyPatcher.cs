@@ -15,6 +15,9 @@ namespace BepInEx.Bootstrap
 
         public static void PatchAll(string directory, Dictionary<AssemblyPatcherDelegate, IEnumerable<string>> patcherMethodDictionary)
         {
+			//run all initializers
+			Preloader.Initializers.ForEach(x => x.Invoke());
+
             //load all the requested assemblies
             List<AssemblyDefinition> assemblies = new List<AssemblyDefinition>();
             Dictionary<AssemblyDefinition, string> assemblyFilenames = new Dictionary<AssemblyDefinition, string>();
@@ -99,6 +102,10 @@ namespace BepInEx.Bootstrap
 				sortedAssemblies[i].Dispose();
 #endif
             }
+
+			
+	        //run all initializers
+	        Preloader.Initializers.ForEach(x => x.Invoke());
         }
 
         public static void Patch(ref AssemblyDefinition assembly, AssemblyPatcherDelegate patcherMethod)
