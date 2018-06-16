@@ -21,15 +21,28 @@ namespace BepInEx.Bootstrap
     {
         #region Path Properties
 
-		/// <summary>
-		/// The path of the currently executing program BepInEx is encapsulated in.
-		/// </summary>
-        public static string ExecutablePath { get; private set; }
+        private static string executablePath;
+
+        /// <summary>
+        /// The path of the currently executing program BepInEx is encapsulated in.
+        /// </summary>
+        public static string ExecutablePath
+        {
+            get => executablePath;
+            set
+            {
+                executablePath = value;
+                GameRootPath = Path.GetDirectoryName(executablePath);
+                ManagedPath = Utility.CombinePaths(GameRootPath, $"{ProcessName}_Data", "Managed");
+                PluginPath = Utility.CombinePaths(GameRootPath, "BepInEx");
+                PatcherPluginPath = Utility.CombinePaths(GameRootPath, "BepInEx", "patchers");
+            }
+        }
 
 		/// <summary>
 		/// The path to the core BepInEx DLL.
 		/// </summary>
-        public static string CurrentExecutingAssemblyPath { get; } = typeof(Preloader).Assembly.CodeBase.Replace("file:///", "").Replace('/', '\\');
+        public static string CurrentExecutingAssemblyPath { get; } = Assembly.GetExecutingAssembly().CodeBase.Replace("file:///", "").Replace('/', '\\');
 
 		/// <summary>
 		/// The directory that the core BepInEx DLLs reside in.
@@ -44,22 +57,22 @@ namespace BepInEx.Bootstrap
 		/// <summary>
 		/// The directory that the currently executing process resides in.
 		/// </summary>
-        public static string GameRootPath { get; } = Path.GetDirectoryName(ExecutablePath);
+        public static string GameRootPath { get; private set; }
 
 		/// <summary>
 		/// The path to the Managed folder of the currently running Unity game.
 		/// </summary>
-        public static string ManagedPath { get; } = Utility.CombinePaths(GameRootPath, $"{ProcessName}_Data", "Managed");
+        public static string ManagedPath { get; private set; }
 
 		/// <summary>
 		/// The path to the main BepInEx folder.
 		/// </summary>
-        public static string PluginPath { get; } = Utility.CombinePaths(GameRootPath, "BepInEx");
+        public static string PluginPath { get; private set; }
 
 		/// <summary>
 		/// The path to the patcher plugin folder which resides in the BepInEx folder.
 		/// </summary>
-        public static string PatcherPluginPath { get; } = Utility.CombinePaths(GameRootPath, "BepInEx", "patchers");
+        public static string PatcherPluginPath { get; private set; }
 
         #endregion
 
