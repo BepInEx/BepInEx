@@ -198,7 +198,7 @@ namespace BepInEx.Bootstrap
                         catch (ReflectionTypeLoadException) { } //invalid references
                     }
 
-                AssemblyPatcher.PatchAll(ManagedPath, PatcherDictionary);
+                AssemblyPatcher.PatchAll(ManagedPath, PatcherDictionary, Initializers, Finalizers);
             }
             catch (Exception ex)
             {
