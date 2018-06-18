@@ -82,46 +82,47 @@ namespace BepInEx.Bootstrap
             //sort the assemblies so load the assemblies that are dependant upon first
             AssemblyDefinition[] sortedAssemblies = Utility.TopologicalSort(assemblies, x => assemblyDependencyDict[x]).ToArray();
 
-	        List<string> sortedAssemblyFilenames = sortedAssemblies.Select(x => assemblyFilenames[x]).ToList();
+            Dictionary<string, AssemblyDefinition> sortedAssemblyFilenames = sortedAssemblies.ToDictionary(ass => assemblyFilenames[ass]);
+
+            HashSet<string> patchedAssemblies = new HashSet<string>();
 
             //call the patchers on the assemblies
 	        foreach (var patcherMethod in patcherMethodDictionary)
 	        {
 		        foreach (string assemblyFilename in patcherMethod.Value)
 		        {
-			        int index = sortedAssemblyFilenames.FindIndex(x => x == assemblyFilename);
-
-			        if (index < 0)
-				        continue;
-
-					Patch(ref sortedAssemblies[index], patcherMethod.Key);
+		            if (sortedAssemblyFilenames.TryGetValue(assemblyFilename, out var assembly))
+		            {
+		                Patch(ref assembly, patcherMethod.Key);
+		                patchedAssemblies.Add(assemblyFilenames[assembly]);
+                    }
 		        }
 	        }
 
-
-			for (int i = 0; i < sortedAssemblies.Length; i++)
+            // Finally, load all assemblies into memory
+			foreach (var assembly in sortedAssemblies)
 			{
-                string filename = Path.GetFileName(assemblyFilenames[sortedAssemblies[i]]);
+			    string filename = Path.GetFileName(assemblyFilenames[assembly]);
 
-                if (DumpingEnabled)
-                {
-                    using (MemoryStream mem = new MemoryStream())
-                    {
-                        string dirPath = Path.Combine(Preloader.PluginPath, "DumpedAssemblies");
+			    if (DumpingEnabled && patchedAssemblies.Contains(filename))
+			    {
+			        using (MemoryStream mem = new MemoryStream())
+			        {
+			            string dirPath = Path.Combine(Preloader.PluginPath, "DumpedAssemblies");
 
-                        if (!Directory.Exists(dirPath))
-                            Directory.CreateDirectory(dirPath);
+			            if (!Directory.Exists(dirPath))
+			                Directory.CreateDirectory(dirPath);
                             
-	                    sortedAssemblies[i].Write(mem);
-                        File.WriteAllBytes(Path.Combine(dirPath, filename), mem.ToArray());
-                    }
-                }
+			            assembly.Write(mem);
+			            File.WriteAllBytes(Path.Combine(dirPath, filename), mem.ToArray());
+			        }
+			    }
 
-				Load(sortedAssemblies[i]);
+			    Load(assembly);
 #if CECIL_10
-				sortedAssemblies[i].Dispose();
+			    assembly.Dispose();
 #endif
-            }
+			}
 			
 	        //run all finalizers
 	        if (finalizers != null)
