@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Text;
 
 namespace BepInEx.Logging
@@ -8,6 +9,11 @@ namespace BepInEx.Logging
 	/// </summary>
     public abstract class BaseLogger : TextWriter
     {
+	    protected BaseLogger()
+	    {
+		    DisplayedLevels = GetDefaultLogLevel();
+	    }
+
 		/// <summary>
 		/// The encoding that the underlying text writer should use. Defaults to UTF-8 BOM.
 		/// </summary>
@@ -26,12 +32,43 @@ namespace BepInEx.Logging
         /// </summary>
         public event EntryLoggedEventHandler EntryLogged;
 
+		/// <summary>
+		/// Retrieves the default log level to use for this logger.
+		/// </summary>
+		/// <returns>The default log level to use.</returns>
+	    protected virtual LogLevel GetDefaultLogLevel()
+		{
+			LogLevel lowest;
+
+		    try
+		    {
+			    lowest = (LogLevel)Enum.Parse(typeof(LogLevel), Config.GetEntry("logger-displayed-levels", "All"));
+		    }
+		    catch
+		    {
+			    return LogLevel.All;
+		    }
+
+		    if (lowest == LogLevel.None)
+			    return LogLevel.None;
+
+		    LogLevel value = lowest;
+
+		    foreach (LogLevel e in Enum.GetValues(typeof(LogLevel)))
+		    {
+			    if (lowest > e)
+				    value |= e;
+		    }
+
+		    return value;
+	    }
+
         /// <summary>
 		/// A filter which is used to specify which log levels are not ignored by the logger.
 		/// </summary>
-        public LogLevel DisplayedLevels { get; set; } = LogLevel.All;
+        public LogLevel DisplayedLevels { get; set; }
 
-        private object logLockObj = new object();
+        private readonly object logLockObj = new object();
 
 		/// <summary>
 		/// Logs an entry to the Logger instance.
