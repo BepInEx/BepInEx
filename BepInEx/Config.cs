@@ -15,7 +15,7 @@ namespace BepInEx
 
         private static string configPath => Path.Combine(Common.Utility.PluginsDirectory, "config.ini");
 
-        private static Regex sanitizeKeyRegex = new Regex("[^a-zA-Z0-9]+");
+        private static Regex sanitizeKeyRegex = new Regex(@"[^a-zA-Z0-9\-\.]+");
 
         private static void RaiseConfigReloaded()
         {
