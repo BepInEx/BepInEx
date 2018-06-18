@@ -49,15 +49,15 @@ namespace BepInEx.Logging
         {
             Type application = typeof(Application);
 
-            MethodInfo registerLogCallback = application.GetMethod("RegisterLogCallback", BindingFlags.Public | BindingFlags.Static);
-            if (registerLogCallback != null)
+            EventInfo logEvent = application.GetEvent("logMessageReceived", BindingFlags.Public | BindingFlags.Static);
+            if (logEvent != null)
             {
-                registerLogCallback.Invoke(null, new object[] {new Application.LogCallback(OnUnityLogMessageReceived)});
+                logEvent.AddEventHandler(null, new Application.LogCallback(OnUnityLogMessageReceived));
             }
             else
             {
-                EventInfo logEvent = application.GetEvent("logMessageReceived", BindingFlags.Public | BindingFlags.Static);
-                logEvent?.AddEventHandler(null, new Application.LogCallback(OnUnityLogMessageReceived));
+                MethodInfo registerLogCallback = application.GetMethod("RegisterLogCallback", BindingFlags.Public | BindingFlags.Static);
+                registerLogCallback.Invoke(null, new object[] { new Application.LogCallback(OnUnityLogMessageReceived) });
             }
         }
 
