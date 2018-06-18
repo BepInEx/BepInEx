@@ -184,19 +184,26 @@ namespace BepInEx.Bootstrap
 
                 AddPatcher(new [] { "UnityEngine.dll" }, PatchEntrypoint);
 
-                if (Directory.Exists(PatcherPluginPath))
-                    foreach (string assemblyPath in Directory.GetFiles(PatcherPluginPath, "*.dll"))
+	            if (Directory.Exists(PatcherPluginPath))
+	            {
+		            SortedDictionary<string, KeyValuePair<AssemblyPatcherDelegate, IEnumerable<string>>> sortedPatchers = new SortedDictionary<string, KeyValuePair<AssemblyPatcherDelegate, IEnumerable<string>>>();
+
+					foreach (string assemblyPath in Directory.GetFiles(PatcherPluginPath, "*.dll"))
                     {
                         try
                         {
                             var assembly = Assembly.LoadFrom(assemblyPath);
 
-                            foreach (var kv in GetPatcherMethods(assembly))
-                                AddPatcher(kv.Value, kv.Key);
+	                        foreach (var kv in GetPatcherMethods(assembly))
+		                        sortedPatchers.Add(assembly.GetName().Name, kv);
                         }
                         catch (BadImageFormatException) { } //unmanaged DLL
                         catch (ReflectionTypeLoadException) { } //invalid references
                     }
+
+		            foreach (var kv in sortedPatchers)
+			            AddPatcher(kv.Value.Value, kv.Value.Key);
+	            }
 
                 AssemblyPatcher.PatchAll(ManagedPath, PatcherDictionary, Initializers, Finalizers);
             }
