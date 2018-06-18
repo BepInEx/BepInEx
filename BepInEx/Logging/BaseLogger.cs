@@ -45,7 +45,7 @@ namespace BepInEx.Logging
                 lock (logLockObj)
                 {
                     EntryLogged?.Invoke(level, entry);
-                    WriteLine($"[{level}] {entry}");
+                    WriteLine($"[{level.GetHighestLevel()}] {entry}");
                 }
             }
         }
