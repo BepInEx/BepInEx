@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using BepInEx.ConsoleUtil;
+using UnityEngine;
 
 namespace BepInEx.Logging
 {
@@ -39,6 +41,52 @@ namespace BepInEx.Logging
         public override void WriteLine(string value) => InternalWrite($"{value}\r\n");
         public override void Write(char value) => InternalWrite(value.ToString());
         public override void Write(string value) => InternalWrite(value);
+
+        /// <summary>
+        /// Start listening to Unity's log message events and sending the messages to BepInEx logger.
+        /// </summary>
+        public static void ListenUnityLogs()
+        {
+            Type application = typeof(Application);
+
+            MethodInfo registerLogCallback = application.GetMethod("RegisterLogCallback", BindingFlags.Public | BindingFlags.Static);
+            if (registerLogCallback != null)
+            {
+                registerLogCallback.Invoke(null, new object[] {new Application.LogCallback(OnUnityLogMessageReceived)});
+            }
+            else
+            {
+                EventInfo logEvent = application.GetEvent("logMessageReceived", BindingFlags.Public | BindingFlags.Static);
+                logEvent?.AddEventHandler(null, new Application.LogCallback(OnUnityLogMessageReceived));
+            }
+        }
+
+        private static void OnUnityLogMessageReceived(string message, string stackTrace, LogType type)
+        {
+            LogLevel logLevel = LogLevel.Message;
+
+            switch (type)
+            {
+                case LogType.Error:
+                case LogType.Assert:
+                case LogType.Exception:
+                    logLevel = LogLevel.Error;
+                    break;
+                case LogType.Warning:
+                    logLevel = LogLevel.Warning;
+                    break;
+                case LogType.Log:
+                default:
+                    logLevel = LogLevel.Message;
+                    break;
+            }
+
+            Logger.Log(logLevel, message);
+            if (type == LogType.Exception)
+            {
+                Logger.Log(logLevel, $"Stack trace:\n{stackTrace}");
+            }
+        }
     }
 }
 
