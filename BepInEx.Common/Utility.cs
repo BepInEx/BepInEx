@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 
 namespace BepInEx.Common
 {
@@ -10,14 +13,14 @@ namespace BepInEx.Common
     public static class Utility
     {
         /// <summary>
-        /// The directory that the Koikatsu .exe is being run from.
+        /// The directory that the game .exe is being run from.
         /// </summary>
-        public static string ExecutingDirectory => Path.GetDirectoryName(Environment.CommandLine);
+        public static string ExecutingDirectory { get; } = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
 
         /// <summary>
         /// The path that the plugins folder is located.
         /// </summary>
-        public static string PluginsDirectory => Path.Combine(ExecutingDirectory, "BepInEx");
+        public static string PluginsDirectory { get; } = Path.Combine(ExecutingDirectory, "BepInEx");
 
         /// <summary>
         /// Combines multiple paths together, as the specfic method is not availble in .NET 3.5.
@@ -44,6 +47,65 @@ namespace BepInEx.Common
         public static bool IsNullOrWhiteSpace(this string self)
         {
             return self == null || self.Trim().Length == 0;
+        }
+
+        public static IEnumerable<TNode> TopologicalSort<TNode>(IEnumerable<TNode> nodes, Func<TNode, IEnumerable<TNode>> dependencySelector)
+        {
+            List<TNode> sorted_list = new List<TNode>();
+
+            HashSet<TNode> visited = new HashSet<TNode>();
+            HashSet<TNode> sorted = new HashSet<TNode>();
+
+            foreach (TNode input in nodes)
+                Visit(input);
+
+            return sorted_list;
+
+            void Visit(TNode node)
+            {
+                if (visited.Contains(node))
+                {
+                    if (!sorted.Contains(node))
+                        throw new Exception("Cyclic Dependency");
+                }
+                else
+                {
+                    visited.Add(node);
+
+                    foreach (var dep in dependencySelector(node))
+                        Visit(dep);
+
+                    sorted.Add(node);
+                    sorted_list.Add(node);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Try to resolve and load the given assembly DLL.
+        /// </summary>
+        /// <param name="assemblyName">Name of the assembly, of the type <see cref="AssemblyName" />.</param>
+        /// <param name="directory">Directory to search the assembly from.</param>
+        /// <param name="assembly">The loaded assembly.</param>
+        /// <returns>True, if the assembly was found and loaded. Otherwise, false.</returns>
+        public static bool TryResolveDllAssembly(AssemblyName assemblyName, string directory, out Assembly assembly)
+        {
+            assembly = null;
+            string path = Path.Combine(directory, $"{assemblyName.Name}.dll");
+
+            if (!File.Exists(path))
+                return false;
+
+            try
+            {
+                assembly = Assembly.LoadFile(path);
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 }

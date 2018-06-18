@@ -18,16 +18,32 @@
     <DebugType>none</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>..\bin\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;CECIL_10</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>
+    </DocumentationFile>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject />
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Cecil 0.9.6_Release|AnyCPU'">
+    <OutputPath>..\bin\</OutputPath>
+    <DefineConstants>TRACE;CECIL_9</DefineConstants>
+    <Optimize>true</Optimize>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="0Harmony">
       <HintPath>..\lib\0Harmony.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Cecil" Condition="$(DefineConstants.Contains('CECIL_9'))">
+      <HintPath>..\lib\Cecil 9\Mono.Cecil.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Cecil" Condition="$(DefineConstants.Contains('CECIL_10'))">
+      <HintPath>..\lib\Cecil 10\Mono.Cecil.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Xml" />
@@ -37,23 +53,30 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Attributes.cs" />
+    <Compile Include="Contract\Attributes.cs" />
+    <Compile Include="Bootstrap\AssemblyPatcher.cs" />
+    <Compile Include="Bootstrap\Preloader.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="ConfigWrapper.cs" />
     <Compile Include="ConsoleUtil\ConsoleEncoding\ConsoleEncoding.Buffers.cs" />
     <Compile Include="ConsoleUtil\ConsoleEncoding\ConsoleEncoding.cs" />
     <Compile Include="ConsoleUtil\ConsoleEncoding\ConsoleEncoding.PInvoke.cs" />
-    <Compile Include="ConsoleUtil\ConsoleMirror.cs" />
     <Compile Include="ConsoleUtil\ConsoleWindow.cs" />
-    <Compile Include="ConsoleUtil\Extensions.cs" />
     <Compile Include="ConsoleUtil\Kon.cs" />
     <Compile Include="ConsoleUtil\SafeConsole.cs" />
-    <Compile Include="Chainloader.cs" />
-    <Compile Include="BaseUnityPlugin.cs" />
-    <Compile Include="Logger.cs" />
+    <Compile Include="Bootstrap\Chainloader.cs" />
+    <Compile Include="Contract\BaseUnityPlugin.cs" />
+    <Compile Include="Deprecated\BepInLogger.cs" />
+    <Compile Include="Logging\BaseLogger.cs" />
+    <Compile Include="Logging\Logger.cs" />
+    <Compile Include="Logging\LogLevel.cs" />
+    <Compile Include="Logging\PreloaderLogWriter.cs" />
+    <Compile Include="Logging\LoggerTraceListener.cs" />
+    <Compile Include="Logging\UnityLogWriter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TypeLoader.cs" />
+    <Compile Include="Bootstrap\TypeLoader.cs" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="..\BepInEx.Common\BepInEx.Common.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

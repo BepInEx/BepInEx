@@ -15,7 +15,7 @@ namespace BepInEx
 
         private static string configPath => Path.Combine(Common.Utility.PluginsDirectory, "config.ini");
 
-        private static Regex sanitizeKeyRegex = new Regex("[^a-zA-Z0-9]+");
+        private static Regex sanitizeKeyRegex = new Regex(@"[^a-zA-Z0-9\-\.]+");
 
         private static void RaiseConfigReloaded()
         {
@@ -24,6 +24,9 @@ namespace BepInEx
                 handler.Invoke();
         }
 
+		/// <summary>
+		/// An event that is fired every time the config is reloaded.
+		/// </summary>
         public static event Action ConfigReloaded;
 
         /// <summary>
@@ -42,14 +45,15 @@ namespace BepInEx
                 SaveConfig();
             }
         }
-        
-        /// <summary>
-        /// Returns the value of the key if found, otherwise returns the default value.
-        /// </summary>
-        /// <param name="key">The key to search for.</param>
-        /// <param name="defaultValue">The default value to return if the key is not found.</param>
-        /// <returns>The value of the key.</returns>
-        public static string GetEntry(string key, string defaultValue = "", string section = "")
+
+	    /// <summary>
+	    /// Returns the value of the key if found, otherwise returns the default value.
+	    /// </summary>
+	    /// <param name="key">The key to search for.</param>
+	    /// <param name="defaultValue">The default value to return if the key is not found.</param>
+	    /// <param name="section">The section of the config to search the key for.</param>
+	    /// <returns>The value of the key.</returns>
+	    public static string GetEntry(string key, string defaultValue = "", string section = "")
         {
             key = Sanitize(key);
             if (section.IsNullOrWhiteSpace())
@@ -196,26 +200,31 @@ namespace BepInEx
             return true;
         }
 
-        public static string Sanitize(string key)
+		/// <summary>
+		/// Replaces any potentially breaking input with underscores.
+		/// </summary>
+		/// <param name="text">The text to sanitize.</param>
+		/// <returns>Sanitized text.</returns>
+        public static string Sanitize(string text)
         {
-            return sanitizeKeyRegex.Replace(key, "_");
+            return sanitizeKeyRegex.Replace(text, "_");
         }
 
         #region Extensions
 
         public static string GetEntry(this BaseUnityPlugin plugin, string key, string defaultValue = "")
         {
-            return GetEntry(key, defaultValue, TypeLoader.GetMetadata(plugin).GUID);
+            return GetEntry(key, defaultValue, MetadataHelper.GetMetadata(plugin).GUID);
         }
 
         public static void SetEntry(this BaseUnityPlugin plugin, string key, string value)
         {
-            SetEntry(key, value, TypeLoader.GetMetadata(plugin).GUID);
+            SetEntry(key, value, MetadataHelper.GetMetadata(plugin).GUID);
         }
 
         public static bool HasEntry(this BaseUnityPlugin plugin, string key)
         {
-            return HasEntry(key, TypeLoader.GetMetadata(plugin).GUID);
+            return HasEntry(key, MetadataHelper.GetMetadata(plugin).GUID);
         }
         #endregion Extensions
     }

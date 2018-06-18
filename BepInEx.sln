@@ -19,18 +19,20 @@ Global
 		BepInEx.Common\BepInEx.Common.projitems*{dc89f18b-235b-4c01-ab31-af40dce5c4c7}*SharedItemsImports = 4
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Cecil 0.9.6_Release|Any CPU = Cecil 0.9.6_Release|Any CPU
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4FFBA620-F5ED-47F9-B90C-DAD1316FD9B9}.Cecil 0.9.6_Release|Any CPU.ActiveCfg = Cecil 0.9.6_Release|Any CPU
+		{4FFBA620-F5ED-47F9-B90C-DAD1316FD9B9}.Cecil 0.9.6_Release|Any CPU.Build.0 = Cecil 0.9.6_Release|Any CPU
 		{4FFBA620-F5ED-47F9-B90C-DAD1316FD9B9}.Debug|Any CPU.ActiveCfg = Release|Any CPU
 		{4FFBA620-F5ED-47F9-B90C-DAD1316FD9B9}.Debug|Any CPU.Build.0 = Release|Any CPU
 		{4FFBA620-F5ED-47F9-B90C-DAD1316FD9B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4FFBA620-F5ED-47F9-B90C-DAD1316FD9B9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DC89F18B-235B-4C01-AB31-AF40DCE5C4C7}.Cecil 0.9.6_Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DC89F18B-235B-4C01-AB31-AF40DCE5C4C7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{DC89F18B-235B-4C01-AB31-AF40DCE5C4C7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DC89F18B-235B-4C01-AB31-AF40DCE5C4C7}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{DC89F18B-235B-4C01-AB31-AF40DCE5C4C7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

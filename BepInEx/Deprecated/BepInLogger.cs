@@ -1,12 +1,12 @@
 ﻿using System;
-using System.Runtime.CompilerServices;
-using BepInEx.ConsoleUtil;
+using BepInEx.Logging;
 
 namespace BepInEx
 {
     /// <summary>
     /// A helper class to use for logging.
     /// </summary>
+    [Obsolete("This class has been deprecated; please use the Logger static class and BaseLogger implementations", true)]
     public static class BepInLogger
     {
         /// <summary>
@@ -28,7 +28,9 @@ namespace BepInEx
         /// <param name="show">Whether or not it should be dislpayed to the user.</param>
         public static void Log(string entry, bool show = false)
         {
-            Log(entry, show, ConsoleColor.Gray);
+	        Logger.Log(show ? LogLevel.Message : LogLevel.Info, entry);
+
+	        EntryLogged?.Invoke(entry, show);
         }
 
         /// <summary>
@@ -39,7 +41,7 @@ namespace BepInEx
         /// <param name="color">The color of the text to show in the console.</param>
         public static void Log(object entry, bool show, ConsoleColor color)
         {
-            Log(entry.ToString(), show, color);
+	        Log(entry.ToString(), show);
         }
 
         /// <summary>
@@ -50,21 +52,7 @@ namespace BepInEx
         /// <param name="color">The color of the text to show in the console.</param>
         public static void Log(string entry, bool show, ConsoleColor color)
         {
-            UnityEngine.UnityLogWriter.WriteStringToUnityLog($"BEPIN - {entry}\r\n");
-
-            Kon.ForegroundColor = color;
-            Console.WriteLine(entry);
-
-            EntryLogged?.Invoke(entry, show);
+			Log(entry, show);
         }
-    }
-}
-
-namespace UnityEngine
-{
-    internal sealed class UnityLogWriter
-    {
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        public static extern void WriteStringToUnityLog(string s);
     }
 }

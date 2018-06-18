@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using BepInEx.Logging;
 
 namespace BepInEx
 {
@@ -69,19 +70,19 @@ namespace BepInEx
         public ConfigWrapper(string key, BaseUnityPlugin plugin, T @default = default(T))
             : this(key, @default)
         {
-            Section = TypeLoader.GetMetadata(plugin).GUID;
+            Section = MetadataHelper.GetMetadata(plugin).GUID;
         }
 
         public ConfigWrapper(string key, BaseUnityPlugin plugin, Func<string, T> strToObj, Func<T, string> objToStr, T @default = default(T))
           : this(key, strToObj, objToStr, @default)
         {
-            Section = TypeLoader.GetMetadata(plugin).GUID;
+            Section = MetadataHelper.GetMetadata(plugin).GUID;
         }
 
         public ConfigWrapper(string key, BaseUnityPlugin plugin, IConfigConverter<T> converter, T @default = default(T))
           : this(key, converter.ConvertFromString, converter.ConvertToString, @default)
         {
-            Section = TypeLoader.GetMetadata(plugin).GUID;
+            Section = MetadataHelper.GetMetadata(plugin).GUID;
         }
 
         public ConfigWrapper(string key, string section, T @default = default(T))
@@ -116,7 +117,7 @@ namespace BepInEx
             }
             catch (Exception ex)
             {
-                BepInLogger.Log("ConfigWrapper Get Converter Exception: " + ex.Message);
+                Logger.Log(LogLevel.Error, "ConfigWrapper Get Converter Exception: " + ex.Message);
                 return _default;
             }
         }
@@ -130,7 +131,7 @@ namespace BepInEx
             }
             catch (Exception ex)
             {
-                BepInLogger.Log("ConfigWrapper Set Converter Exception: " + ex.Message);
+                Logger.Log(LogLevel.Error, "ConfigWrapper Set Converter Exception: " + ex.Message);
             }
         }
 
