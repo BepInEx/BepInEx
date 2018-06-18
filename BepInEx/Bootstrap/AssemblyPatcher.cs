@@ -24,16 +24,18 @@ namespace BepInEx.Bootstrap
 		/// </summary>
         private static bool DumpingEnabled => bool.TryParse(Config.GetEntry("preloader-dumpassemblies", "false"), out bool result) ? result : false;
 
-		/// <summary>
-		/// Patches and loads an entire directory of assemblies.
-		/// </summary>
-		/// <param name="directory">The directory to load assemblies from.</param>
-		/// <param name="patcherMethodDictionary">The dictionary of patchers and their targeted assembly filenames which they are patching.</param>
-        public static void PatchAll(string directory, IDictionary<AssemblyPatcherDelegate, IEnumerable<string>> patcherMethodDictionary, IEnumerable<Action> Initializers = null, IEnumerable<Action> Finalizers = null)
+        /// <summary>
+        /// Patches and loads an entire directory of assemblies.
+        /// </summary>
+        /// <param name="directory">The directory to load assemblies from.</param>
+        /// <param name="patcherMethodDictionary">The dictionary of patchers and their targeted assembly filenames which they are patching.</param>
+        /// <param name="initializers">List of initializers to run before any patching starts</param>
+        /// <param name="finalizers">List of finalizers to run before returning</param>
+        public static void PatchAll(string directory, IDictionary<AssemblyPatcherDelegate, IEnumerable<string>> patcherMethodDictionary, IEnumerable<Action> initializers = null, IEnumerable<Action> finalizers = null)
         {
 			//run all initializers
-			if (Initializers != null)
-				foreach (Action init in Initializers)
+			if (initializers != null)
+				foreach (Action init in initializers)
 					init.Invoke();
 
             //load all the requested assemblies
@@ -122,8 +124,8 @@ namespace BepInEx.Bootstrap
             }
 			
 	        //run all finalizers
-	        if (Finalizers != null)
-		        foreach (Action finalizer in Finalizers)
+	        if (finalizers != null)
+		        foreach (Action finalizer in finalizers)
 			        finalizer.Invoke();
         }
 

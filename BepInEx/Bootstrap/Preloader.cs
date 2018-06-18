@@ -42,12 +42,12 @@ namespace BepInEx.Bootstrap
 		/// <summary>
 		/// The path to the core BepInEx DLL.
 		/// </summary>
-        public static string CurrentExecutingAssemblyPath { get; } = Assembly.GetExecutingAssembly().CodeBase.Replace("file:///", "").Replace('/', '\\');
+        public static string BepInExAssemblyPath { get; } = typeof(Preloader).Assembly.CodeBase.Replace("file:///", "").Replace('/', '\\');
 
 		/// <summary>
 		/// The directory that the core BepInEx DLLs reside in.
 		/// </summary>
-	    public static string CurrentExecutingAssemblyDirectoryPath { get; } = Path.GetDirectoryName(CurrentExecutingAssemblyPath);
+	    public static string BepInExAssemblyDirectory { get; } = Path.GetDirectoryName(BepInExAssemblyPath);
 
 		/// <summary>
 		/// The name of the currently executing process.
@@ -198,7 +198,7 @@ namespace BepInEx.Bootstrap
                         catch (ReflectionTypeLoadException) { } //invalid references
                     }
 
-                AssemblyPatcher.PatchAll(ManagedPath, PatcherDictionary);
+                AssemblyPatcher.PatchAll(ManagedPath, PatcherDictionary, Initializers, Finalizers);
             }
             catch (Exception ex)
             {
@@ -332,9 +332,9 @@ namespace BepInEx.Bootstrap
             if (assembly.Name.Name == "UnityEngine")
             {
 #if CECIL_10
-                using (AssemblyDefinition injected = AssemblyDefinition.ReadAssembly(CurrentExecutingAssemblyPath))
+                using (AssemblyDefinition injected = AssemblyDefinition.ReadAssembly(BepInExAssemblyPath))
 #elif CECIL_9
-                AssemblyDefinition injected = AssemblyDefinition.ReadAssembly(CurrentExecutingAssemblyPath);
+                AssemblyDefinition injected = AssemblyDefinition.ReadAssembly(BepInExAssemblyPath);
 #endif
                 {
                     var originalInjectMethod = injected.MainModule.Types.First(x => x.Name == "Chainloader")
@@ -380,7 +380,7 @@ namespace BepInEx.Bootstrap
             if (foundAssembly != null)
                 return foundAssembly;
 
-            if (Utility.TryResolveDllAssembly(assemblyName, CurrentExecutingAssemblyDirectoryPath, out foundAssembly) ||
+            if (Utility.TryResolveDllAssembly(assemblyName, BepInExAssemblyDirectory, out foundAssembly) ||
                 Utility.TryResolveDllAssembly(assemblyName, PatcherPluginPath, out foundAssembly) ||
                 Utility.TryResolveDllAssembly(assemblyName, PluginPath, out foundAssembly))
                 return foundAssembly;
