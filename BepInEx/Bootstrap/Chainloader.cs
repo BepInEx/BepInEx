@@ -52,6 +52,9 @@ namespace BepInEx.Bootstrap
 
                 Logger.SetLogger(unityLogWriter);
 
+                if(bool.Parse(Config.GetEntry("log_unity_messages", "false", "Global")))
+                    UnityLogWriter.ListenUnityLogs();
+
 			    string consoleTile = $"BepInEx {Assembly.GetExecutingAssembly().GetName().Version} - {Application.productName}";
 			    ConsoleWindow.Title = consoleTile;
                 
