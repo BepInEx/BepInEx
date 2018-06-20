@@ -14,7 +14,7 @@ A short description of what you did for the bug to happen.
 A clear and concise description of what you expected to happen.
 
 **Screenshots and logs**
-Include a console log, if the error is visible there.  
+Include a console log (`output_log.txt` and/or `preloader_xxx_xxx.log`), if the error is visible there.  
 If not possible, include a screenshot of the error.
 
 **Desktop (please complete the following information):**
