@@ -108,7 +108,7 @@ namespace BepInEx.Bootstrap
 			    {
 			        using (MemoryStream mem = new MemoryStream())
 			        {
-			            string dirPath = Path.Combine(Preloader.PluginPath, "DumpedAssemblies");
+			            string dirPath = Path.Combine(Paths.PluginPath, "DumpedAssemblies");
 
 			            if (!Directory.Exists(dirPath))
 			                Directory.CreateDirectory(dirPath);
