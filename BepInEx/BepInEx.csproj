@@ -53,6 +53,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Bootstrap\PreloaderPatchManager.cs" />
     <Compile Include="Contract\Attributes.cs" />
     <Compile Include="Bootstrap\AssemblyPatcher.cs" />
     <Compile Include="Bootstrap\Preloader.cs" />
