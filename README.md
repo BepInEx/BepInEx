@@ -20,3 +20,4 @@ Unity plugin framework
 - [Usagirei](https://github.com/Usagirei) - Color Correction plugin, code for using the console, unity scene dumper and for assisting with technical support
 - [essu](https://github.com/exdownloader) - Project logo, majority of work on Screencap, moral support and lots of misc. help
 - [denikson](https://github.com/denikson) - [UnityDoorstop](https://github.com/NeighTools/UnityDoorstop) for the patchless loader
+- [nn@](https://twitter.com/NnAone2cmg) - Japanese translation of the wiki
