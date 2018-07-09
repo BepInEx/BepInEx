@@ -66,6 +66,7 @@
   <ItemGroup>
     <EmbeddedResource Include="..\bin\0Harmony.dll" />
     <EmbeddedResource Include="..\bin\BepInEx.dll" />
+    <EmbeddedResource Include="..\bin\Mono.Cecil.dll" />
   </ItemGroup>
   <Import Project="..\BepInEx.Common\BepInEx.Common.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
