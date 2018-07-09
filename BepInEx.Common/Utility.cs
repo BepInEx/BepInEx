@@ -29,6 +29,17 @@ namespace BepInEx.Common
         /// <returns>A combined path.</returns>
         public static string CombinePaths(params string[] parts) => parts.Aggregate(Path.Combine);
 
+		/// <summary>
+		/// Tries to parse a bool, with a default value if unable to parse.
+		/// </summary>
+		/// <param name="input">The string to parse</param>
+		/// <param name="defaultValue">The value to return if parsing is unsuccessful.</param>
+		/// <returns>Boolean value of input if able to be parsed, otherwise default value.</returns>
+	    public static bool SafeParseBool(string input, bool defaultValue = false)
+	    {
+		    return bool.TryParse(input, out bool result) ? result : defaultValue;
+	    }
+
         /// <summary>
         /// Converts a file path into a UnityEngine.WWW format.
         /// </summary>

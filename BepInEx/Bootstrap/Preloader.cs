@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using BepInEx.Common;
 using BepInEx.Logging;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -45,8 +46,8 @@ namespace BepInEx.Bootstrap
             try
             {
                 AllocateConsole();
-
-                PreloaderLog = new PreloaderLogWriter(SafeGetConfigBool("preloader-logconsole", "false"));
+				
+                PreloaderLog = new PreloaderLogWriter(Utility.SafeParseBool(Config.GetEntry("preloader-logconsole", "false", "BepInEx")));
                 PreloaderLog.Enabled = true;
 
                 string consoleTile =
@@ -58,7 +59,9 @@ namespace BepInEx.Bootstrap
                 PreloaderLog.WriteLine(consoleTile);
                 Logger.Log(LogLevel.Message, "Preloader started");
 
-                AddPatcher(new[] {"UnityEngine.dll"}, PatchEntrypoint);
+	            string entrypointAssembly = Config.GetEntry("entrypoint-assembly", "UnityEngine.dll", "Preloader");
+
+	            AddPatcher(new[] {entrypointAssembly}, PatchEntrypoint);
 
                 if (Directory.Exists(Paths.PatcherPluginPath))
                 {
@@ -196,33 +199,55 @@ namespace BepInEx.Bootstrap
         /// <param name="assembly">The assembly that will be attempted to be patched.</param>
         public static void PatchEntrypoint(ref AssemblyDefinition assembly)
         {
-            if (assembly.Name.Name == "UnityEngine")
-            {
+			string entrypointType = Config.GetEntry("entrypoint-type", "Application", "Preloader");
+			string entrypointMethod = Config.HasEntry("entrypoint-method") ? Config.GetEntry("entrypoint-method", section: "Preloader") : "";
+	        bool isCctor = entrypointMethod.IsNullOrWhiteSpace() || entrypointMethod == ".cctor";
+			
 #if CECIL_10
-                using (var injected = AssemblyDefinition.ReadAssembly(Paths.BepInExAssemblyPath))
+			using (var injected = AssemblyDefinition.ReadAssembly(Paths.BepInExAssemblyPath))
 #elif CECIL_9
-                AssemblyDefinition injected = AssemblyDefinition.ReadAssembly(BepInExAssemblyPath);
+            AssemblyDefinition injected = AssemblyDefinition.ReadAssembly(BepInExAssemblyPath);
 #endif
-                {
-                    var originalInjectMethod = injected.MainModule.Types.First(x => x.Name == "Chainloader").Methods
-                                                       .First(x => x.Name == "Initialize");
+            {
+                var originalInjectMethod = injected.MainModule.Types.First(x => x.Name == "Chainloader").Methods
+                                                    .First(x => x.Name == "Initialize");
 
-                    var injectMethod = assembly.MainModule.ImportReference(originalInjectMethod);
+                var injectMethod = assembly.MainModule.ImportReference(originalInjectMethod);
 
-                    var sceneManager = assembly.MainModule.Types.First(x => x.Name == "Application");
 
-                    var voidType = assembly.MainModule.ImportReference(typeof(void));
-                    var cctor = new MethodDefinition(".cctor",
-                                                     MethodAttributes.Static | MethodAttributes.Private | MethodAttributes.HideBySig
-                                                     | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
-                                                     voidType);
+                var entryType = assembly.MainModule.Types.First(x => x.Name == entrypointType);
+				
 
-                    var ilp = cctor.Body.GetILProcessor();
-                    ilp.Append(ilp.Create(OpCodes.Call, injectMethod));
-                    ilp.Append(ilp.Create(OpCodes.Ret));
+	            if (isCctor)
+	            {
+		            MethodDefinition cctor = entryType.Methods.FirstOrDefault(m => m.IsConstructor && m.IsStatic);
+		            ILProcessor il;
 
-                    sceneManager.Methods.Add(cctor);
-                }
+		            if (cctor == null)
+		            {
+			            cctor = new MethodDefinition(".cctor",
+				            MethodAttributes.Static | MethodAttributes.Private | MethodAttributes.HideBySig
+				            | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
+				            assembly.MainModule.ImportReference(typeof(void)));
+
+			            entryType.Methods.Add(cctor);
+			            il = cctor.Body.GetILProcessor();
+			            il.Append(il.Create(OpCodes.Ret));
+		            }
+
+		            Instruction ins = cctor.Body.Instructions.First();
+		            il = cctor.Body.GetILProcessor();
+		            il.InsertBefore(ins, il.Create(OpCodes.Call, injectMethod));
+	            }
+	            else
+	            {
+		            foreach (var loadScene in entryType.Methods.Where(x => x.Name == entrypointMethod))
+		            {
+			            var il = loadScene.Body.GetILProcessor();
+
+			            il.InsertBefore(loadScene.Body.Instructions[0], il.Create(OpCodes.Call, injectMethod));
+		            }
+	            }
             }
         }
 
@@ -231,8 +256,8 @@ namespace BepInEx.Bootstrap
         /// </summary>
         public static void AllocateConsole()
         {
-            bool console = SafeGetConfigBool("console", "false");
-            bool shiftjis = SafeGetConfigBool("console-shiftjis", "false");
+            bool console = Utility.SafeParseBool(Config.GetEntry("console", "false", "BepInEx"));
+            bool shiftjis = Utility.SafeParseBool(Config.GetEntry("console-shiftjis", "false", "BepInEx"));
 
             if (console)
                 try
@@ -262,30 +287,6 @@ namespace BepInEx.Bootstrap
         public static void AddPatcher(IEnumerable<string> dllNames, AssemblyPatcherDelegate patcher)
         {
             PatcherDictionary[patcher] = dllNames;
-        }
-
-
-        /// <summary>
-        ///     Safely retrieves a boolean value from the config. Returns false if not able to retrieve safely.
-        /// </summary>
-        /// <param name="key">The key to retrieve from the config.</param>
-        /// <param name="defaultValue">The default value to both return and set if the key does not exist in the config.</param>
-        /// <returns>
-        ///     The value of the key if found in the config, or the default value specified if not found, or false if it was
-        ///     unable to safely retrieve the value from the config.
-        /// </returns>
-        private static bool SafeGetConfigBool(string key, string defaultValue)
-        {
-            try
-            {
-                string result = Config.GetEntry(key, defaultValue);
-
-                return bool.Parse(result);
-            }
-            catch
-            {
-                return false;
-            }
         }
     }
 }

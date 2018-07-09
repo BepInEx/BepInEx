@@ -45,19 +45,20 @@ namespace BepInEx.Bootstrap
 
 			try
 			{
-                UnityLogWriter unityLogWriter = new UnityLogWriter();
+				UnityLogWriter unityLogWriter = new UnityLogWriter();
 
-			    if (Preloader.PreloaderLog != null)
-			        unityLogWriter.WriteToLog($"{Preloader.PreloaderLog}\r\n");
+				if (Preloader.PreloaderLog != null)
+					unityLogWriter.WriteToLog($"{Preloader.PreloaderLog}\r\n");
 
-                Logger.SetLogger(unityLogWriter);
+				Logger.SetLogger(unityLogWriter);
 
-                if(bool.Parse(Config.GetEntry("log_unity_messages", "false", "Global")))
-                    UnityLogWriter.ListenUnityLogs();
+				if (bool.Parse(Config.GetEntry("log-unity-messages", "false", "Global")))
+					UnityLogWriter.ListenUnityLogs();
+				
+				var productNameProp = typeof(Application).GetProperty("productName", BindingFlags.Public | BindingFlags.Static);
+				if (productNameProp != null)
+					ConsoleWindow.Title = $"BepInEx {Assembly.GetExecutingAssembly().GetName().Version} - {productNameProp.GetValue(null, null)}";
 
-			    string consoleTile = $"BepInEx {Assembly.GetExecutingAssembly().GetName().Version} - {Application.productName}";
-			    ConsoleWindow.Title = consoleTile;
-                
 				Logger.Log(LogLevel.Message, "Chainloader started");
 
 				UnityEngine.Object.DontDestroyOnLoad(ManagerObject);
@@ -82,6 +83,7 @@ namespace BepInEx.Bootstrap
 
 				Dictionary<Type, IEnumerable<Type>> dependencyDict = new Dictionary<Type, IEnumerable<Type>>();
 
+
 				foreach (Type t in pluginTypes)
 				{
 					try
@@ -105,8 +107,8 @@ namespace BepInEx.Bootstrap
 					try
 					{
 						var metadata = MetadataHelper.GetMetadata(t);
-
-						var plugin = (BaseUnityPlugin) ManagerObject.AddComponent(t);
+						
+						var plugin = (BaseUnityPlugin)ManagerObject.AddComponent(t);
 
 						Plugins.Add(plugin);
 					    Logger.Log(LogLevel.Info, $"Loaded [{metadata.Name} {metadata.Version}]");
@@ -119,7 +121,7 @@ namespace BepInEx.Bootstrap
 			}
 			catch (Exception ex)
 			{
-				UnityInjector.ConsoleUtil.ConsoleWindow.Attach();
+				ConsoleWindow.Attach();
 
 				Console.WriteLine("Error occurred starting the game");
 				Console.WriteLine(ex.ToString());
