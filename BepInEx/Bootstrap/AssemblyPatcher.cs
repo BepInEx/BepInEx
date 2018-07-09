@@ -22,7 +22,7 @@ namespace BepInEx.Bootstrap
 		/// <summary>
 		/// Configuration value of whether assembly dumping is enabled or not.
 		/// </summary>
-        private static bool DumpingEnabled => bool.TryParse(Config.GetEntry("preloader-dumpassemblies", "false"), out bool result) ? result : false;
+        private static bool DumpingEnabled => Utility.SafeParseBool(Config.GetEntry("dump-assemblies", "false", "Preloader"));
 
         /// <summary>
         /// Patches and loads an entire directory of assemblies.

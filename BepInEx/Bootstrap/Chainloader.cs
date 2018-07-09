@@ -52,7 +52,7 @@ namespace BepInEx.Bootstrap
 
 				Logger.SetLogger(unityLogWriter);
 
-				if (bool.Parse(Config.GetEntry("log-unity-messages", "false", "Global")))
+				if (bool.Parse(Config.GetEntry("chainloader-log-unity-messages", "false", "BepInEx")))
 					UnityLogWriter.ListenUnityLogs();
 
 				var productNameProp = typeof(Application).GetProperty("productName", BindingFlags.Public | BindingFlags.Static);
