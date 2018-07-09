@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 using BepInEx.Common;
+using BepInEx.Logging;
 
 namespace BepInEx
 {
@@ -11,17 +12,15 @@ namespace BepInEx
     /// </summary>
     public static class Config
     {
-        private static Dictionary<string, Dictionary<string, string>> cache = new Dictionary<string, Dictionary<string, string>>();
+        private static readonly Dictionary<string, Dictionary<string, string>> cache = new Dictionary<string, Dictionary<string, string>>();
 
         private static string configPath => Path.Combine(Common.Utility.PluginsDirectory, "config.ini");
 
-        private static Regex sanitizeKeyRegex = new Regex(@"[^a-zA-Z0-9\-\.]+");
+        private static readonly Regex sanitizeKeyRegex = new Regex(@"[^a-zA-Z0-9\-\.]+");
 
         private static void RaiseConfigReloaded()
         {
-            var handler = ConfigReloaded;
-            if (handler != null)
-                handler.Invoke();
+            ConfigReloaded?.Invoke();
         }
 
 		/// <summary>
@@ -55,29 +54,29 @@ namespace BepInEx
 	    /// <returns>The value of the key.</returns>
 	    public static string GetEntry(string key, string defaultValue = "", string section = "")
         {
-            key = Sanitize(key);
-            if (section.IsNullOrWhiteSpace())
-                section = "Global";
-            else
-                section = Sanitize(section);
+	        try
+	        {
+				key = Sanitize(key);
+				section = section.IsNullOrWhiteSpace() ? "Global" : Sanitize(section);
 
-            Dictionary<string, string> subdict;
+				if (!cache.TryGetValue(section, out Dictionary<string, string> subdict))
+				{
+					SetEntry(key, defaultValue, section);
+					return defaultValue;
+				}
 
-            if (!cache.TryGetValue(section, out subdict))
-            {
-                SetEntry(key, defaultValue, section);
-                return defaultValue;
-            }
+				if (subdict.TryGetValue(key, out string value))
+					return value;
 
-            if (subdict.TryGetValue(key, out string value))
-            {
-                return value;
-            }
-            else
-            {
-                SetEntry(key, defaultValue, section);
-                return defaultValue;
-            }
+				SetEntry(key, defaultValue, section);
+				return defaultValue;
+			}
+	        catch (Exception ex)
+	        {
+		        Logger.Log(LogLevel.Error | LogLevel.Message, "Unable to read config entry!");
+		        Logger.Log(LogLevel.Error, ex);
+		        return defaultValue;
+	        }
         }
 
         /// <summary>
@@ -141,24 +140,27 @@ namespace BepInEx
         /// <param name="value">The value to set.</param>
         public static void SetEntry(string key, string value, string section = "")
         {
-            key = Sanitize(key);
-            if (section.IsNullOrWhiteSpace())
-                section = "Global";
-            else
-                section = Sanitize(section);
+	        try
+	        {
+		        key = Sanitize(key);
+		        section = section.IsNullOrWhiteSpace() ? "Global" : Sanitize(section);
 
-            Dictionary<string, string> subdict;
+		        if (!cache.TryGetValue(section, out Dictionary<string, string> subdict))
+		        {
+			        subdict = new Dictionary<string, string>();
+			        cache[section] = subdict;
+		        }
 
-            if (!cache.TryGetValue(section, out subdict))
-            {
-                subdict = new Dictionary<string, string>();
-                cache[section] = subdict;
-            }
+		        subdict[key] = value;
 
-            subdict[key] = value;
-
-            if (SaveOnConfigSet)
-                SaveConfig();
+		        if (SaveOnConfigSet)
+			        SaveConfig();
+	        }
+	        catch (Exception ex)
+	        {
+		        Logger.Log(LogLevel.Error | LogLevel.Message, "Unable to save config entry!");
+		        Logger.Log(LogLevel.Error, ex);
+	        }
         }
        
         /// <summary>
@@ -170,10 +172,7 @@ namespace BepInEx
         public static bool HasEntry(string key, string section = "")
         {
             key = Sanitize(key);
-            if (section.IsNullOrWhiteSpace())
-                section = "Global";
-            else
-                section = Sanitize(section);
+            section = section.IsNullOrWhiteSpace() ? "Global" : Sanitize(section);
 
             return cache.ContainsKey(section) && cache[section].ContainsKey(key);
         }
@@ -188,10 +187,7 @@ namespace BepInEx
         public static bool UnsetEntry(string key, string section = "")
         {
             key = Sanitize(key);
-            if (section.IsNullOrWhiteSpace())
-                section = "Global";
-            else
-                section = Sanitize(section);
+            section = section.IsNullOrWhiteSpace() ? "Global" : Sanitize(section);
 
             if (!HasEntry(key, section))
                 return false;
