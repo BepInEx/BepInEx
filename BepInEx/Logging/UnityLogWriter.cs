@@ -48,7 +48,7 @@ namespace BepInEx.Logging
         public static void ListenUnityLogs()
         {
             Type application = typeof(Application);
-
+			
             EventInfo logEvent = application.GetEvent("logMessageReceived", BindingFlags.Public | BindingFlags.Static);
             if (logEvent != null)
             {

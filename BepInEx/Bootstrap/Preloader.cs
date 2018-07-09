@@ -14,279 +14,286 @@ using MethodAttributes = Mono.Cecil.MethodAttributes;
 
 namespace BepInEx.Bootstrap
 {
-    /// <summary>
-    ///     The main entrypoint of BepInEx, and initializes all patchers and the chainloader.
-    /// </summary>
-    internal static class Preloader
-    {
-        /// <summary>
-        ///     The list of finalizers that were loaded from the patcher contract.
-        /// </summary>
-        public static List<Action> Finalizers { get; } = new List<Action>();
+	/// <summary>
+	///     The main entrypoint of BepInEx, and initializes all patchers and the chainloader.
+	/// </summary>
+	internal static class Preloader
+	{
+		/// <summary>
+		///     The list of finalizers that were loaded from the patcher contract.
+		/// </summary>
+		public static List<Action> Finalizers { get; } = new List<Action>();
 
-        /// <summary>
-        ///     The list of initializers that were loaded from the patcher contract.
-        /// </summary>
-        public static List<Action> Initializers { get; } = new List<Action>();
+		/// <summary>
+		///     The list of initializers that were loaded from the patcher contract.
+		/// </summary>
+		public static List<Action> Initializers { get; } = new List<Action>();
 
-        /// <summary>
-        ///     The dictionary of currently loaded patchers. The key is the patcher delegate that will be used to patch, and the
-        ///     value is a list of filenames of assemblies that the patcher is targeting.
-        /// </summary>
-        public static Dictionary<AssemblyPatcherDelegate, IEnumerable<string>> PatcherDictionary { get; } =
-            new Dictionary<AssemblyPatcherDelegate, IEnumerable<string>>();
+		/// <summary>
+		///     The dictionary of currently loaded patchers. The key is the patcher delegate that will be used to patch, and the
+		///     value is a list of filenames of assemblies that the patcher is targeting.
+		/// </summary>
+		public static Dictionary<AssemblyPatcherDelegate, IEnumerable<string>> PatcherDictionary { get; } =
+			new Dictionary<AssemblyPatcherDelegate, IEnumerable<string>>();
 
-        /// <summary>
-        ///     The log writer that is specific to the preloader.
-        /// </summary>
-        public static PreloaderLogWriter PreloaderLog { get; private set; }
+		/// <summary>
+		///     The log writer that is specific to the preloader.
+		/// </summary>
+		public static PreloaderLogWriter PreloaderLog { get; private set; }
 
-        public static void Run()
-        {
-            try
-            {
-                AllocateConsole();
-				
-                PreloaderLog = new PreloaderLogWriter(Utility.SafeParseBool(Config.GetEntry("preloader-logconsole", "false", "BepInEx")));
-                PreloaderLog.Enabled = true;
+		public static void Run()
+		{
+			try
+			{
+				AllocateConsole();
 
-                string consoleTile =
-                        $"BepInEx {Assembly.GetExecutingAssembly().GetName().Version} - {Process.GetCurrentProcess().ProcessName}";
-                ConsoleWindow.Title = consoleTile;
+				PreloaderLog =
+					new PreloaderLogWriter(Utility.SafeParseBool(Config.GetEntry("preloader-logconsole", "false", "BepInEx")));
+				PreloaderLog.Enabled = true;
 
-                Logger.SetLogger(PreloaderLog);
+				string consoleTile =
+					$"BepInEx {Assembly.GetExecutingAssembly().GetName().Version} - {Process.GetCurrentProcess().ProcessName}";
+				ConsoleWindow.Title = consoleTile;
 
-                PreloaderLog.WriteLine(consoleTile);
-                Logger.Log(LogLevel.Message, "Preloader started");
+				Logger.SetLogger(PreloaderLog);
 
-	            string entrypointAssembly = Config.GetEntry("entrypoint-assembly", "UnityEngine.dll", "Preloader");
+				PreloaderLog.WriteLine(consoleTile);
+				Logger.Log(LogLevel.Message, "Preloader started");
 
-	            AddPatcher(new[] {entrypointAssembly}, PatchEntrypoint);
+				string entrypointAssembly = Config.GetEntry("entrypoint-assembly", "UnityEngine.dll", "Preloader");
 
-                if (Directory.Exists(Paths.PatcherPluginPath))
-                {
-                    var sortedPatchers = new SortedDictionary<string, KeyValuePair<AssemblyPatcherDelegate, IEnumerable<string>>>();
+				AddPatcher(new[] {entrypointAssembly}, PatchEntrypoint);
 
-                    foreach (string assemblyPath in Directory.GetFiles(Paths.PatcherPluginPath, "*.dll"))
-                        try
-                        {
-                            var assembly = Assembly.LoadFrom(assemblyPath);
+				if (Directory.Exists(Paths.PatcherPluginPath))
+				{
+					var sortedPatchers = new SortedDictionary<string, KeyValuePair<AssemblyPatcherDelegate, IEnumerable<string>>>();
 
-                            foreach (KeyValuePair<AssemblyPatcherDelegate, IEnumerable<string>> kv in GetPatcherMethods(assembly))
-                                sortedPatchers.Add(assembly.GetName().Name, kv);
-                        }
-                        catch (BadImageFormatException) { } //unmanaged DLL
-                        catch (ReflectionTypeLoadException) { } //invalid references
+					foreach (string assemblyPath in Directory.GetFiles(Paths.PatcherPluginPath, "*.dll"))
+						try
+						{
+							var assembly = Assembly.LoadFrom(assemblyPath);
 
-                    foreach (KeyValuePair<string, KeyValuePair<AssemblyPatcherDelegate, IEnumerable<string>>> kv in sortedPatchers)
-                        AddPatcher(kv.Value.Value, kv.Value.Key);
-                }
+							foreach (KeyValuePair<AssemblyPatcherDelegate, IEnumerable<string>> kv in GetPatcherMethods(assembly))
+								sortedPatchers.Add(assembly.GetName().Name, kv);
+						}
+						catch (BadImageFormatException)
+						{
+						} //unmanaged DLL
+						catch (ReflectionTypeLoadException)
+						{
+						} //invalid references
 
-                AssemblyPatcher.PatchAll(Paths.ManagedPath, PatcherDictionary, Initializers, Finalizers);
-            }
-            catch (Exception ex)
-            {
-                Logger.Log(LogLevel.Fatal, "Could not run preloader!");
-                Logger.Log(LogLevel.Fatal, ex);
+					foreach (KeyValuePair<string, KeyValuePair<AssemblyPatcherDelegate, IEnumerable<string>>> kv in sortedPatchers)
+						AddPatcher(kv.Value.Value, kv.Value.Key);
+				}
 
-                PreloaderLog.Enabled = false;
+				AssemblyPatcher.PatchAll(Paths.ManagedPath, PatcherDictionary, Initializers, Finalizers);
+			}
+			catch (Exception ex)
+			{
+				Logger.Log(LogLevel.Fatal, "Could not run preloader!");
+				Logger.Log(LogLevel.Fatal, ex);
 
-                try
-                {
-                    AllocateConsole();
-                    Console.Write(PreloaderLog);
-                }
-                finally
-                {
-                    File.WriteAllText(Path.Combine(Paths.GameRootPath, $"preloader_{DateTime.Now:yyyyMMdd_HHmmss_fff}.log"),
-                                      PreloaderLog.ToString());
+				PreloaderLog.Enabled = false;
 
-                    PreloaderLog.Dispose();
-                }
-            }
-        }
+				try
+				{
+					AllocateConsole();
+					Console.Write(PreloaderLog);
+				}
+				finally
+				{
+					File.WriteAllText(Path.Combine(Paths.GameRootPath, $"preloader_{DateTime.Now:yyyyMMdd_HHmmss_fff}.log"),
+						PreloaderLog.ToString());
 
-        /// <summary>
-        ///     Scans the assembly for classes that use the patcher contract, and returns a dictionary of the patch methods.
-        /// </summary>
-        /// <param name="assembly">The assembly to scan.</param>
-        /// <returns>A dictionary of delegates which will be used to patch the targeted assemblies.</returns>
-        public static Dictionary<AssemblyPatcherDelegate, IEnumerable<string>> GetPatcherMethods(Assembly assembly)
-        {
-            var patcherMethods = new Dictionary<AssemblyPatcherDelegate, IEnumerable<string>>();
+					PreloaderLog.Dispose();
+				}
+			}
+		}
 
-            foreach (var type in assembly.GetExportedTypes())
-                try
-                {
-                    if (type.IsInterface)
-                        continue;
+		/// <summary>
+		///     Scans the assembly for classes that use the patcher contract, and returns a dictionary of the patch methods.
+		/// </summary>
+		/// <param name="assembly">The assembly to scan.</param>
+		/// <returns>A dictionary of delegates which will be used to patch the targeted assemblies.</returns>
+		public static Dictionary<AssemblyPatcherDelegate, IEnumerable<string>> GetPatcherMethods(Assembly assembly)
+		{
+			var patcherMethods = new Dictionary<AssemblyPatcherDelegate, IEnumerable<string>>();
 
-                    var targetsProperty = type.GetProperty("TargetDLLs",
-                                                           BindingFlags.Public | BindingFlags.Static | BindingFlags.IgnoreCase,
-                                                           null,
-                                                           typeof(IEnumerable<string>),
-                                                           Type.EmptyTypes,
-                                                           null);
+			foreach (var type in assembly.GetExportedTypes())
+				try
+				{
+					if (type.IsInterface)
+						continue;
 
-                    //first try get the ref patcher method
-                    var patcher = type.GetMethod("Patch",
-                                                 BindingFlags.Public | BindingFlags.Static | BindingFlags.IgnoreCase,
-                                                 null,
-                                                 CallingConventions.Any,
-                                                 new[] {typeof(AssemblyDefinition).MakeByRefType()},
-                                                 null);
+					var targetsProperty = type.GetProperty("TargetDLLs",
+						BindingFlags.Public | BindingFlags.Static | BindingFlags.IgnoreCase,
+						null,
+						typeof(IEnumerable<string>),
+						Type.EmptyTypes,
+						null);
 
-                    if (patcher == null) //otherwise try getting the non-ref patcher method
-                        patcher = type.GetMethod("Patch",
-                                                 BindingFlags.Public | BindingFlags.Static | BindingFlags.IgnoreCase,
-                                                 null,
-                                                 CallingConventions.Any,
-                                                 new[] {typeof(AssemblyDefinition)},
-                                                 null);
+					//first try get the ref patcher method
+					var patcher = type.GetMethod("Patch",
+						BindingFlags.Public | BindingFlags.Static | BindingFlags.IgnoreCase,
+						null,
+						CallingConventions.Any,
+						new[] {typeof(AssemblyDefinition).MakeByRefType()},
+						null);
 
-                    if (targetsProperty == null || !targetsProperty.CanRead || patcher == null)
-                        continue;
+					if (patcher == null) //otherwise try getting the non-ref patcher method
+						patcher = type.GetMethod("Patch",
+							BindingFlags.Public | BindingFlags.Static | BindingFlags.IgnoreCase,
+							null,
+							CallingConventions.Any,
+							new[] {typeof(AssemblyDefinition)},
+							null);
 
-                    AssemblyPatcherDelegate patchDelegate = (ref AssemblyDefinition ass) =>
-                    {
-                        //we do the array fuckery here to get the ref result out
-                        object[] args = {ass};
+					if (targetsProperty == null || !targetsProperty.CanRead || patcher == null)
+						continue;
 
-                        patcher.Invoke(null, args);
+					AssemblyPatcherDelegate patchDelegate = (ref AssemblyDefinition ass) =>
+					{
+						//we do the array fuckery here to get the ref result out
+						object[] args = {ass};
 
-                        ass = (AssemblyDefinition) args[0];
-                    };
+						patcher.Invoke(null, args);
 
-                    var targets = (IEnumerable<string>) targetsProperty.GetValue(null, null);
+						ass = (AssemblyDefinition) args[0];
+					};
 
-                    patcherMethods[patchDelegate] = targets;
+					var targets = (IEnumerable<string>) targetsProperty.GetValue(null, null);
 
-                    var initMethod = type.GetMethod("Initialize",
-                                                    BindingFlags.Public | BindingFlags.Static | BindingFlags.IgnoreCase,
-                                                    null,
-                                                    CallingConventions.Any,
-                                                    Type.EmptyTypes,
-                                                    null);
+					patcherMethods[patchDelegate] = targets;
 
-                    if (initMethod != null)
-                        Initializers.Add(() => initMethod.Invoke(null, null));
+					var initMethod = type.GetMethod("Initialize",
+						BindingFlags.Public | BindingFlags.Static | BindingFlags.IgnoreCase,
+						null,
+						CallingConventions.Any,
+						Type.EmptyTypes,
+						null);
 
-                    var finalizeMethod = type.GetMethod("Finish",
-                                                        BindingFlags.Public | BindingFlags.Static | BindingFlags.IgnoreCase,
-                                                        null,
-                                                        CallingConventions.Any,
-                                                        Type.EmptyTypes,
-                                                        null);
+					if (initMethod != null)
+						Initializers.Add(() => initMethod.Invoke(null, null));
 
-                    if (finalizeMethod != null)
-                        Finalizers.Add(() => finalizeMethod.Invoke(null, null));
-                }
-                catch (Exception ex)
-                {
-                    Logger.Log(LogLevel.Warning, $"Could not load patcher methods from {assembly.GetName().Name}");
-                    Logger.Log(LogLevel.Warning, $"{ex}");
-                }
+					var finalizeMethod = type.GetMethod("Finish",
+						BindingFlags.Public | BindingFlags.Static | BindingFlags.IgnoreCase,
+						null,
+						CallingConventions.Any,
+						Type.EmptyTypes,
+						null);
 
-            Logger.Log(LogLevel.Info,
-                       $"Loaded {patcherMethods.Select(x => x.Key).Distinct().Count()} patcher methods from {assembly.GetName().Name}");
+					if (finalizeMethod != null)
+						Finalizers.Add(() => finalizeMethod.Invoke(null, null));
+				}
+				catch (Exception ex)
+				{
+					Logger.Log(LogLevel.Warning, $"Could not load patcher methods from {assembly.GetName().Name}");
+					Logger.Log(LogLevel.Warning, $"{ex}");
+				}
 
-            return patcherMethods;
-        }
+			Logger.Log(LogLevel.Info,
+				$"Loaded {patcherMethods.Select(x => x.Key).Distinct().Count()} patcher methods from {assembly.GetName().Name}");
 
-        /// <summary>
-        ///     Inserts BepInEx's own chainloader entrypoint into UnityEngine.
-        /// </summary>
-        /// <param name="assembly">The assembly that will be attempted to be patched.</param>
-        public static void PatchEntrypoint(ref AssemblyDefinition assembly)
-        {
+			return patcherMethods;
+		}
+
+		/// <summary>
+		///     Inserts BepInEx's own chainloader entrypoint into UnityEngine.
+		/// </summary>
+		/// <param name="assembly">The assembly that will be attempted to be patched.</param>
+		public static void PatchEntrypoint(ref AssemblyDefinition assembly)
+		{
 			string entrypointType = Config.GetEntry("entrypoint-type", "Application", "Preloader");
-			string entrypointMethod = Config.HasEntry("entrypoint-method") ? Config.GetEntry("entrypoint-method", section: "Preloader") : "";
-	        bool isCctor = entrypointMethod.IsNullOrWhiteSpace() || entrypointMethod == ".cctor";
-			
+			string entrypointMethod = Config.HasEntry("entrypoint-method")
+				? Config.GetEntry("entrypoint-method", section: "Preloader")
+				: "";
+			bool isCctor = entrypointMethod.IsNullOrWhiteSpace() || entrypointMethod == ".cctor";
+
 #if CECIL_10
 			using (var injected = AssemblyDefinition.ReadAssembly(Paths.BepInExAssemblyPath))
 #elif CECIL_9
             AssemblyDefinition injected = AssemblyDefinition.ReadAssembly(BepInExAssemblyPath);
 #endif
-            {
-                var originalInjectMethod = injected.MainModule.Types.First(x => x.Name == "Chainloader").Methods
-                                                    .First(x => x.Name == "Initialize");
+			{
+				var originalInjectMethod = injected.MainModule.Types.First(x => x.Name == "Chainloader").Methods
+					.First(x => x.Name == "Initialize");
 
-                var injectMethod = assembly.MainModule.ImportReference(originalInjectMethod);
+				var injectMethod = assembly.MainModule.ImportReference(originalInjectMethod);
 
 
-                var entryType = assembly.MainModule.Types.First(x => x.Name == entrypointType);
-				
+				var entryType = assembly.MainModule.Types.First(x => x.Name == entrypointType);
 
-	            if (isCctor)
-	            {
-		            MethodDefinition cctor = entryType.Methods.FirstOrDefault(m => m.IsConstructor && m.IsStatic);
-		            ILProcessor il;
 
-		            if (cctor == null)
-		            {
-			            cctor = new MethodDefinition(".cctor",
-				            MethodAttributes.Static | MethodAttributes.Private | MethodAttributes.HideBySig
-				            | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
-				            assembly.MainModule.ImportReference(typeof(void)));
+				if (isCctor)
+				{
+					MethodDefinition cctor = entryType.Methods.FirstOrDefault(m => m.IsConstructor && m.IsStatic);
+					ILProcessor il;
 
-			            entryType.Methods.Add(cctor);
-			            il = cctor.Body.GetILProcessor();
-			            il.Append(il.Create(OpCodes.Ret));
-		            }
+					if (cctor == null)
+					{
+						cctor = new MethodDefinition(".cctor",
+							MethodAttributes.Static | MethodAttributes.Private | MethodAttributes.HideBySig
+							| MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
+							assembly.MainModule.ImportReference(typeof(void)));
 
-		            Instruction ins = cctor.Body.Instructions.First();
-		            il = cctor.Body.GetILProcessor();
-		            il.InsertBefore(ins, il.Create(OpCodes.Call, injectMethod));
-	            }
-	            else
-	            {
-		            foreach (var loadScene in entryType.Methods.Where(x => x.Name == entrypointMethod))
-		            {
-			            var il = loadScene.Body.GetILProcessor();
+						entryType.Methods.Add(cctor);
+						il = cctor.Body.GetILProcessor();
+						il.Append(il.Create(OpCodes.Ret));
+					}
 
-			            il.InsertBefore(loadScene.Body.Instructions[0], il.Create(OpCodes.Call, injectMethod));
-		            }
-	            }
-            }
-        }
+					Instruction ins = cctor.Body.Instructions.First();
+					il = cctor.Body.GetILProcessor();
+					il.InsertBefore(ins, il.Create(OpCodes.Call, injectMethod));
+				}
+				else
+				{
+					foreach (var loadScene in entryType.Methods.Where(x => x.Name == entrypointMethod))
+					{
+						var il = loadScene.Body.GetILProcessor();
 
-        /// <summary>
-        ///     Allocates a console window for use by BepInEx safely.
-        /// </summary>
-        public static void AllocateConsole()
-        {
-            bool console = Utility.SafeParseBool(Config.GetEntry("console", "false", "BepInEx"));
-            bool shiftjis = Utility.SafeParseBool(Config.GetEntry("console-shiftjis", "false", "BepInEx"));
+						il.InsertBefore(loadScene.Body.Instructions[0], il.Create(OpCodes.Call, injectMethod));
+					}
+				}
+			}
+		}
 
-            if (console)
-                try
-                {
-                    ConsoleWindow.Attach();
+		/// <summary>
+		///     Allocates a console window for use by BepInEx safely.
+		/// </summary>
+		public static void AllocateConsole()
+		{
+			bool console = Utility.SafeParseBool(Config.GetEntry("console", "false", "BepInEx"));
+			bool shiftjis = Utility.SafeParseBool(Config.GetEntry("console-shiftjis", "false", "BepInEx"));
 
-                    var encoding = (uint) Encoding.UTF8.CodePage;
+			if (console)
+				try
+				{
+					ConsoleWindow.Attach();
 
-                    if (shiftjis)
-                        encoding = 932;
+					var encoding = (uint) Encoding.UTF8.CodePage;
 
-                    ConsoleEncoding.ConsoleCodePage = encoding;
-                    Console.OutputEncoding = ConsoleEncoding.GetEncoding(encoding);
-                }
-                catch (Exception ex)
-                {
-                    Logger.Log(LogLevel.Error, "Failed to allocate console!");
-                    Logger.Log(LogLevel.Error, ex);
-                }
-        }
+					if (shiftjis)
+						encoding = 932;
 
-        /// <summary>
-        ///     Adds the patcher to the patcher dictionary.
-        /// </summary>
-        /// <param name="dllNames">The list of DLL filenames to be patched.</param>
-        /// <param name="patcher">The method that will perform the patching.</param>
-        public static void AddPatcher(IEnumerable<string> dllNames, AssemblyPatcherDelegate patcher)
-        {
-            PatcherDictionary[patcher] = dllNames;
-        }
-    }
+					ConsoleEncoding.ConsoleCodePage = encoding;
+					Console.OutputEncoding = ConsoleEncoding.GetEncoding(encoding);
+				}
+				catch (Exception ex)
+				{
+					Logger.Log(LogLevel.Error, "Failed to allocate console!");
+					Logger.Log(LogLevel.Error, ex);
+				}
+		}
+
+		/// <summary>
+		///     Adds the patcher to the patcher dictionary.
+		/// </summary>
+		/// <param name="dllNames">The list of DLL filenames to be patched.</param>
+		/// <param name="patcher">The method that will perform the patching.</param>
+		public static void AddPatcher(IEnumerable<string> dllNames, AssemblyPatcherDelegate patcher)
+		{
+			PatcherDictionary[patcher] = dllNames;
+		}
+	}
 }
