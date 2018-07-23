@@ -53,9 +53,7 @@ namespace BepInEx.Bootstrap
                 if (assembly.Name.Name == "System"
                     || assembly.Name.Name == "mscorlib") //mscorlib is already loaded into the appdomain so it can't be patched
                 {
-#if CECIL_10
                     assembly.Dispose();
-#endif
                     continue;
                 }
 
@@ -119,9 +117,7 @@ namespace BepInEx.Bootstrap
 			    }
 
 			    Load(assembly);
-#if CECIL_10
 			    assembly.Dispose();
-#endif
 			}
 			
 	        //run all finalizers

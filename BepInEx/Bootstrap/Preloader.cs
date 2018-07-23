@@ -209,12 +209,8 @@ namespace BepInEx.Bootstrap
 				? Config.GetEntry("entrypoint-method", section: "Preloader")
 				: "";
 			bool isCctor = entrypointMethod.IsNullOrWhiteSpace() || entrypointMethod == ".cctor";
-
-#if CECIL_10
+			
 			using (var injected = AssemblyDefinition.ReadAssembly(Paths.BepInExAssemblyPath))
-#elif CECIL_9
-            AssemblyDefinition injected = AssemblyDefinition.ReadAssembly(BepInExAssemblyPath);
-#endif
 			{
 				var originalInjectMethod = injected.MainModule.Types.First(x => x.Name == "Chainloader").Methods
 					.First(x => x.Name == "Initialize");
