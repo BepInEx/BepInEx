@@ -58,6 +58,20 @@ namespace BepInEx.Bootstrap
 				Logger.SetLogger(PreloaderLog);
 
 				PreloaderLog.WriteLine(consoleTile);
+
+				#if DEBUG
+
+				object[] attributes = typeof(DebugInfoAttribute).Assembly.GetCustomAttributes(typeof(DebugInfoAttribute), false);
+				
+				if (attributes.Length > 0)
+				{
+					var attribute = (DebugInfoAttribute)attributes[0];
+
+					PreloaderLog.WriteLine(attribute.Info);
+				}
+
+				#endif
+
 				Logger.Log(LogLevel.Message, "Preloader started");
 
 				string entrypointAssembly = Config.GetEntry("entrypoint-assembly", "UnityEngine.dll", "Preloader");

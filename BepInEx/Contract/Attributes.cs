@@ -196,4 +196,22 @@ namespace BepInEx
     }
 
     #endregion
+
+	#region Debug
+
+	#if DEBUG
+
+	public class DebugInfoAttribute : Attribute
+	{
+		public string Info { get; }
+
+		public DebugInfoAttribute(string info)
+		{
+			Info = info;
+		}
+	}
+
+	#endif
+
+	#endregion
 }
