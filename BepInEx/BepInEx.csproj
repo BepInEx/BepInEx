@@ -18,7 +18,7 @@
     <DebugType>none</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>..\bin\</OutputPath>
-    <DefineConstants>TRACE;CECIL_10</DefineConstants>
+    <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>
@@ -27,9 +27,9 @@
   <PropertyGroup>
     <StartupObject />
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Cecil 0.9.6_Release|AnyCPU'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
     <OutputPath>..\bin\</OutputPath>
-    <DefineConstants>TRACE;CECIL_9</DefineConstants>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
     <Optimize>true</Optimize>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
@@ -39,11 +39,8 @@
     <Reference Include="0Harmony">
       <HintPath>..\lib\0Harmony.dll</HintPath>
     </Reference>
-    <Reference Include="Mono.Cecil" Condition="$(DefineConstants.Contains('CECIL_9'))">
-      <HintPath>..\lib\Cecil 9\Mono.Cecil.dll</HintPath>
-    </Reference>
-    <Reference Include="Mono.Cecil" Condition="$(DefineConstants.Contains('CECIL_10'))">
-      <HintPath>..\lib\Cecil 10\Mono.Cecil.dll</HintPath>
+    <Reference Include="Mono.Cecil">
+      <HintPath>..\lib\Mono.Cecil.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="UnityEngine">
