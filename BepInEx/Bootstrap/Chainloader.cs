@@ -38,49 +38,52 @@ namespace BepInEx.Bootstrap
 			if (_loaded)
 				return;
 
-		    if (!Directory.Exists(Utility.PluginsDirectory))
-		        Directory.CreateDirectory(Utility.PluginsDirectory);
+			if (!Directory.Exists(Utility.PluginsDirectory))
+				Directory.CreateDirectory(Utility.PluginsDirectory);
 
-            Preloader.AllocateConsole();
+			Preloader.AllocateConsole();
 
 			try
 			{
-                UnityLogWriter unityLogWriter = new UnityLogWriter();
+				UnityLogWriter unityLogWriter = new UnityLogWriter();
 
-			    if (Preloader.PreloaderLog != null)
-			        unityLogWriter.WriteToLog($"{Preloader.PreloaderLog}\r\n");
+				if (Preloader.PreloaderLog != null)
+					unityLogWriter.WriteToLog($"{Preloader.PreloaderLog}\r\n");
 
-                Logger.SetLogger(unityLogWriter);
+				Logger.SetLogger(unityLogWriter);
 
-                if(bool.Parse(Config.GetEntry("log_unity_messages", "false", "Global")))
-                    UnityLogWriter.ListenUnityLogs();
+				if (bool.Parse(Config.GetEntry("chainloader-log-unity-messages", "false", "BepInEx")))
+					UnityLogWriter.ListenUnityLogs();
 
-			    string consoleTile = $"BepInEx {Assembly.GetExecutingAssembly().GetName().Version} - {Application.productName}";
-			    ConsoleWindow.Title = consoleTile;
-                
+				var productNameProp = typeof(Application).GetProperty("productName", BindingFlags.Public | BindingFlags.Static);
+				if (productNameProp != null)
+					ConsoleWindow.Title =
+						$"BepInEx {Assembly.GetExecutingAssembly().GetName().Version} - {productNameProp.GetValue(null, null)}";
+
 				Logger.Log(LogLevel.Message, "Chainloader started");
 
 				UnityEngine.Object.DontDestroyOnLoad(ManagerObject);
 
 
-			    string currentProcess = Process.GetCurrentProcess().ProcessName.ToLower();
+				string currentProcess = Process.GetCurrentProcess().ProcessName.ToLower();
 
 				var pluginTypes = TypeLoader.LoadTypes<BaseUnityPlugin>(Utility.PluginsDirectory)
-				    .Where(plugin =>
-				    {
-                        //Perform a filter for currently running process
-				        var filters = MetadataHelper.GetAttributes<BepInProcess>(plugin);
+					.Where(plugin =>
+					{
+						//Perform a filter for currently running process
+						var filters = MetadataHelper.GetAttributes<BepInProcess>(plugin);
 
-				        if (!filters.Any())
-				            return true;
+						if (!filters.Any())
+							return true;
 
-				        return filters.Any(x => x.ProcessName.ToLower().Replace(".exe", "") == currentProcess);
-				    })
-				    .ToList();
+						return filters.Any(x => x.ProcessName.ToLower().Replace(".exe", "") == currentProcess);
+					})
+					.ToList();
 
-			    Logger.Log(LogLevel.Info, $"{pluginTypes.Count} plugins selected");
+				Logger.Log(LogLevel.Info, $"{pluginTypes.Count} plugins selected");
 
 				Dictionary<Type, IEnumerable<Type>> dependencyDict = new Dictionary<Type, IEnumerable<Type>>();
+
 
 				foreach (Type t in pluginTypes)
 				{
@@ -94,7 +97,7 @@ namespace BepInEx.Bootstrap
 					{
 						var metadata = MetadataHelper.GetMetadata(t);
 
-					    Logger.Log(LogLevel.Info, $"Cannot load [{metadata.Name}] due to missing dependencies.");
+						Logger.Log(LogLevel.Info, $"Cannot load [{metadata.Name}] due to missing dependencies.");
 					}
 				}
 
@@ -109,17 +112,17 @@ namespace BepInEx.Bootstrap
 						var plugin = (BaseUnityPlugin) ManagerObject.AddComponent(t);
 
 						Plugins.Add(plugin);
-					    Logger.Log(LogLevel.Info, $"Loaded [{metadata.Name} {metadata.Version}]");
+						Logger.Log(LogLevel.Info, $"Loaded [{metadata.Name} {metadata.Version}]");
 					}
 					catch (Exception ex)
 					{
-					    Logger.Log(LogLevel.Info, $"Error loading [{t.Name}] : {ex.Message}");
+						Logger.Log(LogLevel.Info, $"Error loading [{t.Name}] : {ex.Message}");
 					}
 				}
 			}
 			catch (Exception ex)
 			{
-				UnityInjector.ConsoleUtil.ConsoleWindow.Attach();
+				ConsoleWindow.Attach();
 
 				Console.WriteLine("Error occurred starting the game");
 				Console.WriteLine(ex.ToString());

@@ -42,7 +42,7 @@ namespace BepInEx.Logging
 
 		    try
 		    {
-			    lowest = (LogLevel)Enum.Parse(typeof(LogLevel), Config.GetEntry("logger-displayed-levels", nameof(LogLevel.Info)));
+			    lowest = (LogLevel)Enum.Parse(typeof(LogLevel), Config.GetEntry("logger-displayed-levels", nameof(LogLevel.Info), "BepInEx"));
 		    }
 		    catch
 		    {
