@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+// ReSharper disable once RedundantUsingDirective
 using BepInEx;
 
 // General Information about an assembly is controlled through the following
