@@ -21,7 +21,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\bin\</OutputPath>
+    <OutputPath>..\bin\patcher\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -32,7 +32,7 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>embedded</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\bin\</OutputPath>
+    <OutputPath>..\bin\patcher\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -64,9 +64,7 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
-    <EmbeddedResource Include="..\bin\0Harmony.dll" />
-    <EmbeddedResource Include="..\bin\BepInEx.dll" />
-    <EmbeddedResource Include="..\bin\Mono.Cecil.dll" />
+    <EmbeddedResource Include="..\bin\patcher\BepInEx.Bootstrap.dll" />
   </ItemGroup>
   <Import Project="..\BepInEx.Common\BepInEx.Common.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
@@ -86,8 +84,7 @@
     </ItemGroup>
     <ILRepack Parallel="true" Internalize="true" DebugInfo="true" PrimaryAssemblyFile="$(OutputPath)\$(AssemblyName)1.exe" InputAssemblies="@(InputAssemblies)" TargetKind="Exe" TargetPlatformVersion="v2" OutputFile="$(OutputPath)\$(AssemblyName).exe" />
     <Delete Files="@(InputAssemblies)" />
-    <Delete Files="$(OutputPath)\0Harmony.dll" />
-    <Delete Files="$(OutputPath)\BepInEx.dll" />
+    <Delete Files="$(OutputPath)\BepInEx.Bootstrap.dll" />
   </Target>
   <!-- /ILRepack -->
   <Import Project="..\packages\ILRepack.MSBuild.Task.1.0.9\build\ILRepack.MSBuild.Task.targets" Condition="Exists('..\packages\ILRepack.MSBuild.Task.1.0.9\build\ILRepack.MSBuild.Task.targets')" />

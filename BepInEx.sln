@@ -12,11 +12,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BepInEx.Patcher", "BepInEx.
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "BepInEx.Common", "BepInEx.Common\BepInEx.Common.shproj", "{D8DEEEF7-28F5-4F13-A004-C581CE051CDC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BepInEx.Bootstrap", "BepInEx.Bootstrap\BepInEx.Bootstrap.csproj", "{6E6BC1E5-5BE8-4566-B3AE-52C4CB218AEB}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		BepInEx.Common\BepInEx.Common.projitems*{4ffba620-f5ed-47f9-b90c-dad1316fd9b9}*SharedItemsImports = 4
 		BepInEx.Common\BepInEx.Common.projitems*{d8deeef7-28f5-4f13-a004-c581ce051cdc}*SharedItemsImports = 13
-		BepInEx.Common\BepInEx.Common.projitems*{dc89f18b-235b-4c01-ab31-af40dce5c4c7}*SharedItemsImports = 4
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|v2017 = Debug|v2017
@@ -45,6 +46,14 @@ Global
 		{DC89F18B-235B-4C01-AB31-AF40DCE5C4C7}.Release|v2017.ActiveCfg = Release|Any CPU
 		{DC89F18B-235B-4C01-AB31-AF40DCE5C4C7}.Release|v4.ActiveCfg = Release|Any CPU
 		{DC89F18B-235B-4C01-AB31-AF40DCE5C4C7}.Release|v5.ActiveCfg = Release|Any CPU
+		{6E6BC1E5-5BE8-4566-B3AE-52C4CB218AEB}.Debug|v2017.ActiveCfg = Release|Any CPU
+		{6E6BC1E5-5BE8-4566-B3AE-52C4CB218AEB}.Debug|v4.ActiveCfg = Release|Any CPU
+		{6E6BC1E5-5BE8-4566-B3AE-52C4CB218AEB}.Debug|v4.Build.0 = Release|Any CPU
+		{6E6BC1E5-5BE8-4566-B3AE-52C4CB218AEB}.Debug|v5.ActiveCfg = Release|Any CPU
+		{6E6BC1E5-5BE8-4566-B3AE-52C4CB218AEB}.Debug|v5.Build.0 = Release|Any CPU
+		{6E6BC1E5-5BE8-4566-B3AE-52C4CB218AEB}.Release|v2017.ActiveCfg = Release|Any CPU
+		{6E6BC1E5-5BE8-4566-B3AE-52C4CB218AEB}.Release|v4.ActiveCfg = Release|Any CPU
+		{6E6BC1E5-5BE8-4566-B3AE-52C4CB218AEB}.Release|v5.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

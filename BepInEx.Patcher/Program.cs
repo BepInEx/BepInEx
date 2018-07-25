@@ -85,11 +85,8 @@ namespace BepInEx.Patcher
 
             try
             {
-                string harmony = Path.GetFullPath($"{managedDir}\\0Harmony.dll");
-                File.WriteAllBytes(harmony, EmbeddedResource.Get("BepInEx.Patcher.0Harmony.dll"));
-
-                string injectedDLL = Path.GetFullPath($"{managedDir}\\BepInEx.dll");
-                File.WriteAllBytes(injectedDLL, EmbeddedResource.Get("BepInEx.Patcher.BepInEx.dll"));
+                string injectedDLL = Path.GetFullPath($"{managedDir}\\BepInEx.Bootstrap.dll");
+                File.WriteAllBytes(injectedDLL, EmbeddedResource.Get("BepInEx.Patcher.BepInEx.Bootstrap.dll"));
 
                 var defaultResolver = new DefaultAssemblyResolver();
                 defaultResolver.AddSearchDirectory(managedDir);
@@ -156,8 +153,8 @@ namespace BepInEx.Patcher
         static void InjectAssembly(AssemblyDefinition unity, AssemblyDefinition injected)
         {
             //Entry point
-            var originalInjectMethod = injected.MainModule.Types.First(x => x.Name == "Chainloader")
-                .Methods.First(x => x.Name == "Initialize");
+            var originalInjectMethod = injected.MainModule.Types.First(x => x.Name == "Entrypoint")
+                .Methods.First(x => x.Name == "Init");
 
             var injectMethod = unity.MainModule.ImportReference(originalInjectMethod);
 
@@ -185,16 +182,14 @@ namespace BepInEx.Patcher
             message = "";
 
             //check if already patched
-            var sceneManager = unity.MainModule.Types.First(x => x.Name == "Application");
-
-            if (sceneManager.Methods.Any(x => x.Name == ".cctor"))
+            if (unity.MainModule.AssemblyReferences.Any(x => x.Name == "BepInEx"))
             {
-                //already patched by bepin
                 canPatch = false;
 
-                message += "This assembly has already been patched by BepInEx.";
+                message += "This assembly has already been patched by BepInEx.\r\n";
             }
 
+	        message = message.Trim();
             return canPatch;
         }
     }
