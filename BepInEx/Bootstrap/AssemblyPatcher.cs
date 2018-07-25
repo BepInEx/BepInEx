@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using Mono.Cecil;
 
@@ -38,7 +37,7 @@ namespace BepInEx.Bootstrap
 					init.Invoke();
 
             //load all the requested assemblies
-            List<AssemblyDefinition> assemblies = new List<AssemblyDefinition>();
+            Dictionary<string, AssemblyDefinition> assemblies = new Dictionary<string, AssemblyDefinition>();
             Dictionary<AssemblyDefinition, string> assemblyFilenames = new Dictionary<AssemblyDefinition, string>();
 
             foreach (string assemblyPath in Directory.GetFiles(directory, "*.dll"))
@@ -56,30 +55,8 @@ namespace BepInEx.Bootstrap
                     continue;
                 }
 
-                assemblies.Add(assembly);
-                assemblyFilenames[assembly] = Path.GetFileName(assemblyPath);
+                assemblies.Add(Path.GetFileName(assemblyPath), assembly);
             }
-
-            //generate a dictionary of each assembly's dependencies
-            Dictionary<AssemblyDefinition, IList<AssemblyDefinition>> assemblyDependencyDict = new Dictionary<AssemblyDefinition, IList<AssemblyDefinition>>();
-            
-            foreach (AssemblyDefinition assembly in assemblies)
-            {
-                assemblyDependencyDict[assembly] = new List<AssemblyDefinition>();
-
-                foreach (var dependencyRef in assembly.MainModule.AssemblyReferences)
-                {
-                    var dependencyAssembly = assemblies.FirstOrDefault(x => x.FullName == dependencyRef.FullName);
-
-                    if (dependencyAssembly != null)
-                        assemblyDependencyDict[assembly].Add(dependencyAssembly);
-                }
-            }
-
-            //sort the assemblies so load the assemblies that are dependant upon first
-            AssemblyDefinition[] sortedAssemblies = Utility.TopologicalSort(assemblies, x => assemblyDependencyDict[x]).ToArray();
-
-            Dictionary<string, AssemblyDefinition> sortedAssemblyFilenames = sortedAssemblies.ToDictionary(ass => assemblyFilenames[ass]);
 
             HashSet<string> patchedAssemblies = new HashSet<string>();
 
@@ -88,7 +65,7 @@ namespace BepInEx.Bootstrap
 	        {
 		        foreach (string assemblyFilename in patcherMethod.Value)
 		        {
-		            if (sortedAssemblyFilenames.TryGetValue(assemblyFilename, out var assembly))
+		            if (assemblies.TryGetValue(assemblyFilename, out var assembly))
 		            {
 		                Patch(ref assembly, patcherMethod.Key);
 		                patchedAssemblies.Add(assemblyFilenames[assembly]);
@@ -97,9 +74,10 @@ namespace BepInEx.Bootstrap
 	        }
 
             // Finally, load all assemblies into memory
-			foreach (var assembly in sortedAssemblies)
+			foreach (var kv in assemblies)
 			{
-			    string filename = Path.GetFileName(assemblyFilenames[assembly]);
+				string filename = kv.Key;
+				var assembly = kv.Value;
 
 			    if (DumpingEnabled && patchedAssemblies.Contains(filename))
 			    {
