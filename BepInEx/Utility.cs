@@ -56,7 +56,7 @@ namespace BepInEx
 
 	        while (nodeQueue.Count > 0)
 	        {
-		        List<TNode> nextBatch = nodeQueue.Where(x => !dependencySelector(x).Except(sorted).Any()).ToList();
+		        List<TNode> nextBatch = nodeQueue.Where(x => !dependencySelector(x).Except(sorted).Intersect(nodeQueue).Any()).ToList();
 
 				if (!nextBatch.Any())
 					throw new Exception("Cyclic Dependency:\r\n" + 
