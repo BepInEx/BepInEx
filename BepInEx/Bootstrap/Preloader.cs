@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using BepInEx.Common;
 using BepInEx.Logging;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
