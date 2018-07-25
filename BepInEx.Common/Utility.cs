@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -12,16 +11,6 @@ namespace BepInEx.Common
     /// </summary>
     public static class Utility
     {
-        /// <summary>
-        /// The directory that the game .exe is being run from.
-        /// </summary>
-        public static string ExecutingDirectory { get; } = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
-
-        /// <summary>
-        /// The path that the plugins folder is located.
-        /// </summary>
-        public static string PluginsDirectory { get; } = Path.Combine(ExecutingDirectory, "BepInEx");
-
         /// <summary>
         /// Combines multiple paths together, as the specfic method is not availble in .NET 3.5.
         /// </summary>

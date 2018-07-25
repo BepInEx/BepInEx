@@ -38,8 +38,8 @@ namespace BepInEx.Bootstrap
 			if (_loaded)
 				return;
 
-			if (!Directory.Exists(Utility.PluginsDirectory))
-				Directory.CreateDirectory(Utility.PluginsDirectory);
+			if (!Directory.Exists(Paths.PluginPath))
+				Directory.CreateDirectory(Paths.PluginPath);
 
 			Preloader.AllocateConsole();
 
@@ -67,7 +67,7 @@ namespace BepInEx.Bootstrap
 
 				string currentProcess = Process.GetCurrentProcess().ProcessName.ToLower();
 
-				var pluginTypes = TypeLoader.LoadTypes<BaseUnityPlugin>(Utility.PluginsDirectory)
+				var pluginTypes = TypeLoader.LoadTypes<BaseUnityPlugin>(Paths.PluginPath)
 					.Where(plugin =>
 					{
 						//Perform a filter for currently running process

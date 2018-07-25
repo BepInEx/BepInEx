@@ -258,11 +258,11 @@ namespace BepInEx.Bootstrap
 				}
 				else
 				{
-					foreach (var loadScene in entryType.Methods.Where(x => x.Name == entrypointMethod))
+					foreach (var method in entryType.Methods.Where(x => x.Name == entrypointMethod))
 					{
-						var il = loadScene.Body.GetILProcessor();
+						var il = method.Body.GetILProcessor();
 
-						il.InsertBefore(loadScene.Body.Instructions[0], il.Create(OpCodes.Call, injectMethod));
+						il.InsertBefore(method.Body.Instructions[0], il.Create(OpCodes.Call, injectMethod));
 					}
 				}
 			}
