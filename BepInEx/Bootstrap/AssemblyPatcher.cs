@@ -38,7 +38,6 @@ namespace BepInEx.Bootstrap
 
             //load all the requested assemblies
             Dictionary<string, AssemblyDefinition> assemblies = new Dictionary<string, AssemblyDefinition>();
-            Dictionary<AssemblyDefinition, string> assemblyFilenames = new Dictionary<AssemblyDefinition, string>();
 
             foreach (string assemblyPath in Directory.GetFiles(directory, "*.dll"))
             {
@@ -68,7 +67,8 @@ namespace BepInEx.Bootstrap
 		            if (assemblies.TryGetValue(assemblyFilename, out var assembly))
 		            {
 		                Patch(ref assembly, patcherMethod.Key);
-		                patchedAssemblies.Add(assemblyFilenames[assembly]);
+			            assemblies[assemblyFilename] = assembly;
+		                patchedAssemblies.Add(assemblyFilename);
                     }
 		        }
 	        }
