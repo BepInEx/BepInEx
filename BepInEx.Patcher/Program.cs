@@ -182,7 +182,7 @@ namespace BepInEx.Patcher
             message = "";
 
             //check if already patched
-            if (unity.MainModule.AssemblyReferences.Any(x => x.Name == "BepInEx"))
+            if (unity.MainModule.AssemblyReferences.Any(x => x.Name.Contains("BepInEx")))
             {
                 canPatch = false;
 
