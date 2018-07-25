@@ -51,34 +51,24 @@ namespace BepInEx.Common
 
         public static IEnumerable<TNode> TopologicalSort<TNode>(IEnumerable<TNode> nodes, Func<TNode, IEnumerable<TNode>> dependencySelector)
         {
-            List<TNode> sorted_list = new List<TNode>();
+			List<TNode> nodeQueue = new List<TNode>(nodes);
+			List<TNode> sorted = new List<TNode>();
 
-            HashSet<TNode> visited = new HashSet<TNode>();
-            HashSet<TNode> sorted = new HashSet<TNode>();
+	        while (nodeQueue.Count > 0)
+	        {
+		        List<TNode> nextBatch = nodeQueue.Where(x => !dependencySelector(x).Except(sorted).Any()).ToList();
 
-            foreach (TNode input in nodes)
-                Visit(input);
+				if (!nextBatch.Any())
+					throw new Exception("Cyclic Dependency:\r\n" + 
+					                     nodeQueue.Select(x => x.ToString()).Aggregate((a , b) => $"{a}\r\n{b}"));
 
-            return sorted_list;
+				sorted.AddRange(nextBatch);
 
-            void Visit(TNode node)
-            {
-                if (visited.Contains(node))
-                {
-                    if (!sorted.Contains(node))
-                        throw new Exception("Cyclic Dependency");
-                }
-                else
-                {
-                    visited.Add(node);
+		        foreach (TNode item in nextBatch)
+			        nodeQueue.Remove(item);
+	        }
 
-                    foreach (var dep in dependencySelector(node))
-                        Visit(dep);
-
-                    sorted.Add(node);
-                    sorted_list.Add(node);
-                }
-            }
+	        return sorted;
         }
 
         /// <summary>
