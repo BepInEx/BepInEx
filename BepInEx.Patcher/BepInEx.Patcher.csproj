@@ -66,7 +66,6 @@
   <ItemGroup>
     <EmbeddedResource Include="..\bin\patcher\BepInEx.Bootstrap.dll" />
   </ItemGroup>
-  <Import Project="..\BepInEx.Common\BepInEx.Common.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
