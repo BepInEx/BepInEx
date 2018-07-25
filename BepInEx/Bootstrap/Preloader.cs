@@ -90,12 +90,8 @@ namespace BepInEx.Bootstrap
 							foreach (KeyValuePair<AssemblyPatcherDelegate, IEnumerable<string>> kv in GetPatcherMethods(assembly))
 								sortedPatchers.Add(assembly.GetName().Name, kv);
 						}
-						catch (BadImageFormatException)
-						{
-						} //unmanaged DLL
-						catch (ReflectionTypeLoadException)
-						{
-						} //invalid references
+						catch (BadImageFormatException) { } //unmanaged DLL
+						catch (ReflectionTypeLoadException) { } //invalid references
 
 					foreach (KeyValuePair<string, KeyValuePair<AssemblyPatcherDelegate, IEnumerable<string>>> kv in sortedPatchers)
 						AddPatcher(kv.Value.Value, kv.Value.Key);
