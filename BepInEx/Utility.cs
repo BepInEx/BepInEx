@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-namespace BepInEx.Common
+namespace BepInEx
 {
     /// <summary>
     /// Generic helper properties and methods.
