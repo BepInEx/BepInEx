@@ -219,9 +219,8 @@ namespace BepInEx.Bootstrap
 		public static void PatchEntrypoint(ref AssemblyDefinition assembly)
 		{
 			string entrypointType = Config.GetEntry("entrypoint-type", "Application", "Preloader");
-			string entrypointMethod = Config.HasEntry("entrypoint-method")
-				? Config.GetEntry("entrypoint-method", section: "Preloader")
-				: "";
+			string entrypointMethod = Config.GetEntry("entrypoint-method", ".cctor", "Preloader");
+			
 			bool isCctor = entrypointMethod.IsNullOrWhiteSpace() || entrypointMethod == ".cctor";
 			
 			using (var injected = AssemblyDefinition.ReadAssembly(Paths.BepInExAssemblyPath))
