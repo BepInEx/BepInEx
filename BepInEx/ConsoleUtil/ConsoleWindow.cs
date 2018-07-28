@@ -12,14 +12,15 @@ namespace UnityInjector.ConsoleUtil
 {
     internal class ConsoleWindow
     {
-        private static bool _attached;
+        public static bool IsAttatched { get; private set; }
         private static IntPtr _cOut;
         private static IntPtr _oOut;
 
         public static void Attach()
         {
-            if (_attached)
+            if (IsAttatched)
                 return;
+
             if (_oOut == IntPtr.Zero)
                 _oOut = GetStdHandle(-11);
 
@@ -40,36 +41,38 @@ namespace UnityInjector.ConsoleUtil
             if (!SetStdHandle(-11, _cOut))
                 throw new Exception("SetStdHandle() failed");
             Init();
-            _attached = true;
+
+	        IsAttatched = true;
         }
 
         public static string Title
         {
             set
             {
-                if (_attached)
-                {
-                    if (value == null)
-                    {
-                        throw new ArgumentNullException(nameof(value));
-                    }
-                    if (value.Length > 24500)
-                    {
-                        throw new InvalidOperationException("Console title too long");
-                    }
+	            if (!IsAttatched)
+		            return;
 
-                    if (!SetConsoleTitle(value))
-                    {
-                        throw new InvalidOperationException("Console title invalid");
-                    }
-                }
+	            if (value == null)
+	            {
+		            throw new ArgumentNullException(nameof(value));
+	            }
+	            if (value.Length > 24500)
+	            {
+		            throw new InvalidOperationException("Console title too long");
+	            }
+
+	            if (!SetConsoleTitle(value))
+	            {
+		            throw new InvalidOperationException("Console title invalid");
+	            }
             }
         }
 
         public static void Detach()
         {
-            if (!_attached)
+            if (!IsAttatched)
                 return;
+
             if (!CloseHandle(_cOut))
                 throw new Exception("CloseHandle() failed");
             _cOut = IntPtr.Zero;
@@ -78,8 +81,8 @@ namespace UnityInjector.ConsoleUtil
             if (!SetStdHandle(-11, _oOut))
                 throw new Exception("SetStdHandle() failed");
             Init();
-            _attached = false;
-            
+
+	        IsAttatched = false;
         }
 
         [DllImport("user32.dll")]

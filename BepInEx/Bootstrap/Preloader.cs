@@ -107,8 +107,12 @@ namespace BepInEx.Bootstrap
 
 				try
 				{
-					AllocateConsole();
-					Console.Write(PreloaderLog);
+					if (!ConsoleWindow.IsAttatched)
+					{
+						//if we've already attached the console, then the log will already be written to the console
+						AllocateConsole();
+						Console.Write(PreloaderLog);
+					}
 				}
 				finally
 				{
