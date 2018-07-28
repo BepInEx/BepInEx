@@ -235,7 +235,12 @@ namespace BepInEx.Bootstrap
 				var injectMethod = assembly.MainModule.ImportReference(originalInjectMethod);
 
 
-				var entryType = assembly.MainModule.Types.First(x => x.Name == entrypointType);
+				var entryType = assembly.MainModule.Types.FirstOrDefault(x => x.Name == entrypointType);
+
+				if (entryType == null)
+				{
+					throw new Exception("The entrypoint type is invalid! Please check your config.ini");
+				}
 
 
 				if (isCctor)
@@ -261,7 +266,14 @@ namespace BepInEx.Bootstrap
 				}
 				else
 				{
-					foreach (var method in entryType.Methods.Where(x => x.Name == entrypointMethod))
+					List<MethodDefinition> methods = entryType.Methods.Where(x => x.Name == entrypointMethod).ToList();
+
+					if (!methods.Any())
+					{
+						throw new Exception("The entrypoint method is invalid! Please check your config.ini");
+					}
+
+					foreach (var method in methods)
 					{
 						var il = method.Body.GetILProcessor();
 
