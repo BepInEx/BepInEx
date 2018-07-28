@@ -51,24 +51,52 @@ namespace BepInEx
 
         public static IEnumerable<TNode> TopologicalSort<TNode>(IEnumerable<TNode> nodes, Func<TNode, IEnumerable<TNode>> dependencySelector)
         {
-			List<TNode> nodeQueue = new List<TNode>(nodes);
-			List<TNode> sorted = new List<TNode>();
+		    List<TNode> sorted_list = new List<TNode>();
 
-	        while (nodeQueue.Count > 0)
+		    HashSet<TNode> visited = new HashSet<TNode>();
+		    HashSet<TNode> sorted = new HashSet<TNode>();
+			
+	        foreach (TNode input in nodes)
 	        {
-		        List<TNode> nextBatch = nodeQueue.Where(x => !dependencySelector(x).Except(sorted).Intersect(nodeQueue).Any()).ToList();
-
-				if (!nextBatch.Any())
-					throw new Exception("Cyclic Dependency:\r\n" + 
-					                     nodeQueue.Select(x => x.ToString()).Aggregate((a , b) => $"{a}\r\n{b}"));
-
-				sorted.AddRange(nextBatch);
-
-		        foreach (TNode item in nextBatch)
-			        nodeQueue.Remove(item);
+		        Stack<TNode> currentStack = new Stack<TNode>();
+		        if (!Visit(input, currentStack))
+		        {
+					throw new Exception("Cyclic Dependency:\r\n" + currentStack
+						                    .Select(x => $" - {x}") //append dashes
+						                    .Aggregate((a, b) => $"{a}\r\n{b}")); //add new lines inbetween
+		        }
 	        }
+			    
 
-	        return sorted;
+		    return sorted_list;
+
+		    bool Visit(TNode node, Stack<TNode> stack)
+		    {
+			    if (visited.Contains(node))
+			    {
+				    if (!sorted.Contains(node))
+				    {
+					    return false;
+				    }
+			    }
+			    else
+			    {
+				    visited.Add(node);
+
+					stack.Push(node);
+
+				    foreach (var dep in dependencySelector(node))
+					    if (!Visit(dep, stack))
+						    return false;
+
+
+				    sorted.Add(node);
+				    sorted_list.Add(node);
+			    }
+				
+			    stack.Pop();
+			    return true;
+		    }
         }
 
         /// <summary>
