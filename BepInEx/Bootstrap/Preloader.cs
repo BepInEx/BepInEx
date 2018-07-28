@@ -217,9 +217,14 @@ namespace BepInEx.Bootstrap
 		/// <param name="assembly">The assembly that will be attempted to be patched.</param>
 		public static void PatchEntrypoint(ref AssemblyDefinition assembly)
 		{
+			if (assembly.MainModule.AssemblyReferences.Any(x => x.Name.Contains("BepInEx")))
+			{
+				throw new Exception("BepInEx has been detected to be patched! Please unpatch before using a patchless variant!");
+			}
+
 			string entrypointType = Config.GetEntry("entrypoint-type", "Application", "Preloader");
 			string entrypointMethod = Config.GetEntry("entrypoint-method", ".cctor", "Preloader");
-			
+
 			bool isCctor = entrypointMethod.IsNullOrWhiteSpace() || entrypointMethod == ".cctor";
 			
 			using (var injected = AssemblyDefinition.ReadAssembly(Paths.BepInExAssemblyPath))
