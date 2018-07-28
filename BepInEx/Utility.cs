@@ -92,9 +92,10 @@ namespace BepInEx
 
 				    sorted.Add(node);
 				    sorted_list.Add(node);
+
+				    stack.Pop();
 			    }
 				
-			    stack.Pop();
 			    return true;
 		    }
         }
