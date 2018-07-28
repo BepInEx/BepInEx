@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Reflection;
 
 namespace BepInEx.Bootstrap
 {
@@ -7,13 +6,8 @@ namespace BepInEx.Bootstrap
 	{
 		public static void StartBepInEx()
 		{
-			var property = typeof(Paths)
-				.GetProperty("ExecutablePath", BindingFlags.Static | BindingFlags.Public)
-				?.GetSetMethod(true);
-
-			property?.Invoke(null, new object[] {Process.GetCurrentProcess().MainModule.FileName});
-			
-			Chainloader.Initialize();
+			Chainloader.Initialize(Process.GetCurrentProcess().MainModule.FileName);
+			Chainloader.Start();
 		}
 	}
 }

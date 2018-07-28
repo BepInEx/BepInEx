@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using BepInEx.Logging;
 using UnityEngine;
 using UnityInjector.ConsoleUtil;
@@ -28,29 +29,56 @@ namespace BepInEx.Bootstrap
 
 
 		private static bool _loaded = false;
+		private static bool _initialized = false;
 
 		/// <summary>
-		/// The entry point for the BepInEx plugin system, called on the very first LoadScene() from UnityEngine.
+		/// Initializes BepInEx to be able to start the chainloader.
 		/// </summary>
-		public static void Initialize()
+		public static void Initialize(string containerExePath, bool startConsole = true)
+		{
+			if (_initialized)
+				return;
+
+			//Set vitals
+			Paths.ExecutablePath = containerExePath;
+
+			//Start logging
+
+			if (startConsole)
+			{
+				ConsoleWindow.Attach();
+				
+				ConsoleEncoding.ConsoleCodePage = (uint)Encoding.UTF8.CodePage;
+				Console.OutputEncoding = Encoding.UTF8;
+			}
+			
+			UnityLogWriter unityLogWriter = new UnityLogWriter();
+
+			if (Preloader.PreloaderLog != null)
+				unityLogWriter.WriteToLog($"{Preloader.PreloaderLog}\r\n");
+
+			Logger.SetLogger(unityLogWriter);
+
+
+			_initialized = true;
+		}
+
+		/// <summary>
+		/// The entrypoint for the BepInEx plugin system.
+		/// </summary>
+		public static void Start()
 		{
 			if (_loaded)
 				return;
 
+			if (!_initialized)
+				throw new InvalidOperationException("BepInEx has not been initialized. Please call Chainloader.Initialize prior to starting the chainloader instance.");
+
 			if (!Directory.Exists(Paths.PluginPath))
 				Directory.CreateDirectory(Paths.PluginPath);
 
-			Preloader.AllocateConsole();
-
 			try
 			{
-				UnityLogWriter unityLogWriter = new UnityLogWriter();
-
-				if (Preloader.PreloaderLog != null)
-					unityLogWriter.WriteToLog($"{Preloader.PreloaderLog}\r\n");
-
-				Logger.SetLogger(unityLogWriter);
-
 				if (bool.Parse(Config.GetEntry("chainloader-log-unity-messages", "false", "BepInEx")))
 					UnityLogWriter.ListenUnityLogs();
 

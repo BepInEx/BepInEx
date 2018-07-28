@@ -226,27 +226,31 @@ namespace BepInEx.Bootstrap
 			string entrypointMethod = Config.GetEntry("entrypoint-method", ".cctor", "Preloader");
 
 			bool isCctor = entrypointMethod.IsNullOrWhiteSpace() || entrypointMethod == ".cctor";
+
+
+			var entryType = assembly.MainModule.Types.FirstOrDefault(x => x.Name == entrypointType);
+
+			if (entryType == null)
+			{
+				throw new Exception("The entrypoint type is invalid! Please check your config.ini");
+			}
 			
 			using (var injected = AssemblyDefinition.ReadAssembly(Paths.BepInExAssemblyPath))
 			{
-				var originalInjectMethod = injected.MainModule.Types.First(x => x.Name == "Chainloader").Methods
+				var originalInitMethod = injected.MainModule.Types.First(x => x.Name == "Chainloader").Methods
 					.First(x => x.Name == "Initialize");
 
-				var injectMethod = assembly.MainModule.ImportReference(originalInjectMethod);
+				var originalStartMethod = injected.MainModule.Types.First(x => x.Name == "Chainloader").Methods
+					.First(x => x.Name == "Start");
 
-
-				var entryType = assembly.MainModule.Types.FirstOrDefault(x => x.Name == entrypointType);
-
-				if (entryType == null)
-				{
-					throw new Exception("The entrypoint type is invalid! Please check your config.ini");
-				}
-
+				var initMethod = assembly.MainModule.ImportReference(originalInitMethod);
+				var startMethod = assembly.MainModule.ImportReference(originalStartMethod);
+				
+				List<MethodDefinition> methods = new List<MethodDefinition>();
 
 				if (isCctor)
 				{
 					MethodDefinition cctor = entryType.Methods.FirstOrDefault(m => m.IsConstructor && m.IsStatic);
-					ILProcessor il;
 
 					if (cctor == null)
 					{
@@ -256,29 +260,32 @@ namespace BepInEx.Bootstrap
 							assembly.MainModule.ImportReference(typeof(void)));
 
 						entryType.Methods.Add(cctor);
-						il = cctor.Body.GetILProcessor();
+						ILProcessor il = cctor.Body.GetILProcessor();
 						il.Append(il.Create(OpCodes.Ret));
 					}
 
-					Instruction ins = cctor.Body.Instructions.First();
-					il = cctor.Body.GetILProcessor();
-					il.InsertBefore(ins, il.Create(OpCodes.Call, injectMethod));
+					methods.Add(cctor);
 				}
 				else
 				{
-					List<MethodDefinition> methods = entryType.Methods.Where(x => x.Name == entrypointMethod).ToList();
+					methods.AddRange(entryType.Methods.Where(x => x.Name == entrypointMethod));
+				}
 
-					if (!methods.Any())
-					{
-						throw new Exception("The entrypoint method is invalid! Please check your config.ini");
-					}
+				if (!methods.Any())
+				{
+					throw new Exception("The entrypoint method is invalid! Please check your config.ini");
+				}
 
-					foreach (var method in methods)
-					{
-						var il = method.Body.GetILProcessor();
+				foreach (var method in methods)
+				{
+					var il = method.Body.GetILProcessor();
 
-						il.InsertBefore(method.Body.Instructions[0], il.Create(OpCodes.Call, injectMethod));
-					}
+					Instruction ins = il.Body.Instructions.First();
+						
+					il.InsertBefore(ins, il.Create(OpCodes.Ldstr, Paths.ExecutablePath)); //containerExePath
+					il.InsertBefore(ins, il.Create(OpCodes.Ldc_I4_0)); //startConsole (always false, we already load the console in Preloader)
+					il.InsertBefore(ins, il.Create(OpCodes.Call, initMethod)); //Chainloader.Initialize(string containerExePath, bool startConsole = true)
+					il.InsertBefore(ins, il.Create(OpCodes.Call, startMethod));
 				}
 			}
 		}
