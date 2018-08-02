@@ -298,24 +298,26 @@ namespace BepInEx.Bootstrap
 			bool console = Utility.SafeParseBool(Config.GetEntry("console", "false", "BepInEx"));
 			bool shiftjis = Utility.SafeParseBool(Config.GetEntry("console-shiftjis", "false", "BepInEx"));
 
-			if (console)
-				try
-				{
-					ConsoleWindow.Attach();
+			if (!console) 
+				return;
 
-					var encoding = (uint) Encoding.UTF8.CodePage;
+			try
+			{
+				ConsoleWindow.Attach();
 
-					if (shiftjis)
-						encoding = 932;
+				var encoding = (uint) Encoding.UTF8.CodePage;
 
-					ConsoleEncoding.ConsoleCodePage = encoding;
-					Console.OutputEncoding = ConsoleEncoding.GetEncoding(encoding);
-				}
-				catch (Exception ex)
-				{
-					Logger.Log(LogLevel.Error, "Failed to allocate console!");
-					Logger.Log(LogLevel.Error, ex);
-				}
+				if (shiftjis)
+					encoding = 932;
+
+				ConsoleEncoding.ConsoleCodePage = encoding;
+				Console.OutputEncoding = ConsoleEncoding.GetEncoding(encoding);
+			}
+			catch (Exception ex)
+			{
+				Logger.Log(LogLevel.Error, "Failed to allocate console!");
+				Logger.Log(LogLevel.Error, ex);
+			}
 		}
 
 		/// <summary>
