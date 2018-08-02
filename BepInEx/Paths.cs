@@ -30,7 +30,8 @@ namespace BepInEx
             internal set
             {
                 executablePath = value;
-                GameRootPath = Path.GetDirectoryName(executablePath);
+                ProcessName = Path.GetFileNameWithoutExtension(value);
+                GameRootPath = Path.GetDirectoryName(value);
                 ManagedPath = Utility.CombinePaths(GameRootPath, $"{ProcessName}_Data", "Managed");
                 PluginPath = Utility.CombinePaths(GameRootPath, "BepInEx");
                 PatcherPluginPath = Utility.CombinePaths(GameRootPath, "BepInEx", "patchers");
@@ -63,6 +64,6 @@ namespace BepInEx
         /// <summary>
         ///     The name of the currently executing process.
         /// </summary>
-        public static string ProcessName { get; } = Path.GetFileNameWithoutExtension(Process.GetCurrentProcess().ProcessName);
+        public static string ProcessName { get; private set; }
     }
 }
