@@ -12,9 +12,13 @@ Bepis Injector Extensible
 
 Unity plugin framework
 
+**[Latest releases](https://github.com/BepInEx/BepInEx/releases)**
+
+**[Bleeding Edge builds](http://bepisbuilds.dyn.mk/bepinex_be)**
+
 **[How to install](https://github.com/bbepis/BepInEx/wiki/How-to-install)**
 
-**[How to make a plugin](https://github.com/bbepis/BepInEx/wiki/How-to-make-a-plugin)**
+**[User and developer guides](https://github.com/BepInEx/BepInEx/wiki)**
 
 ## Credits
 - [Usagirei](https://github.com/Usagirei) - Color Correction plugin, code for using the console, unity scene dumper and for assisting with technical support
