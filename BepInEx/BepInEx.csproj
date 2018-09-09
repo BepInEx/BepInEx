@@ -36,6 +36,14 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'v2018|AnyCPU'">
+    <OutputPath>..\bin\</OutputPath>
+    <DefineConstants>TRACE;UNITY_2018</DefineConstants>
+    <Optimize>true</Optimize>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="0Harmony">
       <HintPath>..\lib\0Harmony.dll</HintPath>
@@ -51,6 +59,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Bootstrap\Entrypoint.cs" />
+    <Compile Include="Bootstrap\UnityPatches.cs" />
     <Compile Include="Contract\Attributes.cs" />
     <Compile Include="Bootstrap\AssemblyPatcher.cs" />
     <Compile Include="Bootstrap\Preloader.cs" />

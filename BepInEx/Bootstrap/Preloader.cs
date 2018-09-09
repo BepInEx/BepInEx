@@ -42,23 +42,25 @@ namespace BepInEx.Bootstrap
 
 		public static void Run()
 		{
-			try
-			{
-				AllocateConsole();
+		    try
+		    {
+		        AllocateConsole();
 
-				PreloaderLog =
-					new PreloaderLogWriter(Utility.SafeParseBool(Config.GetEntry("preloader-logconsole", "false", "BepInEx")));
-				PreloaderLog.Enabled = true;
+		        UnityPatches.Apply();
 
-				string consoleTile =
-					$"BepInEx {Assembly.GetExecutingAssembly().GetName().Version} - {Process.GetCurrentProcess().ProcessName}";
-				ConsoleWindow.Title = consoleTile;
+		        PreloaderLog = 
+		                new PreloaderLogWriter(Utility.SafeParseBool(Config.GetEntry("preloader-logconsole", "false", "BepInEx")));
+		        PreloaderLog.Enabled = true;
 
-				Logger.SetLogger(PreloaderLog);
+		        string consoleTile =
+		                $"BepInEx {Assembly.GetExecutingAssembly().GetName().Version} - {Process.GetCurrentProcess().ProcessName}";
+		        ConsoleWindow.Title = consoleTile;
 
-				PreloaderLog.WriteLine(consoleTile);
+		        Logger.SetLogger(PreloaderLog);
 
-				#if DEBUG
+		        PreloaderLog.WriteLine(consoleTile);
+
+#if DEBUG
 
 				object[] attributes = typeof(DebugInfoAttribute).Assembly.GetCustomAttributes(typeof(DebugInfoAttribute), false);
 				
@@ -69,59 +71,59 @@ namespace BepInEx.Bootstrap
 					PreloaderLog.WriteLine(attribute.Info);
 				}
 
-				#endif
+#endif
 
-				Logger.Log(LogLevel.Message, "Preloader started");
+		        Logger.Log(LogLevel.Message, "Preloader started");
 
-				string entrypointAssembly = Config.GetEntry("entrypoint-assembly", "UnityEngine.dll", "Preloader");
+		        string entrypointAssembly = Config.GetEntry("entrypoint-assembly", "UnityEngine.dll", "Preloader");
 
-				AddPatcher(new[] {entrypointAssembly}, PatchEntrypoint);
+		        AddPatcher(new[] {entrypointAssembly}, PatchEntrypoint);
 
-				if (Directory.Exists(Paths.PatcherPluginPath))
-				{
-					var sortedPatchers = new SortedDictionary<string, KeyValuePair<AssemblyPatcherDelegate, IEnumerable<string>>>();
+		        if (Directory.Exists(Paths.PatcherPluginPath))
+		        {
+		            var sortedPatchers = new SortedDictionary<string, KeyValuePair<AssemblyPatcherDelegate, IEnumerable<string>>>();
 
-					foreach (string assemblyPath in Directory.GetFiles(Paths.PatcherPluginPath, "*.dll"))
-						try
-						{
-							var assembly = Assembly.LoadFrom(assemblyPath);
+		            foreach (string assemblyPath in Directory.GetFiles(Paths.PatcherPluginPath, "*.dll"))
+		                try
+		                {
+		                    var assembly = Assembly.LoadFrom(assemblyPath);
 
-							foreach (KeyValuePair<AssemblyPatcherDelegate, IEnumerable<string>> kv in GetPatcherMethods(assembly))
-								sortedPatchers.Add(assembly.GetName().Name, kv);
-						}
-						catch (BadImageFormatException) { } //unmanaged DLL
-						catch (ReflectionTypeLoadException) { } //invalid references
+		                    foreach (KeyValuePair<AssemblyPatcherDelegate, IEnumerable<string>> kv in GetPatcherMethods(assembly))
+		                        sortedPatchers.Add(assembly.GetName().Name, kv);
+		                }
+		                catch (BadImageFormatException) { } //unmanaged DLL
+		                catch (ReflectionTypeLoadException) { } //invalid references
 
-					foreach (KeyValuePair<string, KeyValuePair<AssemblyPatcherDelegate, IEnumerable<string>>> kv in sortedPatchers)
-						AddPatcher(kv.Value.Value, kv.Value.Key);
-				}
+		            foreach (KeyValuePair<string, KeyValuePair<AssemblyPatcherDelegate, IEnumerable<string>>> kv in sortedPatchers)
+		                AddPatcher(kv.Value.Value, kv.Value.Key);
+		        }
 
-				AssemblyPatcher.PatchAll(Paths.ManagedPath, PatcherDictionary, Initializers, Finalizers);
-			}
-			catch (Exception ex)
-			{
-				Logger.Log(LogLevel.Fatal, "Could not run preloader!");
-				Logger.Log(LogLevel.Fatal, ex);
+		        AssemblyPatcher.PatchAll(Paths.ManagedPath, PatcherDictionary, Initializers, Finalizers);
+		    }
+		    catch (Exception ex)
+		    {
+		        Logger.Log(LogLevel.Fatal, "Could not run preloader!");
+		        Logger.Log(LogLevel.Fatal, ex);
 
-				PreloaderLog.Enabled = false;
+		        PreloaderLog.Enabled = false;
 
-				try
-				{
-					if (!ConsoleWindow.IsAttatched)
-					{
-						//if we've already attached the console, then the log will already be written to the console
-						AllocateConsole();
-						Console.Write(PreloaderLog);
-					}
-				}
-				finally
-				{
-					File.WriteAllText(Path.Combine(Paths.GameRootPath, $"preloader_{DateTime.Now:yyyyMMdd_HHmmss_fff}.log"),
-						PreloaderLog.ToString());
+		        try
+		        {
+		            if (!ConsoleWindow.IsAttatched)
+		            {
+		                //if we've already attached the console, then the log will already be written to the console
+		                AllocateConsole();
+		                Console.Write(PreloaderLog);
+		            }
+		        }
+		        finally
+		        {
+		            File.WriteAllText(Path.Combine(Paths.GameRootPath, $"preloader_{DateTime.Now:yyyyMMdd_HHmmss_fff}.log"),
+		                              PreloaderLog.ToString());
 
-					PreloaderLog.Dispose();
-				}
-			}
+		            PreloaderLog.Dispose();
+		        }
+		    }
 		}
 
 		/// <summary>

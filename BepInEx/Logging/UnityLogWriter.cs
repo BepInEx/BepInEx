@@ -17,7 +17,11 @@ namespace BepInEx.Logging
 		/// <param name="value">The value to write.</param>
         public void WriteToLog(string value)
         {
+#if UNITY_2018
+            UnityEngine.UnityLogWriter.WriteStringToUnityLogImpl(value);
+#else
             UnityEngine.UnityLogWriter.WriteStringToUnityLog(value);
+#endif
         }
 
         protected void InternalWrite(string value)
@@ -94,6 +98,11 @@ namespace UnityEngine
 {
     internal sealed class UnityLogWriter
     {
+#if UNITY_2018
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern void WriteStringToUnityLogImpl(string s);
+#endif
+
         [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern void WriteStringToUnityLog(string s);
     }
