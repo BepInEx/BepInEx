@@ -77,7 +77,7 @@ namespace BepInEx.Logging
                     break;
                 case LogType.Log:
                 default:
-                    logLevel = LogLevel.Message;
+                    logLevel = LogLevel.Info;
                     break;
             }
 
