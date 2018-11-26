@@ -61,6 +61,14 @@ namespace BepInEx.Bootstrap
                         sb.AppendLine(exFileNotFound.FusionLog);
                     }
                 }
+                else if (exSub is FileLoadException exLoad)
+                {
+                    if (!string.IsNullOrEmpty(exLoad.FusionLog))
+                    {
+                        sb.AppendLine("Fusion Log:");
+                        sb.AppendLine(exLoad.FusionLog);
+                    }
+                }
                 sb.AppendLine();
             }
             return sb.ToString();
