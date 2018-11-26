@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Text;
 using BepInEx.Logging;
 
 namespace BepInEx.Bootstrap
@@ -36,13 +37,41 @@ namespace BepInEx.Bootstrap
                     }
                 }
                 catch (BadImageFormatException) { } //unmanaged DLL
-                catch (ReflectionTypeLoadException)
+                catch (ReflectionTypeLoadException ex)
                 {
                     Logger.Log(LogLevel.Error, $"Could not load \"{Path.GetFileName(dll)}\" as a plugin!");
+                    Logger.Log(LogLevel.Debug, TypeLoadExceptionToString(ex));
                 }
             }
 
             return types;
+        }
+
+        private static string TypeLoadExceptionToString(ReflectionTypeLoadException ex)
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (Exception exSub in ex.LoaderExceptions)
+            {
+                sb.AppendLine(exSub.Message);
+                if (exSub is FileNotFoundException exFileNotFound)
+                {
+                    if (!string.IsNullOrEmpty(exFileNotFound.FusionLog))
+                    {
+                        sb.AppendLine("Fusion Log:");
+                        sb.AppendLine(exFileNotFound.FusionLog);
+                    }
+                }
+                else if (exSub is FileLoadException exLoad)
+                {
+                    if (!string.IsNullOrEmpty(exLoad.FusionLog))
+                    {
+                        sb.AppendLine("Fusion Log:");
+                        sb.AppendLine(exLoad.FusionLog);
+                    }
+                }
+                sb.AppendLine();
+            }
+            return sb.ToString();
         }
     }
 }
