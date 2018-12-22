@@ -87,7 +87,14 @@ namespace BepInEx.Bootstrap
 							var assembly = Assembly.LoadFrom(assemblyPath);
 
 							foreach (KeyValuePair<string, KeyValuePair<AssemblyPatcherDelegate, IEnumerable<string>>> kv in GetPatcherMethods(assembly))
-								sortedPatchers.Add(kv.Key, kv.Value);
+							    try
+							    {
+							        sortedPatchers.Add(kv.Key, kv.Value);
+							    }
+							    catch (ArgumentException)
+							    {
+                                    Logger.Log(LogLevel.Warning, $"Found duplicate of patcher {kv.Key}!");
+							    }
 						}
 						catch (BadImageFormatException) { } //unmanaged DLL
 						catch (ReflectionTypeLoadException) { } //invalid references
