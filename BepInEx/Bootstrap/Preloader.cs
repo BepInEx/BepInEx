@@ -86,8 +86,15 @@ namespace BepInEx.Bootstrap
 						{
 							var assembly = Assembly.LoadFrom(assemblyPath);
 
-							foreach (KeyValuePair<AssemblyPatcherDelegate, IEnumerable<string>> kv in GetPatcherMethods(assembly))
-								sortedPatchers.Add(assembly.GetName().Name, kv);
+							foreach (KeyValuePair<string, KeyValuePair<AssemblyPatcherDelegate, IEnumerable<string>>> kv in GetPatcherMethods(assembly))
+							    try
+							    {
+							        sortedPatchers.Add(kv.Key, kv.Value);
+							    }
+							    catch (ArgumentException)
+							    {
+                                    Logger.Log(LogLevel.Warning, $"Found duplicate of patcher {kv.Key}!");
+							    }
 						}
 						catch (BadImageFormatException) { } //unmanaged DLL
 						catch (ReflectionTypeLoadException) { } //invalid references
@@ -129,9 +136,9 @@ namespace BepInEx.Bootstrap
 		/// </summary>
 		/// <param name="assembly">The assembly to scan.</param>
 		/// <returns>A dictionary of delegates which will be used to patch the targeted assemblies.</returns>
-		public static Dictionary<AssemblyPatcherDelegate, IEnumerable<string>> GetPatcherMethods(Assembly assembly)
+		public static Dictionary<string, KeyValuePair<AssemblyPatcherDelegate, IEnumerable<string>>> GetPatcherMethods(Assembly assembly)
 		{
-			var patcherMethods = new Dictionary<AssemblyPatcherDelegate, IEnumerable<string>>();
+			var patcherMethods = new Dictionary<string, KeyValuePair<AssemblyPatcherDelegate, IEnumerable<string>>>();
 
 			foreach (var type in assembly.GetExportedTypes())
 				try
@@ -177,7 +184,7 @@ namespace BepInEx.Bootstrap
 
 					var targets = (IEnumerable<string>) targetsProperty.GetValue(null, null);
 
-					patcherMethods[patchDelegate] = targets;
+					patcherMethods[$"{assembly.GetName().Name}{type.FullName}"] = new KeyValuePair<AssemblyPatcherDelegate, IEnumerable<string>>(patchDelegate, targets);
 
 					var initMethod = type.GetMethod("Initialize",
 						BindingFlags.Public | BindingFlags.Static | BindingFlags.IgnoreCase,
