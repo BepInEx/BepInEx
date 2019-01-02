@@ -11,17 +11,38 @@ namespace BepInEx.Logging
 	/// </summary>
     public class UnityLogWriter : BaseLogger
     {
-		/// <summary>
-		/// Writes a string specifically to the game output log.
-		/// </summary>
-		/// <param name="value">The value to write.</param>
+        private delegate void WriteStringToUnityLogDelegate(string s);
+
+        private static readonly WriteStringToUnityLogDelegate WriteStringToUnityLog;
+
+        static UnityLogWriter()
+        {
+            Type logWriter = typeof(UnityEngine.Logger).Assembly.GetType("UnityEngine.UnityLogWriter");
+
+            MethodInfo writeLog = logWriter.GetMethod("WriteStringToUnityLog",
+                BindingFlags.Static
+                | BindingFlags.Public
+                | BindingFlags.NonPublic);
+            if (writeLog == null)
+            {
+                writeLog = logWriter.GetMethod("WriteStringToUnityLogImpl",
+                    BindingFlags.Static
+                    | BindingFlags.Public
+                    | BindingFlags.NonPublic);
+                if (writeLog == null)
+                    return;
+            }
+
+            WriteStringToUnityLog = (WriteStringToUnityLogDelegate)Delegate.CreateDelegate(typeof(WriteStringToUnityLogDelegate), writeLog);
+        }
+
+        /// <summary>
+        /// Writes a string specifically to the game output log.
+        /// </summary>
+        /// <param name="value">The value to write.</param>
         public void WriteToLog(string value)
         {
-#if UNITY_2018
-            UnityEngine.UnityLogWriter.WriteStringToUnityLogImpl(value);
-#else
-            UnityEngine.UnityLogWriter.WriteStringToUnityLog(value);
-#endif
+            WriteStringToUnityLog?.Invoke(value);
         }
 
         protected void InternalWrite(string value)
@@ -91,19 +112,5 @@ namespace BepInEx.Logging
                 Logger.Log(logLevel, $"Stack trace:\n{stackTrace}");
             }
         }
-    }
-}
-
-namespace UnityEngine
-{
-    internal sealed class UnityLogWriter
-    {
-#if UNITY_2018
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        public static extern void WriteStringToUnityLogImpl(string s);
-#endif
-
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        public static extern void WriteStringToUnityLog(string s);
     }
 }

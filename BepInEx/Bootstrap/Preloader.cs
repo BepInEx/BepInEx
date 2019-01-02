@@ -13,10 +13,10 @@ using MethodAttributes = Mono.Cecil.MethodAttributes;
 
 namespace BepInEx.Bootstrap
 {
-	/// <summary>
-	///     The main entrypoint of BepInEx, and initializes all patchers and the chainloader.
-	/// </summary>
-	internal static class Preloader
+    /// <summary>
+    ///     The main entrypoint of BepInEx, and initializes all patchers and the chainloader.
+    /// </summary>
+    internal static class Preloader
 	{
 		/// <summary>
 		///     The list of finalizers that were loaded from the patcher contract.
