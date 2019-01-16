@@ -1,13 +1,16 @@
 ﻿using System;
+using BepInEx.Harmony;
 using Harmony;
 
 namespace BepInEx.Bootstrap
 {
     internal static class UnityPatches
-    {
-        public static void Apply()
+	{
+		public static HarmonyInstance HarmonyInstance { get; } = HarmonyInstance.Create("com.bepinex.unitypatches");
+
+		public static void Apply()
         {
-            HarmonyInstance.Create("com.bepinex.unitypatches").PatchAll(typeof(UnityPatches));
+            HarmonyWrapper.PatchAll(typeof(UnityPatches), HarmonyInstance);
         }
 
 #if UNITY_2018
@@ -15,9 +18,7 @@ namespace BepInEx.Bootstrap
          * DESC: Workaround for Trace class not working because of missing .config file
          * AFFECTS: Unity 2018+
          */
-        [HarmonyPatch(typeof(AppDomain))]
-        [HarmonyPatch(nameof(AppDomain.SetupInformation), PropertyMethod.Getter)]
-        [HarmonyPostfix]
+        [HarmonyPostfix, HarmonyPatch(typeof(AppDomain), nameof(AppDomain.SetupInformation), MethodType.Getter)]
         public static void GetExeConfigName(AppDomainSetup __result)
         {
             __result.ApplicationBase = $"file://{Paths.GameRootPath}";

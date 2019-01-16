@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using BepInEx.Harmony;
 using Harmony;
 using Mono.Cecil;
 
@@ -133,26 +134,24 @@ namespace BepInEx.Bootstrap
     }
 
     internal static class PatchedAssemblyResolver
-    {
-        public static Dictionary<string, string> AssemblyLocations { get; } = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+	{
+		public static HarmonyInstance HarmonyInstance { get; } = HarmonyInstance.Create("com.bepis.bepinex.asmlocationfix");
+		
+		public static Dictionary<string, string> AssemblyLocations { get; } = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
 
         public static void ApplyPatch()
         {
-            HarmonyInstance.Create("com.bepis.bepinex.asmlocationfix").PatchAll(typeof(PatchedAssemblyResolver));
+			HarmonyWrapper.PatchAll(typeof(PatchedAssemblyResolver), HarmonyInstance);
         }
 
-        [HarmonyPatch(typeof(Assembly))]
-        [HarmonyPatch(nameof(Assembly.Location), PropertyMethod.Getter)]
-        [HarmonyPostfix]
+        [HarmonyPostfix, HarmonyPatch(typeof(Assembly), nameof(Assembly.Location), MethodType.Getter)]
         public static void GetLocation(ref string __result, Assembly __instance)
         {
             if (AssemblyLocations.TryGetValue(__instance.FullName, out string location))
                 __result = location;
         }
 
-        [HarmonyPatch(typeof(Assembly))]
-        [HarmonyPatch(nameof(Assembly.CodeBase), PropertyMethod.Getter)]
-        [HarmonyPostfix]
+		[HarmonyPostfix, HarmonyPatch(typeof(Assembly), nameof(Assembly.CodeBase), MethodType.Getter)]
         public static void GetCodeBase(ref string __result, Assembly __instance)
         {
             if (AssemblyLocations.TryGetValue(__instance.FullName, out string location))
