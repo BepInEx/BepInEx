@@ -73,57 +73,64 @@ namespace BepInEx.Bootstrap
 
 #endif
 
-		        Logger.Log(LogLevel.Message, "Preloader started");
+				Logger.Log(LogLevel.Message, "Preloader started");
 
-		        string entrypointAssembly = Config.GetEntry("entrypoint-assembly", "UnityEngine.dll", "Preloader");
+				string entrypointAssembly = Config.GetEntry("entrypoint-assembly", "UnityEngine.dll", "Preloader");
 
-		        AddPatcher(new[] {entrypointAssembly}, PatchEntrypoint);
+				AddPatcher(new[] {entrypointAssembly}, PatchEntrypoint);
 
-		        if (Directory.Exists(Paths.PatcherPluginPath))
-		        {
-		            var sortedPatchers = new SortedDictionary<string, KeyValuePair<AssemblyPatcherDelegate, IEnumerable<string>>>();
+				if (Directory.Exists(Paths.PatcherPluginPath))
+				{
+					var sortedPatchers = new SortedDictionary<string, KeyValuePair<AssemblyPatcherDelegate, IEnumerable<string>>>();
 
-		            foreach (string assemblyPath in Directory.GetFiles(Paths.PatcherPluginPath, "*.dll"))
-		                try
-		                {
-		                    var assembly = Assembly.LoadFrom(assemblyPath);
+					foreach (string assemblyPath in Directory.GetFiles(Paths.PatcherPluginPath, "*.dll"))
+						try
+						{
+							var assembly = Assembly.LoadFrom(assemblyPath);
 
-		                    foreach (KeyValuePair<AssemblyPatcherDelegate, IEnumerable<string>> kv in GetPatcherMethods(assembly))
-		                        sortedPatchers.Add(assembly.GetName().Name, kv);
-		                }
-		                catch (BadImageFormatException) { } //unmanaged DLL
-		                catch (ReflectionTypeLoadException) { } //invalid references
+							foreach (KeyValuePair<string, KeyValuePair<AssemblyPatcherDelegate, IEnumerable<string>>> kv in GetPatcherMethods(assembly))
+							    try
+							    {
+							        sortedPatchers.Add(kv.Key, kv.Value);
+							    }
+							    catch (ArgumentException)
+							    {
+                                    Logger.Log(LogLevel.Warning, $"Found duplicate of patcher {kv.Key}!");
+							    }
+						}
+						catch (BadImageFormatException) { } //unmanaged DLL
+						catch (ReflectionTypeLoadException) { } //invalid references
 
-		            foreach (KeyValuePair<string, KeyValuePair<AssemblyPatcherDelegate, IEnumerable<string>>> kv in sortedPatchers)
-		                AddPatcher(kv.Value.Value, kv.Value.Key);
-		        }
+					foreach (KeyValuePair<string, KeyValuePair<AssemblyPatcherDelegate, IEnumerable<string>>> kv in sortedPatchers)
+						AddPatcher(kv.Value.Value, kv.Value.Key);
+				}
 
-		        AssemblyPatcher.PatchAll(Paths.ManagedPath, PatcherDictionary, Initializers, Finalizers);
-		    }
-		    catch (Exception ex)
-		    {
-		        Logger.Log(LogLevel.Fatal, "Could not run preloader!");
-		        Logger.Log(LogLevel.Fatal, ex);
+				AssemblyPatcher.PatchAll(Paths.ManagedPath, PatcherDictionary, Initializers, Finalizers);
+			}
+			catch (Exception ex)
+			{
+				Logger.Log(LogLevel.Fatal, "Could not run preloader!");
+				Logger.Log(LogLevel.Fatal, ex);
 
-		        PreloaderLog.Enabled = false;
+				PreloaderLog.Enabled = false;
 
-		        try
-		        {
-		            if (!ConsoleWindow.IsAttatched)
-		            {
-		                //if we've already attached the console, then the log will already be written to the console
-		                AllocateConsole();
-		                Console.Write(PreloaderLog);
-		            }
-		        }
-		        finally
-		        {
-		            File.WriteAllText(Path.Combine(Paths.GameRootPath, $"preloader_{DateTime.Now:yyyyMMdd_HHmmss_fff}.log"),
-		                              PreloaderLog.ToString());
+				try
+				{
+					if (!ConsoleWindow.IsAttatched)
+					{
+						//if we've already attached the console, then the log will already be written to the console
+						AllocateConsole();
+						Console.Write(PreloaderLog);
+					}
+				}
+				finally
+				{
+					File.WriteAllText(Path.Combine(Paths.GameRootPath, $"preloader_{DateTime.Now:yyyyMMdd_HHmmss_fff}.log"),
+						PreloaderLog.ToString());
 
-		            PreloaderLog.Dispose();
-		        }
-		    }
+					PreloaderLog.Dispose();
+				}
+			}
 		}
 
 		/// <summary>
@@ -131,9 +138,9 @@ namespace BepInEx.Bootstrap
 		/// </summary>
 		/// <param name="assembly">The assembly to scan.</param>
 		/// <returns>A dictionary of delegates which will be used to patch the targeted assemblies.</returns>
-		public static Dictionary<AssemblyPatcherDelegate, IEnumerable<string>> GetPatcherMethods(Assembly assembly)
+		public static Dictionary<string, KeyValuePair<AssemblyPatcherDelegate, IEnumerable<string>>> GetPatcherMethods(Assembly assembly)
 		{
-			var patcherMethods = new Dictionary<AssemblyPatcherDelegate, IEnumerable<string>>();
+			var patcherMethods = new Dictionary<string, KeyValuePair<AssemblyPatcherDelegate, IEnumerable<string>>>();
 
 			foreach (var type in assembly.GetExportedTypes())
 				try
@@ -179,7 +186,7 @@ namespace BepInEx.Bootstrap
 
 					var targets = (IEnumerable<string>) targetsProperty.GetValue(null, null);
 
-					patcherMethods[patchDelegate] = targets;
+					patcherMethods[$"{assembly.GetName().Name}{type.FullName}"] = new KeyValuePair<AssemblyPatcherDelegate, IEnumerable<string>>(patchDelegate, targets);
 
 					var initMethod = type.GetMethod("Initialize",
 						BindingFlags.Public | BindingFlags.Static | BindingFlags.IgnoreCase,

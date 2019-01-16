@@ -61,6 +61,10 @@ namespace BepInEx.Logging
             Kon.ForegroundColor = level.GetConsoleColor();
             base.Log(level, entry);
             Kon.ForegroundColor = ConsoleColor.Gray;
+
+            // If the display level got ignored, still write it to the log
+            if ((DisplayedLevels & level) == LogLevel.None)
+                WriteToLog($"[{level.GetHighestLevel()}] {entry}\r\n");
         }
 
         public override void WriteLine(string value) => InternalWrite($"{value}\r\n");
@@ -102,7 +106,7 @@ namespace BepInEx.Logging
                     break;
                 case LogType.Log:
                 default:
-                    logLevel = LogLevel.Message;
+                    logLevel = LogLevel.Info;
                     break;
             }
 
