@@ -13,10 +13,10 @@ using MethodAttributes = Mono.Cecil.MethodAttributes;
 
 namespace BepInEx.Bootstrap
 {
-	/// <summary>
-	///     The main entrypoint of BepInEx, and initializes all patchers and the chainloader.
-	/// </summary>
-	internal static class Preloader
+    /// <summary>
+    ///     The main entrypoint of BepInEx, and initializes all patchers and the chainloader.
+    /// </summary>
+    internal static class Preloader
 	{
 		/// <summary>
 		///     The list of finalizers that were loaded from the patcher contract.
@@ -42,23 +42,25 @@ namespace BepInEx.Bootstrap
 
 		public static void Run()
 		{
-			try
-			{
-				AllocateConsole();
+		    try
+		    {
+		        AllocateConsole();
 
-				PreloaderLog =
-					new PreloaderLogWriter(Utility.SafeParseBool(Config.GetEntry("preloader-logconsole", "false", "BepInEx")));
-				PreloaderLog.Enabled = true;
+		        UnityPatches.Apply();
 
-				string consoleTile =
-					$"BepInEx {Assembly.GetExecutingAssembly().GetName().Version} - {Process.GetCurrentProcess().ProcessName}";
-				ConsoleWindow.Title = consoleTile;
+		        PreloaderLog = 
+		                new PreloaderLogWriter(Utility.SafeParseBool(Config.GetEntry("preloader-logconsole", "false", "BepInEx")));
+		        PreloaderLog.Enabled = true;
 
-				Logger.SetLogger(PreloaderLog);
+		        string consoleTile =
+		                $"BepInEx {Assembly.GetExecutingAssembly().GetName().Version} - {Process.GetCurrentProcess().ProcessName}";
+		        ConsoleWindow.Title = consoleTile;
 
-				PreloaderLog.WriteLine(consoleTile);
+		        Logger.SetLogger(PreloaderLog);
 
-				#if DEBUG
+		        PreloaderLog.WriteLine(consoleTile);
+
+#if DEBUG
 
 				object[] attributes = typeof(DebugInfoAttribute).Assembly.GetCustomAttributes(typeof(DebugInfoAttribute), false);
 				
@@ -69,7 +71,7 @@ namespace BepInEx.Bootstrap
 					PreloaderLog.WriteLine(attribute.Info);
 				}
 
-				#endif
+#endif
 
 				Logger.Log(LogLevel.Message, "Preloader started");
 
