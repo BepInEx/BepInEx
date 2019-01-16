@@ -17,7 +17,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Submodules", "Submodules", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BepInEx.Harmony", "submodules\BepInEx.Harmony\BepInEx.Harmony\BepInEx.Harmony.csproj", "{54161CFE-FF42-4DDE-B161-3A49545DB5CD}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Harmony", "..\BepInEx.Harmony\submodules\Harmony\Harmony\Harmony.csproj", "{A15D6EE6-F954-415B-8605-8A8470CC87DC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Harmony", "submodules\BepInEx.Harmony\submodules\Harmony\Harmony\Harmony.csproj", "{A15D6EE6-F954-415B-8605-8A8470CC87DC}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Patcher", "Patcher", "{A9071994-3533-4C1B-89DC-D817B676AB41}"
 EndProject
