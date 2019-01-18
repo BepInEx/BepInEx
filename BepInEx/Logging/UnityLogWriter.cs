@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using BepInEx.ConsoleUtil;
 using UnityEngine;
 
@@ -15,25 +16,19 @@ namespace BepInEx.Logging
 
         private static readonly WriteStringToUnityLogDelegate WriteStringToUnityLog;
 
+        [DllImport("mono.dll", EntryPoint = "mono_lookup_internal_call")]
+        private static extern IntPtr MonoLookupInternalCall(IntPtr gconstpointer);
+
         static UnityLogWriter()
         {
-            Type logWriter = typeof(UnityEngine.Logger).Assembly.GetType("UnityEngine.UnityLogWriter");
-
-            MethodInfo writeLog = logWriter.GetMethod("WriteStringToUnityLog",
-                BindingFlags.Static
-                | BindingFlags.Public
-                | BindingFlags.NonPublic);
-            if (writeLog == null)
+            foreach (MethodInfo methodInfo in typeof(UnityEngine.UnityLogWriter).GetMethods(BindingFlags.Static | BindingFlags.Public))
             {
-                writeLog = logWriter.GetMethod("WriteStringToUnityLogImpl",
-                    BindingFlags.Static
-                    | BindingFlags.Public
-                    | BindingFlags.NonPublic);
-                if (writeLog == null)
-                    return;
-            }
+                if (MonoLookupInternalCall(methodInfo.MethodHandle.Value) == IntPtr.Zero)
+                    continue;
 
-            WriteStringToUnityLog = (WriteStringToUnityLogDelegate)Delegate.CreateDelegate(typeof(WriteStringToUnityLogDelegate), writeLog);
+                WriteStringToUnityLog = (WriteStringToUnityLogDelegate) Delegate.CreateDelegate(typeof(WriteStringToUnityLogDelegate), methodInfo);
+                break;
+            }
         }
 
         /// <summary>
@@ -116,5 +111,17 @@ namespace BepInEx.Logging
                 Logger.Log(logLevel, $"Stack trace:\n{stackTrace}");
             }
         }
+    }
+}
+
+namespace UnityEngine
+{
+    internal sealed class UnityLogWriter
+    {
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern void WriteStringToUnityLogImpl(string s);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern void WriteStringToUnityLog(string s);
     }
 }
