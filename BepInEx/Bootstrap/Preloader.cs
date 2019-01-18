@@ -92,10 +92,10 @@ namespace BepInEx.Bootstrap
 		}
 
 		/// <summary>
-		///     Scans the assembly for classes that use the patcher contract, and returns a dictionary of the patch methods.
+		///     Scans the assembly for classes that use the patcher contract, and returns a list of valid patchers.
 		/// </summary>
 		/// <param name="assembly">The assembly to scan.</param>
-		/// <returns>A dictionary of delegates which will be used to patch the targeted assemblies.</returns>
+		/// <returns>A list of assembly patchers that were found in the assembly.</returns>
 		public static List<AssemblyPatcher> GetPatcherMethods(Assembly assembly)
 		{
 			var patcherMethods = new List<AssemblyPatcher>();

@@ -15,12 +15,34 @@ namespace BepInEx.Bootstrap
     /// <param name="assembly">The assembly that is being patched.</param>
     public delegate void AssemblyPatcherDelegate(ref AssemblyDefinition assembly);
 
+    /// <summary>
+    /// A single assembly patcher.
+    /// </summary>
     public class AssemblyPatcher
     {
+        /// <summary>
+        /// Target assemblies to patch.
+        /// </summary>
         public IEnumerable<string> TargetDLLs { get; set; } = null;
+
+        /// <summary>
+        /// Initializer method that is run before any patching occurs.
+        /// </summary>
         public Action Initializer { get; set; } = null;
+
+        /// <summary>
+        /// Finalizer method that is run after all patching is done.
+        /// </summary>
         public Action Finalizer { get; set; } = null;
+
+        /// <summary>
+        /// The main patcher method that is called on every DLL defined in <see cref="TargetDLLs"/>.
+        /// </summary>
         public AssemblyPatcherDelegate Patcher { get; set; } = null;
+
+        /// <summary>
+        /// Name of the patcher.
+        /// </summary>
         public string Name { get; set; } = string.Empty;
     }
 
@@ -36,11 +58,20 @@ namespace BepInEx.Bootstrap
         /// </summary>
         private static bool DumpingEnabled => Utility.SafeParseBool(Config.GetEntry("dump-assemblies", "false", "Preloader"));
 
+        /// <summary>
+        /// Adds a single assembly patcher to the pool of applicable patches.
+        /// </summary>
+        /// <param name="patcher">Patcher to apply.</param>
         public static void AddPatcher(AssemblyPatcher patcher)
         {
             patchers.Add(patcher);
         }
 
+        /// <summary>
+        /// Adds all patchers from all managed assemblies specified in a directory.
+        /// </summary>
+        /// <param name="directory">Directory to search patcher DLLs from.</param>
+        /// <param name="patcherLocator">A function that locates assembly patchers in a given managed assembly.</param>
         public static void AddPatchersFromDirectory(string directory, Func<Assembly, List<AssemblyPatcher>> patcherLocator)
         {
             if (!Directory.Exists(directory))
@@ -75,11 +106,18 @@ namespace BepInEx.Bootstrap
                 assemblyPatcher.Finalizer?.Invoke();
         }
 
+        /// <summary>
+        /// Releases all patchers to let them be collected by GC.
+        /// </summary>
         public static void DisposePatchers()
         {
             patchers.Clear();
         }
 
+        /// <summary>
+        /// Applies patchers to all assemblies in the given directory and loads patched assemblies into memory.
+        /// </summary>
+        /// <param name="directory">Directory to load CLR assemblies from.</param>
         public static void PatchAndLoad(string directory)
         {
 
