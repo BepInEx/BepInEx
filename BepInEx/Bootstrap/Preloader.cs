@@ -19,23 +19,6 @@ namespace BepInEx.Bootstrap
     internal static class Preloader
 	{
 		/// <summary>
-		///     The list of finalizers that were loaded from the patcher contract.
-		/// </summary>
-		public static List<Action> Finalizers { get; } = new List<Action>();
-
-		/// <summary>
-		///     The list of initializers that were loaded from the patcher contract.
-		/// </summary>
-		public static List<Action> Initializers { get; } = new List<Action>();
-
-		/// <summary>
-		///     The dictionary of currently loaded patchers. The key is the patcher delegate that will be used to patch, and the
-		///     value is a list of filenames of assemblies that the patcher is targeting.
-		/// </summary>
-		public static Dictionary<AssemblyPatcherDelegate, IEnumerable<string>> PatcherDictionary { get; } =
-			new Dictionary<AssemblyPatcherDelegate, IEnumerable<string>>();
-
-		/// <summary>
 		///     The log writer that is specific to the preloader.
 		/// </summary>
 		public static PreloaderLogWriter PreloaderLog { get; private set; }
@@ -61,7 +44,6 @@ namespace BepInEx.Bootstrap
 		        PreloaderLog.WriteLine(consoleTile);
 
 #if DEBUG
-
 				object[] attributes = typeof(DebugInfoAttribute).Assembly.GetCustomAttributes(typeof(DebugInfoAttribute), false);
 				
 				if (attributes.Length > 0)
@@ -70,42 +52,18 @@ namespace BepInEx.Bootstrap
 
 					PreloaderLog.WriteLine(attribute.Info);
 				}
-
 #endif
 
 				Logger.Log(LogLevel.Message, "Preloader started");
 
 				string entrypointAssembly = Config.GetEntry("entrypoint-assembly", "UnityEngine.dll", "Preloader");
 
-				AddPatcher(new[] {entrypointAssembly}, PatchEntrypoint);
+                AssemblyPatcherLoader.AddPatcher(new AssemblyPatcher { TargetDLLs = new []{ entrypointAssembly }, Patcher = PatchEntrypoint});
+                AssemblyPatcherLoader.AddPatchersFromDirectory(Paths.PatcherPluginPath, GetPatcherMethods);
 
-				if (Directory.Exists(Paths.PatcherPluginPath))
-				{
-					var sortedPatchers = new SortedDictionary<string, KeyValuePair<AssemblyPatcherDelegate, IEnumerable<string>>>();
+		        AssemblyPatcherLoader.PatchAndLoad(Paths.ManagedPath);
 
-					foreach (string assemblyPath in Directory.GetFiles(Paths.PatcherPluginPath, "*.dll"))
-						try
-						{
-							var assembly = Assembly.LoadFrom(assemblyPath);
-
-							foreach (KeyValuePair<string, KeyValuePair<AssemblyPatcherDelegate, IEnumerable<string>>> kv in GetPatcherMethods(assembly))
-							    try
-							    {
-							        sortedPatchers.Add(kv.Key, kv.Value);
-							    }
-							    catch (ArgumentException)
-							    {
-                                    Logger.Log(LogLevel.Warning, $"Found duplicate of patcher {kv.Key}!");
-							    }
-						}
-						catch (BadImageFormatException) { } //unmanaged DLL
-						catch (ReflectionTypeLoadException) { } //invalid references
-
-					foreach (KeyValuePair<string, KeyValuePair<AssemblyPatcherDelegate, IEnumerable<string>>> kv in sortedPatchers)
-						AddPatcher(kv.Value.Value, kv.Value.Key);
-				}
-
-				AssemblyPatcherLoader.PatchAll(Paths.ManagedPath, PatcherDictionary, Initializers, Finalizers);
+		        AssemblyPatcherLoader.DisposePatchers();
 			}
 			catch (Exception ex)
 			{
@@ -138,18 +96,19 @@ namespace BepInEx.Bootstrap
 		/// </summary>
 		/// <param name="assembly">The assembly to scan.</param>
 		/// <returns>A dictionary of delegates which will be used to patch the targeted assemblies.</returns>
-		public static Dictionary<string, KeyValuePair<AssemblyPatcherDelegate, IEnumerable<string>>> GetPatcherMethods(Assembly assembly)
+		public static List<AssemblyPatcher> GetPatcherMethods(Assembly assembly)
 		{
-			var patcherMethods = new Dictionary<string, KeyValuePair<AssemblyPatcherDelegate, IEnumerable<string>>>();
+			var patcherMethods = new List<AssemblyPatcher>();
+		    var flags = BindingFlags.Public | BindingFlags.Static | BindingFlags.IgnoreCase;
 
-			foreach (var type in assembly.GetExportedTypes())
+            foreach (var type in assembly.GetExportedTypes())
 				try
 				{
 					if (type.IsInterface)
 						continue;
 
 					var targetsProperty = type.GetProperty("TargetDLLs",
-						BindingFlags.Public | BindingFlags.Static | BindingFlags.IgnoreCase,
+					    flags,
 						null,
 						typeof(IEnumerable<string>),
 						Type.EmptyTypes,
@@ -157,7 +116,7 @@ namespace BepInEx.Bootstrap
 
 					//first try get the ref patcher method
 					var patcher = type.GetMethod("Patch",
-						BindingFlags.Public | BindingFlags.Static | BindingFlags.IgnoreCase,
+					    flags,
 						null,
 						CallingConventions.Any,
 						new[] {typeof(AssemblyDefinition).MakeByRefType()},
@@ -165,7 +124,7 @@ namespace BepInEx.Bootstrap
 
 					if (patcher == null) //otherwise try getting the non-ref patcher method
 						patcher = type.GetMethod("Patch",
-							BindingFlags.Public | BindingFlags.Static | BindingFlags.IgnoreCase,
+						    flags,
 							null,
 							CallingConventions.Any,
 							new[] {typeof(AssemblyDefinition)},
@@ -174,7 +133,10 @@ namespace BepInEx.Bootstrap
 					if (targetsProperty == null || !targetsProperty.CanRead || patcher == null)
 						continue;
 
-					AssemblyPatcherDelegate patchDelegate = (ref AssemblyDefinition ass) =>
+                    var assemblyPatcher = new AssemblyPatcher();
+
+				    assemblyPatcher.Name = $"{assembly.GetName().Name}{type.FullName}";
+                    assemblyPatcher.Patcher = (ref AssemblyDefinition ass) =>
 					{
 						//we do the array fuckery here to get the ref result out
 						object[] args = {ass};
@@ -184,29 +146,28 @@ namespace BepInEx.Bootstrap
 						ass = (AssemblyDefinition) args[0];
 					};
 
-					var targets = (IEnumerable<string>) targetsProperty.GetValue(null, null);
-
-					patcherMethods[$"{assembly.GetName().Name}{type.FullName}"] = new KeyValuePair<AssemblyPatcherDelegate, IEnumerable<string>>(patchDelegate, targets);
+					assemblyPatcher.TargetDLLs = (IEnumerable<string>) targetsProperty.GetValue(null, null);
 
 					var initMethod = type.GetMethod("Initialize",
-						BindingFlags.Public | BindingFlags.Static | BindingFlags.IgnoreCase,
+					    flags,
 						null,
 						CallingConventions.Any,
 						Type.EmptyTypes,
 						null);
 
-					if (initMethod != null)
-						Initializers.Add(() => initMethod.Invoke(null, null));
+				    if (initMethod != null)
+				        assemblyPatcher.Initializer = () => initMethod.Invoke(null, null);
 
-					var finalizeMethod = type.GetMethod("Finish",
-						BindingFlags.Public | BindingFlags.Static | BindingFlags.IgnoreCase,
+                    var finalizeMethod = type.GetMethod("Finish",
+                        flags,
 						null,
 						CallingConventions.Any,
 						Type.EmptyTypes,
 						null);
 
-					if (finalizeMethod != null)
-						Finalizers.Add(() => finalizeMethod.Invoke(null, null));
+				    if (finalizeMethod != null)
+				        assemblyPatcher.Finalizer = () => finalizeMethod.Invoke(null, null);
+
 				}
 				catch (Exception ex)
 				{
@@ -215,7 +176,7 @@ namespace BepInEx.Bootstrap
 				}
 
 			Logger.Log(LogLevel.Info,
-				$"Loaded {patcherMethods.Select(x => x.Key).Distinct().Count()} patcher methods from {assembly.GetName().Name}");
+				$"Loaded {patcherMethods.Count} patcher methods from {assembly.GetName().Name}");
 
 			return patcherMethods;
 		}
@@ -327,16 +288,6 @@ namespace BepInEx.Bootstrap
 				Logger.Log(LogLevel.Error, "Failed to allocate console!");
 				Logger.Log(LogLevel.Error, ex);
 			}
-		}
-
-		/// <summary>
-		///     Adds the patcher to the patcher dictionary.
-		/// </summary>
-		/// <param name="dllNames">The list of DLL filenames to be patched.</param>
-		/// <param name="patcher">The method that will perform the patching.</param>
-		public static void AddPatcher(IEnumerable<string> dllNames, AssemblyPatcherDelegate patcher)
-		{
-			PatcherDictionary[patcher] = dllNames;
 		}
 	}
 }
