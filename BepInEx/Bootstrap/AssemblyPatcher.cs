@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using BepInEx.Logging;
 using Harmony;
 using Mono.Cecil;
 
@@ -55,7 +56,15 @@ namespace BepInEx.Bootstrap
                     continue;
                 }
 
+                if (PatchedAssemblyResolver.AssemblyLocations.ContainsKey(assembly.FullName))
+                {
+                    Logger.Log(LogLevel.Warning, $"Found a duplicate assembly {Path.GetFileName(assemblyPath)} in the Managed folder! Skipping loading it (the game might be unstable)...");
+                    assembly.Dispose();
+                    continue;
+                }
+
                 assemblies.Add(Path.GetFileName(assemblyPath), assembly);
+
                 PatchedAssemblyResolver.AssemblyLocations.Add(assembly.FullName, Path.GetFullPath(assemblyPath));
             }
 
