@@ -58,12 +58,12 @@ namespace BepInEx.Bootstrap
 
 				string entrypointAssembly = Config.GetEntry("entrypoint-assembly", "UnityEngine.dll", "Preloader");
 
-                AssemblyPatcherLoader.AddPatcher(new AssemblyPatcher { TargetDLLs = new []{ entrypointAssembly }, Patcher = PatchEntrypoint});
-                AssemblyPatcherLoader.AddPatchersFromDirectory(Paths.PatcherPluginPath, GetPatcherMethods);
+                AssemblyLoader.AddPatcher(new AssemblyPatcher { TargetDLLs = new []{ entrypointAssembly }, Patcher = PatchEntrypoint});
+                AssemblyLoader.AddPatchersFromDirectory(Paths.PatcherPluginPath, GetPatcherMethods);
 
-		        AssemblyPatcherLoader.PatchAndLoad(Paths.ManagedPath);
+		        AssemblyLoader.PatchAndLoad(Paths.ManagedPath);
 
-		        AssemblyPatcherLoader.DisposePatchers();
+		        AssemblyLoader.DisposePatchers();
 			}
 			catch (Exception ex)
 			{

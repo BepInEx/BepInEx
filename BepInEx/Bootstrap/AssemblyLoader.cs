@@ -27,7 +27,7 @@ namespace BepInEx.Bootstrap
     /// <summary>
     /// Worker class which is used for loading and patching entire folders of assemblies, or alternatively patching and loading assemblies one at a time.
     /// </summary>
-    public static class AssemblyPatcherLoader
+    public static class AssemblyLoader
     {
         private static List<AssemblyPatcher> patchers = new List<AssemblyPatcher>();
 
