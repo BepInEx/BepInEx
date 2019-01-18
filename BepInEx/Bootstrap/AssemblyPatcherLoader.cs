@@ -14,10 +14,12 @@ namespace BepInEx.Bootstrap
     /// <param name="assembly">The assembly that is being patched.</param>
     public delegate void AssemblyPatcherDelegate(ref AssemblyDefinition assembly);
 
+
+
     /// <summary>
     /// Worker class which is used for loading and patching entire folders of assemblies, or alternatively patching and loading assemblies one at a time.
     /// </summary>
-    public static class AssemblyPatcher
+    public static class AssemblyPatcherLoader
     {
         /// <summary>
         /// Configuration value of whether assembly dumping is enabled or not.

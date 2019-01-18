@@ -105,7 +105,7 @@ namespace BepInEx.Bootstrap
 						AddPatcher(kv.Value.Value, kv.Value.Key);
 				}
 
-				AssemblyPatcher.PatchAll(Paths.ManagedPath, PatcherDictionary, Initializers, Finalizers);
+				AssemblyPatcherLoader.PatchAll(Paths.ManagedPath, PatcherDictionary, Initializers, Finalizers);
 			}
 			catch (Exception ex)
 			{
