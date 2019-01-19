@@ -40,7 +40,7 @@ namespace BepInEx.Bootstrap
 				return;
 
 			//Set vitals
-			Paths.ExecutablePath = containerExePath;
+			Paths.SetExecutablePath(containerExePath);
 
 			//Start logging
 
@@ -77,10 +77,14 @@ namespace BepInEx.Bootstrap
 			if (!Directory.Exists(Paths.PluginPath))
 				Directory.CreateDirectory(Paths.PluginPath);
 
+			if (!Directory.Exists(Paths.PatcherPluginPath))
+				Directory.CreateDirectory(Paths.PatcherPluginPath);
+
 			try
 			{
 				if (bool.Parse(Config.GetEntry("chainloader-log-unity-messages", "false", "BepInEx")))
 					UnityLogWriter.ListenUnityLogs();
+				
 
 				var productNameProp = typeof(Application).GetProperty("productName", BindingFlags.Public | BindingFlags.Static);
 				if (productNameProp != null)

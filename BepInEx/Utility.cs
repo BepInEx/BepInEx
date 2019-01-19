@@ -12,7 +12,7 @@ namespace BepInEx
     public static class Utility
     {
         /// <summary>
-        /// Combines multiple paths together, as the specfic method is not availble in .NET 3.5.
+        /// Combines multiple paths together, as the specific method is not available in .NET 3.5.
         /// </summary>
         /// <param name="parts">The multiple paths to combine together.</param>
         /// <returns>A combined path.</returns>
@@ -110,21 +110,31 @@ namespace BepInEx
         public static bool TryResolveDllAssembly(AssemblyName assemblyName, string directory, out Assembly assembly)
         {
             assembly = null;
-            string path = Path.Combine(directory, $"{assemblyName.Name}.dll");
 
-            if (!File.Exists(path))
-                return false;
+			var potentialDirectories = new List<string> { directory };
 
-            try
-            {
-                assembly = Assembly.LoadFile(path);
-            }
-            catch (Exception)
-            {
-                return false;
-            }
+			potentialDirectories.AddRange(Directory.GetDirectories(directory, "*", SearchOption.AllDirectories));
 
-            return true;
-        }
+			foreach (string subDirectory in potentialDirectories)
+			{
+				string path = Path.Combine(subDirectory, $"{assemblyName.Name}.dll");
+
+				if (!File.Exists(path))
+					continue;
+
+				try
+				{
+					assembly = Assembly.LoadFile(path);
+				}
+				catch (Exception)
+				{
+					continue;
+				}
+
+				return true;
+			}
+
+			return false;
+		}
     }
 }

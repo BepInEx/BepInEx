@@ -15,14 +15,14 @@ namespace BepInEx.Bootstrap
         /// </param>
         public static void Main(string[] args)
         {
-            Paths.ExecutablePath = args[0];
-            AppDomain.CurrentDomain.AssemblyResolve += LocalResolve;
+            Paths.SetExecutablePath(args[0]);
+			AppDomain.CurrentDomain.AssemblyResolve += LocalResolve;
 
-            Preloader.Run();
+			Preloader.Run();
         }
 
         /// <summary>
-        ///     A handler for <see cref="AppDomain" />.AssemblyResolve to perform some special handling.
+        ///     A handler for <see cref="AppDomain.AssemblyResolve" /> to perform some special handling.
         ///     <para>
         ///         It attempts to check currently loaded assemblies (ignoring the version), and then checks the BepInEx/core path,
         ///         BepInEx/patchers path and the BepInEx folder, all in that order.

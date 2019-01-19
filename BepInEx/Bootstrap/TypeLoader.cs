@@ -15,7 +15,7 @@ namespace BepInEx.Bootstrap
         /// <summary>
         /// Loads a list of types from a directory containing assemblies, that derive from a base type.
         /// </summary>
-        /// <typeparam name="T">The specfiic base type to search for.</typeparam>
+        /// <typeparam name="T">The specific base type to search for.</typeparam>
         /// <param name="directory">The directory to search for assemblies.</param>
         /// <returns>Returns a list of found derivative types.</returns>
         public static IEnumerable<Type> LoadTypes<T>(string directory)
@@ -23,7 +23,7 @@ namespace BepInEx.Bootstrap
             List<Type> types = new List<Type>();
             Type pluginType = typeof(T);
 
-            foreach (string dll in Directory.GetFiles(Path.GetFullPath(directory), "*.dll"))
+            foreach (string dll in Directory.GetFiles(Path.GetFullPath(directory), "*.dll", SearchOption.AllDirectories))
             {
                 try
                 {
