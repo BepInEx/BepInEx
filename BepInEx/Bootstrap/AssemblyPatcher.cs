@@ -13,12 +13,12 @@ namespace BepInEx.Bootstrap
     /// Delegate used in patching assemblies.
     /// </summary>
     /// <param name="assembly">The assembly that is being patched.</param>
-    public delegate void AssemblyPatcherDelegate(ref AssemblyDefinition assembly);
+    internal delegate void AssemblyPatcherDelegate(ref AssemblyDefinition assembly);
 
     /// <summary>
     /// A single assembly patcher.
     /// </summary>
-    public class AssemblyPatcher
+    internal class PatcherPlugin
     {
         /// <summary>
         /// Target assemblies to patch.
@@ -49,9 +49,9 @@ namespace BepInEx.Bootstrap
     /// <summary>
     /// Worker class which is used for loading and patching entire folders of assemblies, or alternatively patching and loading assemblies one at a time.
     /// </summary>
-    public static class AssemblyLoader
+    internal static class AssemblyPatcher
     {
-        private static List<AssemblyPatcher> patchers = new List<AssemblyPatcher>();
+        private static List<PatcherPlugin> patchers = new List<PatcherPlugin>();
 
         /// <summary>
         /// Configuration value of whether assembly dumping is enabled or not.
@@ -62,7 +62,7 @@ namespace BepInEx.Bootstrap
         /// Adds a single assembly patcher to the pool of applicable patches.
         /// </summary>
         /// <param name="patcher">Patcher to apply.</param>
-        public static void AddPatcher(AssemblyPatcher patcher)
+        public static void AddPatcher(PatcherPlugin patcher)
         {
             patchers.Add(patcher);
         }
@@ -72,12 +72,12 @@ namespace BepInEx.Bootstrap
         /// </summary>
         /// <param name="directory">Directory to search patcher DLLs from.</param>
         /// <param name="patcherLocator">A function that locates assembly patchers in a given managed assembly.</param>
-        public static void AddPatchersFromDirectory(string directory, Func<Assembly, List<AssemblyPatcher>> patcherLocator)
+        public static void AddPatchersFromDirectory(string directory, Func<Assembly, List<PatcherPlugin>> patcherLocator)
         {
             if (!Directory.Exists(directory))
                 return;
 
-            var sortedPatchers = new SortedDictionary<string, AssemblyPatcher>();
+            var sortedPatchers = new SortedDictionary<string, PatcherPlugin>();
 
             foreach (string assemblyPath in Directory.GetFiles(directory, "*.dll"))
                 try

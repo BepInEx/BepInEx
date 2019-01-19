@@ -58,12 +58,12 @@ namespace BepInEx.Bootstrap
 
 				string entrypointAssembly = Config.GetEntry("entrypoint-assembly", "UnityEngine.dll", "Preloader");
 
-                AssemblyLoader.AddPatcher(new AssemblyPatcher { TargetDLLs = new []{ entrypointAssembly }, Patcher = PatchEntrypoint});
-                AssemblyLoader.AddPatchersFromDirectory(Paths.PatcherPluginPath, GetPatcherMethods);
+                AssemblyPatcher.AddPatcher(new PatcherPlugin { TargetDLLs = new []{ entrypointAssembly }, Patcher = PatchEntrypoint});
+		        AssemblyPatcher.AddPatchersFromDirectory(Paths.PatcherPluginPath, GetPatcherMethods);
 
-		        AssemblyLoader.PatchAndLoad(Paths.ManagedPath);
+		        AssemblyPatcher.PatchAndLoad(Paths.ManagedPath);
 
-		        AssemblyLoader.DisposePatchers();
+		        AssemblyPatcher.DisposePatchers();
 			}
 			catch (Exception ex)
 			{
@@ -96,9 +96,9 @@ namespace BepInEx.Bootstrap
 		/// </summary>
 		/// <param name="assembly">The assembly to scan.</param>
 		/// <returns>A list of assembly patchers that were found in the assembly.</returns>
-		public static List<AssemblyPatcher> GetPatcherMethods(Assembly assembly)
+		public static List<PatcherPlugin> GetPatcherMethods(Assembly assembly)
 		{
-			var patcherMethods = new List<AssemblyPatcher>();
+			var patcherMethods = new List<PatcherPlugin>();
 		    var flags = BindingFlags.Public | BindingFlags.Static | BindingFlags.IgnoreCase;
 
             foreach (var type in assembly.GetExportedTypes())
@@ -133,7 +133,7 @@ namespace BepInEx.Bootstrap
 					if (targetsProperty == null || !targetsProperty.CanRead || patcher == null)
 						continue;
 
-                    var assemblyPatcher = new AssemblyPatcher();
+                    var assemblyPatcher = new PatcherPlugin();
 
 				    assemblyPatcher.Name = $"{assembly.GetName().Name}{type.FullName}";
                     assemblyPatcher.Patcher = (ref AssemblyDefinition ass) =>
