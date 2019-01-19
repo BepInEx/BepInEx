@@ -71,8 +71,6 @@
     <Compile Include="ConsoleUtil\SafeConsole.cs" />
     <Compile Include="Bootstrap\Chainloader.cs" />
     <Compile Include="Contract\BaseUnityPlugin.cs" />
-    <Compile Include="Deprecated\BepInLogger.cs" />
-    <Compile Include="Deprecated\Utility.cs" />
     <Compile Include="Logging\BaseLogger.cs" />
     <Compile Include="Logging\Logger.cs" />
     <Compile Include="Logging\LogLevel.cs" />
