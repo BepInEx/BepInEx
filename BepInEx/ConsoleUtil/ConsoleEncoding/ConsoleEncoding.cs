@@ -15,7 +15,7 @@ namespace UnityInjector.ConsoleUtil
     // http://jonskeet.uk/csharp/ebcdic/
     // using only safe (managed) code
     // --------------------------------------------------
-    internal partial class ConsoleEncoding : Encoding
+    public partial class ConsoleEncoding : Encoding
     {
         private readonly uint _codePage;
         public override int CodePage => (int) _codePage;

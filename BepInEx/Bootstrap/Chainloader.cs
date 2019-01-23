@@ -54,11 +54,10 @@ namespace BepInEx.Bootstrap
 			
 			UnityLogWriter unityLogWriter = new UnityLogWriter();
 
-			if (Preloader.PreloaderLog != null)
-				unityLogWriter.WriteToLog($"{Preloader.PreloaderLog}\r\n");
+		    if (Logger.CurrentLogger != null && Logger.CurrentLogger is PreloaderLogWriter preloaderLogger)
+                unityLogWriter.WriteToLog($"{preloaderLogger}\r\n");
 
 			Logger.SetLogger(unityLogWriter);
-
 
 			_initialized = true;
 		}

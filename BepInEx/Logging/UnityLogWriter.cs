@@ -11,10 +11,8 @@ namespace BepInEx.Logging
 	/// Logs entries using Unity specific outputs.
 	/// </summary>
     public class UnityLogWriter : BaseLogger
-    {
-        private delegate void WriteStringToUnityLogDelegate(string s);
-
-        private static readonly WriteStringToUnityLogDelegate WriteStringToUnityLog;
+	{
+	    private static readonly Action<string> WriteStringToUnityLog;
 
         [DllImport("mono.dll", EntryPoint = "mono_lookup_internal_call")]
         private static extern IntPtr MonoLookupInternalCall(IntPtr gconstpointer);
@@ -26,7 +24,7 @@ namespace BepInEx.Logging
                 if (MonoLookupInternalCall(methodInfo.MethodHandle.Value) == IntPtr.Zero)
                     continue;
 
-                WriteStringToUnityLog = (WriteStringToUnityLogDelegate) Delegate.CreateDelegate(typeof(WriteStringToUnityLogDelegate), methodInfo);
+                WriteStringToUnityLog = (Action<string>) Delegate.CreateDelegate(typeof(Action<string>), methodInfo);
                 break;
             }
         }

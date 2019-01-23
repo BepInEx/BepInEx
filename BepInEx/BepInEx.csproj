@@ -56,11 +56,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Bootstrap\Entrypoint.cs" />
-    <Compile Include="Bootstrap\UnityPatches.cs" />
     <Compile Include="Contract\Attributes.cs" />
-    <Compile Include="Bootstrap\AssemblyPatcher.cs" />
-    <Compile Include="Bootstrap\Preloader.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="ConfigWrapper.cs" />
     <Compile Include="ConsoleUtil\ConsoleEncoding\ConsoleEncoding.Buffers.cs" />
