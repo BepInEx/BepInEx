@@ -47,15 +47,15 @@ namespace BepInEx.Bootstrap
 			if (startConsole)
 			{
 				ConsoleWindow.Attach();
-				
+
 				ConsoleEncoding.ConsoleCodePage = (uint)Encoding.UTF8.CodePage;
 				Console.OutputEncoding = Encoding.UTF8;
 			}
-			
+
 			UnityLogWriter unityLogWriter = new UnityLogWriter();
 
-		    if (Logger.CurrentLogger != null && Logger.CurrentLogger is PreloaderLogWriter preloaderLogger)
-                unityLogWriter.WriteToLog($"{preloaderLogger}\r\n");
+			if (Logger.CurrentLogger != null && Logger.CurrentLogger is PreloaderLogWriter preloaderLogger)
+				unityLogWriter.WriteToLog($"{preloaderLogger}\r\n");
 
 			Logger.SetLogger(unityLogWriter);
 
@@ -94,17 +94,17 @@ namespace BepInEx.Bootstrap
 				string currentProcess = Process.GetCurrentProcess().ProcessName.ToLower();
 
 				var pluginTypes = TypeLoader.LoadTypes<BaseUnityPlugin>(Paths.PluginPath)
-					.Where(plugin =>
-					{
-						//Perform a filter for currently running process
-						var filters = MetadataHelper.GetAttributes<BepInProcess>(plugin);
+											.Where(plugin =>
+											{
+												//Perform a filter for currently running process
+												var filters = MetadataHelper.GetAttributes<BepInProcess>(plugin);
 
-						if (!filters.Any())
-							return true;
+												if (!filters.Any())
+													return true;
 
-						return filters.Any(x => x.ProcessName.ToLower().Replace(".exe", "") == currentProcess);
-					})
-					.ToList();
+												return filters.Any(x => x.ProcessName.ToLower().Replace(".exe", "") == currentProcess);
+											})
+											.ToList();
 
 				Logger.Log(LogLevel.Info, $"{pluginTypes.Count} plugins selected");
 
@@ -135,7 +135,7 @@ namespace BepInEx.Bootstrap
 					{
 						var metadata = MetadataHelper.GetMetadata(t);
 
-						var plugin = (BaseUnityPlugin) ManagerObject.AddComponent(t);
+						var plugin = (BaseUnityPlugin)ManagerObject.AddComponent(t);
 
 						Plugins.Add(plugin);
 						Logger.Log(LogLevel.Info, $"Loaded [{metadata.Name} {metadata.Version}]");
