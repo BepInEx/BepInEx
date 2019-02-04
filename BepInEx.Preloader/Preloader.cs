@@ -87,7 +87,7 @@ namespace BepInEx.Preloader
                 {
                     File.WriteAllText(
                         Path.Combine(Paths.GameRootPath, $"preloader_{DateTime.Now:yyyyMMdd_HHmmss_fff}.log"),
-                        PreloaderLog.ToString());
+                        PreloaderLog + "\r\n" + ex);
 
                     PreloaderLog.Dispose();
                     PreloaderLog = null;

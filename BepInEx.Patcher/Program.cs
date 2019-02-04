@@ -42,9 +42,15 @@ namespace BepInEx.Patcher
                 string gameName = Path.GetFileNameWithoutExtension(exePath);
 
                 string managedDir = Environment.CurrentDirectory + $@"\{gameName}_Data\Managed";
-                string unityOutputDLL = Path.GetFullPath($"{managedDir}\\UnityEngine.dll");
 
-                if (!Directory.Exists(managedDir) || !File.Exists(unityOutputDLL))
+#if UNITY_2018
+				string unityOutputDLL = Path.GetFullPath($"{managedDir}\\UnityEngine.CoreModule.dll");
+#else
+				string unityOutputDLL = Path.GetFullPath($"{managedDir}\\UnityEngine.dll");
+#endif
+
+
+				if (!Directory.Exists(managedDir) || !File.Exists(unityOutputDLL))
                     continue;
 
                 hasFound = true;
@@ -95,10 +101,14 @@ namespace BepInEx.Patcher
                     AssemblyResolver = defaultResolver
                 };
 
-                string unityBackupDLL = Path.GetFullPath($"{managedDir}\\UnityEngine.dll.bak");
-                
-                //determine which assembly to use as a base
-                AssemblyDefinition unity = AssemblyDefinition.ReadAssembly(unityOutputDLL, rp);
+#if UNITY_2018
+				string unityBackupDLL = Path.GetFullPath($"{managedDir}\\UnityEngine.CoreModule.dll.bak");
+#else
+				string unityBackupDLL = Path.GetFullPath($"{managedDir}\\UnityEngine.dll.bak");
+#endif
+
+				//determine which assembly to use as a base
+				AssemblyDefinition unity = AssemblyDefinition.ReadAssembly(unityOutputDLL, rp);
 
                 if (!VerifyAssembly(unity, out message))
                 {
