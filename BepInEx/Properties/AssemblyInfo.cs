@@ -24,6 +24,8 @@ using BepInEx;
 // The following GUID is for the ID of the typelib if this project is exposed to COM
 [assembly: Guid("4ffba620-f5ed-47f9-b90c-dad1316fd9b9")]
 
+[assembly: InternalsVisibleTo("BepInEx.Preloader")]
+
 // Version information for an assembly consists of the following four values:
 //
 //      Major Version

@@ -45,17 +45,15 @@ namespace BepInEx.Preloader
 
                 PreloaderLog.WriteLine(consoleTile);
 
-#if DEBUG
-                object[] attributes =
-                    typeof(DebugInfoAttribute).Assembly.GetCustomAttributes(typeof(DebugInfoAttribute), false);
+				//See BuildInfoAttribute for more information about this section.
+				object[] attributes = typeof(BuildInfoAttribute).Assembly.GetCustomAttributes(typeof(BuildInfoAttribute), false);
 
                 if (attributes.Length > 0)
                 {
-                    var attribute = (DebugInfoAttribute) attributes[0];
+                    var attribute = (BuildInfoAttribute)attributes[0];
 
                     PreloaderLog.WriteLine(attribute.Info);
                 }
-#endif
 
                 Logger.Log(LogLevel.Message, "Preloader started");
 
