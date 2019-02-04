@@ -10,7 +10,7 @@ using System.Text;
 
 namespace UnityInjector.ConsoleUtil
 {
-    internal class ConsoleWindow
+    public class ConsoleWindow
     {
         public static bool IsAttatched { get; private set; }
         private static IntPtr _cOut;

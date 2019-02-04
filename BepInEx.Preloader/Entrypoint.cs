@@ -2,9 +2,9 @@
 using System.Linq;
 using System.Reflection;
 
-namespace BepInEx.Bootstrap
+namespace BepInEx.Preloader
 {
-    public static class Entrypoint
+    internal static class Entrypoint
     {
         /// <summary>
         ///     The main entrypoint of BepInEx, called from Doorstop.
@@ -15,7 +15,9 @@ namespace BepInEx.Bootstrap
         /// </param>
         public static void Main(string[] args)
         {
-            Paths.ExecutablePath = args[0];
+            // Manually set up the path for patchers to work
+            typeof(Paths).GetProperty(nameof(Paths.ExecutablePath)).SetValue(null, args[0], null);
+            //Paths.ExecutablePath = args[0];
             AppDomain.CurrentDomain.AssemblyResolve += LocalResolve;
 
             Preloader.Run();
@@ -35,7 +37,8 @@ namespace BepInEx.Bootstrap
         {
             var assemblyName = new AssemblyName(args.Name);
 
-            var foundAssembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(x => x.GetName().Name == assemblyName.Name);
+            var foundAssembly = AppDomain.CurrentDomain.GetAssemblies()
+                .FirstOrDefault(x => x.GetName().Name == assemblyName.Name);
 
             if (foundAssembly != null)
                 return foundAssembly;

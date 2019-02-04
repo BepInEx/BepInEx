@@ -62,7 +62,7 @@ namespace BepInEx.Logging
             if (IsRedirectingConsole)
                 Console.SetOut(this);
             else
-                Console.SetOut(TextWriter.Null);
+                Console.SetOut(Null);
 
             Trace.Listeners.Add(traceListener);
 
@@ -76,7 +76,7 @@ namespace BepInEx.Logging
         {
             if (!_enabled)
                 return;
-            
+
             Console.SetOut(stdout);
 
             Trace.Listeners.Remove(traceListener);

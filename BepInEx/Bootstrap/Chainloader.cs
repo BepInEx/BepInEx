@@ -15,17 +15,17 @@ namespace BepInEx.Bootstrap
 	/// <summary>
 	/// The manager and loader for all plugins, and the entry point for BepInEx plugin system.
 	/// </summary>
-	public class Chainloader
+	public static class Chainloader
 	{
 		/// <summary>
 		/// The loaded and initialized list of plugins.
 		/// </summary>
-		public static List<BaseUnityPlugin> Plugins { get; protected set; } = new List<BaseUnityPlugin>();
+		public static List<BaseUnityPlugin> Plugins { get; private set; } = new List<BaseUnityPlugin>();
 
 		/// <summary>
 		/// The GameObject that all plugins are attached to as components.
 		/// </summary>
-		public static GameObject ManagerObject { get; protected set; } = new GameObject("BepInEx_Manager");
+		public static GameObject ManagerObject { get; private set; } = new GameObject("BepInEx_Manager");
 
 
 		private static bool _loaded = false;
@@ -54,11 +54,10 @@ namespace BepInEx.Bootstrap
 			
 			UnityLogWriter unityLogWriter = new UnityLogWriter();
 
-			if (Preloader.PreloaderLog != null)
-				unityLogWriter.WriteToLog($"{Preloader.PreloaderLog}\r\n");
+		    if (Logger.CurrentLogger != null && Logger.CurrentLogger is PreloaderLogWriter preloaderLogger)
+                unityLogWriter.WriteToLog($"{preloaderLogger}\r\n");
 
 			Logger.SetLogger(unityLogWriter);
-
 
 			_initialized = true;
 		}

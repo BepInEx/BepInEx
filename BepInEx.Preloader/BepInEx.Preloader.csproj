@@ -4,33 +4,28 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{4FFBA620-F5ED-47F9-B90C-DAD1316FD9B9}</ProjectGuid>
+    <ProjectGuid>{F7ABBE07-C02F-4F7C-BF6E-C6656BF588CA}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>BepInEx</RootNamespace>
-    <AssemblyName>BepInEx</AssemblyName>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>BepInEx.Preloader</RootNamespace>
+    <AssemblyName>BepInEx.Preloader</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <TargetFrameworkProfile />
+    <Deterministic>true</Deterministic>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Legacy|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugType>none</DebugType>
+    <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>..\bin\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>
-    </DocumentationFile>
-  </PropertyGroup>
-  <PropertyGroup>
-    <StartupObject />
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'v2018|AnyCPU'">
-    <OutputPath>..\bin\</OutputPath>
+    <OutputPath>bin\v2018\</OutputPath>
     <DefineConstants>TRACE;UNITY_2018</DefineConstants>
     <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
@@ -40,42 +35,28 @@
       <HintPath>..\lib\Mono.Cecil.dll</HintPath>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="UnityEngine">
-      <HintPath>..\lib\UnityEngine.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
+    <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Contract\Attributes.cs" />
-    <Compile Include="Config.cs" />
-    <Compile Include="ConfigWrapper.cs" />
-    <Compile Include="ConsoleUtil\ConsoleEncoding\ConsoleEncoding.Buffers.cs" />
-    <Compile Include="ConsoleUtil\ConsoleEncoding\ConsoleEncoding.cs" />
-    <Compile Include="ConsoleUtil\ConsoleEncoding\ConsoleEncoding.PInvoke.cs" />
-    <Compile Include="ConsoleUtil\ConsoleWindow.cs" />
-    <Compile Include="ConsoleUtil\Kon.cs" />
-    <Compile Include="ConsoleUtil\SafeConsole.cs" />
-    <Compile Include="Bootstrap\Chainloader.cs" />
-    <Compile Include="Contract\BaseUnityPlugin.cs" />
-    <Compile Include="Logging\BaseLogger.cs" />
-    <Compile Include="Logging\Logger.cs" />
-    <Compile Include="Logging\LogLevel.cs" />
-    <Compile Include="Logging\PreloaderLogWriter.cs" />
-    <Compile Include="Logging\LoggerTraceListener.cs" />
-    <Compile Include="Logging\UnityLogWriter.cs" />
-    <Compile Include="Paths.cs" />
+    <Compile Include="Patcher\AssemblyPatcher.cs" />
+    <Compile Include="Entrypoint.cs" />
+    <Compile Include="Patcher\PatcherPlugin.cs" />
+    <Compile Include="Preloader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Bootstrap\TypeLoader.cs" />
-    <Compile Include="Utility.cs" />
+    <Compile Include="UnityPatches.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\submodules\BepInEx.Harmony\submodules\Harmony\Harmony\Harmony.csproj">
-      <Project>{a15d6ee6-f954-415b-8605-8a8470cc87dc}</Project>
-      <Name>Harmony</Name>
+    <ProjectReference Include="..\BepInEx\BepInEx.csproj">
+      <Project>{4ffba620-f5ed-47f9-b90c-dad1316fd9b9}</Project>
+      <Name>BepInEx</Name>
     </ProjectReference>
     <ProjectReference Include="..\submodules\BepInEx.Harmony\BepInEx.Harmony\BepInEx.Harmony.csproj">
       <Project>{54161cfe-ff42-4dde-b161-3a49545db5cd}</Project>
       <Name>BepInEx.Harmony</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\submodules\BepInEx.Harmony\submodules\Harmony\Harmony\Harmony.csproj">
+      <Project>{a15d6ee6-f954-415b-8605-8a8470cc87dc}</Project>
+      <Name>Harmony</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
