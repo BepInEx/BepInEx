@@ -21,6 +21,11 @@ namespace BepInEx
 			BepInExAssemblyPath = Utility.CombinePaths(BepInExAssemblyDirectory, $"{Assembly.GetExecutingAssembly().GetName().Name}.dll");
 		}
 
+		internal static void SetPluginPath(string pluginPath)
+		{
+			PluginPath = Utility.CombinePaths(BepInExRootPath, pluginPath);
+		}
+
         /// <summary>
         ///     The directory that the core BepInEx DLLs reside in.
         /// </summary>
@@ -58,6 +63,9 @@ namespace BepInEx
 
 		/// <summary>
 		///     The path to the plugin folder which resides in the BepInEx folder.
+		/// <para>
+		///		This is ONLY guaranteed to be set correctly when Chainloader has been initialized.
+		/// </para>
 		/// </summary>
 		public static string PluginPath { get; private set; }
 

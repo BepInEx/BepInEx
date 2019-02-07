@@ -42,6 +42,8 @@ namespace BepInEx.Bootstrap
 			//Set vitals
 			Paths.SetExecutablePath(containerExePath);
 
+			Paths.SetPluginPath(Config.GetEntry("chainloader-plugins-directory", "plugins", "BepInEx"));
+
 			//Start logging
 
 			if (startConsole)
