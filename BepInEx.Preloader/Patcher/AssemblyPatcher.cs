@@ -143,7 +143,7 @@ namespace BepInEx.Preloader.Patcher
 				if (DumpingEnabled && patchedAssemblies.Contains(filename))
 					using (var mem = new MemoryStream())
 					{
-						string dirPath = Path.Combine(Paths.PluginPath, "DumpedAssemblies");
+						string dirPath = Path.Combine(Paths.BepInExRootPath, "DumpedAssemblies");
 
 						if (!Directory.Exists(dirPath))
 							Directory.CreateDirectory(dirPath);

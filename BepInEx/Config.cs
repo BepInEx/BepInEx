@@ -13,7 +13,7 @@ namespace BepInEx
 	{
 		private static readonly Dictionary<string, Dictionary<string, string>> cache = new Dictionary<string, Dictionary<string, string>>();
 
-		private static string configPath => Path.Combine(Paths.PluginPath, "config.ini");
+		private static string ConfigPath => Path.Combine(Paths.BepInExRootPath, "config.ini");
 
 		private static readonly Regex sanitizeKeyRegex = new Regex(@"[^a-zA-Z0-9\-\.]+");
 
@@ -34,7 +34,7 @@ namespace BepInEx
 
 		static Config()
 		{
-			if (File.Exists(configPath))
+			if (File.Exists(ConfigPath))
 			{
 				ReloadConfig();
 			}
@@ -87,7 +87,7 @@ namespace BepInEx
 
 			string currentSection = "";
 
-			foreach (string rawLine in File.ReadAllLines(configPath))
+			foreach (string rawLine in File.ReadAllLines(ConfigPath))
 			{
 				string line = rawLine.Trim();
 
@@ -120,7 +120,7 @@ namespace BepInEx
 		/// </summary>
 		public static void SaveConfig()
 		{
-			using (StreamWriter writer = new StreamWriter(File.Create(configPath), System.Text.Encoding.UTF8))
+			using (StreamWriter writer = new StreamWriter(File.Create(ConfigPath), System.Text.Encoding.UTF8))
 				foreach (var sectionKv in cache)
 				{
 					writer.WriteLine($"[{sectionKv.Key}]");

@@ -15,16 +15,14 @@ namespace BepInEx.Preloader
 		/// </param>
 		public static void Main(string[] args)
 		{
-			// Manually set up the path for patchers to work
-			typeof(Paths).GetProperty(nameof(Paths.ExecutablePath)).SetValue(null, args[0], null);
-			//Paths.ExecutablePath = args[0];
+			Paths.ExecutablePath(args[0]);
 			AppDomain.CurrentDomain.AssemblyResolve += LocalResolve;
 
 			Preloader.Run();
 		}
 
 		/// <summary>
-		///     A handler for <see cref="AppDomain" />.AssemblyResolve to perform some special handling.
+		///     A handler for <see cref="AppDomain.AssemblyResolve" /> to perform some special handling.
 		///     <para>
 		///         It attempts to check currently loaded assemblies (ignoring the version), and then checks the BepInEx/core path,
 		///         BepInEx/patchers path and the BepInEx folder, all in that order.
