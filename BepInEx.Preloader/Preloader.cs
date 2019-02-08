@@ -22,7 +22,7 @@ namespace BepInEx.Preloader
 		/// <summary>
 		///     The log writer that is specific to the preloader.
 		/// </summary>
-		private static PreloaderLogWriter PreloaderLog { get; set; }
+		private static PreloaderConsoleListener PreloaderLog { get; set; }
 
 		public static void Run()
 		{
@@ -31,19 +31,20 @@ namespace BepInEx.Preloader
 				AllocateConsole();
 
 				UnityPatches.Apply();
+				
+				Logger.Sources.Add(TraceLogSource.CreateSource());
 
-				PreloaderLog =
-					new PreloaderLogWriter(
+				PreloaderLog = new PreloaderConsoleListener(
 						Utility.SafeParseBool(Config.GetEntry("preloader-logconsole", "false", "BepInEx")));
-				PreloaderLog.Enabled = true;
+
+				Logger.Listeners.Add(PreloaderLog);
+				
 
 				string consoleTile =
 					$"BepInEx {typeof(Paths).Assembly.GetName().Version} - {Process.GetCurrentProcess().ProcessName}";
 				ConsoleWindow.Title = consoleTile;
 
-				Logger.SetLogger(PreloaderLog);
-
-				PreloaderLog.WriteLine(consoleTile);
+				Logger.LogMessage(consoleTile);
 
 				//See BuildInfoAttribute for more information about this section.
 				object[] attributes = typeof(BuildInfoAttribute).Assembly.GetCustomAttributes(typeof(BuildInfoAttribute), false);
@@ -52,10 +53,10 @@ namespace BepInEx.Preloader
 				{
 					var attribute = (BuildInfoAttribute)attributes[0];
 
-					PreloaderLog.WriteLine(attribute.Info);
+					Logger.LogMessage(attribute.Info);
 				}
 
-				Logger.Log(LogLevel.Message, "Preloader started");
+				Logger.LogMessage("Preloader started");
 
 				string entrypointAssembly = Config.GetEntry("entrypoint-assembly", "UnityEngine.dll", "Preloader");
 
@@ -66,22 +67,33 @@ namespace BepInEx.Preloader
 				AssemblyPatcher.PatchAndLoad(Paths.ManagedPath);
 
 				AssemblyPatcher.DisposePatchers();
+
+				Logger.LogMessage("Preloader finished");
+
+				UnityLogListener.WriteStringToUnityLog?.Invoke(PreloaderLog.ToString());
+
+				Logger.Listeners.Remove(PreloaderLog);
+				Logger.Listeners.Add(new ConsoleLogListener());
+
+				PreloaderLog.Dispose();
 			}
 			catch (Exception ex)
 			{
-				Logger.Log(LogLevel.Fatal, "Could not run preloader!");
-				Logger.Log(LogLevel.Fatal, ex);
-
-				PreloaderLog.Enabled = false;
-
 				try
 				{
+					Logger.Log(LogLevel.Fatal, "Could not run preloader!");
+					Logger.Log(LogLevel.Fatal, ex);
+
+					PreloaderLog?.Dispose();
+
 					if (!ConsoleWindow.IsAttatched)
 					{
 						//if we've already attached the console, then the log will already be written to the console
 						AllocateConsole();
 						Console.Write(PreloaderLog);
 					}
+
+					PreloaderLog = null;
 				}
 				finally
 				{
@@ -89,7 +101,7 @@ namespace BepInEx.Preloader
 						Path.Combine(Paths.GameRootPath, $"preloader_{DateTime.Now:yyyyMMdd_HHmmss_fff}.log"),
 						PreloaderLog + "\r\n" + ex);
 
-					PreloaderLog.Dispose();
+					PreloaderLog?.Dispose();
 					PreloaderLog = null;
 				}
 			}
@@ -191,8 +203,7 @@ namespace BepInEx.Preloader
 		public static void PatchEntrypoint(ref AssemblyDefinition assembly)
 		{
 			if (assembly.MainModule.AssemblyReferences.Any(x => x.Name.Contains("BepInEx")))
-				throw new Exception(
-					"BepInEx has been detected to be patched! Please unpatch before using a patchless variant!");
+				throw new Exception("BepInEx has been detected to be patched! Please unpatch before using a patchless variant!");
 
 			string entrypointType = Config.GetEntry("entrypoint-type", "Application", "Preloader");
 			string entrypointMethod = Config.GetEntry("entrypoint-method", ".cctor", "Preloader");

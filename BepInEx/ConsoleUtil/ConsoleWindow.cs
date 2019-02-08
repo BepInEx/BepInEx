@@ -10,11 +10,13 @@ using System.Text;
 
 namespace UnityInjector.ConsoleUtil
 {
-	public class ConsoleWindow
+	internal class ConsoleWindow
 	{
 		public static bool IsAttatched { get; private set; }
 		private static IntPtr _cOut;
 		private static IntPtr _oOut;
+
+		public static TextWriter StandardOut { get; private set; }
 
 		public static void Attach()
 		{
@@ -121,12 +123,13 @@ namespace UnityInjector.ConsoleUtil
 		private static void Init()
 		{
 			var stdOut = Console.OpenStandardOutput();
-			var stdWriter = new StreamWriter(stdOut, Encoding.Default)
+			StandardOut = new StreamWriter(stdOut, Encoding.Default)
 			{
 				AutoFlush = true
 			};
-			Console.SetOut(stdWriter);
-			Console.SetError(stdWriter);
+
+			Console.SetOut(StandardOut);
+			Console.SetError(StandardOut);
 		}
 
 		[DllImport("kernel32.dll", SetLastError = true)]

@@ -8,7 +8,6 @@ using System.Text;
 using BepInEx.Logging;
 using UnityEngine;
 using UnityInjector.ConsoleUtil;
-using UnityLogWriter = BepInEx.Logging.UnityLogWriter;
 
 namespace BepInEx.Bootstrap
 {
@@ -25,7 +24,7 @@ namespace BepInEx.Bootstrap
 		/// <summary>
 		/// The GameObject that all plugins are attached to as components.
 		/// </summary>
-		public static GameObject ManagerObject { get; private set; } = new GameObject("BepInEx_Manager");
+		public static GameObject ManagerObject { get; private set; }
 
 
 		private static bool _loaded = false;
@@ -52,14 +51,23 @@ namespace BepInEx.Bootstrap
 
 				ConsoleEncoding.ConsoleCodePage = (uint)Encoding.UTF8.CodePage;
 				Console.OutputEncoding = Encoding.UTF8;
+				Logger.Listeners.Add(new ConsoleLogListener());
 			}
 
-			UnityLogWriter unityLogWriter = new UnityLogWriter();
+			//Fix for standard output getting overwritten by UnityLogger
+			Console.SetOut(ConsoleWindow.StandardOut);
 
-			if (Logger.CurrentLogger != null && Logger.CurrentLogger is PreloaderLogWriter preloaderLogger)
-				unityLogWriter.WriteToLog($"{preloaderLogger}\r\n");
 
-			Logger.SetLogger(unityLogWriter);
+			Logger.Listeners.Add(new UnityLogListener());
+
+			if (!TraceLogSource.IsListening)
+				Logger.Sources.Add(TraceLogSource.CreateSource());
+
+			if (bool.Parse(Config.GetEntry("chainloader-log-unity-messages", "false", "BepInEx")))
+				Logger.Sources.Add(new UnityLogSource());
+
+
+			Logger.Log(LogLevel.Message, "Chainloader ready");
 
 			_initialized = true;
 		}
@@ -83,16 +91,14 @@ namespace BepInEx.Bootstrap
 
 			try
 			{
-				if (bool.Parse(Config.GetEntry("chainloader-log-unity-messages", "false", "BepInEx")))
-					UnityLogWriter.ListenUnityLogs();
-				
-
 				var productNameProp = typeof(Application).GetProperty("productName", BindingFlags.Public | BindingFlags.Static);
 				if (productNameProp != null)
 					ConsoleWindow.Title =
 						$"BepInEx {Assembly.GetExecutingAssembly().GetName().Version} - {productNameProp.GetValue(null, null)}";
 
 				Logger.Log(LogLevel.Message, "Chainloader started");
+
+				ManagerObject = new GameObject("BepInEx_Manager");
 
 				UnityEngine.Object.DontDestroyOnLoad(ManagerObject);
 

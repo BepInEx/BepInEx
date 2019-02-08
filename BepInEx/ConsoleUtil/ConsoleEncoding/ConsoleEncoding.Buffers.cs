@@ -13,7 +13,7 @@ namespace UnityInjector.ConsoleUtil
 	// using only safe (managed) code
 	// --------------------------------------------------
 
-	partial class ConsoleEncoding
+	internal partial class ConsoleEncoding
 	{
 		private byte[] _byteBuffer = new byte[256];
 		private char[] _charBuffer = new char[256];

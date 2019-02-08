@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using Harmony;
+using UnityEngineInternal;
 
 namespace BepInEx.Logging
 {
@@ -10,14 +11,9 @@ namespace BepInEx.Logging
 	/// A trace listener that writes to an underlying <see cref="BaseLogger"/> instance.
 	/// </summary>
 	/// <inheritdoc cref="TraceListener"/>
-	public class LoggerTraceListener : TraceListener
+	public class TraceLogSource : TraceListener
 	{
-		/// <summary>
-		/// The logger instance that is being written to.
-		/// </summary>
-		public BaseLogger Logger { get; }
-
-		static LoggerTraceListener()
+		static TraceLogSource()
 		{
 			try
 			{
@@ -26,10 +22,28 @@ namespace BepInEx.Logging
 			catch { } //ignore everything, if it's thrown an exception, we're using an assembly that has already fixed this
 		}
 
-		/// <param name="logger">The logger instance to write to.</param>
-		public LoggerTraceListener(BaseLogger logger)
+		public static bool IsListening { get; protected set; } = false;
+
+		private static TraceLogSource traceListener;
+
+		public static ILogSource CreateSource()
 		{
-			Logger = logger;
+			if (traceListener == null)
+			{
+				traceListener = new TraceLogSource();
+				Trace.Listeners.Add(traceListener);
+				IsListening = true;
+			}
+
+			return traceListener.LogSource;
+		}
+
+		protected ManualLogSource LogSource { get; }
+
+		/// <param name="logger">The logger instance to write to.</param>
+		protected TraceLogSource()
+		{
+			LogSource = new ManualLogSource("Trace");
 		}
 
 		/// <summary>
@@ -38,7 +52,7 @@ namespace BepInEx.Logging
 		/// <param name="message">The message to write.</param>
 		public override void Write(string message)
 		{
-			Logger.Write(message);
+			LogSource.Log(LogLevel.None, message);
 		}
 
 		/// <summary>
@@ -47,7 +61,7 @@ namespace BepInEx.Logging
 		/// <param name="message">The message to write.</param>
 		public override void WriteLine(string message)
 		{
-			Logger.WriteLine(message);
+			LogSource.Log(LogLevel.None, $"{message}\r\n");
 		}
 
 		public override void TraceEvent(TraceEventCache eventCache, string source, TraceEventType eventType, int id, string format, params object[] args)
@@ -77,7 +91,7 @@ namespace BepInEx.Logging
 					break;
 			}
 
-			Logger.Log(level, $"{source} : {message}");
+			LogSource.Log(level, $"{source} : {message}");
 		}
 
 		/// <summary>
@@ -113,12 +127,11 @@ namespace BepInEx.Logging
 
 				instance.Patch(
 					typeof(Trace).GetMethod("DoTrace", BindingFlags.Static | BindingFlags.NonPublic),
-					new HarmonyMethod(typeof(TraceFixer).GetMethod(nameof(DoTraceReplacement), BindingFlags.Static | BindingFlags.Public)),
-					null);
+					prefix: new HarmonyMethod(typeof(TraceFixer).GetMethod(nameof(DoTraceReplacement), BindingFlags.Static | BindingFlags.NonPublic)));
 			}
 
 
-			public static bool DoTraceReplacement(string kind, Assembly report, string message)
+			private static bool DoTraceReplacement(string kind, Assembly report, string message)
 			{
 				string arg = string.Empty;
 				try

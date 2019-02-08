@@ -42,6 +42,7 @@
     <Compile Include="Entrypoint.cs" />
     <Compile Include="Patcher\PatcherPlugin.cs" />
     <Compile Include="Preloader.cs" />
+    <Compile Include="PreloaderLogWriter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="UnityPatches.cs" />
   </ItemGroup>
@@ -58,6 +59,9 @@
       <Project>{a15d6ee6-f954-415b-8605-8a8470cc87dc}</Project>
       <Name>Harmony</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Logger\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
