@@ -15,7 +15,7 @@ namespace BepInEx.Preloader
 		/// </param>
 		public static void Main(string[] args)
 		{
-			Paths.ExecutablePath(args[0]);
+			Paths.SetExecutablePath(args[0]);
 			AppDomain.CurrentDomain.AssemblyResolve += LocalResolve;
 
 			Preloader.Run();
