@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 namespace BepInEx.Logging
 {
@@ -12,19 +11,25 @@ namespace BepInEx.Logging
 	{
 		internal static readonly Action<string> WriteStringToUnityLog;
 
-		[DllImport("mono.dll", EntryPoint = "mono_lookup_internal_call")]
-		private static extern IntPtr MonoLookupInternalCall(IntPtr gconstpointer);
-
 		static UnityLogListener()
 		{
 			foreach (MethodInfo methodInfo in typeof(UnityEngine.UnityLogWriter).GetMethods(BindingFlags.Static | BindingFlags.Public))
 			{
-				if (MonoLookupInternalCall(methodInfo.MethodHandle.Value) == IntPtr.Zero)
+				try
+				{
+					methodInfo.Invoke(null, new object[] { "" });
+				}
+				catch
+				{
 					continue;
+				}
 
 				WriteStringToUnityLog = (Action<string>)Delegate.CreateDelegate(typeof(Action<string>), methodInfo);
 				break;
 			}
+			
+			if (WriteStringToUnityLog == null)
+				Logger.LogError("Unable to start Unity log writer");
 		}
 
 		public void LogEvent(object sender, LogEventArgs eventArgs)
