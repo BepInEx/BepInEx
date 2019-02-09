@@ -106,16 +106,6 @@ namespace BepInEx
 	public static class MetadataHelper
 	{
 		/// <summary>
-		/// Retrieves the BepInPlugin metadata from a plugin instance.
-		/// </summary>
-		/// <param name="plugin">The plugin instance.</param>
-		/// <returns>The BepInPlugin metadata of the plugin instance.</returns>
-		public static BepInPlugin GetMetadata(object plugin)
-		{
-			return GetMetadata(plugin.GetType());
-		}
-
-		/// <summary>
 		/// Retrieves the BepInPlugin metadata from a plugin type.
 		/// </summary>
 		/// <param name="plugin">The plugin type.</param>
@@ -131,15 +121,12 @@ namespace BepInEx
 		}
 
 		/// <summary>
-		/// Gets the specified attributes of an instance, if they exist.
+		/// Retrieves the BepInPlugin metadata from a plugin instance.
 		/// </summary>
-		/// <typeparam name="T">The attribute type to retrieve.</typeparam>
 		/// <param name="plugin">The plugin instance.</param>
-		/// <returns>The attributes of the instance, if existing.</returns>
-		public static IEnumerable<T> GetAttributes<T>(object plugin) where T : Attribute
-		{
-			return GetAttributes<T>(plugin.GetType());
-		}
+		/// <returns>The BepInPlugin metadata of the plugin instance.</returns>
+		public static BepInPlugin GetMetadata(object plugin)
+			=> GetMetadata(plugin.GetType());
 
 		/// <summary>
 		/// Gets the specified attributes of a type, if they exist.
@@ -147,10 +134,19 @@ namespace BepInEx
 		/// <typeparam name="T">The attribute type to retrieve.</typeparam>
 		/// <param name="plugin">The plugin type.</param>
 		/// <returns>The attributes of the type, if existing.</returns>
-		public static IEnumerable<T> GetAttributes<T>(Type pluginType) where T : Attribute
+		public static T[] GetAttributes<T>(Type pluginType) where T : Attribute
 		{
-			return pluginType.GetCustomAttributes(typeof(T), true).Cast<T>();
+			return (T[])pluginType.GetCustomAttributes(typeof(T), true);
 		}
+
+		/// <summary>
+		/// Gets the specified attributes of an instance, if they exist.
+		/// </summary>
+		/// <typeparam name="T">The attribute type to retrieve.</typeparam>
+		/// <param name="plugin">The plugin instance.</param>
+		/// <returns>The attributes of the instance, if existing.</returns>
+		public static IEnumerable<T> GetAttributes<T>(object plugin) where T : Attribute
+			=> GetAttributes<T>(plugin.GetType());
 
 		/// <summary>
 		/// Retrieves the dependencies of the specified plugin type.
