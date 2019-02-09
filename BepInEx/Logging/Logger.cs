@@ -9,14 +9,11 @@ namespace BepInEx
 	/// </summary>
 	public static class Logger
 	{
-		private static readonly ManualLogSource InternalLogSource = new ManualLogSource("BepInEx");
-
 		public static ICollection<ILogListener> Listeners { get; } = new List<ILogListener>();
 
-		public static ICollection<ILogSource> Sources { get; } = new LogSourceCollection()
-		{
-			InternalLogSource
-		};
+		public static ICollection<ILogSource> Sources { get; } = new LogSourceCollection();
+
+		private static readonly ManualLogSource InternalLogSource = CreateLogSource("BepInEx");
 
 		private static void InternalLogEvent(object sender, LogEventArgs eventArgs)
 		{
@@ -33,7 +30,7 @@ namespace BepInEx
 		/// <param name="entry">The textual value of the entry.</param>
 		public static void Log(LogLevel level, object data)
 		{
-			InternalLogEvent(InternalLogSource, new LogEventArgs(data, level, InternalLogSource));
+			InternalLogSource.Log(level, data);
 		}
 
 		public static void LogFatal(object data) => Log(LogLevel.Fatal, data);
@@ -42,6 +39,15 @@ namespace BepInEx
 		public static void LogMessage(object data) => Log(LogLevel.Message, data);
 		public static void LogInfo(object data) => Log(LogLevel.Info, data);
 		public static void LogDebug(object data) => Log(LogLevel.Debug, data);
+
+		public static ManualLogSource CreateLogSource(string sourceName)
+		{
+			var source = new ManualLogSource(sourceName);
+
+			Sources.Add(source);
+
+			return source;
+		}
 
 
 		private class LogSourceCollection : List<ILogSource>, ICollection<ILogSource>
