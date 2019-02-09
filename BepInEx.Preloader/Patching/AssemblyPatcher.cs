@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using BepInEx.Logging;
+using BepInEx.Preloader.RuntimeFixes;
 using Mono.Cecil;
 
-namespace BepInEx.Preloader.Patcher
+namespace BepInEx.Preloader.Patching
 {
 	/// <summary>
 	///     Delegate used in patching assemblies.

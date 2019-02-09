@@ -8,7 +8,7 @@ using System.Reflection;
 
 namespace UnityInjector.ConsoleUtil
 {
-	public static class SafeConsole
+	internal static class SafeConsole
 	{
 		private static GetColorDelegate _getBackgroundColor;
 		private static GetColorDelegate _getForegroundColor;

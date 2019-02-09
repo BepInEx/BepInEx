@@ -4,7 +4,7 @@ using System.Reflection;
 using BepInEx.Harmony;
 using Harmony;
 
-namespace BepInEx.Preloader
+namespace BepInEx.Preloader.RuntimeFixes
 {
 	internal static class UnityPatches
 	{
@@ -16,6 +16,12 @@ namespace BepInEx.Preloader
 		public static void Apply()
 		{
 			HarmonyWrapper.PatchAll(typeof(UnityPatches), HarmonyInstance);
+
+			try
+			{
+				TraceFix.ApplyFix();
+			}
+			catch { } //ignore everything, if it's thrown an exception, we're using an assembly that has already fixed this
 		}
 
 		[HarmonyPostfix]

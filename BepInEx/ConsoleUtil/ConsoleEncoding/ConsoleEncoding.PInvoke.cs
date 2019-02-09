@@ -15,7 +15,7 @@ namespace UnityInjector.ConsoleUtil
 	// http://jonskeet.uk/csharp/ebcdic/
 	// using only safe (managed) code
 	// --------------------------------------------------
-	partial class ConsoleEncoding
+	internal partial class ConsoleEncoding
 	{
 		[DllImport("kernel32.dll")]
 		private static extern uint GetConsoleOutputCP();

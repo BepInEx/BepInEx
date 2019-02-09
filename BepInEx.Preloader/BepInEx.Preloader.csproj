@@ -38,12 +38,14 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Patcher\AssemblyPatcher.cs" />
+    <Compile Include="Patching\AssemblyPatcher.cs" />
     <Compile Include="Entrypoint.cs" />
-    <Compile Include="Patcher\PatcherPlugin.cs" />
+    <Compile Include="Patching\PatcherPlugin.cs" />
+    <Compile Include="RuntimeFixes\TraceFix.cs" />
     <Compile Include="Preloader.cs" />
+    <Compile Include="Logger\PreloaderLogWriter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="UnityPatches.cs" />
+    <Compile Include="RuntimeFixes\UnityPatches.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\BepInEx\BepInEx.csproj">
@@ -59,5 +61,6 @@
       <Name>Harmony</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
