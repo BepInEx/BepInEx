@@ -32,7 +32,7 @@ namespace BepInEx.Bootstrap
 
 					foreach (Type type in assembly.GetTypes())
 					{
-						if (!type.IsInterface && !type.IsAbstract && type.BaseType == pluginType)
+						if (!type.IsInterface && !type.IsAbstract && pluginType.IsAssignableFrom(type))
 							types.Add(type);
 					}
 				}
