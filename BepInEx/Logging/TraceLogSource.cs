@@ -1,9 +1,4 @@
-﻿using System;
-using System.Diagnostics;
-using System.Linq;
-using System.Reflection;
-using Harmony;
-using UnityEngineInternal;
+﻿using System.Diagnostics;
 
 namespace BepInEx.Logging
 {
@@ -13,15 +8,6 @@ namespace BepInEx.Logging
 	/// <inheritdoc cref="TraceListener"/>
 	public class TraceLogSource : TraceListener
 	{
-		static TraceLogSource()
-		{
-			try
-			{
-				TraceFixer.ApplyFix();
-			}
-			catch { } //ignore everything, if it's thrown an exception, we're using an assembly that has already fixed this
-		}
-
 		public static bool IsListening { get; protected set; } = false;
 
 		private static TraceLogSource traceListener;
@@ -92,72 +78,6 @@ namespace BepInEx.Logging
 			}
 
 			LogSource.Log(level, $"{source} : {message}");
-		}
-
-		/// <summary>
-		/// This exists because the Mono implementation of <see cref="Trace"/> is/was broken, and would call Write directly instead of calling TraceEvent. This class fixes that with a <see cref="Harmony"/> hook.
-		/// </summary>
-		private static class TraceFixer
-		{
-			private static Type TraceImplType;
-
-			private static object ListenersSyncRoot;
-			private static TraceListenerCollection Listeners;
-			private static PropertyInfo prop_AutoFlush;
-
-			private static bool AutoFlush => (bool)prop_AutoFlush.GetValue(null, null);
-
-
-			public static void ApplyFix()
-			{
-				TraceImplType = AppDomain.CurrentDomain.GetAssemblies()
-										 .First(x => x.GetName().Name == "System")
-										 .GetTypes()
-										 .First(x => x.Name == "TraceImpl");
-
-
-				ListenersSyncRoot = AccessTools.Property(TraceImplType, "ListenersSyncRoot").GetValue(null, null);
-
-				Listeners = (TraceListenerCollection)AccessTools.Property(TraceImplType, "Listeners").GetValue(null, null);
-
-				prop_AutoFlush = AccessTools.Property(TraceImplType, "AutoFlush");
-
-
-				HarmonyInstance instance = HarmonyInstance.Create("com.bepis.bepinex.tracefix");
-
-				instance.Patch(
-					typeof(Trace).GetMethod("DoTrace", BindingFlags.Static | BindingFlags.NonPublic),
-					prefix: new HarmonyMethod(typeof(TraceFixer).GetMethod(nameof(DoTraceReplacement), BindingFlags.Static | BindingFlags.NonPublic)));
-			}
-
-
-			private static bool DoTraceReplacement(string kind, Assembly report, string message)
-			{
-				string arg = string.Empty;
-				try
-				{
-					arg = report.GetName().Name;
-				}
-				catch (MethodAccessException) { }
-
-				TraceEventType type = (TraceEventType)Enum.Parse(typeof(TraceEventType), kind);
-
-				lock (ListenersSyncRoot)
-				{
-					foreach (object obj in Listeners)
-					{
-						TraceListener traceListener = (TraceListener)obj;
-						traceListener.TraceEvent(new TraceEventCache(), arg, type, 0, message);
-
-						if (AutoFlush)
-						{
-							traceListener.Flush();
-						}
-					}
-				}
-
-				return false;
-			}
 		}
 	}
 }

@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using BepInEx.ConsoleUtil;
+using BepInEx.Logging;
 
-namespace BepInEx.Logging
+namespace BepInEx.Preloader
 {
 	public class PreloaderConsoleListener : ILogListener
 	{

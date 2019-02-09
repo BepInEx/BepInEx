@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace BepInEx.Preloader.Patcher
+namespace BepInEx.Preloader.Patching
 {
 	/// <summary>
 	///     A single assembly patcher.
