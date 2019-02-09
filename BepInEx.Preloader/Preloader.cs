@@ -57,8 +57,6 @@ namespace BepInEx.Preloader
 					Logger.LogMessage(attribute.Info);
 				}
 
-				Logger.LogMessage($"Running under unity version {Process.GetCurrentProcess().MainModule.FileVersionInfo.FileVersion}");
-
 				Logger.LogMessage("Preloader started");
 
 				string entrypointAssembly = Config.GetEntry("entrypoint-assembly", "UnityEngine.dll", "Preloader");
@@ -79,8 +77,6 @@ namespace BepInEx.Preloader
 				Logger.Listeners.Add(new ConsoleLogListener());
 
 				PreloaderLog.Dispose();
-
-				Trace.TraceError("This should be an error");
 			}
 			catch (Exception ex)
 			{
