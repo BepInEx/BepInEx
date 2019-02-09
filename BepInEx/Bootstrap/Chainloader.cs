@@ -105,29 +105,45 @@ namespace BepInEx.Bootstrap
 
 				string currentProcess = Process.GetCurrentProcess().ProcessName.ToLower();
 
-				var pluginTypes = TypeLoader.LoadTypes<BaseUnityPlugin>(Paths.PluginPath)
-											.Where(plugin =>
-											{
-												//Perform a filter for currently running process
-												var filters = MetadataHelper.GetAttributes<BepInProcess>(plugin);
+				var globalPluginTypes = TypeLoader.LoadTypes<BaseUnityPlugin>(Paths.PluginPath).ToList();
 
-												if (!filters.Any())
-													return true;
+				var selectedPluginTypes = globalPluginTypes
+				                          .Where(plugin =>
+										  {
+											  //Ensure metadata exists
+											  var metadata = MetadataHelper.GetMetadata(plugin);
 
-												return filters.Any(x => x.ProcessName.ToLower().Replace(".exe", "") == currentProcess);
-											})
-											.ToList();
+											  if (metadata == null)
+											  {
+												  Logger.LogWarning($"Skipping over type [{plugin.Name}] as no metadata attribute is specified");
+												  return false;
+											  }
 
-				Logger.Log(LogLevel.Info, $"{pluginTypes.Count} plugins selected");
+											  //Perform a filter for currently running process
+											  var filters = MetadataHelper.GetAttributes<BepInProcess>(plugin);
+
+											  if (filters.Length == 0) //no filters means it loads everywhere
+												  return true;
+
+											  var result = filters.Any(x => x.ProcessName.ToLower().Replace(".exe", "") == currentProcess);
+
+											  if (!result)
+												  Logger.LogInfo($"Skipping over plugin [{metadata.GUID}] due to process filter");
+
+											  return result;
+										  })
+										  .ToList();
+
+				Logger.Log(LogLevel.Info, $"{selectedPluginTypes.Count} / {globalPluginTypes.Count} plugins to load");
 
 				Dictionary<Type, IEnumerable<Type>> dependencyDict = new Dictionary<Type, IEnumerable<Type>>();
 
 
-				foreach (Type t in pluginTypes)
+				foreach (Type t in selectedPluginTypes)
 				{
 					try
 					{
-						IEnumerable<Type> dependencies = MetadataHelper.GetDependencies(t, pluginTypes);
+						IEnumerable<Type> dependencies = MetadataHelper.GetDependencies(t, selectedPluginTypes);
 
 						dependencyDict[t] = dependencies;
 					}
@@ -139,18 +155,18 @@ namespace BepInEx.Bootstrap
 					}
 				}
 
-				pluginTypes = Utility.TopologicalSort(dependencyDict.Keys, x => dependencyDict[x]).ToList();
+				var sortedTypes = Utility.TopologicalSort(dependencyDict.Keys, x => dependencyDict[x]).ToList();
 
-				foreach (Type t in pluginTypes)
+				foreach (Type t in sortedTypes)
 				{
 					try
 					{
 						var metadata = MetadataHelper.GetMetadata(t);
+						Logger.Log(LogLevel.Info, $"Loading [{metadata.Name} {metadata.Version}]");
 
 						var plugin = (BaseUnityPlugin)ManagerObject.AddComponent(t);
 
 						Plugins.Add(plugin);
-						Logger.Log(LogLevel.Info, $"Loaded [{metadata.Name} {metadata.Version}]");
 					}
 					catch (Exception ex)
 					{
@@ -165,6 +181,8 @@ namespace BepInEx.Bootstrap
 				Console.WriteLine("Error occurred starting the game");
 				Console.WriteLine(ex.ToString());
 			}
+
+			Logger.LogMessage("Chainloader startup complete");
 
 			_loaded = true;
 		}
