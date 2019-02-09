@@ -35,16 +35,14 @@ namespace BepInEx.Preloader
 				
 				Logger.Sources.Add(TraceLogSource.CreateSource());
 
-				PreloaderLog = new PreloaderConsoleListener(
-						Utility.SafeParseBool(Config.GetEntry("preloader-logconsole", "false", "BepInEx")));
+				PreloaderLog = new PreloaderConsoleListener(Utility.SafeParseBool(Config.GetEntry("preloader-logconsole", "false", "BepInEx")));
 
 				Logger.Listeners.Add(PreloaderLog);
 				
 
-				string consoleTile =
-					$"BepInEx {typeof(Paths).Assembly.GetName().Version} - {Process.GetCurrentProcess().ProcessName}";
-				ConsoleWindow.Title = consoleTile;
+				string consoleTile = $"BepInEx {typeof(Paths).Assembly.GetName().Version} - {Process.GetCurrentProcess().ProcessName}";
 
+				ConsoleWindow.Title = consoleTile;
 				Logger.LogMessage(consoleTile);
 
 				//See BuildInfoAttribute for more information about this section.
@@ -57,6 +55,14 @@ namespace BepInEx.Preloader
 					Logger.LogMessage(attribute.Info);
 				}
 
+#if UNITY_2018
+				Logger.LogMessage("Compiled in Unity v2018 mode");
+#else
+				Logger.LogMessage("Compiled in Legacy Unity mode");
+#endif
+
+				Logger.LogInfo($"Running under Unity v{Process.GetCurrentProcess().MainModule.FileVersionInfo.FileVersion}");
+
 				Logger.LogMessage("Preloader started");
 
 				string entrypointAssembly = Config.GetEntry("entrypoint-assembly", "UnityEngine.dll", "Preloader");
@@ -64,6 +70,8 @@ namespace BepInEx.Preloader
 				AssemblyPatcher.AddPatcher(new PatcherPlugin
 					{ TargetDLLs = new[] { entrypointAssembly }, Patcher = PatchEntrypoint });
 				AssemblyPatcher.AddPatchersFromDirectory(Paths.PatcherPluginPath, GetPatcherMethods);
+
+				Logger.LogInfo($"{AssemblyPatcher.PatcherPlugins.Count} patcher plugin(s) loaded");
 
 				AssemblyPatcher.PatchAndLoad(Paths.ManagedPath);
 
@@ -82,12 +90,12 @@ namespace BepInEx.Preloader
 			{
 				try
 				{
-					Logger.Log(LogLevel.Fatal, "Could not run preloader!");
-					Logger.Log(LogLevel.Fatal, ex);
+					Logger.LogFatal("Could not run preloader!");
+					Logger.LogFatal(ex);
 
 					PreloaderLog?.Dispose();
 
-					if (!ConsoleWindow.IsAttatched)
+					if (!ConsoleWindow.IsAttached)
 					{
 						//if we've already attached the console, then the log will already be written to the console
 						AllocateConsole();
@@ -187,12 +195,11 @@ namespace BepInEx.Preloader
 				}
 				catch (Exception ex)
 				{
-					Logger.Log(LogLevel.Warning, $"Could not load patcher methods from {assembly.GetName().Name}");
-					Logger.Log(LogLevel.Warning, $"{ex}");
+					Logger.LogWarning($"Could not load patcher methods from {assembly.GetName().Name}");
+					Logger.LogWarning(ex);
 				}
 
-			Logger.Log(LogLevel.Info,
-				$"Loaded {patcherMethods.Count} patcher methods from {assembly.GetName().Name}");
+			Logger.LogInfo($"Loaded {patcherMethods.Count} patcher methods from {assembly.GetName().Name}");
 
 			return patcherMethods;
 		}
@@ -299,8 +306,8 @@ namespace BepInEx.Preloader
 			}
 			catch (Exception ex)
 			{
-				Logger.Log(LogLevel.Error, "Failed to allocate console!");
-				Logger.Log(LogLevel.Error, ex);
+				Logger.LogError("Failed to allocate console!");
+				Logger.LogError(ex);
 			}
 		}
 	}

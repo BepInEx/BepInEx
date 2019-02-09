@@ -122,7 +122,7 @@ namespace BepInEx
 			}
 			catch (Exception ex)
 			{
-				Logger.Log(LogLevel.Error, "ConfigWrapper Get Converter Exception: " + ex.Message);
+				Logger.LogError("ConfigWrapper Get Converter Exception: " + ex.Message);
 				return _default;
 			}
 		}
@@ -145,7 +145,7 @@ namespace BepInEx
 			}
 			catch (Exception ex)
 			{
-				Logger.Log(LogLevel.Error, "ConfigWrapper Set Converter Exception: " + ex.Message);
+				Logger.LogError("ConfigWrapper Set Converter Exception: " + ex.Message);
 			}
 		}
 

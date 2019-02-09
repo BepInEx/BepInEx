@@ -10,7 +10,7 @@ namespace BepInEx.Logging
 	{
 		public void LogEvent(object sender, LogEventArgs eventArgs)
 		{
-			string log = $"[{eventArgs.Level}:{((ILogSource)sender).SourceName}] {eventArgs.Data}\r\n";
+			string log = $"[{eventArgs.Level, -7}:{((ILogSource)sender).SourceName, 10}] {eventArgs.Data}\r\n";
 
 			Kon.ForegroundColor = eventArgs.Level.GetConsoleColor();
 			Console.Write(log);

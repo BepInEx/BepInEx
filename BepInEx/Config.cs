@@ -73,7 +73,7 @@ namespace BepInEx
 			catch (Exception ex)
 			{
 				Logger.Log(LogLevel.Error | LogLevel.Message, "Unable to read config entry!");
-				Logger.Log(LogLevel.Error, ex);
+				Logger.LogError(ex);
 				return defaultValue;
 			}
 		}
@@ -158,7 +158,7 @@ namespace BepInEx
 			catch (Exception ex)
 			{
 				Logger.Log(LogLevel.Error | LogLevel.Message, "Unable to save config entry!");
-				Logger.Log(LogLevel.Error, ex);
+				Logger.LogError(ex);
 			}
 		}
 

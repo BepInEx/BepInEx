@@ -12,7 +12,7 @@ namespace UnityInjector.ConsoleUtil
 {
 	internal class ConsoleWindow
 	{
-		public static bool IsAttatched { get; private set; }
+		public static bool IsAttached { get; private set; }
 		private static IntPtr _cOut;
 		private static IntPtr _oOut;
 
@@ -20,7 +20,7 @@ namespace UnityInjector.ConsoleUtil
 
 		public static void Attach()
 		{
-			if (IsAttatched)
+			if (IsAttached)
 				return;
 
 			if (_oOut == IntPtr.Zero)
@@ -44,14 +44,14 @@ namespace UnityInjector.ConsoleUtil
 				throw new Exception("SetStdHandle() failed");
 			Init();
 
-			IsAttatched = true;
+			IsAttached = true;
 		}
 
 		public static string Title
 		{
 			set
 			{
-				if (!IsAttatched)
+				if (!IsAttached)
 					return;
 
 				if (value == null)
@@ -73,7 +73,7 @@ namespace UnityInjector.ConsoleUtil
 
 		public static void Detach()
 		{
-			if (!IsAttatched)
+			if (!IsAttached)
 				return;
 
 			if (!CloseHandle(_cOut))
@@ -85,7 +85,7 @@ namespace UnityInjector.ConsoleUtil
 				throw new Exception("SetStdHandle() failed");
 			Init();
 
-			IsAttatched = false;
+			IsAttached = false;
 		}
 
 		[DllImport("user32.dll")]

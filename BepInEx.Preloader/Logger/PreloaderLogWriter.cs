@@ -33,7 +33,7 @@ namespace BepInEx.Preloader
 		{
 			LogEvents.Add(eventArgs);
 
-			string log = $"[{eventArgs.Level}:{((ILogSource)sender).SourceName}] {eventArgs.Data}\r\n";
+			string log = $"[{eventArgs.Level,-7}:{((ILogSource)sender).SourceName,10}] {eventArgs.Data}\r\n";
 
 			LogBuilder.Append(log);
 

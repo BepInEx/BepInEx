@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using BepInEx.Logging;
 using BepInEx.Preloader.RuntimeFixes;
 using Mono.Cecil;
 
@@ -20,7 +19,7 @@ namespace BepInEx.Preloader.Patching
 	/// </summary>
 	internal static class AssemblyPatcher
 	{
-		private static readonly List<PatcherPlugin> patchers = new List<PatcherPlugin>();
+		public static List<PatcherPlugin> PatcherPlugins { get; } = new List<PatcherPlugin>();
 
 		/// <summary>
 		///     Configuration value of whether assembly dumping is enabled or not.
@@ -34,7 +33,7 @@ namespace BepInEx.Preloader.Patching
 		/// <param name="patcher">Patcher to apply.</param>
 		public static void AddPatcher(PatcherPlugin patcher)
 		{
-			patchers.Add(patcher);
+			PatcherPlugins.Add(patcher);
 		}
 
 		/// <summary>
@@ -67,13 +66,13 @@ namespace BepInEx.Preloader.Patching
 
 		private static void InitializePatchers()
 		{
-			foreach (var assemblyPatcher in patchers)
+			foreach (var assemblyPatcher in PatcherPlugins)
 				assemblyPatcher.Initializer?.Invoke();
 		}
 
 		private static void FinalizePatching()
 		{
-			foreach (var assemblyPatcher in patchers)
+			foreach (var assemblyPatcher in PatcherPlugins)
 				assemblyPatcher.Finalizer?.Invoke();
 		}
 
@@ -82,7 +81,7 @@ namespace BepInEx.Preloader.Patching
 		/// </summary>
 		public static void DisposePatchers()
 		{
-			patchers.Clear();
+			PatcherPlugins.Clear();
 		}
 
 		/// <summary>
@@ -112,8 +111,7 @@ namespace BepInEx.Preloader.Patching
 
 				if (UnityPatches.AssemblyLocations.ContainsKey(assembly.FullName))
 				{
-					Logger.Log(LogLevel.Warning,
-						$"Tried to load duplicate assembly {Path.GetFileName(assemblyPath)} from Managed folder! Skipping...");
+					Logger.LogWarning($"Tried to load duplicate assembly {Path.GetFileName(assemblyPath)} from Managed folder! Skipping...");
 					continue;
 				}
 
@@ -126,7 +124,7 @@ namespace BepInEx.Preloader.Patching
 
 			// Then, perform the actual patching
 			var patchedAssemblies = new HashSet<string>();
-			foreach (var assemblyPatcher in patchers)
+			foreach (var assemblyPatcher in PatcherPlugins)
 				foreach (string targetDll in assemblyPatcher.TargetDLLs)
 					if (assemblies.TryGetValue(targetDll, out var assembly))
 					{

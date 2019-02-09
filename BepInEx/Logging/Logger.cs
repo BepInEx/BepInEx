@@ -28,17 +28,17 @@ namespace BepInEx
 		/// </summary>
 		/// <param name="level">The level of the entry.</param>
 		/// <param name="entry">The textual value of the entry.</param>
-		public static void Log(LogLevel level, object data)
+		internal static void Log(LogLevel level, object data)
 		{
 			InternalLogSource.Log(level, data);
 		}
 
-		public static void LogFatal(object data) => Log(LogLevel.Fatal, data);
-		public static void LogError(object data) => Log(LogLevel.Error, data);
-		public static void LogWarning(object data) => Log(LogLevel.Warning, data);
-		public static void LogMessage(object data) => Log(LogLevel.Message, data);
-		public static void LogInfo(object data) => Log(LogLevel.Info, data);
-		public static void LogDebug(object data) => Log(LogLevel.Debug, data);
+		internal static void LogFatal(object data) => Log(LogLevel.Fatal, data);
+		internal static void LogError(object data) => Log(LogLevel.Error, data);
+		internal static void LogWarning(object data) => Log(LogLevel.Warning, data);
+		internal static void LogMessage(object data) => Log(LogLevel.Message, data);
+		internal static void LogInfo(object data) => Log(LogLevel.Info, data);
+		internal static void LogDebug(object data) => Log(LogLevel.Debug, data);
 
 		public static ManualLogSource CreateLogSource(string sourceName)
 		{

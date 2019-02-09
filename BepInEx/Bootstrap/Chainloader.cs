@@ -67,7 +67,7 @@ namespace BepInEx.Bootstrap
 				Logger.Sources.Add(new UnityLogSource());
 
 
-			Logger.Log(LogLevel.Message, "Chainloader ready");
+			Logger.LogMessage("Chainloader ready");
 
 			_initialized = true;
 		}
@@ -96,7 +96,7 @@ namespace BepInEx.Bootstrap
 					ConsoleWindow.Title =
 						$"BepInEx {Assembly.GetExecutingAssembly().GetName().Version} - {productNameProp.GetValue(null, null)}";
 
-				Logger.Log(LogLevel.Message, "Chainloader started");
+				Logger.LogMessage("Chainloader started");
 
 				ManagerObject = new GameObject("BepInEx_Manager");
 
@@ -134,7 +134,7 @@ namespace BepInEx.Bootstrap
 										  })
 										  .ToList();
 
-				Logger.Log(LogLevel.Info, $"{selectedPluginTypes.Count} / {globalPluginTypes.Count} plugins to load");
+				Logger.LogInfo($"{selectedPluginTypes.Count} / {globalPluginTypes.Count} plugins to load");
 
 				Dictionary<Type, IEnumerable<Type>> dependencyDict = new Dictionary<Type, IEnumerable<Type>>();
 
@@ -151,7 +151,7 @@ namespace BepInEx.Bootstrap
 					{
 						var metadata = MetadataHelper.GetMetadata(t);
 
-						Logger.Log(LogLevel.Info, $"Cannot load [{metadata.Name}] due to missing dependencies.");
+						Logger.LogWarning($"Cannot load [{metadata.Name}] due to missing dependencies.");
 					}
 				}
 
@@ -162,7 +162,7 @@ namespace BepInEx.Bootstrap
 					try
 					{
 						var metadata = MetadataHelper.GetMetadata(t);
-						Logger.Log(LogLevel.Info, $"Loading [{metadata.Name} {metadata.Version}]");
+						Logger.LogInfo($"Loading [{metadata.Name} {metadata.Version}]");
 
 						var plugin = (BaseUnityPlugin)ManagerObject.AddComponent(t);
 
@@ -170,7 +170,8 @@ namespace BepInEx.Bootstrap
 					}
 					catch (Exception ex)
 					{
-						Logger.Log(LogLevel.Info, $"Error loading [{t.Name}] : {ex.Message}");
+						Logger.LogError($"Error loading [{t.Name}] : {ex.Message}");
+						Logger.LogDebug(ex);
 					}
 				}
 			}
