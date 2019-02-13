@@ -42,15 +42,13 @@ Changes since ${latestTag}:
                 }
             }
         }
-        stage('Build BepInEx') {
+        stage('Prepare BepInEx') {
             steps {
-                //TODO: Add builds for other Unity versions as well
-                sh 'cp -f Unity/5.6/UnityEngine.dll BepInEx/lib/UnityEngine.dll'
                 dir('BepInEx') {
                     sh 'nuget restore'
                 }
-                dir('BepInEx/BepInEx') {
 
+                dir('BepInEx/BepInEx') {
                     // Write additional BuildInfo into the Bleeding Edge BepInEx.dll
                     dir('Properties') {
                         sh "echo '[assembly: BuildInfo(\"BLEEDING EDGE Build #${env.BUILD_NUMBER} from ${shortCommit} at ${branchName}\")]' >> AssemblyInfo.cs"
@@ -60,63 +58,114 @@ Changes since ${latestTag}:
                         }
                     }
                 }
-                // TODO: Build stuff selectively?
+            }
+        }
+        stage('Build Legacy BepInEx') {
+            steps {
+                sh 'cp -f Unity/5.6/UnityEngine.dll BepInEx/lib/UnityEngine.dll'
                 dir('BepInEx') {
                     sh 'msbuild /p:Configuration=Legacy /t:Build /p:DebugType=none BepInEx.sln'
                 }
+
+                dir('Build/Legacy/bin') {
+                    sh 'cp -fr ../../../BepInEx/bin/* .'
+                }
+                dir('BepInEx/bin') {
+                    deleteDir()
+                }
             }
         }
-        stage('Package everything') {
+        stage('Build 2018 BepInEx') {
             steps {
-                dir('Build') {
-                    deleteDir()
+                // sh 'cp -f Unity/2018/UnityEngine.CoreModule.dll BepInEx/lib/UnityEngine.CoreModule.dll'
+                // TODO: Switch to 2018 version of UnityEngine.dll?
+                sh 'cp -f Unity/5.6/UnityEngine.dll BepInEx/lib/UnityEngine.dll'
+                dir('BepInEx') {
+                    sh 'msbuild /p:Configuration=v2018 /t:Build /p:DebugType=none BepInEx.sln'
                 }
-                dir('BepInEx/bin/patcher') {
-                    // NOTE: Currently we exclude patcher because we don't need it!
-                    deleteDir()
-                }
-                dir('Build') {
-                    sh 'mkdir -p BepInEx/core BepInEx/patchers'
-                    sh 'cp -f -t BepInEx/core ../BepInEx/bin/*'
-                    sh 'rm -f BepInEx/core/UnityEngine.dll'
 
-                    sh 'cp -f ../BepInEx/doorstop/doorstop_config.ini doorstop_config.ini'
-                    sh 'cp -f ../Doorstop/x86/winhttp.dll winhttp.dll'
+                dir('Build/v2018/bin') {
+                    sh 'cp -fr ../../../BepInEx/bin/* .'
+                }
+                dir('BepInEx/bin') {
+                    deleteDir()
+                }
+            }
+        }
+        stage('Package Legacy') {
+            steps {
+                dir('Build/Legacy/dist') {
+                    sh 'mkdir -p BepInEx/core BepInEx/patchers BepInEx/plugins'
+                    sh 'cp -fr -t BepInEx/core ../bin/*'
+                    sh 'rm -f BepInEx/core/UnityEngine.dll'
+                    sh 'rm -rf BepInEx/core/patcher'
+
+                    sh 'cp -f ../../../BepInEx/doorstop/doorstop_config.ini doorstop_config.ini'
+                    sh 'cp -f ../../../Doorstop/x86/winhttp.dll winhttp.dll'
                     
                     writeFile encoding: 'UTF-8', file: 'changelog.txt', text: changelog
 
-                    sh "zip -r9 BepInEx_x86_${shortCommit}_${versionNumber}.zip ./*"
+                    sh "zip -r9 BepInEx_Legacy_x86_${shortCommit}_${versionNumber}.zip ./*"
                     
-                    sh 'cp -f ../Doorstop/x64/winhttp.dll winhttp.dll'
+                    sh 'cp -f ../../../Doorstop/x64/winhttp.dll winhttp.dll'
                     
                     sh 'unix2dos doorstop_config.ini changelog.txt'
                     
-                    sh "zip -r9 BepInEx_x64_${shortCommit}_${versionNumber}.zip ./* -x \\*.zip"
+                    sh "zip -r9 BepInEx_Legacy_x64_${shortCommit}_${versionNumber}.zip ./* -x \\*.zip"
+
+                    archiveArtifacts "*.zip"
                 }
             }
         }
-        stage('Saving artifacts') {
+        stage('Package v2018') {
             steps {
-                archiveArtifacts 'Build/*.zip'
+                dir('Build/v2018/dist') {
+                    sh 'mkdir -p BepInEx/core BepInEx/patchers BepInEx/plugins'
+                    sh 'cp -fr -t BepInEx/core ../bin/*'
+                    sh 'rm -rf BepInEx/core/patcher'
+                    sh 'rm -f BepInEx/core/UnityEngine.dll'
+                    sh 'rm -f BepInEx/core/UnityEngine.CoreModule.dll'
+
+                    sh 'cp -f ../../../BepInEx/doorstop/doorstop_config.ini doorstop_config.ini'
+                    sh 'cp -f ../../../Doorstop/x86/winhttp.dll winhttp.dll'
+                    
+                    writeFile encoding: 'UTF-8', file: 'changelog.txt', text: changelog
+
+                    sh "zip -r9 BepInEx_v2018_x86_${shortCommit}_${versionNumber}.zip ./*"
+                    
+                    sh 'cp -f ../../../Doorstop/x64/winhttp.dll winhttp.dll'
+                    
+                    sh 'unix2dos doorstop_config.ini changelog.txt'
+                    
+                    sh "zip -r9 BepInEx_v2018_x64_${shortCommit}_${versionNumber}.zip ./* -x \\*.zip"
+
+                    archiveArtifacts "*.zip"
+                }
             }
         }
     }
     post {
         success {
             // Write built BepInEx into bepisbuilds
-            dir('Build') {
-                sh "cp BepInEx_x86_${shortCommit}_${versionNumber}.zip /var/www/bepisbuilds/builds/bepinex_be"
-                sh "cp BepInEx_x64_${shortCommit}_${versionNumber}.zip /var/www/bepisbuilds/builds/bepinex_be"
-                sh "echo \"`date -Iseconds -u`;${env.BUILD_NUMBER};${shortCommit};BepInEx_x86_${shortCommit}_${versionNumber}.zip;BepInEx_x64_${shortCommit}_${versionNumber}.zip\" >> /var/www/bepisbuilds/builds/bepinex_be/artifacts_list"
+            dir('Build/Legacy/dist') {
+                sh "cp BepInEx_Legacy_x86_${shortCommit}_${versionNumber}.zip /var/www/bepisbuilds/builds/bepinex_be"
+                sh "cp BepInEx_Legacy_x64_${shortCommit}_${versionNumber}.zip /var/www/bepisbuilds/builds/bepinex_be"
             }
 
-            // Notify Bepin Discord of successfull build
+            dir('Build/v2018/dist') {
+                sh "cp BepInEx_v2018_x86_${shortCommit}_${versionNumber}.zip /var/www/bepisbuilds/builds/bepinex_be"
+                sh "cp BepInEx_v2018_x64_${shortCommit}_${versionNumber}.zip /var/www/bepisbuilds/builds/bepinex_be"
+            }
+
+            sh "echo \"`date -Iseconds -u`;${env.BUILD_NUMBER};${shortCommit};BepInEx_Legacy_x86_${shortCommit}_${versionNumber}.zip;BepInEx_Legacy_x64_${shortCommit}_${versionNumber}.zip;BepInEx_v2018_x86_${shortCommit}_${versionNumber}.zip;BepInEx_v2018_x64_${shortCommit}_${versionNumber}.zip\" >> /var/www/bepisbuilds/builds/bepinex_be/artifacts_list"
+
+            Notify Bepin Discord of successfull build
             withCredentials([string(credentialsId: 'discord-notify-webhook', variable: 'DISCORD_WEBHOOK')]) {
                 discordSend description: "**Build:** [${currentBuild.id}](${env.BUILD_URL})\n**Status:** [${currentBuild.currentResult}](${env.BUILD_URL})\n\n**Artifacts:**\n- [BepInEx_x86_${shortCommit}_${versionNumber}.zip](${env.BUILD_URL}artifact/Build/BepInEx_x86_${shortCommit}_${versionNumber}.zip)\n- [BepInEx_x64_${shortCommit}_${versionNumber}.zip](${env.BUILD_URL}artifact/Build/BepInEx_x64_${shortCommit}_${versionNumber}.zip)", footer: 'Jenkins via Discord Notifier', link: env.BUILD_URL, successful: currentBuild.resultIsBetterOrEqualTo('SUCCESS'), title: "${env.JOB_NAME} #${currentBuild.id}", webhookURL: DISCORD_WEBHOOK
             }
         }
         failure {
-            // Notify Discord of failed build
+            Notify Discord of failed build
             withCredentials([string(credentialsId: 'discord-notify-webhook', variable: 'DISCORD_WEBHOOK')]) {
                 discordSend description: "**Build:** [${currentBuild.id}](${env.BUILD_URL})\n**Status:** [${currentBuild.currentResult}](${env.BUILD_URL})", footer: 'Jenkins via Discord Notifier', link: env.BUILD_URL, successful: currentBuild.resultIsBetterOrEqualTo('SUCCESS'), title: "${env.JOB_NAME} #${currentBuild.id}", webhookURL: DISCORD_WEBHOOK
             }
