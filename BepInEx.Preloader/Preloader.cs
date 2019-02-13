@@ -79,8 +79,6 @@ namespace BepInEx.Preloader
 
 				Logger.LogMessage("Preloader finished");
 
-                UnityLogListener.WriteStringToUnityLog?.Invoke(PreloaderLog.ToString());
-
                 Logger.Listeners.Remove(PreloaderLog);
 				Logger.Listeners.Add(new ConsoleLogListener());
 
