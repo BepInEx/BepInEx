@@ -133,7 +133,7 @@ namespace BepInEx.Preloader.Patching
 						patchedAssemblies.Add(targetDll);
 					}
 
-			// Finally, load all assemblies into memory
+			// Finally, load patched assemblies into memory
 			foreach (KeyValuePair<string, AssemblyDefinition> kv in assemblies)
 			{
 				string filename = kv.Key;
@@ -151,7 +151,13 @@ namespace BepInEx.Preloader.Patching
 						File.WriteAllBytes(Path.Combine(dirPath, filename), mem.ToArray());
 					}
 
-				Load(assembly);
+                // Note that since we only *load* assemblies, they shouldn't trigger dependency loading
+                // Not loading all assemblies is very important not only because of memory reasons,
+                // but because some games *rely* on that because of messed up internal dependencies.
+                if (patchedAssemblies.Contains(filename))
+				    Load(assembly);
+
+                // Though we have to dispose of all assemblies regardless of them being patched or not
 				assembly.Dispose();
 			}
 
