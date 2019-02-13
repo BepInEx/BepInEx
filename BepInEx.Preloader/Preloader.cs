@@ -32,13 +32,13 @@ namespace BepInEx.Preloader
 				AllocateConsole();
 
 				UnityPatches.Apply();
-				
+
 				Logger.Sources.Add(TraceLogSource.CreateSource());
 
 				PreloaderLog = new PreloaderConsoleListener(Utility.SafeParseBool(Config.GetEntry("preloader-logconsole", "false", "BepInEx")));
 
 				Logger.Listeners.Add(PreloaderLog);
-				
+
 
 				string consoleTile = $"BepInEx {typeof(Paths).Assembly.GetName().Version} - {Process.GetCurrentProcess().ProcessName}";
 
@@ -73,13 +73,13 @@ namespace BepInEx.Preloader
 
 				Logger.LogInfo($"{AssemblyPatcher.PatcherPlugins.Count} patcher plugin(s) loaded");
 
-                AssemblyPatcher.PatchAndLoad(Paths.ManagedPath);
+				AssemblyPatcher.PatchAndLoad(Paths.ManagedPath);
 
-                AssemblyPatcher.DisposePatchers();
+				AssemblyPatcher.DisposePatchers();
 
 				Logger.LogMessage("Preloader finished");
 
-                Logger.Listeners.Remove(PreloaderLog);
+				Logger.Listeners.Remove(PreloaderLog);
 				Logger.Listeners.Add(new ConsoleLogListener());
 
 				PreloaderLog.Dispose();
@@ -191,7 +191,7 @@ namespace BepInEx.Preloader
 					if (finalizeMethod != null)
 						assemblyPatcher.Finalizer = () => finalizeMethod.Invoke(null, null);
 
-                    patcherMethods.Add(assemblyPatcher);
+					patcherMethods.Add(assemblyPatcher);
 				}
 				catch (Exception ex)
 				{
