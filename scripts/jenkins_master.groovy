@@ -159,7 +159,7 @@ Changes since ${latestTag}:
 
             sh "echo \"`date -Iseconds -u`;${env.BUILD_NUMBER};${shortCommit};BepInEx_Legacy_x86_${shortCommit}_${versionNumber}.zip;BepInEx_Legacy_x64_${shortCommit}_${versionNumber}.zip;BepInEx_v2018_x86_${shortCommit}_${versionNumber}.zip;BepInEx_v2018_x64_${shortCommit}_${versionNumber}.zip\" >> /var/www/bepisbuilds/builds/bepinex_be/artifacts_list"
 
-            Notify Bepin Discord of successfull build
+            //Notify Bepin Discord of successfull build
             withCredentials([string(credentialsId: 'discord-notify-webhook', variable: 'DISCORD_WEBHOOK')]) {
                 discordSend description: "**Build:** [${currentBuild.id}](${env.BUILD_URL})\n**Status:** [${currentBuild.currentResult}](${env.BUILD_URL})\n\n**Artifacts:**\n- [BepInEx_x86_${shortCommit}_${versionNumber}.zip](${env.BUILD_URL}artifact/Build/BepInEx_x86_${shortCommit}_${versionNumber}.zip)\n- [BepInEx_x64_${shortCommit}_${versionNumber}.zip](${env.BUILD_URL}artifact/Build/BepInEx_x64_${shortCommit}_${versionNumber}.zip)", footer: 'Jenkins via Discord Notifier', link: env.BUILD_URL, successful: currentBuild.resultIsBetterOrEqualTo('SUCCESS'), title: "${env.JOB_NAME} #${currentBuild.id}", webhookURL: DISCORD_WEBHOOK
             }
