@@ -73,15 +73,15 @@ namespace BepInEx.Preloader
 
 				Logger.LogInfo($"{AssemblyPatcher.PatcherPlugins.Count} patcher plugin(s) loaded");
 
-				AssemblyPatcher.PatchAndLoad(Paths.ManagedPath);
+                AssemblyPatcher.PatchAndLoad(Paths.ManagedPath);
 
-				AssemblyPatcher.DisposePatchers();
+                AssemblyPatcher.DisposePatchers();
 
 				Logger.LogMessage("Preloader finished");
 
-				UnityLogListener.WriteStringToUnityLog?.Invoke(PreloaderLog.ToString());
+                UnityLogListener.WriteStringToUnityLog?.Invoke(PreloaderLog.ToString());
 
-				Logger.Listeners.Remove(PreloaderLog);
+                Logger.Listeners.Remove(PreloaderLog);
 				Logger.Listeners.Add(new ConsoleLogListener());
 
 				PreloaderLog.Dispose();
@@ -192,6 +192,8 @@ namespace BepInEx.Preloader
 
 					if (finalizeMethod != null)
 						assemblyPatcher.Finalizer = () => finalizeMethod.Invoke(null, null);
+
+                    patcherMethods.Add(assemblyPatcher);
 				}
 				catch (Exception ex)
 				{
