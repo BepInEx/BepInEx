@@ -22,7 +22,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'v2018|AnyCPU'">
-    <OutputPath>bin\v2018\</OutputPath>
+    <OutputPath>..\bin\</OutputPath>
     <DefineConstants>TRACE;UNITY_2018</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>none</DebugType>
