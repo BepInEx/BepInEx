@@ -14,7 +14,7 @@ namespace BepInEx
 		{
 			var metadata = MetadataHelper.GetMetadata(this);
 
-			Logger = BepInEx.Logger.CreateLogSource(metadata.Name);
+			Logger = Logging.Logger.CreateLogSource(metadata.Name);
 		}
 	}
 }

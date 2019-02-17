@@ -8,6 +8,7 @@ using System.Text;
 using BepInEx.Logging;
 using UnityEngine;
 using UnityInjector.ConsoleUtil;
+using Logger = BepInEx.Logging.Logger;
 
 namespace BepInEx.Bootstrap
 {

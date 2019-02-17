@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using BepInEx.Logging;
 
-namespace BepInEx
+namespace BepInEx.Logging
 {
 	/// <summary>
 	/// A static <see cref="BaseLogger"/> instance.

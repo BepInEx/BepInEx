@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using BepInEx.Logging;
 using BepInEx.Preloader.RuntimeFixes;
 using Mono.Cecil;
 
