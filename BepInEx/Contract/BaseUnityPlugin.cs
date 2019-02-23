@@ -1,4 +1,5 @@
-﻿using BepInEx.Logging;
+﻿using BepInEx.Configuration;
+using BepInEx.Logging;
 using UnityEngine;
 
 namespace BepInEx
@@ -10,11 +11,15 @@ namespace BepInEx
 	{
 		protected ManualLogSource Logger { get; }
 
+		protected ConfigFile Config { get; }
+
 		protected BaseUnityPlugin()
 		{
 			var metadata = MetadataHelper.GetMetadata(this);
 
 			Logger = Logging.Logger.CreateLogSource(metadata.Name);
+
+			Config = new ConfigFile(Utility.CombinePaths(Paths.ConfigPath, metadata.GUID + ".ini"));
 		}
 	}
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using BepInEx.Configuration;
 using BepInEx.Logging;
 using BepInEx.Preloader.RuntimeFixes;
 using Mono.Cecil;
@@ -21,12 +22,6 @@ namespace BepInEx.Preloader.Patching
 	internal static class AssemblyPatcher
 	{
 		public static List<PatcherPlugin> PatcherPlugins { get; } = new List<PatcherPlugin>();
-
-		/// <summary>
-		///     Configuration value of whether assembly dumping is enabled or not.
-		/// </summary>
-		private static bool DumpingEnabled =>
-			Utility.SafeParseBool(Config.GetEntry("dump-assemblies", "false", "Preloader"));
 
 		/// <summary>
 		///     Adds a single assembly patcher to the pool of applicable patches.
@@ -140,7 +135,7 @@ namespace BepInEx.Preloader.Patching
 				string filename = kv.Key;
 				var assembly = kv.Value;
 
-				if (DumpingEnabled && patchedAssemblies.Contains(filename))
+				if (ConfigDumpAssemblies.Value && patchedAssemblies.Contains(filename))
 					using (var mem = new MemoryStream())
 					{
 						string dirPath = Path.Combine(Paths.BepInExRootPath, "DumpedAssemblies");
@@ -167,7 +162,7 @@ namespace BepInEx.Preloader.Patching
 		}
 
 		/// <summary>
-		///     Loads an individual assembly defintion into the CLR.
+		///     Loads an individual assembly definition into the CLR.
 		/// </summary>
 		/// <param name="assembly">The assembly to load.</param>
 		public static void Load(AssemblyDefinition assembly)
@@ -178,5 +173,15 @@ namespace BepInEx.Preloader.Patching
 				Assembly.Load(assemblyStream.ToArray());
 			}
 		}
+
+		#region Config
+
+		private static ConfigWrapper<bool> ConfigDumpAssemblies = ConfigFile.CoreConfig.Wrap(
+			"Preloader",
+			"DumpAssemblies",
+			"If enabled, BepInEx will save patched assemblies into BepInEx/DumpedAssemblies.\nThis can be used by developers to inspect and debug preloader patchers.",
+			false);
+
+		#endregion
 	}
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using BepInEx.Configuration;
 using BepInEx.ConsoleUtil;
 
 namespace BepInEx.Logging
@@ -8,8 +9,13 @@ namespace BepInEx.Logging
 	/// </summary>
 	public class ConsoleLogListener : ILogListener
 	{
+		protected LogLevel DisplayedLogLevel = (LogLevel)Enum.Parse(typeof(LogLevel), ConfigConsoleDisplayedLevel.Value, true);
+
 		public void LogEvent(object sender, LogEventArgs eventArgs)
 		{
+			if (eventArgs.Level.GetHighestLevel() > DisplayedLogLevel)
+				return;
+
 			string log = $"[{eventArgs.Level, -7}:{((ILogSource)sender).SourceName, 10}] {eventArgs.Data}\r\n";
 
 			Kon.ForegroundColor = eventArgs.Level.GetConsoleColor();
@@ -18,5 +24,11 @@ namespace BepInEx.Logging
 		}
 
 		public void Dispose() { }
+
+		private static ConfigWrapper<string> ConfigConsoleDisplayedLevel = ConfigFile.CoreConfig.Wrap(
+			"Logging.Console",
+			"DisplayedLogLevel",
+			"Only displays the specified log level and above in the console output.",
+			"Info");
 	}
 }
