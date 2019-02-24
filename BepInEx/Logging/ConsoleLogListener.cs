@@ -25,7 +25,7 @@ namespace BepInEx.Logging
 
 		public void Dispose() { }
 
-		private static ConfigWrapper<string> ConfigConsoleDisplayedLevel = ConfigFile.CoreConfig.Wrap(
+		private static readonly ConfigWrapper<string> ConfigConsoleDisplayedLevel = ConfigFile.CoreConfig.Wrap(
 			"Logging.Console",
 			"DisplayedLogLevel",
 			"Only displays the specified log level and above in the console output.",

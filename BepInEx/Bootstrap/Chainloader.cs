@@ -192,13 +192,13 @@ namespace BepInEx.Bootstrap
 
 		#region Config
 
-		private static ConfigWrapper<string> ConfigPluginsDirectory = ConfigFile.CoreConfig.Wrap(
+		private static readonly ConfigWrapper<string> ConfigPluginsDirectory = ConfigFile.CoreConfig.Wrap(
 				"Paths",
 				"PluginsDirectory",
 				"The relative directory to the BepInEx folder where plugins are loaded.",
 				"plugins");
 
-		private static ConfigWrapper<bool> ConfigUnityLogging = ConfigFile.CoreConfig.Wrap(
+		private static readonly ConfigWrapper<bool> ConfigUnityLogging = ConfigFile.CoreConfig.Wrap(
 				"Logging",
 				"UnityLogListening",
 				"Enables showing unity log messages in the BepInEx logging system.",

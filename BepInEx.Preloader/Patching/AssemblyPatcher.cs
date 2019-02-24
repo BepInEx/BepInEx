@@ -176,7 +176,7 @@ namespace BepInEx.Preloader.Patching
 
 		#region Config
 
-		private static ConfigWrapper<bool> ConfigDumpAssemblies = ConfigFile.CoreConfig.Wrap(
+		private static readonly ConfigWrapper<bool> ConfigDumpAssemblies = ConfigFile.CoreConfig.Wrap(
 			"Preloader",
 			"DumpAssemblies",
 			"If enabled, BepInEx will save patched assemblies into BepInEx/DumpedAssemblies.\nThis can be used by developers to inspect and debug preloader patchers.",

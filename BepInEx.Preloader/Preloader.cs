@@ -30,11 +30,10 @@ namespace BepInEx.Preloader
 		{
 			try
 			{
-				InitConfig();
-
 				AllocateConsole();
 
-				UnityPatches.Apply();
+				if (ConfigApplyRuntimePatches.Value)
+					UnityPatches.Apply();
 
 				Logger.Sources.Add(TraceLogSource.CreateSource());
 
@@ -42,7 +41,7 @@ namespace BepInEx.Preloader
 
 				Logger.Listeners.Add(PreloaderLog);
 
-
+				
 				string consoleTile = $"BepInEx {typeof(Paths).Assembly.GetName().Version} - {Process.GetCurrentProcess().ProcessName}";
 
 				ConsoleWindow.Title = consoleTile;
@@ -316,56 +315,47 @@ namespace BepInEx.Preloader
 
 		#region Config
 
-		private static ConfigWrapper<string> ConfigEntrypointAssembly;
+		private static readonly ConfigWrapper<string> ConfigEntrypointAssembly = ConfigFile.CoreConfig.Wrap(
+			"Preloader.Entrypoint",
+			"Assembly",
+			"The local filename of the assembly to target.",
+			"UnityEngine.dll");
 
-		private static ConfigWrapper<string> ConfigEntrypointType;
+		private static readonly ConfigWrapper<string> ConfigEntrypointType = ConfigFile.CoreConfig.Wrap(
+			"Preloader.Entrypoint",
+			"Type",
+			"The name of the type in the entrypoint assembly to search for the entrypoint method.",
+			"Application");
 
-		private static ConfigWrapper<string> ConfigEntrypointMethod;
+		private static readonly ConfigWrapper<string> ConfigEntrypointMethod = ConfigFile.CoreConfig.Wrap(
+			"Preloader.Entrypoint",
+			"Method",
+			"The name of the method in the specified entrypoint assembly and type to hook and load Chainloader from.",
+			".cctor");
 
-		private static ConfigWrapper<bool> ConfigPreloaderCOutLogging;
+		private static readonly ConfigWrapper<bool> ConfigApplyRuntimePatches = ConfigFile.CoreConfig.Wrap(
+			"Preloader",
+			"ApplyRuntimePatches",
+			"Enables or disables runtime patches.\nThis should always be true, unless you cannot start the game due to a Harmony related issue (such as running .NET Standard runtime) or you know what you're doing.",
+			true);
 
-		private static ConfigWrapper<bool> ConfigConsoleEnabled;
+		private static readonly ConfigWrapper<bool> ConfigPreloaderCOutLogging = ConfigFile.CoreConfig.Wrap(
+			"Logging",
+			"PreloaderConsoleOutRedirection",
+			"Redirects text from Console.Out during preloader patch loading to the BepInEx logging system.",
+			true);
 
-		private static ConfigWrapper<bool> ConfigConsoleShiftJis;
+		private static readonly ConfigWrapper<bool> ConfigConsoleEnabled = ConfigFile.CoreConfig.Wrap(
+			"Logging.Console",
+			"Enabled",
+			"Enables showing a console for log output.",
+			false);
 
-		private static void InitConfig()
-		{
-			ConfigEntrypointAssembly = ConfigFile.CoreConfig.Wrap(
-				"Preloader.Entrypoint",
-				"Assembly",
-				"The local filename of the assembly to target.",
-				"UnityEngine.dll");
-
-			ConfigEntrypointType = ConfigFile.CoreConfig.Wrap(
-				"Preloader.Entrypoint",
-				"Type",
-				"The name of the type in the entrypoint assembly to search for the entrypoint method.",
-				"Application");
-
-			ConfigEntrypointMethod = ConfigFile.CoreConfig.Wrap(
-				"Preloader.Entrypoint",
-				"Method",
-				"The name of the method in the specified entrypoint assembly and type to hook and load Chainloader from.",
-				".cctor");
-
-			ConfigPreloaderCOutLogging = ConfigFile.CoreConfig.Wrap(
-				"Logging",
-				"PreloaderConsoleOutRedirection",
-				"Redirects text from Console.Out during preloader patch loading to the BepInEx logging system.",
-				true);
-
-			ConfigConsoleEnabled = ConfigFile.CoreConfig.Wrap(
-				"Logging.Console",
-				"Enabled",
-				"Enables showing a console for log output.",
-				false);
-
-			ConfigConsoleShiftJis = ConfigFile.CoreConfig.Wrap(
-				"Logging.Console",
-				"ShiftJisEncoding",
-				"If true, console is set to the Shift-JIS encoding, otherwise UTF-8 encoding.",
-				false);
-		}
+		private static readonly ConfigWrapper<bool> ConfigConsoleShiftJis = ConfigFile.CoreConfig.Wrap(
+			"Logging.Console",
+			"ShiftJisEncoding",
+			"If true, console is set to the Shift-JIS encoding, otherwise UTF-8 encoding.",
+			false);
 
 		#endregion
 	}
