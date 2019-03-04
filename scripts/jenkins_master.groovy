@@ -33,8 +33,8 @@ Changes since ${latestTag}:
                 }
 
                 dir('Doorstop') {
-                    sh '''  tag="$(curl -s https://api.github.com/repos/NeighTools/UnityDoorstop/releases/latest | grep "tag_name" | cut -d : -f 2 | tr -d "\\", ")";
-                    version="$(echo $tag | cut -c 2-)";
+                    sh '''  tag="v2.7.1.0";
+                    version="2.7.1.0";
                     wget https://github.com/NeighTools/UnityDoorstop/releases/download/$tag/Doorstop_x64_$version.zip;
                     wget https://github.com/NeighTools/UnityDoorstop/releases/download/$tag/Doorstop_x86_$version.zip;
                     unzip -o Doorstop_x86_$version.zip winhttp.dll -d x86;
