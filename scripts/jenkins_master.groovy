@@ -45,7 +45,10 @@ Changes since ${latestTag}:
         stage('Prepare BepInEx') {
             steps {
                 dir('BepInEx') {
-                    sh 'nuget restore'
+                    sh '''
+						nuget restore
+						mkdir -p "lib"
+					'''
                 }
 
                 dir('BepInEx/BepInEx') {
