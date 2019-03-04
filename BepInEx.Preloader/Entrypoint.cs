@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 
@@ -18,9 +17,6 @@ namespace BepInEx.Preloader
 		{
 			Paths.SetExecutablePath(args[0]);
 			AppDomain.CurrentDomain.AssemblyResolve += LocalResolve;
-
-			foreach (var dll in Directory.GetFiles(Paths.BepInExAssemblyDirectory))
-				Assembly.Load(dll);
 
 			Preloader.Run();
 		}
