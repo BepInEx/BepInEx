@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
+using BepInEx.Installer.Patching;
 
 namespace BepInEx.Installer
 {
@@ -29,8 +30,22 @@ namespace BepInEx.Installer
 				txtTargetGamePath.Text = SelectedPath;
 				TargetGame = new TargetGame(SelectedPath);
 
+
+				SetDefaults();
 				UpdateLabels();
 			}
+		}
+
+		private void SetDefaults()
+		{
+			checkRuntimePatches.Checked = true;
+
+			cmbTargetAssembly.Text = TargetGame.UnityEngineType == TargetGame.UnityGameType.v2017Plus
+				? "UnityEngine.CoreModule.dll"
+				: "UnityEngine.dll";
+
+			cmbTargetClass.Text = "Application";
+			cmbTargetMethod.Text = ".cctor";
 		}
 
 		private void UpdateLabels()
@@ -72,13 +87,53 @@ namespace BepInEx.Installer
 					 || TargetGame.Platform == TargetGame.ExecutablePlatform.Mac)
 			{
 				labelExeType.ForeColor = Color.Goldenrod;
+
+				radioDoorstop.Checked = false;
+				radioDoorstop.Enabled = false;
+				radioPatch.Enabled = true;
 			}
 			else
 			{
 				labelExeType.ForeColor = Color.Green;
+
+				radioDoorstop.Checked = true;
+				radioDoorstop.Enabled = true;
 			}
 
 			tabControl1.Enabled = IsValid;
+		}
+
+		private Config GenerateAdvancedConfig()
+		{
+			var runtimePatchesType = checkRuntimePatches.Checked
+				? RuntimePatchesType.EnabledHarmony
+				: RuntimePatchesType.Disabled;
+
+			return new Config(cmbTargetAssembly.Text, cmbTargetClass.Text, cmbTargetMethod.Text, runtimePatchesType);
+		}
+
+		private InstallationType InstallationType
+		{
+			get
+			{
+				if (radioDoorstop.Checked)
+					return InstallationType.Doorstop;
+
+				if (radioCryptoRng.Checked)
+					return InstallationType.CryptoRng;
+
+				if (radioPatch.Checked)
+					return InstallationType.AssemblyPatch;
+
+				throw new InvalidOperationException();
+			}
+		}
+
+		private void btnAdvancedPatch_Click(object sender, EventArgs e)
+		{
+			var installer = new FrameworkInstaller(TargetGame, InstallationType, GenerateAdvancedConfig());
+
+			installer.Install();
 		}
 	}
 }

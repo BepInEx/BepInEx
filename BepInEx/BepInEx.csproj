@@ -40,11 +40,25 @@
       <HintPath>..\lib\Mono.Cecil.dll</HintPath>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="UnityEngine">
-      <HintPath>..\lib\UnityEngine.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
   </ItemGroup>
+  <Choose>
+    <When Condition="'$(Configuration)' == 'Legacy'">
+      <ItemGroup>
+        <Reference Include="UnityEngine">
+          <HintPath>..\lib\UnityEngine.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+      </ItemGroup>
+    </When>
+    <When Condition="'$(Configuration)' == 'v2018'">
+      <ItemGroup>
+        <Reference Include="UnityEngine.CoreModule">
+          <HintPath>..\lib\UnityEngine.CoreModule.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+      </ItemGroup>
+    </When>
+  </Choose>
   <ItemGroup>
     <Compile Include="Contract\Attributes.cs" />
     <Compile Include="Config.cs" />
