@@ -1,7 +1,10 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Windows.Forms;
 using Ionic.Zip;
+using Mono.Cecil;
+using Mono.Cecil.Cil;
 
 namespace BepInEx.Installer.Patching
 {
@@ -22,17 +25,27 @@ namespace BepInEx.Installer.Patching
 
 		public void Install()
 		{
-			switch (InstallationType)
+			try
 			{
-				case InstallationType.Doorstop:
-					DoorstopInstallation();
-					break;
-				case InstallationType.CryptoRng:
-					throw new NotImplementedException();
-				case InstallationType.AssemblyPatch:
-					break;
-				default:
-					throw new ArgumentOutOfRangeException(nameof(InstallationType));
+				switch (InstallationType)
+				{
+					case InstallationType.Doorstop:
+						DoorstopInstallation();
+						break;
+					case InstallationType.CryptoRng:
+						throw new NotImplementedException();
+					case InstallationType.AssemblyPatch:
+						AssemblyPatchInstallation();
+						break;
+					default:
+						throw new ArgumentOutOfRangeException(nameof(InstallationType));
+				}
+
+				MessageBox.Show("Installation completed successfully.", "Installation", MessageBoxButtons.OK, MessageBoxIcon.None);
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show(ex.Message, "Error during installation", MessageBoxButtons.OK, MessageBoxIcon.Error);
 			}
 		}
 
@@ -41,16 +54,7 @@ namespace BepInEx.Installer.Patching
 			return ZipFile.Read(EmbeddedResource.GetStream("BepInEx.Installer.InstallPackage.zip"));
 		}
 
-		private static MemoryStream ExtractZipEntry(ZipEntry entry)
-		{
-			MemoryStream ms = new MemoryStream((int)entry.UncompressedSize);
-
-			entry.Extract(ms);
-
-			ms.Position = 0;
-
-			return ms;
-		}
+		#region Doorstop
 
 		private const string DoorstopConfig = @"[UnityDoorstop]
 # Specifies whether assembly executing is enabled
@@ -75,7 +79,7 @@ targetAssembly=BepInEx\core\BepInEx.Preloader.dll";
 
 			using (var packageZip = GetPackageZip())
 			{
-				using (var doorstopZip = ZipFile.Read(ExtractZipEntry(packageZip[doorstopZipName])))
+				using (var doorstopZip = ZipFile.Read(packageZip[doorstopZipName].ExtractEntry()))
 				{
 					doorstopZip["winhttp.dll"].Extract(TargetGame.DirectoryPath, ExtractExistingFileAction.OverwriteSilently);
 				}
@@ -87,8 +91,7 @@ targetAssembly=BepInEx\core\BepInEx.Preloader.dll";
 				{
 					string localFilename = Path.Combine(coreDirectory, Path.GetFileName(entry.FileName));
 
-					using (FileStream fs = new FileStream(localFilename, FileMode.Create))
-						entry.Extract(fs);
+					entry.ExtractEntry(localFilename);
 				}
 			}
 
@@ -96,5 +99,157 @@ targetAssembly=BepInEx\core\BepInEx.Preloader.dll";
 
 			File.WriteAllText(Path.Combine(TargetGame.DirectoryPath, "doorstop_config.ini"), DoorstopConfig);
 		}
+
+		#endregion
+
+		#region Assembly Patch
+
+		private void AssemblyPatchInstallation()
+		{
+			string bepinexDirectory = Path.Combine(TargetGame.DirectoryPath, "BepInEx");
+			string coreDirectory = Path.Combine(bepinexDirectory, "core");
+
+			string managedDir = Path.Combine(TargetGame.DataFolder, "Managed");
+			string unityEngineDllPath = Path.Combine(managedDir, Config.TargetAssembly);
+			string bootstrapDllPath = Path.Combine(managedDir, "BepInEx.Bootstrap.dll");
+
+			if (!File.Exists(unityEngineDllPath))
+				throw new ArgumentException($"Cannot find target assembly '{unityEngineDllPath}'");
+
+			Directory.CreateDirectory(coreDirectory);
+
+			string coreAssemblyZipFolder = TargetGame.UnityEngineType == TargetGame.UnityGameType.v2017Plus
+				? "v2018"
+				: "legacy";
+
+			using (var packageZip = GetPackageZip())
+			{
+				var selectedEntries = packageZip.SelectEntries("*", "shared")
+												.Concat(packageZip.SelectEntries("*", coreAssemblyZipFolder))
+												.Where(x => !x.FileName.EndsWith("BepInEx.Preloader.dll"));
+
+				foreach (var entry in selectedEntries)
+				{
+					string localFilename = Path.Combine(coreDirectory, Path.GetFileName(entry.FileName));
+
+					entry.ExtractEntry(localFilename);
+				}
+
+				packageZip["bootstrap\\BepInEx.Bootstrap.dll"].ExtractEntry(bootstrapDllPath);
+			}
+
+			if (!PatchUnityGame(managedDir, unityEngineDllPath, bootstrapDllPath, out var message))
+				throw new Exception(message);
+		}
+
+		bool PatchUnityGame(string managedDir, string unityEngineDll, string bootstrapDll, out string message)
+		{
+			var defaultResolver = new DefaultAssemblyResolver();
+			defaultResolver.AddSearchDirectory(managedDir);
+			var rp = new ReaderParameters
+			{
+				AssemblyResolver = defaultResolver
+			};
+			
+			string unityBackupDll = Path.GetFullPath($"{unityEngineDll}.bak");
+
+			//determine which assembly to use as a base
+			AssemblyDefinition unity = AssemblyDefinition.ReadAssembly(unityEngineDll, rp);
+
+			if (!VerifyAssembly(unity))
+			{
+				//try and fall back to .bak if exists
+				if (File.Exists(unityBackupDll))
+				{
+					unity.Dispose();
+					unity = AssemblyDefinition.ReadAssembly(unityBackupDll, rp);
+
+					if (!VerifyAssembly(unity))
+					{
+						//can't use anything
+						unity.Dispose();
+						message = "Target assembly already has BepInEx injected, and the backup is not usable.";
+						return false;
+					}
+				}
+				else
+				{
+					//can't use anything
+					unity.Dispose();
+					message = "Target assembly already has BepInEx injected, and no backup exists.";
+					return false;
+				}
+			}
+			else
+			{
+				//make a backup of the assembly
+				File.Copy(unityEngineDll, unityBackupDll, true);
+				unity.Dispose();
+				unity = AssemblyDefinition.ReadAssembly(unityBackupDll, rp);
+			}
+
+			//patch
+			using (unity)
+			using (AssemblyDefinition injected = AssemblyDefinition.ReadAssembly(bootstrapDll, rp))
+			{
+				InjectAssembly(unity, injected);
+
+				unity.Write(unityEngineDll);
+			}
+
+			message = null;
+			return true;
+		}
+
+		void InjectAssembly(AssemblyDefinition targetAssembly, AssemblyDefinition injected)
+		{
+			//Entry point
+			var originalInjectMethod = injected.MainModule.Types.First(x => x.Name == "Entrypoint")
+											   .Methods.First(x => x.Name == "Init");
+
+			var injectMethod = targetAssembly.MainModule.ImportReference(originalInjectMethod);
+
+			var targetType = targetAssembly.MainModule.Types.FirstOrDefault(x => x.Name == Config.TargetType);
+
+			if (targetType == null)
+				throw new ArgumentException($"Cannot find target type '{Config.TargetType}'");
+
+			MethodDefinition targetMethod;
+
+			if (Config.TargetMethod == ".cctor")
+			{
+				targetMethod = targetType.Methods.FirstOrDefault(m => m.IsConstructor && m.IsStatic);
+
+				if (targetMethod == null)
+				{
+					targetMethod = new MethodDefinition(".cctor",
+						MethodAttributes.Static
+						| MethodAttributes.Private
+						| MethodAttributes.HideBySig
+						| MethodAttributes.SpecialName
+						| MethodAttributes.RTSpecialName,
+						targetAssembly.MainModule.ImportReference(typeof(void)));
+
+					targetType.Methods.Add(targetMethod);
+					var il = targetMethod.Body.GetILProcessor();
+					il.Append(il.Create(OpCodes.Ret));
+				}
+			}
+			else
+			{
+				targetMethod = targetType.Methods.FirstOrDefault(m => m.Name == Config.TargetMethod);
+
+				if (targetMethod == null)
+					throw new ArgumentException($"Cannot find target method '{Config.TargetType}.{Config.TargetMethod}'");
+			}
+
+			var ilp = targetMethod.Body.GetILProcessor();
+			ilp.InsertBefore(ilp.Body.Instructions.First(), ilp.Create(OpCodes.Call, injectMethod));
+		}
+
+		static bool VerifyAssembly(AssemblyDefinition unity)
+			=> !unity.MainModule.AssemblyReferences.Any(x => x.Name.Contains("BepInEx"));
+
+		#endregion
 	}
 }

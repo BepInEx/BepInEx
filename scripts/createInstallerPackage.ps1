@@ -14,19 +14,18 @@ New-Item $tempPath -ItemType Directory -Force | Out-Null
 
 #download doorstop
 
-$doorstopTag = "v2.7.1.0"
 $doorstopVersion = "2.7.1.0"
 
 Write-Output "Downloading Doorstop $doorstopTag"
 
 $wc = New-Object System.Net.WebClient
 
-$url = "https://github.com/NeighTools/UnityDoorstop/releases/download/$doorstopTag/Doorstop_x64_$doorstopVersion.zip"
+$url = "https://github.com/NeighTools/UnityDoorstop/releases/download/v$doorstopVersion/Doorstop_x64_$doorstopVersion.zip"
 $output = "$tempPath\doorstop_x64.zip"
 
 $wc.DownloadFile($url, $output)
 
-$url = "https://github.com/NeighTools/UnityDoorstop/releases/download/$doorstopTag/Doorstop_x86_$doorstopVersion.zip"
+$url = "https://github.com/NeighTools/UnityDoorstop/releases/download/v$doorstopVersion/Doorstop_x86_$doorstopVersion.zip"
 $output = "$tempPath\doorstop_x86.zip"
 
 $wc.DownloadFile($url, $output)
