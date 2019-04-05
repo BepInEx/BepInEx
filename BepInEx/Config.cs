@@ -163,7 +163,7 @@ namespace BepInEx
 		}
 
 		/// <summary>
-		/// Returns wether a value is currently set.
+		/// Returns whether a value is currently set.
 		/// </summary>
 		/// <param name="key">The key to check against</param>
 		/// <param name="section">The section to check in</param>
