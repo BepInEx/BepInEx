@@ -38,7 +38,7 @@ namespace BepInEx.Logging
 		/// <param name="message">The message to write.</param>
 		public override void Write(string message)
 		{
-			LogSource.Log(LogLevel.None, message);
+			LogSource.LogInfo(message);
 		}
 
 		/// <summary>
@@ -47,7 +47,7 @@ namespace BepInEx.Logging
 		/// <param name="message">The message to write.</param>
 		public override void WriteLine(string message)
 		{
-			LogSource.Log(LogLevel.None, $"{message}\r\n");
+			LogSource.LogInfo(message);
 		}
 
 		public override void TraceEvent(TraceEventCache eventCache, string source, TraceEventType eventType, int id, string format, params object[] args)
@@ -77,7 +77,7 @@ namespace BepInEx.Logging
 					break;
 			}
 			
-			LogSource.Log(level, $"{message}");
+			LogSource.Log(level, $"{message}".Trim());
 		}
 	}
 }

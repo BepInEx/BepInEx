@@ -69,7 +69,10 @@ namespace BepInEx.Preloader
 
 
 				AssemblyPatcher.AddPatcher(new PatcherPlugin
-					{ TargetDLLs = new[] { ConfigEntrypointAssembly.Value }, Patcher = PatchEntrypoint });
+					{ TargetDLLs = new[] { ConfigEntrypointAssembly.Value },
+						Patcher = PatchEntrypoint,
+						Name = "BepInEx.Chainloader"
+					});
 
 				AssemblyPatcher.AddPatchersFromDirectory(Paths.PatcherPluginPath, GetPatcherMethods);
 
@@ -163,7 +166,7 @@ namespace BepInEx.Preloader
 
 					var assemblyPatcher = new PatcherPlugin();
 
-					assemblyPatcher.Name = $"{assembly.GetName().Name}{type.FullName}";
+					assemblyPatcher.Name = $"{assembly.GetName().Name}/{type.FullName}";
 					assemblyPatcher.Patcher = (ref AssemblyDefinition ass) =>
 					{
 						//we do the array fuckery here to get the ref result out
@@ -204,7 +207,8 @@ namespace BepInEx.Preloader
 					Logger.LogWarning(ex);
 				}
 
-			Logger.LogInfo($"Loaded {patcherMethods.Count} patcher methods from {assembly.GetName().Name}");
+			Logger.Log(patcherMethods.Count > 0 ? LogLevel.Info : LogLevel.Debug,
+				$"Loaded {patcherMethods.Count} patcher methods from {assembly.GetName().Name}");
 
 			return patcherMethods;
 		}

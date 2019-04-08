@@ -45,7 +45,7 @@ namespace BepInEx.Preloader.Patching
 
 			var sortedPatchers = new SortedDictionary<string, PatcherPlugin>();
 
-			foreach (string assemblyPath in Directory.GetFiles(directory, "*.dll"))
+			foreach (string assemblyPath in Directory.GetFiles(directory, "*.dll", SearchOption.AllDirectories))
 				try
 				{
 					var assembly = Assembly.LoadFrom(assemblyPath);
@@ -124,6 +124,8 @@ namespace BepInEx.Preloader.Patching
 				foreach (string targetDll in assemblyPatcher.TargetDLLs)
 					if (assemblies.TryGetValue(targetDll, out var assembly))
 					{
+						Logger.LogInfo($"Patching [{assembly.Name.Name}] with [{assemblyPatcher.Name}]");
+
 						assemblyPatcher.Patcher?.Invoke(ref assembly);
 						assemblies[targetDll] = assembly;
 						patchedAssemblies.Add(targetDll);

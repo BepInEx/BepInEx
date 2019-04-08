@@ -57,7 +57,8 @@ namespace BepInEx.Bootstrap
 			}
 
 			//Fix for standard output getting overwritten by UnityLogger
-			Console.SetOut(ConsoleWindow.StandardOut);
+			if (ConsoleWindow.StandardOut != null)
+				Console.SetOut(ConsoleWindow.StandardOut);
 
 
 			Logger.Listeners.Add(new UnityLogListener());
