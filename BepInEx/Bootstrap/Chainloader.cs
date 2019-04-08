@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using BepInEx.Configuration;
 using BepInEx.Logging;
 using UnityEngine;
 using UnityInjector.ConsoleUtil;
@@ -42,7 +43,7 @@ namespace BepInEx.Bootstrap
 			//Set vitals
 			Paths.SetExecutablePath(containerExePath);
 
-			Paths.SetPluginPath(Config.GetEntry("chainloader-plugins-directory", "plugins", "BepInEx"));
+			Paths.SetPluginPath(ConfigPluginsDirectory.Value);
 
 			//Start logging
 
@@ -65,7 +66,7 @@ namespace BepInEx.Bootstrap
 			if (!TraceLogSource.IsListening)
 				Logger.Sources.Add(TraceLogSource.CreateSource());
 
-			if (bool.Parse(Config.GetEntry("chainloader-log-unity-messages", "false", "BepInEx")))
+			if (ConfigUnityLogging.Value)
 				Logger.Sources.Add(new UnityLogSource());
 
 
@@ -110,7 +111,7 @@ namespace BepInEx.Bootstrap
 				var globalPluginTypes = TypeLoader.LoadTypes<BaseUnityPlugin>(Paths.PluginPath).ToList();
 
 				var selectedPluginTypes = globalPluginTypes
-				                          .Where(plugin =>
+										  .Where(plugin =>
 										  {
 											  //Ensure metadata exists
 											  var metadata = MetadataHelper.GetMetadata(plugin);
@@ -189,5 +190,21 @@ namespace BepInEx.Bootstrap
 
 			_loaded = true;
 		}
+
+		#region Config
+
+		private static readonly ConfigWrapper<string> ConfigPluginsDirectory = ConfigFile.CoreConfig.Wrap(
+				"Paths",
+				"PluginsDirectory",
+				"The relative directory to the BepInEx folder where plugins are loaded.",
+				"plugins");
+
+		private static readonly ConfigWrapper<bool> ConfigUnityLogging = ConfigFile.CoreConfig.Wrap(
+				"Logging",
+				"UnityLogListening",
+				"Enables showing unity log messages in the BepInEx logging system.",
+				true);
+
+		#endregion
 	}
 }

@@ -46,7 +46,7 @@ namespace BepInEx
 		/// <returns>True if the value parameter is null or empty, or if value consists exclusively of white-space characters.</returns>
 		public static bool IsNullOrWhiteSpace(this string self)
 		{
-			return self == null || self.Trim().Length == 0;
+			return self == null || self.All(char.IsWhiteSpace);
 		}
 
 		public static IEnumerable<TNode> TopologicalSort<TNode>(IEnumerable<TNode> nodes, Func<TNode, IEnumerable<TNode>> dependencySelector)

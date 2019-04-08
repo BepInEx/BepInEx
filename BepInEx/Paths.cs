@@ -14,11 +14,13 @@ namespace BepInEx
 			ProcessName = Path.GetFileNameWithoutExtension(executablePath);
 			GameRootPath = Path.GetDirectoryName(executablePath);
 			ManagedPath = Utility.CombinePaths(GameRootPath, $"{ProcessName}_Data", "Managed");
-			BepInExRootPath = Utility.CombinePaths(GameRootPath, "BepInEx");
-			PluginPath = Utility.CombinePaths(BepInExRootPath, "plugins");
-			PatcherPluginPath = Utility.CombinePaths(BepInExRootPath, "patchers");
-			BepInExAssemblyDirectory = Utility.CombinePaths(BepInExRootPath, "core");
-			BepInExAssemblyPath = Utility.CombinePaths(BepInExAssemblyDirectory, $"{Assembly.GetExecutingAssembly().GetName().Name}.dll");
+			BepInExRootPath = Path.Combine(GameRootPath, "BepInEx");
+			ConfigPath = Path.Combine(BepInExRootPath, "config");
+			BepInExConfigPath = Path.Combine(ConfigPath, "BepInEx.cfg");
+			PluginPath = Path.Combine(BepInExRootPath, "plugins");
+			PatcherPluginPath = Path.Combine(BepInExRootPath, "patchers");
+			BepInExAssemblyDirectory = Path.Combine(BepInExRootPath, "core");
+			BepInExAssemblyPath = Path.Combine(BepInExAssemblyDirectory, $"{Assembly.GetExecutingAssembly().GetName().Name}.dll");
 		}
 
 		internal static void SetPluginPath(string pluginPath)
@@ -55,6 +57,16 @@ namespace BepInEx
 		///     The path to the Managed folder of the currently running Unity game.
 		/// </summary>
 		public static string ManagedPath { get; private set; }
+
+		/// <summary>
+		///		The path to the config directory.
+		/// </summary>
+		public static string ConfigPath { get; private set; }
+
+		/// <summary>
+		///		The path to the global BepInEx configuration file.
+		/// </summary>
+		public static string BepInExConfigPath { get; private set; }
 
 		/// <summary>
 		///     The path to the patcher plugin folder which resides in the BepInEx folder.

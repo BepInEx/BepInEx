@@ -43,7 +43,7 @@ namespace BepInEx.Preloader.RuntimeFixes
 #if UNITY_2018
 /*
  * DESC: Workaround for Trace class not working because of missing .config file
- * AFFECTS: Unity 2018+
+ * AFFECTS: Unity 2018+ (not .NET Standard / MonoBleedingEdge runtimes)
  */
 		[HarmonyPostfix, HarmonyPatch(typeof(AppDomain), nameof(AppDomain.SetupInformation), MethodType.Getter)]
 		public static void GetExeConfigName(AppDomainSetup __result)
