@@ -14,7 +14,7 @@ namespace BepInEx.Configuration
 	{
 		private static readonly Regex sanitizeKeyRegex = new Regex(@"[^a-zA-Z0-9\-\.]+");
 
-		internal static ConfigFile CoreConfig { get; } = new ConfigFile(Paths.BepInExConfigPath);
+		internal static ConfigFile CoreConfig { get; } = new ConfigFile(Paths.BepInExConfigPath, true);
 
 		protected internal Dictionary<ConfigDefinition, string> Cache { get; } = new Dictionary<ConfigDefinition, string>();
 
@@ -32,7 +32,7 @@ namespace BepInEx.Configuration
 		/// </summary>
 		public bool SaveOnConfigSet { get; set; } = true;
 
-		public ConfigFile(string configPath)
+		public ConfigFile(string configPath, bool saveOnInit)
 		{
 			ConfigFilePath = configPath;
 
@@ -40,7 +40,7 @@ namespace BepInEx.Configuration
 			{
 				Reload();
 			}
-			else
+			else if (saveOnInit)
 			{
 				Save();
 			}
