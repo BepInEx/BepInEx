@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using BepInEx.Configuration;
 using BepInEx.Logging;
@@ -23,11 +25,13 @@ namespace BepInEx.Preloader.Patching
 	{
 		public static List<PatcherPlugin> PatcherPlugins { get; } = new List<PatcherPlugin>();
 
-		/// <summary>
-		///     Adds a single assembly patcher to the pool of applicable patches.
-		/// </summary>
-		/// <param name="patcher">Patcher to apply.</param>
-		public static void AddPatcher(PatcherPlugin patcher)
+		private static readonly string DumpedAssembliesPath = Path.Combine(Paths.BepInExRootPath, "DumpedAssemblies");
+
+        /// <summary>
+        ///     Adds a single assembly patcher to the pool of applicable patches.
+        /// </summary>
+        /// <param name="patcher">Patcher to apply.</param>
+        public static void AddPatcher(PatcherPlugin patcher)
 		{
 			PatcherPlugins.Add(patcher);
 		}
@@ -131,49 +135,57 @@ namespace BepInEx.Preloader.Patching
 						patchedAssemblies.Add(targetDll);
 					}
 
-			// Finally, load patched assemblies into memory
-			foreach (KeyValuePair<string, AssemblyDefinition> kv in assemblies)
+
+            // Finally, load patched assemblies into memory
+
+			if (ConfigDumpAssemblies.Value || ConfigLoadDumpedAssemblies.Value)
+			{
+				if (!Directory.Exists(DumpedAssembliesPath))
+					Directory.CreateDirectory(DumpedAssembliesPath);
+
+				foreach (KeyValuePair<string, AssemblyDefinition> kv in assemblies)
+				{
+					string filename = kv.Key;
+					var assembly = kv.Value;
+
+					if (patchedAssemblies.Contains(filename))
+						assembly.Write(Path.Combine(DumpedAssembliesPath, filename));
+				}
+            }
+
+			foreach (var kv in assemblies)
 			{
 				string filename = kv.Key;
 				var assembly = kv.Value;
-
-				if (ConfigDumpAssemblies.Value && patchedAssemblies.Contains(filename))
-					using (var mem = new MemoryStream())
-					{
-						string dirPath = Path.Combine(Paths.BepInExRootPath, "DumpedAssemblies");
-
-						if (!Directory.Exists(dirPath))
-							Directory.CreateDirectory(dirPath);
-
-						assembly.Write(mem);
-						File.WriteAllBytes(Path.Combine(dirPath, filename), mem.ToArray());
-					}
 
                 // Note that since we only *load* assemblies, they shouldn't trigger dependency loading
                 // Not loading all assemblies is very important not only because of memory reasons,
                 // but because some games *rely* on that because of messed up internal dependencies.
                 if (patchedAssemblies.Contains(filename))
-				    Load(assembly);
+					Load(assembly, filename);
 
-                // Though we have to dispose of all assemblies regardless of them being patched or not
+				// Though we have to dispose of all assemblies regardless of them being patched or not
 				assembly.Dispose();
-			}
+            }
 
-			//run all finalizers
-			FinalizePatching();
+            //run all finalizers
+            FinalizePatching();
 		}
 
 		/// <summary>
 		///     Loads an individual assembly definition into the CLR.
 		/// </summary>
 		/// <param name="assembly">The assembly to load.</param>
-		public static void Load(AssemblyDefinition assembly)
+		public static void Load(AssemblyDefinition assembly, string filename)
 		{
-			using (var assemblyStream = new MemoryStream())
-			{
-				assembly.Write(assemblyStream);
-				Assembly.Load(assemblyStream.ToArray());
-			}
+			if (ConfigLoadDumpedAssemblies.Value)
+				Assembly.LoadFile(Path.Combine(DumpedAssembliesPath, filename));
+			else
+				using (var assemblyStream = new MemoryStream())
+				{
+					assembly.Write(assemblyStream);
+					Assembly.Load(assemblyStream.ToArray());
+				}
 		}
 
 		#region Config
@@ -184,6 +196,12 @@ namespace BepInEx.Preloader.Patching
 			"If enabled, BepInEx will save patched assemblies into BepInEx/DumpedAssemblies.\nThis can be used by developers to inspect and debug preloader patchers.",
 			false);
 
-		#endregion
-	}
+		private static readonly ConfigWrapper<bool> ConfigLoadDumpedAssemblies = ConfigFile.CoreConfig.Wrap(
+			"Preloader",
+			"LoadDumpedAssemblies",
+            "If enabled, BepInEx will load patched assemblies from BepInEx/DumpedAssemblies instead of memory.\nThis can be used to be able to load patched assemblies into debuggers like dnSpy.\nIf set to true, will override DumpAssemblies.",
+			false);
+
+        #endregion
+    }
 }
