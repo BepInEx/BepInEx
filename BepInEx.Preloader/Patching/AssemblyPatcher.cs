@@ -27,11 +27,11 @@ namespace BepInEx.Preloader.Patching
 
 		private static readonly string DumpedAssembliesPath = Path.Combine(Paths.BepInExRootPath, "DumpedAssemblies");
 
-        /// <summary>
-        ///     Adds a single assembly patcher to the pool of applicable patches.
-        /// </summary>
-        /// <param name="patcher">Patcher to apply.</param>
-        public static void AddPatcher(PatcherPlugin patcher)
+		/// <summary>
+		///     Adds a single assembly patcher to the pool of applicable patches.
+		/// </summary>
+		/// <param name="patcher">Patcher to apply.</param>
+		public static void AddPatcher(PatcherPlugin patcher)
 		{
 			PatcherPlugins.Add(patcher);
 		}
@@ -101,9 +101,7 @@ namespace BepInEx.Preloader.Patching
 				//System has an assembly reference to itself, and it also has a reference to Mono.Security causing a circular dependency
 				//It's also generally dangerous to change system.dll since so many things rely on it, 
 				// and it's already loaded into the appdomain since this loader references it, so we might as well skip it
-				if (assembly.Name.Name == "System"
-					|| assembly.Name.Name == "mscorlib"
-				) //mscorlib is already loaded into the appdomain so it can't be patched
+				if (assembly.Name.Name == "System" || assembly.Name.Name == "mscorlib") //mscorlib is already loaded into the appdomain so it can't be patched
 				{
 					assembly.Dispose();
 					continue;
@@ -136,7 +134,7 @@ namespace BepInEx.Preloader.Patching
 					}
 
 
-            // Finally, load patched assemblies into memory
+			// Finally, load patched assemblies into memory
 
 			if (ConfigDumpAssemblies.Value || ConfigLoadDumpedAssemblies.Value)
 			{
@@ -151,7 +149,7 @@ namespace BepInEx.Preloader.Patching
 					if (patchedAssemblies.Contains(filename))
 						assembly.Write(Path.Combine(DumpedAssembliesPath, filename));
 				}
-            }
+			}
 
 			if (ConfigBreakBeforeLoadAssemblies.Value)
 			{
@@ -166,18 +164,18 @@ namespace BepInEx.Preloader.Patching
 				string filename = kv.Key;
 				var assembly = kv.Value;
 
-                // Note that since we only *load* assemblies, they shouldn't trigger dependency loading
-                // Not loading all assemblies is very important not only because of memory reasons,
-                // but because some games *rely* on that because of messed up internal dependencies.
-                if (patchedAssemblies.Contains(filename))
+				// Note that since we only *load* assemblies, they shouldn't trigger dependency loading
+				// Not loading all assemblies is very important not only because of memory reasons,
+				// but because some games *rely* on that because of messed up internal dependencies.
+				if (patchedAssemblies.Contains(filename))
 					Load(assembly, filename);
 
 				// Though we have to dispose of all assemblies regardless of them being patched or not
 				assembly.Dispose();
-            }
+			}
 
-            //run all finalizers
-            FinalizePatching();
+			//run all finalizers
+			FinalizePatching();
 		}
 
 		/// <summary>
@@ -207,7 +205,7 @@ namespace BepInEx.Preloader.Patching
 		private static readonly ConfigWrapper<bool> ConfigLoadDumpedAssemblies = ConfigFile.CoreConfig.Wrap(
 			"Preloader",
 			"LoadDumpedAssemblies",
-            "If enabled, BepInEx will load patched assemblies from BepInEx/DumpedAssemblies instead of memory.\nThis can be used to be able to load patched assemblies into debuggers like dnSpy.\nIf set to true, will override DumpAssemblies.",
+			"If enabled, BepInEx will load patched assemblies from BepInEx/DumpedAssemblies instead of memory.\nThis can be used to be able to load patched assemblies into debuggers like dnSpy.\nIf set to true, will override DumpAssemblies.",
 			false);
 
 		private static readonly ConfigWrapper<bool> ConfigBreakBeforeLoadAssemblies = ConfigFile.CoreConfig.Wrap(
@@ -216,6 +214,6 @@ namespace BepInEx.Preloader.Patching
 			"If enabled, BepInEx will call Debugger.Break() once before loading patched assemblies.\nThis can be used with debuggers like dnSpy to install breakpoints into patched assemblies before they are loaded.",
 			false);
 
-        #endregion
-    }
+		#endregion
+	}
 }
