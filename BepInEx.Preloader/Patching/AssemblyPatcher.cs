@@ -153,6 +153,14 @@ namespace BepInEx.Preloader.Patching
 				}
             }
 
+			if (ConfigBreakBeforeLoadAssemblies.Value)
+			{
+				Logger.LogInfo($"BepInEx is about load the following assemblies:\n{string.Join("\n", patchedAssemblies.ToArray())}");
+				Logger.LogInfo($"The assemblies were dumped into {DumpedAssembliesPath}");
+				Logger.LogInfo("Load any assemblies into the debugger, set breakpoints and continue execution.");
+				Debugger.Break();
+			}
+
 			foreach (var kv in assemblies)
 			{
 				string filename = kv.Key;
@@ -200,6 +208,12 @@ namespace BepInEx.Preloader.Patching
 			"Preloader",
 			"LoadDumpedAssemblies",
             "If enabled, BepInEx will load patched assemblies from BepInEx/DumpedAssemblies instead of memory.\nThis can be used to be able to load patched assemblies into debuggers like dnSpy.\nIf set to true, will override DumpAssemblies.",
+			false);
+
+		private static readonly ConfigWrapper<bool> ConfigBreakBeforeLoadAssemblies = ConfigFile.CoreConfig.Wrap(
+			"Preloader",
+			"BreakBeforeLoadAssemblies",
+			"If enabled, BepInEx will call Debugger.Break() once before loading patched assemblies.\nThis can be used with debuggers like dnSpy to install breakpoints into patched assemblies before they are loaded.",
 			false);
 
         #endregion
