@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using BepInEx.Configuration;
 using BepInEx.Logging;
@@ -22,6 +24,8 @@ namespace BepInEx.Preloader.Patching
 	internal static class AssemblyPatcher
 	{
 		public static List<PatcherPlugin> PatcherPlugins { get; } = new List<PatcherPlugin>();
+
+		private static readonly string DumpedAssembliesPath = Path.Combine(Paths.BepInExRootPath, "DumpedAssemblies");
 
 		/// <summary>
 		///     Adds a single assembly patcher to the pool of applicable patches.
@@ -97,9 +101,7 @@ namespace BepInEx.Preloader.Patching
 				//System has an assembly reference to itself, and it also has a reference to Mono.Security causing a circular dependency
 				//It's also generally dangerous to change system.dll since so many things rely on it, 
 				// and it's already loaded into the appdomain since this loader references it, so we might as well skip it
-				if (assembly.Name.Name == "System"
-					|| assembly.Name.Name == "mscorlib"
-				) //mscorlib is already loaded into the appdomain so it can't be patched
+				if (assembly.Name.Name == "System" || assembly.Name.Name == "mscorlib") //mscorlib is already loaded into the appdomain so it can't be patched
 				{
 					assembly.Dispose();
 					continue;
@@ -131,31 +133,44 @@ namespace BepInEx.Preloader.Patching
 						patchedAssemblies.Add(targetDll);
 					}
 
+
 			// Finally, load patched assemblies into memory
-			foreach (KeyValuePair<string, AssemblyDefinition> kv in assemblies)
+
+			if (ConfigDumpAssemblies.Value || ConfigLoadDumpedAssemblies.Value)
+			{
+				if (!Directory.Exists(DumpedAssembliesPath))
+					Directory.CreateDirectory(DumpedAssembliesPath);
+
+				foreach (KeyValuePair<string, AssemblyDefinition> kv in assemblies)
+				{
+					string filename = kv.Key;
+					var assembly = kv.Value;
+
+					if (patchedAssemblies.Contains(filename))
+						assembly.Write(Path.Combine(DumpedAssembliesPath, filename));
+				}
+			}
+
+			if (ConfigBreakBeforeLoadAssemblies.Value)
+			{
+				Logger.LogInfo($"BepInEx is about load the following assemblies:\n{string.Join("\n", patchedAssemblies.ToArray())}");
+				Logger.LogInfo($"The assemblies were dumped into {DumpedAssembliesPath}");
+				Logger.LogInfo("Load any assemblies into the debugger, set breakpoints and continue execution.");
+				Debugger.Break();
+			}
+
+			foreach (var kv in assemblies)
 			{
 				string filename = kv.Key;
 				var assembly = kv.Value;
 
-				if (ConfigDumpAssemblies.Value && patchedAssemblies.Contains(filename))
-					using (var mem = new MemoryStream())
-					{
-						string dirPath = Path.Combine(Paths.BepInExRootPath, "DumpedAssemblies");
+				// Note that since we only *load* assemblies, they shouldn't trigger dependency loading
+				// Not loading all assemblies is very important not only because of memory reasons,
+				// but because some games *rely* on that because of messed up internal dependencies.
+				if (patchedAssemblies.Contains(filename))
+					Load(assembly, filename);
 
-						if (!Directory.Exists(dirPath))
-							Directory.CreateDirectory(dirPath);
-
-						assembly.Write(mem);
-						File.WriteAllBytes(Path.Combine(dirPath, filename), mem.ToArray());
-					}
-
-                // Note that since we only *load* assemblies, they shouldn't trigger dependency loading
-                // Not loading all assemblies is very important not only because of memory reasons,
-                // but because some games *rely* on that because of messed up internal dependencies.
-                if (patchedAssemblies.Contains(filename))
-				    Load(assembly);
-
-                // Though we have to dispose of all assemblies regardless of them being patched or not
+				// Though we have to dispose of all assemblies regardless of them being patched or not
 				assembly.Dispose();
 			}
 
@@ -167,13 +182,16 @@ namespace BepInEx.Preloader.Patching
 		///     Loads an individual assembly definition into the CLR.
 		/// </summary>
 		/// <param name="assembly">The assembly to load.</param>
-		public static void Load(AssemblyDefinition assembly)
+		public static void Load(AssemblyDefinition assembly, string filename)
 		{
-			using (var assemblyStream = new MemoryStream())
-			{
-				assembly.Write(assemblyStream);
-				Assembly.Load(assemblyStream.ToArray());
-			}
+			if (ConfigLoadDumpedAssemblies.Value)
+				Assembly.LoadFile(Path.Combine(DumpedAssembliesPath, filename));
+			else
+				using (var assemblyStream = new MemoryStream())
+				{
+					assembly.Write(assemblyStream);
+					Assembly.Load(assemblyStream.ToArray());
+				}
 		}
 
 		#region Config
@@ -182,6 +200,18 @@ namespace BepInEx.Preloader.Patching
 			"Preloader",
 			"DumpAssemblies",
 			"If enabled, BepInEx will save patched assemblies into BepInEx/DumpedAssemblies.\nThis can be used by developers to inspect and debug preloader patchers.",
+			false);
+
+		private static readonly ConfigWrapper<bool> ConfigLoadDumpedAssemblies = ConfigFile.CoreConfig.Wrap(
+			"Preloader",
+			"LoadDumpedAssemblies",
+			"If enabled, BepInEx will load patched assemblies from BepInEx/DumpedAssemblies instead of memory.\nThis can be used to be able to load patched assemblies into debuggers like dnSpy.\nIf set to true, will override DumpAssemblies.",
+			false);
+
+		private static readonly ConfigWrapper<bool> ConfigBreakBeforeLoadAssemblies = ConfigFile.CoreConfig.Wrap(
+			"Preloader",
+			"BreakBeforeLoadAssemblies",
+			"If enabled, BepInEx will call Debugger.Break() once before loading patched assemblies.\nThis can be used with debuggers like dnSpy to install breakpoints into patched assemblies before they are loaded.",
 			false);
 
 		#endregion
