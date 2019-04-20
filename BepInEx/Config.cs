@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using System.Text.RegularExpressions;
 using BepInEx.Logging;
 
@@ -30,7 +31,15 @@ namespace BepInEx
         /// <summary>
         /// If enabled, writes the config to disk every time a value is set.
         /// </summary>
-        public static bool SaveOnConfigSet { get; set; } = true;
+        public static bool SaveOnConfigSet { get; set; }
+
+
+        /// <summary>
+        /// Improve performance by minimizing reads and writes to the config by <see cref="ConfigWrapper{T}"/>.
+        /// This will cause each wrapper to not see changes done to its setting if they were done from outside of that wrapper.
+        /// Use only if you use a single ConfigWrapper for your settings, or don't use wrappers at all.
+        /// </summary>
+        public static bool EnableConfigWrapperCaching { get; set; } = true;
 
         static Config()
         {
@@ -40,8 +49,11 @@ namespace BepInEx
             }
             else
             {
+                SetEntry("EnableConfigWrapperCaching", EnableConfigWrapperCaching.ToString(), "BepInEx");
                 SaveConfig();
             }
+
+            SaveOnConfigSet = true;
         }
 
 	    /// <summary>
@@ -112,6 +124,15 @@ namespace BepInEx
                 cache[currentSection][split[0]] = split[1];
             }
 
+            try
+            {
+                EnableConfigWrapperCaching = bool.Parse(GetEntry("EnableConfigWrapperCaching", "True", "BepInEx"));
+            }
+            catch
+            {
+                EnableConfigWrapperCaching = true;
+            }
+
             RaiseConfigReloaded();
         }
 
@@ -120,7 +141,7 @@ namespace BepInEx
         /// </summary>
         public static void SaveConfig()
         {
-            using (StreamWriter writer = new StreamWriter(File.Create(configPath), System.Text.Encoding.UTF8))
+            using (StreamWriter writer = new StreamWriter(File.Create(configPath), Encoding.UTF8))
                 foreach (var sectionKv in cache)
                 {
                     writer.WriteLine($"[{sectionKv.Key}]");
