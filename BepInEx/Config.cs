@@ -121,6 +121,15 @@ namespace BepInEx
                 cache[currentSection][split[0]] = split[1];
             }
 
+            try
+            {
+                EnableConfigWrapperCaching = bool.Parse(GetEntry("EnableConfigWrapperCaching", "True", "BepInEx"));
+            }
+            catch
+            {
+                EnableConfigWrapperCaching = true;
+            }
+
             RaiseConfigReloaded();
         }
 
@@ -129,6 +138,8 @@ namespace BepInEx
         /// </summary>
         public static void SaveConfig()
         {
+            SetEntry("EnableConfigWrapperCaching", EnableConfigWrapperCaching.ToString(), "BepInEx");
+
             using (StreamWriter writer = new StreamWriter(File.Create(configPath), Encoding.UTF8))
                 foreach (var sectionKv in cache)
                 {
