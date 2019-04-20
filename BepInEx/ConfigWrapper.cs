@@ -112,12 +112,14 @@ namespace BepInEx
 
         protected virtual T GetValue()
         {
+            if (Config.EnableConfigWrapperCaching && _lastValueSet)
+                return _lastValue;
+
             try
             {
                 var strVal = Config.GetEntry(Key, _defaultStr, Section);
                 var obj = _strToObj(strVal);
 
-                // Always update in case config was changed from outside
                 _lastValue = obj;
                 _lastValueSet = true;
 
@@ -132,13 +134,17 @@ namespace BepInEx
 
         protected virtual void SetValue(T value)
         {
+            var valueChanged = !_lastValueSet || !Equals(_lastValue, value);
+
+            if (Config.EnableConfigWrapperCaching && !valueChanged)
+                return;
+
             try
             {
-                // Always write just in case config was changed from outside
                 var strVal = _objToStr(value);
                 Config.SetEntry(Key, strVal, Section);
 
-                if (_lastValueSet && Equals(_lastValue, value)) return;
+                if (!valueChanged) return;
 
                 _lastValue = value;
                 _lastValueSet = true;
