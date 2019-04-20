@@ -31,7 +31,7 @@ namespace BepInEx
         /// <summary>
         /// If enabled, writes the config to disk every time a value is set.
         /// </summary>
-        public static bool SaveOnConfigSet { get; set; } = true;
+        public static bool SaveOnConfigSet { get; set; }
 
 
         /// <summary>
@@ -49,8 +49,11 @@ namespace BepInEx
             }
             else
             {
+                SetEntry("EnableConfigWrapperCaching", EnableConfigWrapperCaching.ToString(), "BepInEx");
                 SaveConfig();
             }
+
+            SaveOnConfigSet = true;
         }
 
 	    /// <summary>
@@ -138,8 +141,6 @@ namespace BepInEx
         /// </summary>
         public static void SaveConfig()
         {
-            SetEntry("EnableConfigWrapperCaching", EnableConfigWrapperCaching.ToString(), "BepInEx");
-
             using (StreamWriter writer = new StreamWriter(File.Create(configPath), Encoding.UTF8))
                 foreach (var sectionKv in cache)
                 {
