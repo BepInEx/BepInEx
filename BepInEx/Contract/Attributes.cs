@@ -154,29 +154,9 @@ namespace BepInEx
 		/// <param name="Plugin">The plugin type.</param>
 		/// <param name="AllPlugins">All currently loaded plugin types.</param>
 		/// <returns>A list of all plugin types that the specified plugin type depends upon.</returns>
-		public static IEnumerable<Type> GetDependencies(Type Plugin, IEnumerable<Type> AllPlugins)
+		public static IEnumerable<BepInDependency> GetDependencies(Type Plugin, IEnumerable<Type> AllPlugins)
 		{
-			object[] attributes = Plugin.GetCustomAttributes(typeof(BepInDependency), true);
-
-			List<Type> dependencyTypes = new List<Type>();
-
-			foreach (BepInDependency dependency in attributes)
-			{
-				Type dependencyType = AllPlugins.FirstOrDefault(x => GetMetadata(x)?.GUID == dependency.DependencyGUID);
-
-				if (dependencyType == null)
-				{
-					if ((dependency.Flags & BepInDependency.DependencyFlags.SoftDependency) != 0)
-						continue; //skip on soft dependencies
-
-					throw new MissingDependencyException("Cannot find dependency type.");
-				}
-
-
-				dependencyTypes.Add(dependencyType);
-			}
-
-			return dependencyTypes;
+			return Plugin.GetCustomAttributes(typeof(BepInDependency), true).Cast<BepInDependency>();
 		}
 	}
 

@@ -1,12 +1,12 @@
-﻿using System;
+﻿using BepInEx.Configuration;
+using BepInEx.Logging;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using BepInEx.Configuration;
-using BepInEx.Logging;
 using UnityEngine;
 using UnityInjector.ConsoleUtil;
 using Logger = BepInEx.Logging.Logger;
@@ -139,41 +139,82 @@ namespace BepInEx.Bootstrap
 
 				Logger.LogInfo($"{selectedPluginTypes.Count} / {globalPluginTypes.Count} plugins to load");
 
-				Dictionary<Type, IEnumerable<Type>> dependencyDict = new Dictionary<Type, IEnumerable<Type>>();
-
+				var dependencyDict = new Dictionary<string, IEnumerable<string>>();
+				var pluginsByGUID = new Dictionary<string, Type>();
 
 				foreach (Type t in selectedPluginTypes)
 				{
-					try
-					{
-						IEnumerable<Type> dependencies = MetadataHelper.GetDependencies(t, selectedPluginTypes);
-
-						dependencyDict[t] = dependencies;
-					}
-					catch (MissingDependencyException)
-					{
-						var metadata = MetadataHelper.GetMetadata(t);
-
-						Logger.LogWarning($"Cannot load [{metadata.Name}] due to missing dependencies.");
-					}
+					var dependencies = MetadataHelper.GetDependencies(t, selectedPluginTypes);
+					var metadata = MetadataHelper.GetMetadata(t);
+					dependencyDict[metadata.GUID] = dependencies.Select(d => d.DependencyGUID);
+					pluginsByGUID[metadata.GUID] = t;
 				}
 
-				var sortedTypes = Utility.TopologicalSort(dependencyDict.Keys, x => dependencyDict[x]).ToList();
+				var emptyDependencies = new string[0];
 
-				foreach (Type t in sortedTypes)
+				// Sort plugins by their dependencies.
+				// Give missing dependencies no dependencies of its own, which will cause missing plugins to be first in the resulting list.
+				var sortedPlugins = Utility.TopologicalSort(dependencyDict.Keys, x => dependencyDict.TryGetValue(x, out var deps) ? deps : emptyDependencies).ToList();
+
+				var invalidPlugins = new HashSet<string>();
+				var processedPlugins = new HashSet<string>();
+
+				foreach (var pluginGUID in sortedPlugins)
 				{
+					// If the plugin is missing, don't process it
+					if (!pluginsByGUID.TryGetValue(pluginGUID, out var pluginType))
+						continue;
+
+					var metadata = MetadataHelper.GetMetadata(pluginType);
+					var dependencies = MetadataHelper.GetDependencies(pluginType, selectedPluginTypes);
+					var dependsOnInvalidPlugin = false;
+					var missingDependencies = new List<string>();
+					foreach (var dependency in dependencies)
+					{
+						// If the depenency wasn't already processed, it's missing altogether
+						if (!processedPlugins.Contains(dependency.DependencyGUID))
+						{
+							// If the dependency is hard, collect it into a list to show
+							if ((dependency.Flags & BepInDependency.DependencyFlags.HardDependency) != 0)
+								missingDependencies.Add(dependency.DependencyGUID);
+							continue;
+						}
+
+						// If the dependency is invalid (e.g. has missing depedencies), report that to the user
+						if (invalidPlugins.Contains(dependency.DependencyGUID))
+						{
+							dependsOnInvalidPlugin = true;
+							break;
+						}
+					}
+
+					processedPlugins.Add(pluginGUID);
+
+					if (dependsOnInvalidPlugin)
+					{
+						Logger.LogWarning($"Skipping [{metadata.Name}] because it has a dependency that was not loaded. See above errors for details.");
+						continue;
+					}
+
+					if (missingDependencies.Count != 0)
+					{
+						Logger.LogError($@"Missing the following dependencies for [{metadata.Name}]: {"\r\n"}{
+							string.Join("\r\n", missingDependencies.Select(s => $"- {s}").ToArray())
+							}{"\r\n"}Loading will be skipped; expect further errors and unstabilities.");
+
+						invalidPlugins.Add(pluginGUID);
+						continue;
+					}
+
 					try
 					{
-						var metadata = MetadataHelper.GetMetadata(t);
 						Logger.LogInfo($"Loading [{metadata.Name} {metadata.Version}]");
-
-						var plugin = (BaseUnityPlugin)ManagerObject.AddComponent(t);
-
-						Plugins.Add(plugin);
+						Plugins.Add((BaseUnityPlugin)ManagerObject.AddComponent(pluginType));
 					}
 					catch (Exception ex)
 					{
-						Logger.LogError($"Error loading [{t.Name}] : {ex.Message}");
+						invalidPlugins.Add(pluginGUID);
+						Logger.LogError($"Error loading [{metadata.Name}] : {ex.Message}");
 						Logger.LogDebug(ex);
 					}
 				}
