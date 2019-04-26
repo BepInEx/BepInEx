@@ -146,6 +146,19 @@ namespace BepInEx.Bootstrap
 				{
 					var dependencies = MetadataHelper.GetDependencies(t, selectedPluginTypes);
 					var metadata = MetadataHelper.GetMetadata(t);
+
+					if (metadata.GUID == null)
+					{
+						Logger.LogWarning($"Skipping [{metadata.Name}] because it does not have a valid GUID.");
+						continue;
+					}
+
+					if (dependencyDict.ContainsKey(metadata.GUID))
+					{
+						Logger.LogWarning($"Skipping [{metadata.Name}] because its GUID ({metadata.GUID}) is already used by another plugin.");
+						continue;
+					}
+
 					dependencyDict[metadata.GUID] = dependencies.Select(d => d.DependencyGUID);
 					pluginsByGUID[metadata.GUID] = t;
 				}
