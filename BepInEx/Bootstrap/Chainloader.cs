@@ -62,6 +62,7 @@ namespace BepInEx.Bootstrap
 
 
 			Logger.Listeners.Add(new UnityLogListener());
+			Logger.Listeners.Add(new DiskLogListener());
 
 			if (!TraceLogSource.IsListening)
 				Logger.Sources.Add(TraceLogSource.CreateSource());
