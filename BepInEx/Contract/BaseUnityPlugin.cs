@@ -1,4 +1,6 @@
-﻿using BepInEx.Configuration;
+﻿using BepInEx.Bootstrap;
+using BepInEx.Configuration;
+using BepInEx.Contract;
 using BepInEx.Logging;
 using UnityEngine;
 
@@ -13,9 +15,13 @@ namespace BepInEx
 
 		protected ConfigFile Config { get; }
 
+		protected PluginInfo Info { get; }
+
 		protected BaseUnityPlugin()
 		{
 			var metadata = MetadataHelper.GetMetadata(this);
+
+			Info = Chainloader.Plugins[metadata.GUID];
 
 			Logger = Logging.Logger.CreateLogSource(metadata.Name);
 
