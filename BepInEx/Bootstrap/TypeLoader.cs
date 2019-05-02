@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
+using BepInEx.Contract;
 using BepInEx.Logging;
+using Mono.Cecil;
 
 namespace BepInEx.Bootstrap
 {
@@ -12,39 +16,99 @@ namespace BepInEx.Bootstrap
 	/// </summary>
 	public static class TypeLoader
 	{
+		private static bool Is(this TypeDefinition self, Type td)
+		{
+			if (self.FullName == td.FullName)
+				return true;
+			return self.FullName != "System.Object" && (self.BaseType?.Resolve().Is(td) ?? false);
+		}
+
+		private static DefaultAssemblyResolver resolver;
+		private static ReaderParameters readerParameters;
+
+		static TypeLoader()
+		{
+			resolver = new DefaultAssemblyResolver();
+			readerParameters = new ReaderParameters { AssemblyResolver = resolver };
+
+			resolver.ResolveFailure += (sender, reference) =>
+			{
+				var name = new AssemblyName(reference.FullName);
+
+				if (Utility.TryResolveDllAssembly(name, Paths.BepInExAssemblyDirectory, readerParameters, out AssemblyDefinition assembly) || Utility.TryResolveDllAssembly(name, Paths.PluginPath, readerParameters, out assembly) || Utility.TryResolveDllAssembly(name, Paths.ManagedPath, readerParameters, out assembly))
+					return assembly;
+
+				return null;
+			};
+		}
+
 		/// <summary>
 		/// Loads a list of types from a directory containing assemblies, that derive from a base type.
 		/// </summary>
 		/// <typeparam name="T">The specific base type to search for.</typeparam>
 		/// <param name="directory">The directory to search for assemblies.</param>
 		/// <returns>Returns a list of found derivative types.</returns>
-		public static IEnumerable<Type> LoadTypes<T>(string directory)
+		public static Dictionary<AssemblyDefinition, IEnumerable<PluginInfo>> FindPluginTypes(string directory)
 		{
-			List<Type> types = new List<Type>();
-			Type pluginType = typeof(T);
+			var result = new Dictionary<AssemblyDefinition, IEnumerable<PluginInfo>>();
+			var pluginType = typeof(BaseUnityPlugin);
+			string currentProcess = Process.GetCurrentProcess().ProcessName.ToLower();
 
 			foreach (string dll in Directory.GetFiles(Path.GetFullPath(directory), "*.dll", SearchOption.AllDirectories))
 			{
 				try
 				{
-					AssemblyName an = AssemblyName.GetAssemblyName(dll);
-					Assembly assembly = Assembly.Load(an);
+					var ass = AssemblyDefinition.ReadAssembly(dll, readerParameters);
 
-					foreach (Type type in assembly.GetTypes())
+					var matchingTypes = ass.MainModule.Types.Where(t => !t.IsInterface && !t.IsAbstract && t.Is(pluginType)).ToList();
+
+					if (matchingTypes.Count == 0)
+						continue;
+
+					var pluginInfos = new List<PluginInfo>();
+
+					foreach (var pluginTypeDefinition in matchingTypes)
 					{
-						if (!type.IsInterface && !type.IsAbstract && pluginType.IsAssignableFrom(type))
-							types.Add(type);
+						var metadata = BepInPlugin.FromCecilType(pluginTypeDefinition);
+
+						if (metadata == null)
+						{
+							Logger.LogWarning($"Skipping over type [{pluginTypeDefinition.Name}] as no metadata attribute is specified");
+							continue;
+						}
+
+						//Perform a filter for currently running process
+						var filters = BepInProcess.FromCecilType(pluginTypeDefinition);
+
+						bool invalidProcessName = filters.Any(x => x.ProcessName.ToLower().Replace(".exe", "") == currentProcess);
+
+						if (invalidProcessName)
+						{
+							Logger.LogInfo($"Skipping over plugin [{metadata.GUID}] due to process filter");
+							continue;
+						}
+
+						var dependencies = BepInDependency.FromCecilType(pluginTypeDefinition);
+
+						pluginInfos.Add(new PluginInfo
+						{
+							Metadata = metadata,
+							Processes = filters,
+							Dependencies = dependencies,
+							CecilType = pluginTypeDefinition,
+							Location = dll
+						});
 					}
+
+					result[ass] = pluginInfos;
 				}
-				catch (BadImageFormatException) { } //unmanaged DLL
-				catch (ReflectionTypeLoadException ex)
+				catch (Exception e)
 				{
-					Logger.LogError($"Could not load \"{Path.GetFileName(dll)}\" as a plugin!");
-					Logger.LogDebug(TypeLoadExceptionToString(ex));
+					Logger.LogError(e.ToString());
 				}
 			}
 
-			return types;
+			return result;
 		}
 
 		private static string TypeLoadExceptionToString(ReflectionTypeLoadException ex)
