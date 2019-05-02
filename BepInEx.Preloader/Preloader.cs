@@ -323,7 +323,12 @@ namespace BepInEx.Preloader
 			"Preloader.Entrypoint",
 			"Assembly",
 			"The local filename of the assembly to target.",
-			"UnityEngine.dll");
+#if UNITY_2018
+			"UnityEngine.CoreModule.dll"
+#else
+			"UnityEngine.dll"
+#endif
+			);
 
 		private static readonly ConfigWrapper<string> ConfigEntrypointType = ConfigFile.CoreConfig.Wrap(
 			"Preloader.Entrypoint",
@@ -361,6 +366,6 @@ namespace BepInEx.Preloader
 			"If true, console is set to the Shift-JIS encoding, otherwise UTF-8 encoding.",
 			false);
 
-		#endregion
+#endregion
 	}
 }
