@@ -29,7 +29,7 @@ namespace BepInEx.Configuration
 
 		public ConfigWrapper(ConfigFile configFile, ConfigDefinition definition)
 		{
-			if (!TomlTypeConverter.SupportedTypes.Contains(typeof(T)))
+			if (!TomlTypeConverter.TypeConverters.ContainsKey(typeof(T)))
 				throw new ArgumentException("Unsupported config wrapper type");
 
 			ConfigFile = configFile;

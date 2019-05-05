@@ -1,63 +1,112 @@
 ﻿using System;
-using System.Collections.ObjectModel;
+using System.Collections.Generic;
 
 namespace BepInEx.Configuration
 {
+	public class TypeConverter
+	{
+		public Func<object, string> ConvertToString { get; set; }
+		public Func<string, object> ConvertToObject { get; set; }
+	}
+
 	internal static class TomlTypeConverter
 	{
-		public static ReadOnlyCollection<Type> SupportedTypes { get; } = new ReadOnlyCollection<Type>(new[]
+		public static Dictionary<Type, TypeConverter> TypeConverters { get; } = new Dictionary<Type, TypeConverter>
 		{
-			typeof(string),
-			typeof(int),
-			typeof(bool)
-		});
+			[typeof(string)] = new TypeConverter
+			{
+				ConvertToString = (obj) => (string)obj,
+				ConvertToObject = (str) => str,
+			},
+			[typeof(bool)] = new TypeConverter
+			{
+				ConvertToString = (obj) => obj.ToString().ToLowerInvariant(),
+				ConvertToObject = (str) => bool.Parse(str),
+			},
+			[typeof(byte)] = new TypeConverter
+			{
+				ConvertToString = (obj) => obj.ToString(),
+				ConvertToObject = (str) => byte.Parse(str),
+			},
+
+			//integral types
+
+			[typeof(sbyte)] = new TypeConverter
+			{
+				ConvertToString = (obj) => obj.ToString(),
+				ConvertToObject = (str) => sbyte.Parse(str),
+			},
+			[typeof(byte)] = new TypeConverter
+			{
+				ConvertToString = (obj) => obj.ToString(),
+				ConvertToObject = (str) => byte.Parse(str),
+			},
+			[typeof(short)] = new TypeConverter
+			{
+				ConvertToString = (obj) => obj.ToString(),
+				ConvertToObject = (str) => short.Parse(str),
+			},
+			[typeof(ushort)] = new TypeConverter
+			{
+				ConvertToString = (obj) => obj.ToString(),
+				ConvertToObject = (str) => ushort.Parse(str),
+			},
+			[typeof(int)] = new TypeConverter
+			{
+				ConvertToString = (obj) => obj.ToString(),
+				ConvertToObject = (str) => int.Parse(str),
+			},
+			[typeof(uint)] = new TypeConverter
+			{
+				ConvertToString = (obj) => obj.ToString(),
+				ConvertToObject = (str) => uint.Parse(str),
+			},
+			[typeof(long)] = new TypeConverter
+			{
+				ConvertToString = (obj) => obj.ToString(),
+				ConvertToObject = (str) => long.Parse(str),
+			},
+			[typeof(ulong)] = new TypeConverter
+			{
+				ConvertToString = (obj) => obj.ToString(),
+				ConvertToObject = (str) => ulong.Parse(str),
+			},
+
+			//floating point types
+
+			[typeof(float)] = new TypeConverter
+			{
+				ConvertToString = (obj) => obj.ToString(),
+				ConvertToObject = (str) => float.Parse(str),
+			},
+			[typeof(double)] = new TypeConverter
+			{
+				ConvertToString = (obj) => obj.ToString(),
+				ConvertToObject = (str) => double.Parse(str),
+			},
+			[typeof(decimal)] = new TypeConverter
+			{
+				ConvertToString = (obj) => obj.ToString(),
+				ConvertToObject = (str) => decimal.Parse(str),
+			},
+		};
 
 		public static string ConvertToString(object value)
 		{
 			Type valueType = value.GetType();
 
-			if (!SupportedTypes.Contains(valueType))
+			if (!TypeConverters.ContainsKey(valueType))
 				throw new InvalidOperationException($"Cannot convert from type {valueType}");
 
-			if (value is string s)
-			{
-				return s;
-			}
-
-			if (value is int i)
-			{
-				return i.ToString();
-			}
-
-			if (value is bool b)
-			{
-				return b.ToString().ToLowerInvariant();
-			}
-
-			throw new NotImplementedException("Supported type does not have a converter");
+			return TypeConverters[valueType].ConvertToString(value);
 		}
 
 		public static T ConvertToValue<T>(string value)
 		{
-			if (!SupportedTypes.Contains(typeof(T)))
+			if (!TypeConverters.ContainsKey(typeof(T)))
 				throw new InvalidOperationException($"Cannot convert to type {typeof(T)}");
 
-			if (typeof(T) == typeof(string))
-			{
-				return (T)(object)value;
-			}
-
-			if (typeof(T) == typeof(int))
-			{
-				return (T)(object)int.Parse(value);
-			}
-
-			if (typeof(T) == typeof(bool))
-			{
-				return (T)(object)bool.Parse(value);
-			}
-
-			throw new NotImplementedException("Supported type does not have a converter");
+			return (T)TypeConverters[typeof(T)].ConvertToObject(value);
 		}
 	}
 }
