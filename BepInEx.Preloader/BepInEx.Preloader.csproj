@@ -60,6 +60,14 @@
       <Project>{a15d6ee6-f954-415b-8605-8a8470cc87dc}</Project>
       <Name>Harmony</Name>
     </ProjectReference>
+    <ProjectReference Include="..\submodules\MonoMod\MonoMod.RuntimeDetour\MonoMod.RuntimeDetour.csproj">
+      <Project>{d0c584c0-81d7-486e-b70e-d7f9256e0909}</Project>
+      <Name>MonoMod.RuntimeDetour</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\submodules\MonoMod\MonoMod.Utils\MonoMod.Utils.csproj">
+      <Project>{1839cfe2-3db0-45a8-b03d-9aa797479a3a}</Project>
+      <Name>MonoMod.Utils</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
