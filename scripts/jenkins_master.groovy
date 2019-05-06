@@ -45,10 +45,11 @@ Changes since ${latestTag}:
         stage('Prepare BepInEx') {
             steps {
                 dir('BepInEx') {
-                    sh '''
-						nuget restore
-						mkdir -p "lib"
-					'''
+                    sh "mkdir -p lib"
+
+                    // Ghetto fix to force TargetFrameworks to only net35
+                    sh "find . -type f -name \"*.csproj\" -exec sed -i -E \"s/(<TargetFrameworks>)[^<]+(<\\/TargetFrameworks>)/\\1net35\\2/g\" {} +"
+                    sh "nuget restore"
                 }
 
                 dir('BepInEx/BepInEx') {
