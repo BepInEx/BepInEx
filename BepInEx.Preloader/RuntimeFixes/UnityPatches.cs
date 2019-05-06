@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Reflection;
 using BepInEx.Harmony;
-using Harmony;
+using HarmonyLib;
 
 namespace BepInEx.Preloader.RuntimeFixes
 {
 	internal static class UnityPatches
 	{
-		public static HarmonyInstance HarmonyInstance { get; } = HarmonyInstance.Create("com.bepinex.unitypatches");
+		public static HarmonyLib.Harmony HarmonyInstance { get; } = new HarmonyLib.Harmony("com.bepinex.unitypatches");
 
 		public static Dictionary<string, string> AssemblyLocations { get; } =
 			new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);

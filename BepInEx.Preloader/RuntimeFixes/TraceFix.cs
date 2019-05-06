@@ -2,12 +2,12 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
-using Harmony;
+using HarmonyLib;
 
 namespace BepInEx.Preloader.RuntimeFixes
 {
 	/// <summary>
-	/// This exists because the Mono implementation of <see cref="Trace"/> is/was broken, and would call Write directly instead of calling TraceEvent. This class fixes that with a <see cref="Harmony"/> hook.
+	/// This exists because the Mono implementation of <see cref="Trace"/> is/was broken, and would call Write directly instead of calling TraceEvent. This class fixes that with a <see cref="BepInEx.Harmony"/> hook.
 	/// </summary>
 	internal static class TraceFix
 	{
@@ -35,7 +35,7 @@ namespace BepInEx.Preloader.RuntimeFixes
 			prop_AutoFlush = AccessTools.Property(TraceImplType, "AutoFlush");
 
 
-			HarmonyInstance instance = HarmonyInstance.Create("com.bepis.bepinex.tracefix");
+			HarmonyLib.Harmony instance = new HarmonyLib.Harmony("com.bepis.bepinex.tracefix");
 
 			instance.Patch(
 				typeof(Trace).GetMethod("DoTrace", BindingFlags.Static | BindingFlags.NonPublic),
