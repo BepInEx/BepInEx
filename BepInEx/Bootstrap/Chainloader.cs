@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityInjector.ConsoleUtil;
 using Logger = BepInEx.Logging.Logger;
@@ -77,6 +78,8 @@ namespace BepInEx.Bootstrap
 			_initialized = true;
 		}
 
+		private static Regex allowedGuidRegex { get; } = new Regex(@"^[a-zA-Z0-9\._]+$");
+
 		/// <summary>
 		/// The entrypoint for the BepInEx plugin system.
 		/// </summary>
@@ -109,60 +112,74 @@ namespace BepInEx.Bootstrap
 
 
 				string currentProcess = Process.GetCurrentProcess().ProcessName.ToLower();
-
+				
 				var globalPluginTypes = TypeLoader.LoadTypes<BaseUnityPlugin>(Paths.PluginPath).ToList();
 
-				var selectedPluginTypes = globalPluginTypes
-										  .Where(plugin =>
-										  {
-											  //Ensure metadata exists
-											  var metadata = MetadataHelper.GetMetadata(plugin);
+				Dictionary<Type, BepInPlugin> selectedPluginTypes = new Dictionary<Type, BepInPlugin>(globalPluginTypes.Count);
 
-											  if (metadata == null)
-											  {
-												  Logger.LogWarning($"Skipping over type [{plugin.Name}] as no metadata attribute is specified");
-												  return false;
-											  }
+				foreach (var pluginType in globalPluginTypes)
+				{
+					//Ensure metadata exists
+					var metadata = MetadataHelper.GetMetadata(pluginType);
 
-											  //Perform a filter for currently running process
-											  var filters = MetadataHelper.GetAttributes<BepInProcess>(plugin);
+					if (metadata == null)
+					{
+						Logger.LogWarning($"Skipping type [{pluginType.FullName}] as no metadata attribute is specified");
+						continue;
+					}
 
-											  if (filters.Length == 0) //no filters means it loads everywhere
-												  return true;
+					if (string.IsNullOrEmpty(metadata.GUID) || !allowedGuidRegex.IsMatch(metadata.GUID))
+					{
+						Logger.LogWarning($"Skipping type [{pluginType.FullName}] because its GUID [{metadata.GUID}] is of an illegal format.");
+						continue;
+					}
 
-											  var result = filters.Any(x => x.ProcessName.ToLower().Replace(".exe", "") == currentProcess);
+					if (selectedPluginTypes.Any(x => x.Value.GUID.Equals(metadata.GUID, StringComparison.OrdinalIgnoreCase)))
+					{
+						Logger.LogWarning($"Skipping type [{pluginType.FullName}] because its GUID [{metadata.GUID}] is already used by another plugin.");
+						continue;
+					}
 
-											  if (!result)
-												  Logger.LogInfo($"Skipping over plugin [{metadata.GUID}] due to process filter");
+					if (metadata.Version == null)
+					{
+						Logger.LogWarning($"Skipping type [{pluginType.FullName}] because its version is invalid.");
+						continue;
+					}
 
-											  return result;
-										  })
-										  .ToList();
+					if (metadata.Name == null)
+					{
+						Logger.LogWarning($"Skipping type [{pluginType.FullName}] because its name is null.");
+						continue;
+					}
+
+					//Perform a filter for currently running process
+					var filters = MetadataHelper.GetAttributes<BepInProcess>(pluginType);
+
+					if (filters.Length != 0)
+					{
+						var result = filters.Any(x => x.ProcessName.ToLower().Replace(".exe", "") == currentProcess);
+
+						if (!result)
+						{
+							Logger.LogInfo($"Skipping over plugin [{metadata.GUID}] due to process filter");
+							continue;
+						}
+					}
+
+					selectedPluginTypes.Add(pluginType, metadata);
+				}
 
 				Logger.LogInfo($"{selectedPluginTypes.Count} / {globalPluginTypes.Count} plugins to load");
 
 				var dependencyDict = new Dictionary<string, IEnumerable<string>>();
 				var pluginsByGUID = new Dictionary<string, Type>();
 
-				foreach (Type t in selectedPluginTypes)
+				foreach (var kv in selectedPluginTypes)
 				{
-					var dependencies = MetadataHelper.GetDependencies(t, selectedPluginTypes);
-					var metadata = MetadataHelper.GetMetadata(t);
+					var dependencies = MetadataHelper.GetDependencies(kv.Key, selectedPluginTypes.Keys);
 
-					if (metadata.GUID == null)
-					{
-						Logger.LogWarning($"Skipping [{metadata.Name}] because it does not have a valid GUID.");
-						continue;
-					}
-
-					if (dependencyDict.ContainsKey(metadata.GUID))
-					{
-						Logger.LogWarning($"Skipping [{metadata.Name}] because its GUID ({metadata.GUID}) is already used by another plugin.");
-						continue;
-					}
-
-					dependencyDict[metadata.GUID] = dependencies.Select(d => d.DependencyGUID);
-					pluginsByGUID[metadata.GUID] = t;
+					dependencyDict[kv.Value.GUID] = dependencies.Select(d => d.DependencyGUID);
+					pluginsByGUID[kv.Value.GUID] = kv.Key;
 				}
 
 				var emptyDependencies = new string[0];
@@ -181,7 +198,7 @@ namespace BepInEx.Bootstrap
 						continue;
 
 					var metadata = MetadataHelper.GetMetadata(pluginType);
-					var dependencies = MetadataHelper.GetDependencies(pluginType, selectedPluginTypes);
+					var dependencies = MetadataHelper.GetDependencies(pluginType, selectedPluginTypes.Keys);
 					var dependsOnInvalidPlugin = false;
 					var missingDependencies = new List<string>();
 					foreach (var dependency in dependencies)

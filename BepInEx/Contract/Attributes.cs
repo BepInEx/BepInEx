@@ -36,7 +36,15 @@ namespace BepInEx
 		{
 			this.GUID = GUID;
 			this.Name = Name;
-			this.Version = new Version(Version);
+
+			try
+			{
+				this.Version = new Version(Version);
+			}
+			catch
+			{
+				this.Version = null;
+			}
 		}
 	}
 
