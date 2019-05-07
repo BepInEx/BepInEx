@@ -3,6 +3,9 @@
 */
 pipeline {
     agent any
+    parameters {
+        booleanParam(name: "IS_BE")
+    }
     stages {
         stage('Pull Projects') {
             steps {
@@ -11,13 +14,20 @@ pipeline {
 
                 dir('BepInEx') {
                     git 'https://github.com/BepInEx/BepInEx.git'
-                    sh 'git submodule update --init --recursive'
+                    
                     script {
                         shortCommit = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%h'").trim()
                         longCommit = sh(returnStdout: true, script: "git rev-parse HEAD").trim()
                         branchName = sh(returnStdout: true, script: "git rev-parse --abbrev-ref HEAD").trim()
                         latestTag = sh(returnStdout: true, script: "git describe --tags `git rev-list --tags --max-count=1`").trim()
-                        changelog = gitChangelog from: [type: 'REF', value: "${latestTag}"], returnType: 'STRING', template: """BepInEx Bleeding Edge Changelog
+
+                        if(!params.IS_BE) {
+                            latestTagOnCurrentBranch = sh(returnStdout: true, script: "git describe --abbrev=0 --tags").trim()
+                            sh("git checkout ${latestTagOnCurrentBranch}")
+                        }
+
+                        if(params.IS_BE)
+                            changelog = gitChangelog from: [type: 'REF', value: "${latestTag}"], returnType: 'STRING', template: """BepInEx Bleeding Edge Changelog
 Changes since ${latestTag}:
 
 {{#commits}}
@@ -26,6 +36,8 @@ Changes since ${latestTag}:
 {{/merge}}
 {{/commits}}""", to: [type: 'COMMIT', value: "${longCommit}"]
                     }
+
+                    sh 'git submodule update --init --recursive'
                 }
 
                 dir('Unity') {
@@ -55,9 +67,11 @@ Changes since ${latestTag}:
                 dir('BepInEx/BepInEx') {
                     // Write additional BuildInfo into the Bleeding Edge BepInEx.dll
                     dir('Properties') {
-                        sh "echo '[assembly: BuildInfo(\"BLEEDING EDGE Build #${env.BUILD_NUMBER} from ${shortCommit} at ${branchName}\")]' >> AssemblyInfo.cs"
-                        sh "sed -i -E \"s/([0-9]+\\.[0-9]+\\.[0-9]+\\.)[0-9]+/\\1${env.BUILD_NUMBER}/\" AssemblyInfo.cs"
                         script {
+                            if(params.IS_BE) {
+                                sh "sed -i -E \"s/([0-9]+\\.[0-9]+\\.[0-9]+\\.)[0-9]+/\\1${env.BUILD_NUMBER}/\" AssemblyInfo.cs"
+                                sh "echo '[assembly: BuildInfo(\"BLEEDING EDGE Build #${env.BUILD_NUMBER} from ${shortCommit} at ${branchName}\")]' >> AssemblyInfo.cs"
+                            }
                             versionNumber = sh(returnStdout: true, script: "grep -m 1 -oE \"[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+\" AssemblyInfo.cs").trim()
                         }
                     }
@@ -107,23 +121,36 @@ Changes since ${latestTag}:
                     sh 'cp -f ../../../BepInEx/doorstop/doorstop_config.ini doorstop_config.ini'
                     sh 'cp -f ../../../Doorstop/x86/winhttp.dll winhttp.dll'
                     
-                    writeFile encoding: 'UTF-8', file: 'changelog.txt', text: changelog
+                    script {
+                        if(params.IS_BE) {
+                            writeFile encoding: 'UTF-8', file: 'changelog.txt', text: changelog
+                            sh 'unix2dos changelog.txt'
+                            commitPrefix = "_${shortCommit}_"
+                        } 
+                        else
+                            commitPrefix = "_"
+                    }
 
-                    sh "zip -r9 BepInEx_Legacy_x86_${shortCommit}_${versionNumber}.zip ./*"
+                    sh "zip -r9 BepInEx_Legacy_x86${commitPrefix}${versionNumber}.zip ./*"
                     
                     sh 'cp -f ../../../Doorstop/x64/winhttp.dll winhttp.dll'
                     
-                    sh 'unix2dos doorstop_config.ini changelog.txt'
+                    sh 'unix2dos doorstop_config.ini'
                     
-                    sh "zip -r9 BepInEx_Legacy_x64_${shortCommit}_${versionNumber}.zip ./* -x \\*.zip"
+                    
+                    sh "zip -r9 BepInEx_Legacy_x64${commitPrefix}${versionNumber}.zip ./* -x \\*.zip"
 
                     archiveArtifacts "*.zip"
                 }
                 dir('Build/Legacy/patcher') {
                     sh 'cp -fr ../bin/patcher/* .'
-                    writeFile encoding: 'UTF-8', file: 'changelog.txt', text: changelog
-                    sh 'unix2dos changelog.txt'
-                    sh "zip -r9 BepInEx_Legacy_Patcher_${shortCommit}_${versionNumber}.zip ./*"
+                    script {
+                        if(params.IS_BE) {
+                            writeFile encoding: 'UTF-8', file: 'changelog.txt', text: changelog
+                            sh 'unix2dos changelog.txt'
+                        }
+                    }
+                    sh "zip -r9 BepInEx_Legacy_Patcher${commitPrefix}${versionNumber}.zip ./*"
 
                     archiveArtifacts "*.zip"
                 }
@@ -141,23 +168,35 @@ Changes since ${latestTag}:
                     sh 'cp -f ../../../BepInEx/doorstop/doorstop_config.ini doorstop_config.ini'
                     sh 'cp -f ../../../Doorstop/x86/winhttp.dll winhttp.dll'
                     
-                    writeFile encoding: 'UTF-8', file: 'changelog.txt', text: changelog
+                    script {
+                        if(params.IS_BE) {
+                            writeFile encoding: 'UTF-8', file: 'changelog.txt', text: changelog
+                            sh 'unix2dos changelog.txt'
+                            commitPrefix = "_${shortCommit}_"
+                        } 
+                        else
+                            commitPrefix = "_"
+                    }
 
-                    sh "zip -r9 BepInEx_v2018_x86_${shortCommit}_${versionNumber}.zip ./*"
+                    sh "zip -r9 BepInEx_v2018_x86${commitPrefix}${versionNumber}.zip ./*"
                     
                     sh 'cp -f ../../../Doorstop/x64/winhttp.dll winhttp.dll'
                     
-                    sh 'unix2dos doorstop_config.ini changelog.txt'
+                    sh 'unix2dos doorstop_config.ini'
                     
-                    sh "zip -r9 BepInEx_v2018_x64_${shortCommit}_${versionNumber}.zip ./* -x \\*.zip"
+                    sh "zip -r9 BepInEx_v2018_x64${commitPrefix}${versionNumber}.zip ./* -x \\*.zip"
 
                     archiveArtifacts "*.zip"
                 }
                 dir('Build/v2018/patcher') {
                     sh 'cp -fr ../bin/patcher/* .'
-                    writeFile encoding: 'UTF-8', file: 'changelog.txt', text: changelog
-                    sh 'unix2dos changelog.txt'
-                    sh "zip -r9 BepInEx_v2018_Patcher_${shortCommit}_${versionNumber}.zip ./*"
+                    script {
+                        if(params.IS_BE) {
+                            writeFile encoding: 'UTF-8', file: 'changelog.txt', text: changelog
+                            sh 'unix2dos changelog.txt'
+                        }
+                    }
+                    sh "zip -r9 BepInEx_v2018_Patcher${commitPrefix}${versionNumber}.zip ./*"
 
                     archiveArtifacts "*.zip"
                 }
@@ -166,24 +205,30 @@ Changes since ${latestTag}:
     }
     post {
         success {
-            // Write built BepInEx into bepisbuilds
-            dir('Build/Legacy/dist') {
-                sh "cp BepInEx_Legacy_x86_${shortCommit}_${versionNumber}.zip /var/www/bepisbuilds/builds/bepinex_be"
-                sh "cp BepInEx_Legacy_x64_${shortCommit}_${versionNumber}.zip /var/www/bepisbuilds/builds/bepinex_be"
-            }
-            dir('Build/Legacy/patcher') {
-                sh "cp BepInEx_Legacy_Patcher_${shortCommit}_${versionNumber}.zip /var/www/bepisbuilds/builds/bepinex_be"
-            }
+            script {
+                if(params.IS_BE) {
+                    // Write built BepInEx into bepisbuilds
+                    dir('Build/Legacy/dist') {
+                        sh "cp BepInEx_Legacy_x86_${shortCommit}_${versionNumber}.zip /var/www/bepisbuilds/builds/bepinex_be"
+                        sh "cp BepInEx_Legacy_x64_${shortCommit}_${versionNumber}.zip /var/www/bepisbuilds/builds/bepinex_be"
+                    }
 
-            dir('Build/v2018/dist') {
-                sh "cp BepInEx_v2018_x86_${shortCommit}_${versionNumber}.zip /var/www/bepisbuilds/builds/bepinex_be"
-                sh "cp BepInEx_v2018_x64_${shortCommit}_${versionNumber}.zip /var/www/bepisbuilds/builds/bepinex_be"
-            }
-            dir('Build/v2018/patcher') {
-                sh "cp BepInEx_v2018_Patcher_${shortCommit}_${versionNumber}.zip /var/www/bepisbuilds/builds/bepinex_be"
-            }
+                    dir('Build/Legacy/patcher') {
+                        sh "cp BepInEx_Legacy_Patcher_${shortCommit}_${versionNumber}.zip /var/www/bepisbuilds/builds/bepinex_be"
+                    }
 
-            sh "echo \"`date -Iseconds -u`;${env.BUILD_NUMBER};${shortCommit};BepInEx_Legacy_x86_${shortCommit}_${versionNumber}.zip;BepInEx_Legacy_x64_${shortCommit}_${versionNumber}.zip;BepInEx_v2018_x86_${shortCommit}_${versionNumber}.zip;BepInEx_v2018_x64_${shortCommit}_${versionNumber}.zip;BepInEx_Legacy_Patcher_${shortCommit}_${versionNumber}.zip;BepInEx_v2018_Patcher_${shortCommit}_${versionNumber}.zip\" >> /var/www/bepisbuilds/builds/bepinex_be/artifacts_list"
+                    dir('Build/v2018/dist') {
+                        sh "cp BepInEx_v2018_x86_${shortCommit}_${versionNumber}.zip /var/www/bepisbuilds/builds/bepinex_be"
+                        sh "cp BepInEx_v2018_x64_${shortCommit}_${versionNumber}.zip /var/www/bepisbuilds/builds/bepinex_be"
+                    }
+
+                    dir('Build/v2018/patcher') {
+                        sh "cp BepInEx_v2018_Patcher_${shortCommit}_${versionNumber}.zip /var/www/bepisbuilds/builds/bepinex_be"
+                    }
+
+                    sh "echo \"`date -Iseconds -u`;${env.BUILD_NUMBER};${shortCommit};BepInEx_Legacy_x86_${shortCommit}_${versionNumber}.zip;BepInEx_Legacy_x64_${shortCommit}_${versionNumber}.zip;BepInEx_v2018_x86_${shortCommit}_${versionNumber}.zip;BepInEx_v2018_x64_${shortCommit}_${versionNumber}.zip;BepInEx_Legacy_Patcher_${shortCommit}_${versionNumber}.zip;BepInEx_v2018_Patcher_${shortCommit}_${versionNumber}.zip\" >> /var/www/bepisbuilds/builds/bepinex_be/artifacts_list"
+                }
+            }
 
             //Notify Bepin Discord of successfull build
             withCredentials([string(credentialsId: 'discord-notify-webhook', variable: 'DISCORD_WEBHOOK')]) {
