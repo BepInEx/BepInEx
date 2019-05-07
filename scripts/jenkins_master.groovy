@@ -4,6 +4,7 @@
 pipeline {
     agent any
     parameters {
+        // Check if the build is Bleeding Edge. Affects whether the result is pushed to BepisBuilds
         booleanParam(name: "IS_BE")
     }
     stages {
