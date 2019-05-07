@@ -13,12 +13,34 @@ namespace BepInEx.Logging
 	{
 		protected LogLevel DisplayedLogLevel = (LogLevel)Enum.Parse(typeof(LogLevel), ConfigConsoleDisplayedLevel.Value, true);
 
-		protected TextWriter LogWriter = TextWriter.Synchronized(new StreamWriter(Path.Combine(Paths.BepInExRootPath, "LogOutput.log"), ConfigAppendLog.Value, Encoding.UTF8));
+		protected TextWriter LogWriter { get; set; }
 
-		protected Timer FlushTimer;
+		protected Timer FlushTimer { get; set; }
 
 		public DiskLogListener()
 		{
+			int counter = 1;
+			string localPath = "LogOutput.log";
+
+			FileStream fileStream;
+
+			while (!Utility.TryOpenFileStream(Path.Combine(Paths.BepInExRootPath, localPath), ConfigAppendLog.Value ? FileMode.Append : FileMode.Create, out fileStream, share: FileShare.Read))
+			{
+				if (counter == 5)
+				{
+					Logger.LogError("Couldn't open a log file for writing. Skipping log file creation");
+
+					return;
+				}
+
+				Logger.LogWarning($"Couldn't open log file '{localPath}' for writing, trying another...");
+
+				localPath = $"LogOutput.log.{counter++}";
+			}
+
+			LogWriter = TextWriter.Synchronized(new StreamWriter(fileStream, Encoding.UTF8));
+			
+
 			FlushTimer = new Timer(o =>
 			{
 				LogWriter?.Flush();
@@ -38,9 +60,9 @@ namespace BepInEx.Logging
 
 		public void Dispose()
 		{
-			FlushTimer.Dispose();
-			LogWriter.Flush();
-			LogWriter.Dispose();
+			FlushTimer?.Dispose();
+			LogWriter?.Flush();
+			LogWriter?.Dispose();
 		}
 
 		~DiskLogListener()

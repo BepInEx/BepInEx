@@ -136,5 +136,21 @@ namespace BepInEx
 
 			return false;
 		}
+
+		public static bool TryOpenFileStream(string path, FileMode mode, out FileStream fileStream, FileAccess access = FileAccess.ReadWrite, FileShare share = FileShare.None)
+		{
+			try
+			{
+				fileStream = new FileStream(path, mode, access, share);
+
+				return true;
+			}
+			catch (IOException)
+			{
+				fileStream = null;
+
+				return false;
+			}
+		}
 	}
 }
