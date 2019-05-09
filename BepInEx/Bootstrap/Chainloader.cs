@@ -33,9 +33,9 @@ namespace BepInEx.Bootstrap
 		private static bool _initialized = false;
 
 		/// <summary>
-		/// Initializes BepInEx to be able to start the chainloader.
-		/// </summary>
-		public static void Initialize(string containerExePath, bool startConsole = true)
+        /// Initializes BepInEx to be able to start the chainloader.
+        /// </summary>
+        public static void Initialize(string containerExePath, bool startConsole = true)
 		{
 			if (_initialized)
 				return;
@@ -45,23 +45,24 @@ namespace BepInEx.Bootstrap
 
 			Paths.SetPluginPath(ConfigPluginsDirectory.Value);
 
-			//Start logging
-
-			if (startConsole)
+            //Start logging
+            if (ConsoleWindow.ConfigConsoleEnabled.Value && startConsole)
 			{
 				ConsoleWindow.Attach();
-
-				ConsoleEncoding.ConsoleCodePage = (uint)Encoding.UTF8.CodePage;
-				Console.OutputEncoding = Encoding.UTF8;
 				Logger.Listeners.Add(new ConsoleLogListener());
-			}
+            }
 
 			//Fix for standard output getting overwritten by UnityLogger
 			if (ConsoleWindow.StandardOut != null)
+			{
 				Console.SetOut(ConsoleWindow.StandardOut);
 
+				var encoding = ConsoleWindow.ConfigConsoleShiftJis.Value ? 932 : (uint)Encoding.UTF8.CodePage;
+				ConsoleEncoding.ConsoleCodePage = encoding;
+				Console.OutputEncoding = ConsoleEncoding.GetEncoding(encoding);
+			}
 
-			Logger.Listeners.Add(new UnityLogListener());
+            Logger.Listeners.Add(new UnityLogListener());
 			Logger.Listeners.Add(new DiskLogListener());
 
 			if (!TraceLogSource.IsListening)

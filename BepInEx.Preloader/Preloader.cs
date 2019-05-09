@@ -295,7 +295,7 @@ namespace BepInEx.Preloader
 		/// </summary>
 		public static void AllocateConsole()
 		{
-			if (!ConfigConsoleEnabled.Value)
+			if (!ConsoleWindow.ConfigConsoleEnabled.Value)
 				return;
 
 			try
@@ -304,7 +304,7 @@ namespace BepInEx.Preloader
 
 				var encoding = (uint)Encoding.UTF8.CodePage;
 
-				if (ConfigConsoleShiftJis.Value)
+				if (ConsoleWindow.ConfigConsoleShiftJis.Value)
 					encoding = 932;
 
 				ConsoleEncoding.ConsoleCodePage = encoding;
@@ -354,18 +354,6 @@ namespace BepInEx.Preloader
 			"Redirects text from Console.Out during preloader patch loading to the BepInEx logging system.",
 			true);
 
-		private static readonly ConfigWrapper<bool> ConfigConsoleEnabled = ConfigFile.CoreConfig.Wrap(
-			"Logging.Console",
-			"Enabled",
-			"Enables showing a console for log output.",
-			false);
-
-		private static readonly ConfigWrapper<bool> ConfigConsoleShiftJis = ConfigFile.CoreConfig.Wrap(
-			"Logging.Console",
-			"ShiftJisEncoding",
-			"If true, console is set to the Shift-JIS encoding, otherwise UTF-8 encoding.",
-			false);
-
-#endregion
+		#endregion
 	}
 }

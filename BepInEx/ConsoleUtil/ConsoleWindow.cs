@@ -7,12 +7,25 @@ using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
+using BepInEx.Configuration;
 
 namespace UnityInjector.ConsoleUtil
 {
 	internal class ConsoleWindow
 	{
-		public static bool IsAttached { get; private set; }
+		public static readonly ConfigWrapper<bool> ConfigConsoleEnabled = ConfigFile.CoreConfig.Wrap(
+			"Logging.Console",
+			"Enabled",
+			"Enables showing a console for log output.",
+			false);
+
+		public static readonly ConfigWrapper<bool> ConfigConsoleShiftJis = ConfigFile.CoreConfig.Wrap(
+			"Logging.Console",
+			"ShiftJisEncoding",
+			"If true, console is set to the Shift-JIS encoding, otherwise UTF-8 encoding.",
+			false);
+
+        public static bool IsAttached { get; private set; }
 		private static IntPtr _cOut;
 		private static IntPtr _oOut;
 
