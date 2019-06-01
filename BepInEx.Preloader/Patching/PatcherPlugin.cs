@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Mono.Cecil;
 
 namespace BepInEx.Preloader.Patching
 {
@@ -8,10 +9,12 @@ namespace BepInEx.Preloader.Patching
 	/// </summary>
 	internal class PatcherPlugin
 	{
+		public TypeDefinition Type { get; set; }
+
 		/// <summary>
 		///     Target assemblies to patch.
 		/// </summary>
-		public IEnumerable<string> TargetDLLs { get; set; } = null;
+		public Func<IEnumerable<string>> TargetDLLs { get; set; } = null;
 
 		/// <summary>
 		///     Initializer method that is run before any patching occurs.
