@@ -79,6 +79,44 @@ namespace BepInEx.Bootstrap
 			_initialized = true;
 		}
 
+		private static PluginInfo ToPluginInfo(TypeDefinition type)
+		{
+			if (type.IsInterface || type.IsAbstract || !type.IsSubtypeOf(typeof(BaseUnityPlugin)))
+				return null;
+
+			var metadata = BepInPlugin.FromCecilType(type);
+
+			if (metadata == null)
+			{
+				Logger.LogWarning($"Skipping over type [{type.Name}] as no metadata attribute is specified");
+				return null;
+			}
+
+			//Perform a filter for currently running process
+			var filters = BepInProcess.FromCecilType(type);
+
+			bool invalidProcessName = filters.Any(x => x.ProcessName.ToLower().Replace(".exe", "") == Paths.ProcessName);
+
+			if (invalidProcessName)
+			{
+				Logger.LogWarning($"Skipping over plugin [{metadata.GUID}] due to process filter");
+				return null;
+			}
+
+			var dependencies = BepInDependency.FromCecilType(type);
+
+			Logger.LogInfo($"Type path: {type.Module.FileName}");
+
+			return new PluginInfo
+			{
+				Metadata = metadata,
+				Processes = filters,
+				Dependencies = dependencies,
+				CecilType = type,
+				Location = type.Module.FileName
+			};
+		}
+
 		/// <summary>
 		/// The entrypoint for the BepInEx plugin system.
 		/// </summary>
@@ -108,7 +146,7 @@ namespace BepInEx.Bootstrap
 
 				UnityEngine.Object.DontDestroyOnLoad(ManagerObject);
 
-				var pluginsToLoad = TypeLoader.FindPluginTypes(Paths.PluginPath);
+				var pluginsToLoad = TypeLoader.FindPluginTypes(Paths.PluginPath, ToPluginInfo);
 
 				var pluginInfos = pluginsToLoad.SelectMany(p => p.Value).ToList();
 
@@ -184,8 +222,8 @@ namespace BepInEx.Bootstrap
 					if (missingDependencies.Count != 0)
 					{
 						Logger.LogError($@"Missing the following dependencies for [{pluginInfo.Metadata.Name}]: {"\r\n"}{
-												string.Join("\r\n", missingDependencies.Select(s => $"- {s}").ToArray())
-											}{"\r\n"}Loading will be skipped; expect further errors and unstabilities.");
+								string.Join("\r\n", missingDependencies.Select(s => $"- {s}").ToArray())
+							}{"\r\n"}Loading will be skipped; expect further errors and unstabilities.");
 
 						invalidPlugins.Add(pluginGUID);
 						continue;
