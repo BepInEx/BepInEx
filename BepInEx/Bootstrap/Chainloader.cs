@@ -245,7 +245,10 @@ namespace BepInEx.Bootstrap
 						Plugins.Remove(pluginGUID);
 
 						Logger.LogError($"Error loading [{pluginInfo.Metadata.Name}] : {ex.Message}");
-						Logger.LogDebug(ex);
+						if (ex is ReflectionTypeLoadException re)
+							Logger.LogDebug(TypeLoader.TypeLoadExceptionToString(re));
+						else
+							Logger.LogDebug(ex);
 					}
 				}
 

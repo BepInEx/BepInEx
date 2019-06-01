@@ -72,7 +72,7 @@ namespace BepInEx.Bootstrap
 			return result;
 		}
 
-		private static string TypeLoadExceptionToString(ReflectionTypeLoadException ex)
+		public static string TypeLoadExceptionToString(ReflectionTypeLoadException ex)
 		{
 			StringBuilder sb = new StringBuilder();
 			foreach (Exception exSub in ex.LoaderExceptions)
