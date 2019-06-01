@@ -41,8 +41,8 @@ namespace BepInEx.Preloader
 
 				Logger.Listeners.Add(PreloaderLog);
 
-				
-				string consoleTile = $"BepInEx {typeof(Paths).Assembly.GetName().Version} RC1 - {Process.GetCurrentProcess().ProcessName}";
+
+				string consoleTile = $"BepInEx {typeof(Paths).Assembly.GetName().Version} - {Process.GetCurrentProcess().ProcessName}";
 
 				ConsoleWindow.Title = consoleTile;
 				Logger.LogMessage(consoleTile);
@@ -69,12 +69,13 @@ namespace BepInEx.Preloader
 
 
 				AssemblyPatcher.AddPatcher(new PatcherPlugin
-					{ TargetDLLs = new[] { ConfigEntrypointAssembly.Value },
-						Patcher = PatchEntrypoint,
-						Name = "BepInEx.Chainloader"
-					});
+				{
+					TargetDLLs = () => new[] { ConfigEntrypointAssembly.Value },
+					Patcher = PatchEntrypoint,
+					Name = "BepInEx.Chainloader"
+				});
 
-				AssemblyPatcher.AddPatchersFromDirectory(Paths.PatcherPluginPath, GetPatcherMethods);
+				AssemblyPatcher.AddPatchersFromDirectory(Paths.PatcherPluginPath, ToPatcherPlugin);
 
 				Logger.LogInfo($"{AssemblyPatcher.PatcherPlugins.Count} patcher plugin(s) loaded");
 
@@ -122,95 +123,34 @@ namespace BepInEx.Preloader
 			}
 		}
 
-		/// <summary>
-		///     Scans the assembly for classes that use the patcher contract, and returns a list of valid patchers.
-		/// </summary>
-		/// <param name="assembly">The assembly to scan.</param>
-		/// <returns>A list of assembly patchers that were found in the assembly.</returns>
-		public static List<PatcherPlugin> GetPatcherMethods(Assembly assembly)
+		public static PatcherPlugin ToPatcherPlugin(TypeDefinition type)
 		{
-			var patcherMethods = new List<PatcherPlugin>();
-			var flags = BindingFlags.Public | BindingFlags.Static | BindingFlags.IgnoreCase;
+			if (type.IsInterface || type.IsAbstract)
+				return null;
 
-			foreach (var type in assembly.GetExportedTypes())
-				try
-				{
-					if (type.IsInterface)
-						continue;
+			var targetDlls = type.Methods.FirstOrDefault(m => m.Name.Equals("get_TargetDLLs", StringComparison.InvariantCultureIgnoreCase) &&
+															  m.IsPublic &&
+															  m.IsStatic);
 
-					var targetsProperty = type.GetProperty("TargetDLLs",
-						flags,
-						null,
-						typeof(IEnumerable<string>),
-						Type.EmptyTypes,
-						null);
+			if (targetDlls == null ||
+				targetDlls.ReturnType.FullName != "System.Collections.Generic.IEnumerable`1<System.String>")
+				return null;
 
-					//first try get the ref patcher method
-					var patcher = type.GetMethod("Patch",
-						flags,
-						null,
-						CallingConventions.Any,
-						new[] { typeof(AssemblyDefinition).MakeByRefType() },
-						null);
+			var patch = type.Methods.FirstOrDefault(m => m.Name.Equals("Patch") &&
+														 m.IsPublic &&
+														 m.IsStatic &&
+														 m.ReturnType.FullName == "System.Void" &&
+														 m.Parameters.Count == 1 &&
+														 (m.Parameters[0].ParameterType.FullName == "Mono.Cecil.AssemblyDefinition&" ||
+														  m.Parameters[0].ParameterType.FullName == "Mono.Cecil.AssemblyDefinition"));
 
-					if (patcher == null) //otherwise try getting the non-ref patcher method
-						patcher = type.GetMethod("Patch",
-							flags,
-							null,
-							CallingConventions.Any,
-							new[] { typeof(AssemblyDefinition) },
-							null);
+			if (patch == null)
+				return null;
 
-					if (targetsProperty == null || !targetsProperty.CanRead || patcher == null)
-						continue;
-
-					var assemblyPatcher = new PatcherPlugin();
-
-					assemblyPatcher.Name = $"{assembly.GetName().Name}/{type.FullName}";
-					assemblyPatcher.Patcher = (ref AssemblyDefinition ass) =>
-					{
-						//we do the array fuckery here to get the ref result out
-						object[] args = { ass };
-
-						patcher.Invoke(null, args);
-
-						ass = (AssemblyDefinition)args[0];
-					};
-
-					assemblyPatcher.TargetDLLs = (IEnumerable<string>)targetsProperty.GetValue(null, null);
-
-					var initMethod = type.GetMethod("Initialize",
-						flags,
-						null,
-						CallingConventions.Any,
-						Type.EmptyTypes,
-						null);
-
-					if (initMethod != null)
-						assemblyPatcher.Initializer = () => initMethod.Invoke(null, null);
-
-					var finalizeMethod = type.GetMethod("Finish",
-						flags,
-						null,
-						CallingConventions.Any,
-						Type.EmptyTypes,
-						null);
-
-					if (finalizeMethod != null)
-						assemblyPatcher.Finalizer = () => finalizeMethod.Invoke(null, null);
-
-					patcherMethods.Add(assemblyPatcher);
-				}
-				catch (Exception ex)
-				{
-					Logger.LogWarning($"Could not load patcher methods from {assembly.GetName().Name}");
-					Logger.LogWarning(ex);
-				}
-
-			Logger.Log(patcherMethods.Count > 0 ? LogLevel.Info : LogLevel.Debug,
-				$"Loaded {patcherMethods.Count} patcher methods from {assembly.GetName().Name}");
-
-			return patcherMethods;
+			return new PatcherPlugin
+			{
+				Type = type
+			};
 		}
 
 		/// <summary>
@@ -279,11 +219,11 @@ namespace BepInEx.Preloader
 					var ins = il.Body.Instructions.First();
 
 					il.InsertBefore(ins,
-						il.Create(OpCodes.Ldnull)); // gameExePath (always null, we initialize the Paths class in Entrypoint
+						il.Create(OpCodes.Ldstr, Paths.ExecutablePath)); //containerExePath
 					il.InsertBefore(ins,
-						il.Create(OpCodes.Ldc_I4_0)); // startConsole (always false, we already load the console in Preloader)
+						il.Create(OpCodes.Ldc_I4_0)); //startConsole (always false, we already load the console in Preloader)
 					il.InsertBefore(ins,
-						il.Create(OpCodes.Call, initMethod)); // Chainloader.Initialize(string gameExePath, bool startConsole = true)
+						il.Create(OpCodes.Call, initMethod)); //Chainloader.Initialize(string containerExePath, bool startConsole = true)
 					il.InsertBefore(ins,
 						il.Create(OpCodes.Call, startMethod));
 				}
