@@ -46,12 +46,12 @@ Changes since ${latestTag}:
                 }
 
                 dir('Doorstop') {
-                    sh '''  tag="v2.7.1.0";
-                    version="2.7.1.0";
+                    sh '''  tag="v2.9.0.0";
+                    version="2.9.0.0";
                     wget https://github.com/NeighTools/UnityDoorstop/releases/download/$tag/Doorstop_x64_$version.zip;
                     wget https://github.com/NeighTools/UnityDoorstop/releases/download/$tag/Doorstop_x86_$version.zip;
-                    unzip -o Doorstop_x86_$version.zip winhttp.dll -d x86;
-                    unzip -o Doorstop_x64_$version.zip winhttp.dll -d x64;'''
+                    unzip -o Doorstop_x86_$version.zip version.dll -d x86;
+                    unzip -o Doorstop_x64_$version.zip version.dll -d x64;'''
                 }
             }
         }
@@ -120,7 +120,7 @@ Changes since ${latestTag}:
                     sh 'rm -rf BepInEx/core/patcher'
 
                     sh 'cp -f ../../../BepInEx/doorstop/doorstop_config.ini doorstop_config.ini'
-                    sh 'cp -f ../../../Doorstop/x86/winhttp.dll winhttp.dll'
+                    sh 'cp -f ../../../Doorstop/x86/version.dll version.dll'
                     
                     script {
                         if(params.IS_BE) {
@@ -134,7 +134,7 @@ Changes since ${latestTag}:
 
                     sh "zip -r9 BepInEx_Legacy_x86${commitPrefix}${versionNumber}.zip ./*"
                     
-                    sh 'cp -f ../../../Doorstop/x64/winhttp.dll winhttp.dll'
+                    sh 'cp -f ../../../Doorstop/x64/version.dll version.dll'
                     
                     sh 'unix2dos doorstop_config.ini'
                     
@@ -167,7 +167,7 @@ Changes since ${latestTag}:
                     sh 'rm -f BepInEx/core/UnityEngine.CoreModule.dll'
 
                     sh 'cp -f ../../../BepInEx/doorstop/doorstop_config.ini doorstop_config.ini'
-                    sh 'cp -f ../../../Doorstop/x86/winhttp.dll winhttp.dll'
+                    sh 'cp -f ../../../Doorstop/x86/version.dll version.dll'
                     
                     script {
                         if(params.IS_BE) {
@@ -181,7 +181,7 @@ Changes since ${latestTag}:
 
                     sh "zip -r9 BepInEx_v2018_x86${commitPrefix}${versionNumber}.zip ./*"
                     
-                    sh 'cp -f ../../../Doorstop/x64/winhttp.dll winhttp.dll'
+                    sh 'cp -f ../../../Doorstop/x64/version.dll version.dll'
                     
                     sh 'unix2dos doorstop_config.ini'
                     
