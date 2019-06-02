@@ -27,7 +27,7 @@ namespace BepInEx.Bootstrap
             {
                 try
                 {
-                    Assembly assembly = Assembly.Load(dll);
+                    Assembly assembly = Assembly.LoadFile(dll);
 
                     foreach (Type type in assembly.GetTypes())
                     {
