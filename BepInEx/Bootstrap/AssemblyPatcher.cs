@@ -22,7 +22,8 @@ namespace BepInEx.Bootstrap
         /// <summary>
         /// Configuration value of whether assembly dumping is enabled or not.
         /// </summary>
-        private static bool DumpingEnabled => Utility.SafeParseBool(Config.GetEntry("dump-assemblies", "false", "Preloader"));
+        private static bool DumpingEnabled =>
+            Utility.SafeParseBool(Config.GetEntry("dump-assemblies", "false", "Preloader"));
 
         /// <summary>
         /// Patches and loads an entire directory of assemblies.
@@ -31,7 +32,9 @@ namespace BepInEx.Bootstrap
         /// <param name="patcherMethodDictionary">The dictionary of patchers and their targeted assembly filenames which they are patching.</param>
         /// <param name="initializers">List of initializers to run before any patching starts</param>
         /// <param name="finalizers">List of finalizers to run before returning</param>
-        public static void PatchAll(string directory, IDictionary<AssemblyPatcherDelegate, IEnumerable<string>> patcherMethodDictionary, IEnumerable<Action> initializers = null, IEnumerable<Action> finalizers = null)
+        public static void PatchAll(string directory,
+            IDictionary<AssemblyPatcherDelegate, IEnumerable<string>> patcherMethodDictionary,
+            IEnumerable<Action> initializers = null, IEnumerable<Action> finalizers = null)
         {
             //run all initializers
             if (initializers != null)
@@ -50,7 +53,8 @@ namespace BepInEx.Bootstrap
                 //It's also generally dangerous to change system.dll since so many things rely on it, 
                 // and it's already loaded into the appdomain since this loader references it, so we might as well skip it
                 if (assembly.Name.Name == "System"
-                    || assembly.Name.Name == "mscorlib") //mscorlib is already loaded into the appdomain so it can't be patched
+                    || assembly.Name.Name == "mscorlib"
+                ) //mscorlib is already loaded into the appdomain so it can't be patched
                 {
                     assembly.Dispose();
                     continue;
@@ -58,7 +62,8 @@ namespace BepInEx.Bootstrap
 
                 if (PatchedAssemblyResolver.AssemblyLocations.ContainsKey(assembly.FullName))
                 {
-                    Logger.Log(LogLevel.Warning, $"Found a duplicate assembly {Path.GetFileName(assemblyPath)} in the Managed folder! Skipping loading it (the game might be unstable)...");
+                    Logger.Log(LogLevel.Warning,
+                        $"Found a duplicate assembly {Path.GetFileName(assemblyPath)} in the Managed folder! Skipping loading it (the game might be unstable)...");
                     assembly.Dispose();
                     continue;
                 }
@@ -90,21 +95,23 @@ namespace BepInEx.Bootstrap
                 string filename = kv.Key;
                 var assembly = kv.Value;
 
-                if (DumpingEnabled && patchedAssemblies.Contains(filename))
+                if (patchedAssemblies.Contains(filename))
                 {
-                    using (MemoryStream mem = new MemoryStream())
-                    {
-                        string dirPath = Path.Combine(Paths.PluginPath, "DumpedAssemblies");
+                    if (DumpingEnabled)
+                        using (MemoryStream mem = new MemoryStream())
+                        {
+                            string dirPath = Path.Combine(Paths.PluginPath, "DumpedAssemblies");
 
-                        if (!Directory.Exists(dirPath))
-                            Directory.CreateDirectory(dirPath);
+                            if (!Directory.Exists(dirPath))
+                                Directory.CreateDirectory(dirPath);
 
-                        assembly.Write(mem);
-                        File.WriteAllBytes(Path.Combine(dirPath, filename), mem.ToArray());
-                    }
+                            assembly.Write(mem);
+                            File.WriteAllBytes(Path.Combine(dirPath, filename), mem.ToArray());
+                        }
+
+                    Load(assembly);
                 }
 
-                Load(assembly);
                 assembly.Dispose();
             }
 
@@ -143,7 +150,8 @@ namespace BepInEx.Bootstrap
 
     internal static class PatchedAssemblyResolver
     {
-        public static Dictionary<string, string> AssemblyLocations { get; } = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+        public static Dictionary<string, string> AssemblyLocations { get; } =
+            new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
 
         public static void ApplyPatch()
         {
