@@ -110,7 +110,10 @@ namespace BepInEx
 		public string ProcessName { get; protected set; }
 
 		/// <param name="ProcessName">The name of the process that this plugin will run under.</param>
-		public BepInProcess(string ProcessName) { this.ProcessName = ProcessName; }
+		public BepInProcess(string ProcessName)
+		{
+			this.ProcessName = ProcessName;
+		}
 
 		internal static IEnumerable<BepInProcess> FromCecilType(TypeDefinition td)
 		{
@@ -128,8 +131,6 @@ namespace BepInEx
 	/// </summary>
 	public static class MetadataHelper
 	{
-		public static BepInPlugin GetMetadata(BaseUnityPlugin pluginType) { return pluginType.GetType().GetCustomAttributes(typeof(BepInPlugin), false).FirstOrDefault() as BepInPlugin; }
-
 		internal static IEnumerable<CustomAttribute> GetCustomAttributes<T>(TypeDefinition td, bool inherit) where T : Attribute
 		{
 			var result = new List<CustomAttribute>();
@@ -147,11 +148,27 @@ namespace BepInEx
 		}
 
 		/// <summary>
+		/// Retrieves the BepInPlugin metadata from a plugin type.
+		/// </summary>
+		/// <param name="plugin">The plugin type.</param>
+		/// <returns>The BepInPlugin metadata of the plugin type.</returns>
+		public static BepInPlugin GetMetadata(Type pluginType)
+		{
+			object[] attributes = pluginType.GetCustomAttributes(typeof(BepInPlugin), false);
+
+			if (attributes.Length == 0)
+				return null;
+
+			return (BepInPlugin)attributes[0];
+		}
+
+		/// <summary>
 		/// Retrieves the BepInPlugin metadata from a plugin instance.
 		/// </summary>
 		/// <param name="plugin">The plugin instance.</param>
 		/// <returns>The BepInPlugin metadata of the plugin instance.</returns>
-		public static BepInPlugin GetMetadata(object plugin) => GetMetadata(plugin as BaseUnityPlugin);
+		public static BepInPlugin GetMetadata(object plugin)
+			=> GetMetadata(plugin.GetType());
 
 		/// <summary>
 		/// Gets the specified attributes of a type, if they exist.
@@ -159,7 +176,10 @@ namespace BepInEx
 		/// <typeparam name="T">The attribute type to retrieve.</typeparam>
 		/// <param name="plugin">The plugin type.</param>
 		/// <returns>The attributes of the type, if existing.</returns>
-		public static T[] GetAttributes<T>(Type pluginType) where T : Attribute { return (T[])pluginType.GetCustomAttributes(typeof(T), true); }
+		public static T[] GetAttributes<T>(Type pluginType) where T : Attribute
+		{
+			return (T[])pluginType.GetCustomAttributes(typeof(T), true);
+		}
 
 		/// <summary>
 		/// Gets the specified attributes of an instance, if they exist.
@@ -167,7 +187,8 @@ namespace BepInEx
 		/// <typeparam name="T">The attribute type to retrieve.</typeparam>
 		/// <param name="plugin">The plugin instance.</param>
 		/// <returns>The attributes of the instance, if existing.</returns>
-		public static IEnumerable<T> GetAttributes<T>(object plugin) where T : Attribute => GetAttributes<T>(plugin.GetType());
+		public static IEnumerable<T> GetAttributes<T>(object plugin) where T : Attribute
+			=> GetAttributes<T>(plugin.GetType());
 
 		/// <summary>
 		/// Retrieves the dependencies of the specified plugin type.
@@ -175,7 +196,10 @@ namespace BepInEx
 		/// <param name="Plugin">The plugin type.</param>
 		/// <param name="AllPlugins">All currently loaded plugin types.</param>
 		/// <returns>A list of all plugin types that the specified plugin type depends upon.</returns>
-		public static IEnumerable<BepInDependency> GetDependencies(Type Plugin, IEnumerable<Type> AllPlugins) { return Plugin.GetCustomAttributes(typeof(BepInDependency), true).Cast<BepInDependency>(); }
+		public static IEnumerable<BepInDependency> GetDependencies(Type Plugin, IEnumerable<Type> AllPlugins)
+		{
+			return Plugin.GetCustomAttributes(typeof(BepInDependency), true).Cast<BepInDependency>();
+		}
 	}
 
 	/// <summary>
@@ -198,7 +222,10 @@ namespace BepInEx
 	{
 		public string Info { get; }
 
-		public BuildInfoAttribute(string info) { Info = info; }
+		public BuildInfoAttribute(string info)
+		{
+			Info = info;
+		}
 	}
 
 	#endregion
