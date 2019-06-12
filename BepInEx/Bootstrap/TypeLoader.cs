@@ -17,6 +17,8 @@ namespace BepInEx.Bootstrap
 		private static DefaultAssemblyResolver resolver;
 		private static ReaderParameters readerParameters;
 
+		public static event AssemblyResolveEventHandler AssemblyResolve;
+
 		static TypeLoader()
 		{
 			resolver = new DefaultAssemblyResolver();
@@ -31,7 +33,7 @@ namespace BepInEx.Bootstrap
 					Utility.TryResolveDllAssembly(name, Paths.ManagedPath, readerParameters, out assembly))
 					return assembly;
 
-				return null;
+				return AssemblyResolve?.Invoke(sender, reference);
 			};
 		}
 
