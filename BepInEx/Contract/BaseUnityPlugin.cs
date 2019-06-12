@@ -21,7 +21,7 @@ namespace BepInEx
 		{
 			var metadata = MetadataHelper.GetMetadata(this);
 
-			Info = Chainloader.Plugins[metadata.GUID];
+			Info = Chainloader.PluginInfos[metadata.GUID];
 
 			Logger = Logging.Logger.CreateLogSource(metadata.Name);
 
