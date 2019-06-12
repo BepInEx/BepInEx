@@ -151,7 +151,7 @@ namespace BepInEx
 		/// </summary>
 		/// <param name="plugin">The plugin instance.</param>
 		/// <returns>The BepInPlugin metadata of the plugin instance.</returns>
-		public static BepInPlugin GetMetadata(object plugin) => GetMetadata(plugin.GetType());
+		public static BepInPlugin GetMetadata(object plugin) => GetMetadata(plugin as BaseUnityPlugin);
 
 		/// <summary>
 		/// Gets the specified attributes of a type, if they exist.
