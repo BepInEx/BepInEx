@@ -97,7 +97,7 @@ namespace BepInEx.Bootstrap
 			//Perform a filter for currently running process
 			var filters = BepInProcess.FromCecilType(type);
 
-			bool invalidProcessName = filters.Any(x => x.ProcessName.ToLower().Replace(".exe", "") == Paths.ProcessName);
+			bool invalidProcessName = filters.Any(x => !string.Equals(x.ProcessName.Replace(".exe", ""), Paths.ProcessName, StringComparison.InvariantCultureIgnoreCase));
 
 			if (invalidProcessName)
 			{
@@ -106,8 +106,6 @@ namespace BepInEx.Bootstrap
 			}
 
 			var dependencies = BepInDependency.FromCecilType(type);
-
-			Logger.LogInfo($"Type path: {type.Module.FileName}");
 
 			return new PluginInfo
 			{
