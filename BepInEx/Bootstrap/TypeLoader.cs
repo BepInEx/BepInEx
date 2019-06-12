@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using BepInEx.Contract;
 using BepInEx.Logging;
 using Mono.Cecil;
 
@@ -43,9 +41,9 @@ namespace BepInEx.Bootstrap
 		/// <typeparam name="T">The specific base type to search for.</typeparam>
 		/// <param name="directory">The directory to search for assemblies.</param>
 		/// <returns>Returns a list of found derivative types.</returns>
-		public static Dictionary<AssemblyDefinition, IEnumerable<T>> FindPluginTypes<T>(string directory, Func<TypeDefinition, T> typeSelector) where T : class
+		public static Dictionary<AssemblyDefinition, List<T>> FindPluginTypes<T>(string directory, Func<TypeDefinition, T> typeSelector) where T : class
 		{
-			var result = new Dictionary<AssemblyDefinition, IEnumerable<T>>();
+			var result = new Dictionary<AssemblyDefinition, List<T>>();
 
 			foreach (string dll in Directory.GetFiles(Path.GetFullPath(directory), "*.dll", SearchOption.AllDirectories))
 			{
