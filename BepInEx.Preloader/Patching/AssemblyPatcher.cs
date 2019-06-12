@@ -109,9 +109,12 @@ namespace BepInEx.Preloader.Patching
 							Logger.LogDebug(e.ToString());
 					}
 				}
-			}
 
-			foreach (KeyValuePair<string, PatcherPlugin> patcher in sortedPatchers)
+				Logger.Log(patcherCollection.Any() ? LogLevel.Info : LogLevel.Debug,
+					$"Loaded {patcherCollection.Count} patcher methods from {assembly.Name.Name}");
+            }
+
+            foreach (KeyValuePair<string, PatcherPlugin> patcher in sortedPatchers)
 				AddPatcher(patcher.Value);
 
 			foreach (var assemblyDefinition in patchers.Keys)
