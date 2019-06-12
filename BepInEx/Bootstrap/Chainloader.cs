@@ -152,7 +152,7 @@ namespace BepInEx.Bootstrap
 
 				var loadedAssemblies = new Dictionary<AssemblyDefinition, Assembly>();
 
-				Logger.LogInfo($"{pluginInfos.Count} / {pluginInfos.Count} plugins to load");
+				Logger.LogInfo($"{pluginInfos.Count} plugins to load");
 
 				var dependencyDict = new Dictionary<string, IEnumerable<string>>();
 				var pluginsByGUID = new Dictionary<string, PluginInfo>();
