@@ -23,12 +23,14 @@ namespace BepInEx.Bootstrap
 		/// <summary>
 		/// The loaded and initialized list of plugins.
 		/// </summary>
-		public static Dictionary<string, PluginInfo> Plugins { get; private set; } = new Dictionary<string, PluginInfo>();
+		public static Dictionary<string, PluginInfo> PluginInfos { get; } = new Dictionary<string, PluginInfo>();
+
+		public static List<BaseUnityPlugin> Plugins { get; } = new List<BaseUnityPlugin>();
 
 		/// <summary>
-		/// The GameObject that all plugins are attached to as components.
-		/// </summary>
-		public static GameObject ManagerObject { get; private set; }
+        /// The GameObject that all plugins are attached to as components.
+        /// </summary>
+        public static GameObject ManagerObject { get; private set; }
 
 
 		private static bool _loaded = false;
@@ -236,14 +238,16 @@ namespace BepInEx.Bootstrap
 						if (!loadedAssemblies.TryGetValue(pluginInfo.CecilType.Module.Assembly, out var ass))
 							loadedAssemblies[pluginInfo.CecilType.Module.Assembly] = ass = Assembly.LoadFile(pluginInfo.Location);
 
-						Plugins[pluginGUID] = pluginInfo;
+						PluginInfos[pluginGUID] = pluginInfo;
 						pluginInfo.Instance = (BaseUnityPlugin)ManagerObject.AddComponent(ass.GetType(pluginInfo.CecilType.FullName));
 						pluginInfo.CecilType = null;
+
+						Plugins.Add(pluginInfo.Instance);
 					}
 					catch (Exception ex)
 					{
 						invalidPlugins.Add(pluginGUID);
-						Plugins.Remove(pluginGUID);
+						PluginInfos.Remove(pluginGUID);
 
 						Logger.LogError($"Error loading [{pluginInfo.Metadata.Name}] : {ex.Message}");
 						if (ex is ReflectionTypeLoadException re)
