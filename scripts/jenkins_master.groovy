@@ -46,8 +46,8 @@ Changes since ${latestTag}:
                 }
 
                 dir('Doorstop') {
-                    sh '''  tag="v2.9.0.0";
-                    version="2.9.0.0";
+                    sh '''  tag="v2.9.0.1";
+                    version="2.9.0.1";
                     wget https://github.com/NeighTools/UnityDoorstop/releases/download/$tag/Doorstop_x64_$version.zip;
                     wget https://github.com/NeighTools/UnityDoorstop/releases/download/$tag/Doorstop_x86_$version.zip;
                     unzip -o Doorstop_x86_$version.zip version.dll -d x86;
