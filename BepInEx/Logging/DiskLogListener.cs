@@ -13,7 +13,7 @@ namespace BepInEx.Logging
 	{
 		protected LogLevel DisplayedLogLevel = (LogLevel)Enum.Parse(typeof(LogLevel), ConfigConsoleDisplayedLevel.Value, true);
 
-		protected TextWriter LogWriter = TextWriter.Synchronized(new StreamWriter(Path.Combine(Paths.BepInExRootPath, "LogOutput.log"), ConfigAppendLog.Value, Encoding.UTF8));
+		protected TextWriter LogWriter = TextWriter.Synchronized(new StreamWriter(Path.Combine(Paths.BepInExRootPath, $"LogOutput_{Paths.ProcessName}.log"), ConfigAppendLog.Value, Encoding.UTF8));
 
 		protected Timer FlushTimer;
 
