@@ -41,20 +41,50 @@ namespace BepInEx.Preloader.Patching
 
 		private static T CreateDelegate<T>(MethodInfo method) where T : class => method != null ? Delegate.CreateDelegate(typeof(T), method) as T : null;
 
+		private static PatcherPlugin ToPatcherPlugin(TypeDefinition type)
+		{
+			if (type.IsInterface || type.IsAbstract && !type.IsSealed)
+				return null;
+
+            var targetDlls = type.Methods.FirstOrDefault(m => m.Name.Equals("get_TargetDLLs", StringComparison.InvariantCultureIgnoreCase) &&
+															  m.IsPublic &&
+															  m.IsStatic);
+
+            if (targetDlls == null ||
+				targetDlls.ReturnType.FullName != "System.Collections.Generic.IEnumerable`1<System.String>")
+				return null;
+
+			var patch = type.Methods.FirstOrDefault(m => m.Name.Equals("Patch") &&
+														 m.IsPublic &&
+														 m.IsStatic &&
+														 m.ReturnType.FullName == "System.Void" &&
+														 m.Parameters.Count == 1 &&
+														 (m.Parameters[0].ParameterType.FullName == "Mono.Cecil.AssemblyDefinition&" ||
+														  m.Parameters[0].ParameterType.FullName == "Mono.Cecil.AssemblyDefinition"));
+
+			if (patch == null)
+				return null;
+
+			return new PatcherPlugin
+			{
+				Type = type,
+				Name = type.FullName
+			};
+		}
+
 		/// <summary>
-		///     Adds all patchers from all managed assemblies specified in a directory.
-		/// </summary>
-		/// <param name="directory">Directory to search patcher DLLs from.</param>
-		/// <param name="patcherLocator">A function that locates assembly patchers in a given managed assembly.</param>
-		public static void AddPatchersFromDirectory(string directory,
-			Func<TypeDefinition, PatcherPlugin> patcherLocator)
+        ///     Adds all patchers from all managed assemblies specified in a directory.
+        /// </summary>
+        /// <param name="directory">Directory to search patcher DLLs from.</param>
+        /// <param name="patcherLocator">A function that locates assembly patchers in a given managed assembly.</param>
+        public static void AddPatchersFromDirectory(string directory)
 		{
 			if (!Directory.Exists(directory))
 				return;
 
 			var sortedPatchers = new SortedDictionary<string, PatcherPlugin>();
 
-			var patchers = TypeLoader.FindPluginTypes(directory, patcherLocator);
+			var patchers = TypeLoader.FindPluginTypes(directory, ToPatcherPlugin);
 
 			foreach (var keyValuePair in patchers)
 			{
@@ -83,7 +113,7 @@ namespace BepInEx.Preloader.Patching
 
 						var patcher = methods.FirstOrDefault(m => m.Name.Equals("Patch", StringComparison.CurrentCultureIgnoreCase) &&
 																  m.ReturnType == typeof(void) &&
-																  m.GetParameters().Length == 0 &&
+																  m.GetParameters().Length == 1 &&
 																  (m.GetParameters()[0].ParameterType == typeof(AssemblyDefinition) ||
 																   m.GetParameters()[0].ParameterType == typeof(AssemblyDefinition).MakeByRefType()));
 
@@ -209,7 +239,7 @@ namespace BepInEx.Preloader.Patching
 
 			if (ConfigBreakBeforeLoadAssemblies.Value)
 			{
-				Logger.LogInfo($"BepInEx is about load the following assemblies:\n{string.Join("\n", patchedAssemblies.ToArray())}");
+				Logger.LogInfo($"BepInEx is about load the following assemblies:\n{String.Join("\n", patchedAssemblies.ToArray())}");
 				Logger.LogInfo($"The assemblies were dumped into {DumpedAssembliesPath}");
 				Logger.LogInfo("Load any assemblies into the debugger, set breakpoints and continue execution.");
 				Debugger.Break();
