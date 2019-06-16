@@ -26,6 +26,20 @@ namespace BepInEx.Preloader
 		/// </summary>
 		private static PreloaderConsoleListener PreloaderLog { get; set; }
 
+		public static bool IsPostUnity2017 { get; } = File.Exists(Path.Combine(Paths.ManagedPath, "UnityEngine.CoreModule.dll"));
+
+		public static bool IsDotNet46 { get; } = string.Compare("4.0.30319.42000", Environment.Version.ToString(), StringComparison.Ordinal) <= 0;
+
+        static Preloader()
+		{
+			ConfigEntrypointAssembly = ConfigFile.CoreConfig.Wrap(
+				"Preloader.Entrypoint",
+				"Assembly",
+				"The local filename of the assembly to target.",
+				IsPostUnity2017 ? "UnityEngine.CoreModule.dll" : "UnityEngine.dll"
+            );
+        }
+
 		public static void Run()
 		{
 			try
@@ -57,13 +71,8 @@ namespace BepInEx.Preloader
 					Logger.LogMessage(attribute.Info);
 				}
 
-#if UNITY_2018
-				Logger.LogMessage("Compiled in Unity v2018 mode");
-#else
-				Logger.LogMessage("Compiled in Legacy Unity mode");
-#endif
-
-				Logger.LogInfo($"Running under Unity v{Process.GetCurrentProcess().MainModule.FileVersionInfo.FileVersion}");
+				Logger.LogInfo($"Running under Unity v{FileVersionInfo.GetVersionInfo(Paths.ExecutablePath).FileVersion}");
+				Logger.LogInfo($"CLR runtime version: {Environment.Version}");
 
 				Logger.LogMessage("Preloader started");
 
@@ -75,7 +84,7 @@ namespace BepInEx.Preloader
 					Name = "BepInEx.Chainloader"
 				});
 
-				AssemblyPatcher.AddPatchersFromDirectory(Paths.PatcherPluginPath, ToPatcherPlugin);
+				AssemblyPatcher.AddPatchersFromDirectory(Paths.PatcherPluginPath);
 
 				Logger.LogInfo($"{AssemblyPatcher.PatcherPlugins.Count} patcher plugin(s) loaded");
 
@@ -121,36 +130,6 @@ namespace BepInEx.Preloader
 					PreloaderLog = null;
 				}
 			}
-		}
-
-		public static PatcherPlugin ToPatcherPlugin(TypeDefinition type)
-		{
-			if (type.IsInterface || type.IsAbstract)
-				return null;
-
-			var targetDlls = type.Methods.FirstOrDefault(m => m.Name.Equals("get_TargetDLLs", StringComparison.InvariantCultureIgnoreCase) &&
-															  m.IsPublic &&
-															  m.IsStatic);
-
-			if (targetDlls == null ||
-				targetDlls.ReturnType.FullName != "System.Collections.Generic.IEnumerable`1<System.String>")
-				return null;
-
-			var patch = type.Methods.FirstOrDefault(m => m.Name.Equals("Patch") &&
-														 m.IsPublic &&
-														 m.IsStatic &&
-														 m.ReturnType.FullName == "System.Void" &&
-														 m.Parameters.Count == 1 &&
-														 (m.Parameters[0].ParameterType.FullName == "Mono.Cecil.AssemblyDefinition&" ||
-														  m.Parameters[0].ParameterType.FullName == "Mono.Cecil.AssemblyDefinition"));
-
-			if (patch == null)
-				return null;
-
-			return new PatcherPlugin
-			{
-				Type = type
-			};
 		}
 
 		/// <summary>
@@ -223,7 +202,7 @@ namespace BepInEx.Preloader
 					il.InsertBefore(ins,
 						il.Create(OpCodes.Ldc_I4_0)); //startConsole (always false, we already load the console in Preloader)
 					il.InsertBefore(ins,
-						il.Create(OpCodes.Call, initMethod)); //Chainloader.Initialize(string containerExePath, bool startConsole = true)
+						il.Create(OpCodes.Call, initMethod)); // Chainloader.Initialize(string containerExePath, string managedPath = null, bool startConsole = true)
 					il.InsertBefore(ins,
 						il.Create(OpCodes.Call, startMethod));
 				}
@@ -259,16 +238,7 @@ namespace BepInEx.Preloader
 
 		#region Config
 
-		private static readonly ConfigWrapper<string> ConfigEntrypointAssembly = ConfigFile.CoreConfig.Wrap(
-			"Preloader.Entrypoint",
-			"Assembly",
-			"The local filename of the assembly to target.",
-#if UNITY_2018
-			"UnityEngine.CoreModule.dll"
-#else
-			"UnityEngine.dll"
-#endif
-			);
+		private static readonly ConfigWrapper<string> ConfigEntrypointAssembly;
 
 		private static readonly ConfigWrapper<string> ConfigEntrypointType = ConfigFile.CoreConfig.Wrap(
 			"Preloader.Entrypoint",

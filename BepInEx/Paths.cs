@@ -8,31 +8,27 @@ namespace BepInEx
 	/// </summary>
 	public static class Paths
 	{
-		internal static void SetExecutablePath(string executablePath)
+		internal static void SetExecutablePath(string executablePath, string bepinRootPath = null, string managedPath = null, string pluginPath = null)
 		{
 			ExecutablePath = executablePath;
 			ProcessName = Path.GetFileNameWithoutExtension(executablePath);
 			GameRootPath = Path.GetDirectoryName(executablePath);
-			ManagedPath = Utility.CombinePaths(GameRootPath, $"{ProcessName}_Data", "Managed");
-			BepInExRootPath = Path.Combine(GameRootPath, "BepInEx");
+
+			if (ManagedPath == null || managedPath != null)
+				ManagedPath = managedPath ?? Utility.CombinePaths(GameRootPath, $"{ProcessName}_Data", "Managed");
+
+			if (BepInExRootPath == null || bepinRootPath != null)
+				BepInExRootPath = bepinRootPath ?? Path.Combine(GameRootPath, "BepInEx");
+
 			ConfigPath = Path.Combine(BepInExRootPath, "config");
 			BepInExConfigPath = Path.Combine(ConfigPath, "BepInEx.cfg");
-			PluginPath = Path.Combine(BepInExRootPath, "plugins");
+
+			if (PluginPath == null || pluginPath != null)
+				PluginPath = pluginPath ?? Path.Combine(BepInExRootPath, "plugins");
+
 			PatcherPluginPath = Path.Combine(BepInExRootPath, "patchers");
 			BepInExAssemblyDirectory = Path.Combine(BepInExRootPath, "core");
 			BepInExAssemblyPath = Path.Combine(BepInExAssemblyDirectory, $"{Assembly.GetExecutingAssembly().GetName().Name}.dll");
-		}
-
-		internal static void SetManagedPath(string managedPath)
-		{
-			if (managedPath == null)
-				return;
-			ManagedPath = managedPath;
-		}
-
-		internal static void SetPluginPath(string pluginPath)
-		{
-			PluginPath = Utility.CombinePaths(BepInExRootPath, pluginPath);
 		}
 
 		/// <summary>
