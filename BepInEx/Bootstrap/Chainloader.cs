@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using BepInEx.Contract;
 using Mono.Cecil;
 using UnityEngine;
@@ -39,22 +40,27 @@ namespace BepInEx.Bootstrap
 		/// <summary>
         /// Initializes BepInEx to be able to start the chainloader.
         /// </summary>
-        public static void Initialize(string containerExePath, bool startConsole = true)
+        public static void Initialize(string gameExePath, bool startConsole = true)
 		{
 			if (_initialized)
 				return;
 
-			//Set vitals
-			Paths.SetExecutablePath(containerExePath, pluginPath: ConfigPluginsDirectory.Value);
+            // Set vitals
+			if (gameExePath != null)
+			{
+				// Checking for null allows a more advanced initialization workflow, where the Paths class has been initialized before calling Chainloader.Initialize
+				// This is used by Preloader to use environment variables, for example
+				Paths.SetExecutablePath(gameExePath);
+			}
 
-            //Start logging
+            // Start logging
             if (ConsoleWindow.ConfigConsoleEnabled.Value && startConsole)
 			{
 				ConsoleWindow.Attach();
 				Logger.Listeners.Add(new ConsoleLogListener());
             }
 
-			//Fix for standard output getting overwritten by UnityLogger
+			// Fix for standard output getting overwritten by UnityLogger
 			if (ConsoleWindow.StandardOut != null)
 			{
 				Console.SetOut(ConsoleWindow.StandardOut);
@@ -79,7 +85,9 @@ namespace BepInEx.Bootstrap
 			_initialized = true;
 		}
 
-		private static PluginInfo ToPluginInfo(TypeDefinition type)
+		private static Regex allowedGuidRegex { get; } = new Regex(@"^[a-zA-Z0-9\._]+$");
+
+        private static PluginInfo ToPluginInfo(TypeDefinition type)
 		{
 			if (type.IsInterface || type.IsAbstract || !type.IsSubtypeOf(typeof(BaseUnityPlugin)))
 				return null;
@@ -88,12 +96,30 @@ namespace BepInEx.Bootstrap
 
 			if (metadata == null)
 			{
-				Logger.LogWarning($"Skipping over type [{type.Name}] as no metadata attribute is specified");
+				Logger.LogWarning($"Skipping over type [{type.FullName}] as no metadata attribute is specified");
 				return null;
 			}
 
-			//Perform a filter for currently running process
-			var filters = BepInProcess.FromCecilType(type);
+			if (string.IsNullOrEmpty(metadata.GUID) || !allowedGuidRegex.IsMatch(metadata.GUID))
+			{
+				Logger.LogWarning($"Skipping type [{type.FullName}] because its GUID [{metadata.GUID}] is of an illegal format.");
+				return null;
+			}
+
+			if (metadata.Version == null)
+			{
+				Logger.LogWarning($"Skipping type [{type.FullName}] because its version is invalid.");
+				return null;
+			}
+
+			if (metadata.Name == null)
+			{
+				Logger.LogWarning($"Skipping type [{type.FullName}] because its name is null.");
+				return null;
+			}
+
+            //Perform a filter for currently running process
+            var filters = BepInProcess.FromCecilType(type);
 
 			bool invalidProcessName = filters.Any(x => !string.Equals(x.ProcessName.Replace(".exe", ""), Paths.ProcessName, StringComparison.InvariantCultureIgnoreCase));
 

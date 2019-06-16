@@ -152,5 +152,30 @@ namespace BepInEx
 		/// <param name="assembly">The loaded assembly.</param>
 		/// <returns>True, if the assembly was found and loaded. Otherwise, false.</returns>
 		public static bool TryResolveDllAssembly(AssemblyName assemblyName, string directory, ReaderParameters readerParameters, out AssemblyDefinition assembly) { return TryResolveDllAssembly(assemblyName, directory, s => AssemblyDefinition.ReadAssembly(s, readerParameters), out assembly); }
-	}
+
+		/// <summary>
+		/// Tries to create a file with the given name
+		/// </summary>
+		/// <param name="path">Path of the file to create</param>
+		/// <param name="mode">File open mode</param>
+		/// <param name="fileStream">Resulting filestream</param>
+		/// <param name="access">File access options</param>
+		/// <param name="share">File share options</param>
+		/// <returns></returns>
+		public static bool TryOpenFileStream(string path, FileMode mode, out FileStream fileStream, FileAccess access = FileAccess.ReadWrite, FileShare share = FileShare.Read)
+		{
+			try
+			{
+				fileStream = new FileStream(path, mode, access, share);
+
+				return true;
+			}
+			catch (IOException)
+			{
+				fileStream = null;
+
+				return false;
+			}
+		}
+    }
 }

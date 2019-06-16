@@ -51,7 +51,7 @@ namespace BepInEx.Preloader
 		public static void Main(string[] args)
 		{
 			// Get the path of this DLL via Doorstop env var because Assembly.Location mangles non-ASCII characters on some versions of Mono for unknown reasons
-			preloaderPath = Path.GetDirectoryName(Path.GetFullPath(Environment.GetEnvironmentVariable("DOORSTOP_INVOKE_DLL_PATH")));
+			preloaderPath = Path.GetDirectoryName(Path.GetFullPath(EnvVars.DOORSTOP_INVOKE_DLL_PATH));
 
 			AppDomain.CurrentDomain.AssemblyResolve += ResolveCurrentDirectory;
 
