@@ -23,6 +23,13 @@ namespace BepInEx
 			BepInExAssemblyPath = Path.Combine(BepInExAssemblyDirectory, $"{Assembly.GetExecutingAssembly().GetName().Name}.dll");
 		}
 
+		internal static void SetManagedPath(string managedPath)
+		{
+			if (managedPath == null)
+				return;
+			ManagedPath = managedPath;
+		}
+
 		internal static void SetPluginPath(string pluginPath)
 		{
 			PluginPath = Utility.CombinePaths(BepInExRootPath, pluginPath);
