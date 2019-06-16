@@ -60,16 +60,6 @@ namespace BepInEx
 
 			return new BepInPlugin((string)attr.ConstructorArguments[0].Value, (string)attr.ConstructorArguments[1].Value, (string)attr.ConstructorArguments[2].Value);
 		}
-
-		internal static BepInPlugin FromCecilType(TypeDefinition td)
-		{
-			var attr = MetadataHelper.GetCustomAttributes<BepInPlugin>(td, false).FirstOrDefault();
-
-			if (attr == null)
-				return null;
-
-			return new BepInPlugin((string)attr.ConstructorArguments[0].Value, (string)attr.ConstructorArguments[1].Value, (string)attr.ConstructorArguments[2].Value);
-		}
 	}
 
 	/// <summary>
