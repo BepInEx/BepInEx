@@ -1,7 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="..\packages\ILRepack.2.0.16\build\ILRepack.props" Condition="Exists('..\packages\ILRepack.2.0.16\build\ILRepack.props')" />
-  <Import Project="..\packages\ILRepack.MSBuild.Task.2.0.13\build\ILRepack.MSBuild.Task.props" Condition="Exists('..\packages\ILRepack.MSBuild.Task.2.0.13\build\ILRepack.MSBuild.Task.props')" />
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -73,9 +72,10 @@
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\ILRepack.MSBuild.Task.2.0.13\build\ILRepack.MSBuild.Task.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ILRepack.MSBuild.Task.2.0.13\build\ILRepack.MSBuild.Task.props'))" />
     <Error Condition="!Exists('..\packages\ILRepack.2.0.16\build\ILRepack.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ILRepack.2.0.16\build\ILRepack.props'))" />
+    <Error Condition="!Exists('..\packages\ILRepack.Lib.MSBuild.Task.2.0.16.1\build\ILRepack.Lib.MSBuild.Task.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ILRepack.Lib.MSBuild.Task.2.0.16.1\build\ILRepack.Lib.MSBuild.Task.targets'))" />
   </Target>
+  <Import Project="..\packages\ILRepack.Lib.MSBuild.Task.2.0.16.1\build\ILRepack.Lib.MSBuild.Task.targets" Condition="Exists('..\packages\ILRepack.Lib.MSBuild.Task.2.0.16.1\build\ILRepack.Lib.MSBuild.Task.targets')" />
   <!-- ILRepack -->
   <Target Name="AfterBuild">
     <Move SourceFiles="$(OutputPath)\$(AssemblyName).exe" DestinationFiles="$(OutputPath)\$(AssemblyName)1.exe" />
@@ -83,7 +83,7 @@
       <InputAssemblies Include="$(OutputPath)\$(AssemblyName)1.exe" />
       <InputAssemblies Include="$(OutputPath)\Mono.Cecil.dll" />
     </ItemGroup>
-    <ILRepack Parallel="true" Internalize="true" DebugInfo="true" PrimaryAssemblyFile="$(OutputPath)\$(AssemblyName)1.exe" InputAssemblies="@(InputAssemblies)" TargetKind="Exe" TargetPlatformVersion="v2" OutputFile="$(OutputPath)\$(AssemblyName).exe" />
+    <ILRepack Parallel="true" Internalize="true" DebugInfo="true" InputAssemblies="@(InputAssemblies)" TargetKind="Exe" TargetPlatformVersion="v2" OutputFile="$(OutputPath)\$(AssemblyName).exe" />
     <Delete Files="@(InputAssemblies)" />
     <Delete Files="$(OutputPath)\BepInEx.Bootstrap.dll" />
   </Target>
