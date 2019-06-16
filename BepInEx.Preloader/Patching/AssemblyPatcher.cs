@@ -46,11 +46,11 @@ namespace BepInEx.Preloader.Patching
 			if (type.IsInterface || type.IsAbstract && !type.IsSealed)
 				return null;
 
-            var targetDlls = type.Methods.FirstOrDefault(m => m.Name.Equals("get_TargetDLLs", StringComparison.InvariantCultureIgnoreCase) &&
+			var targetDlls = type.Methods.FirstOrDefault(m => m.Name.Equals("get_TargetDLLs", StringComparison.InvariantCultureIgnoreCase) &&
 															  m.IsPublic &&
 															  m.IsStatic);
 
-            if (targetDlls == null ||
+			if (targetDlls == null ||
 				targetDlls.ReturnType.FullName != "System.Collections.Generic.IEnumerable`1<System.String>")
 				return null;
 
@@ -73,11 +73,11 @@ namespace BepInEx.Preloader.Patching
 		}
 
 		/// <summary>
-        ///     Adds all patchers from all managed assemblies specified in a directory.
-        /// </summary>
-        /// <param name="directory">Directory to search patcher DLLs from.</param>
-        /// <param name="patcherLocator">A function that locates assembly patchers in a given managed assembly.</param>
-        public static void AddPatchersFromDirectory(string directory)
+		///     Adds all patchers from all managed assemblies specified in a directory.
+		/// </summary>
+		/// <param name="directory">Directory to search patcher DLLs from.</param>
+		/// <param name="patcherLocator">A function that locates assembly patchers in a given managed assembly.</param>
+		public static void AddPatchersFromDirectory(string directory)
 		{
 			if (!Directory.Exists(directory))
 				return;
@@ -142,9 +142,9 @@ namespace BepInEx.Preloader.Patching
 
 				Logger.Log(patcherCollection.Any() ? LogLevel.Info : LogLevel.Debug,
 					$"Loaded {patcherCollection.Count} patcher methods from {assembly.Name.Name}");
-            }
+			}
 
-            foreach (KeyValuePair<string, PatcherPlugin> patcher in sortedPatchers)
+			foreach (KeyValuePair<string, PatcherPlugin> patcher in sortedPatchers)
 				AddPatcher(patcher.Value);
 
 			foreach (var assemblyDefinition in patchers.Keys)

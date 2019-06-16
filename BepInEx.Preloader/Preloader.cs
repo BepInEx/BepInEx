@@ -30,15 +30,15 @@ namespace BepInEx.Preloader
 
 		public static bool IsDotNet46 { get; } = string.Compare("4.0.30319.42000", Environment.Version.ToString(), StringComparison.Ordinal) <= 0;
 
-        static Preloader()
+		static Preloader()
 		{
 			ConfigEntrypointAssembly = ConfigFile.CoreConfig.Wrap(
 				"Preloader.Entrypoint",
 				"Assembly",
 				"The local filename of the assembly to target.",
 				IsPostUnity2017 ? "UnityEngine.CoreModule.dll" : "UnityEngine.dll"
-            );
-        }
+			);
+		}
 
 		public static void Run()
 		{
