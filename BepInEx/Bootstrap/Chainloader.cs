@@ -39,14 +39,14 @@ namespace BepInEx.Bootstrap
 		/// <summary>
         /// Initializes BepInEx to be able to start the chainloader.
         /// </summary>
-        public static void Initialize(string containerExePath, bool startConsole = true)
+        public static void Initialize(string containerExePath, string managedPath = null, bool startConsole = true)
 		{
 			if (_initialized)
 				return;
 
 			//Set vitals
 			Paths.SetExecutablePath(containerExePath);
-
+			Paths.SetManagedPath(managedPath);
 			Paths.SetPluginPath(ConfigPluginsDirectory.Value);
 
             //Start logging

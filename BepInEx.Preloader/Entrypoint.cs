@@ -10,6 +10,8 @@ namespace BepInEx.Preloader
 		public static void PreloaderMain(string[] args)
 		{
 			Paths.SetExecutablePath(args[0]);
+			Paths.SetManagedPath(Environment.GetEnvironmentVariable("DOORSTOP_MANAGED_FOLDER_DIR"));
+
 			AppDomain.CurrentDomain.AssemblyResolve += LocalResolve;
 			Preloader.Run();
 		}
