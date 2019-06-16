@@ -42,7 +42,7 @@ namespace BepInEx.Preloader
 				Logger.Listeners.Add(PreloaderLog);
 
 				
-				string consoleTile = $"BepInEx {typeof(Paths).Assembly.GetName().Version} - {Process.GetCurrentProcess().ProcessName}";
+				string consoleTile = $"BepInEx {typeof(Paths).Assembly.GetName().Version} RC1 - {Process.GetCurrentProcess().ProcessName}";
 
 				ConsoleWindow.Title = consoleTile;
 				Logger.LogMessage(consoleTile);
