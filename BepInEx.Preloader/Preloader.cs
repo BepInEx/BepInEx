@@ -279,11 +279,11 @@ namespace BepInEx.Preloader
 					var ins = il.Body.Instructions.First();
 
 					il.InsertBefore(ins,
-						il.Create(OpCodes.Ldstr, Paths.ExecutablePath)); //containerExePath
+						il.Create(OpCodes.Ldnull)); // gameExePath (always null, we initialize the Paths class in Entrypoint
 					il.InsertBefore(ins,
-						il.Create(OpCodes.Ldc_I4_0)); //startConsole (always false, we already load the console in Preloader)
+						il.Create(OpCodes.Ldc_I4_0)); // startConsole (always false, we already load the console in Preloader)
 					il.InsertBefore(ins,
-						il.Create(OpCodes.Call, initMethod)); //Chainloader.Initialize(string containerExePath, bool startConsole = true)
+						il.Create(OpCodes.Call, initMethod)); // Chainloader.Initialize(string gameExePath, bool startConsole = true)
 					il.InsertBefore(ins,
 						il.Create(OpCodes.Call, startMethod));
 				}

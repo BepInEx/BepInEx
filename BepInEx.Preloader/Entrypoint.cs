@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 
@@ -15,7 +16,11 @@ namespace BepInEx.Preloader
 		/// </param>
 		public static void Main(string[] args)
 		{
-			Paths.SetExecutablePath(args[0]);
+			EnvVars.LoadVars();
+
+			string bepinPath = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetFullPath(EnvVars.DOORSTOP_INVOKE_DLL_PATH)));
+
+			Paths.SetExecutablePath(args[0], bepinPath, EnvVars.DOORSTOP_MANAGED_FOLDER_DIR);
 			AppDomain.CurrentDomain.AssemblyResolve += LocalResolve;
 
 			Preloader.Run();

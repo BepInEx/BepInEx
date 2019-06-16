@@ -8,13 +8,13 @@ namespace BepInEx
 	/// </summary>
 	public static class Paths
 	{
-		internal static void SetExecutablePath(string executablePath)
+		internal static void SetExecutablePath(string executablePath, string bepinRootPath = null, string managedPath = null)
 		{
 			ExecutablePath = executablePath;
 			ProcessName = Path.GetFileNameWithoutExtension(executablePath);
 			GameRootPath = Path.GetDirectoryName(executablePath);
-			ManagedPath = Utility.CombinePaths(GameRootPath, $"{ProcessName}_Data", "Managed");
-			BepInExRootPath = Path.Combine(GameRootPath, "BepInEx");
+			ManagedPath = managedPath ?? Utility.CombinePaths(GameRootPath, $"{ProcessName}_Data", "Managed");
+			BepInExRootPath = bepinRootPath ?? Path.Combine(GameRootPath, "BepInEx");
 			ConfigPath = Path.Combine(BepInExRootPath, "config");
 			BepInExConfigPath = Path.Combine(ConfigPath, "BepInEx.cfg");
 			PluginPath = Path.Combine(BepInExRootPath, "plugins");

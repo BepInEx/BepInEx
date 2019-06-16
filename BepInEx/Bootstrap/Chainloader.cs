@@ -36,24 +36,30 @@ namespace BepInEx.Bootstrap
 		/// <summary>
         /// Initializes BepInEx to be able to start the chainloader.
         /// </summary>
-        public static void Initialize(string containerExePath, bool startConsole = true)
+        public static void Initialize(string gameExePath, bool startConsole = true)
 		{
 			if (_initialized)
 				return;
 
-			//Set vitals
-			Paths.SetExecutablePath(containerExePath);
+			// Set vitals
+
+			if (gameExePath != null)
+			{
+				// Checking for null allows a more advanced initialization workflow, where the Paths class has been initialized before calling Chainloader.Initialize
+				// This is used by Preloader to use environment variables, for example
+				Paths.SetExecutablePath(gameExePath);
+			}
 
 			Paths.SetPluginPath(ConfigPluginsDirectory.Value);
 
-            //Start logging
+            // Start logging
             if (ConsoleWindow.ConfigConsoleEnabled.Value && startConsole)
 			{
 				ConsoleWindow.Attach();
 				Logger.Listeners.Add(new ConsoleLogListener());
             }
 
-			//Fix for standard output getting overwritten by UnityLogger
+			// Fix for standard output getting overwritten by UnityLogger
 			if (ConsoleWindow.StandardOut != null)
 			{
 				Console.SetOut(ConsoleWindow.StandardOut);
