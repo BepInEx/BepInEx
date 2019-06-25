@@ -9,8 +9,6 @@ namespace BepInEx.Preloader
 	{
 		public static void PreloaderMain(string[] args)
 		{
-			EnvVars.LoadVars();
-
 			string bepinPath = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetFullPath(EnvVars.DOORSTOP_INVOKE_DLL_PATH)));
 
 			Paths.SetExecutablePath(args[0], bepinPath, EnvVars.DOORSTOP_MANAGED_FOLDER_DIR);
@@ -50,6 +48,8 @@ namespace BepInEx.Preloader
 		/// </param>
 		public static void Main(string[] args)
 		{
+			EnvVars.LoadVars();
+
 			// Get the path of this DLL via Doorstop env var because Assembly.Location mangles non-ASCII characters on some versions of Mono for unknown reasons
 			preloaderPath = Path.GetDirectoryName(Path.GetFullPath(EnvVars.DOORSTOP_INVOKE_DLL_PATH));
 
