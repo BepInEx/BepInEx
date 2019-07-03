@@ -141,6 +141,18 @@ namespace BepInEx.Bootstrap
 			};
 		}
 
+		private static readonly string CurrentAssemblyName = Assembly.GetExecutingAssembly().GetName().Name;
+
+		private static bool HasBepinPlugins(AssemblyDefinition ass)
+		{
+			if (ass.MainModule.AssemblyReferences.All(r => r.Name != CurrentAssemblyName))
+				return false;
+			if (ass.MainModule.GetTypeReferences().All(r => r.FullName != typeof(BaseUnityPlugin).FullName))
+				return false;
+
+			return true;
+		}
+
 		/// <summary>
 		/// The entrypoint for the BepInEx plugin system.
 		/// </summary>
@@ -170,7 +182,7 @@ namespace BepInEx.Bootstrap
 
 				UnityEngine.Object.DontDestroyOnLoad(ManagerObject);
 
-				var pluginsToLoad = TypeLoader.FindPluginTypes(Paths.PluginPath, ToPluginInfo);
+				var pluginsToLoad = TypeLoader.FindPluginTypes(Paths.PluginPath, ToPluginInfo, HasBepinPlugins);
 
 				var pluginInfos = pluginsToLoad.SelectMany(p => p.Value).ToList();
 

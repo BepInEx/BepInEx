@@ -43,7 +43,7 @@ namespace BepInEx.Bootstrap
 		/// <typeparam name="T">The specific base type to search for.</typeparam>
 		/// <param name="directory">The directory to search for assemblies.</param>
 		/// <returns>Returns a list of found derivative types.</returns>
-		public static Dictionary<AssemblyDefinition, List<T>> FindPluginTypes<T>(string directory, Func<TypeDefinition, T> typeSelector) where T : class
+		public static Dictionary<AssemblyDefinition, List<T>> FindPluginTypes<T>(string directory, Func<TypeDefinition, T> typeSelector, Func<AssemblyDefinition, bool> assemblyFilter = null) where T : class
 		{
 			var result = new Dictionary<AssemblyDefinition, List<T>>();
 
@@ -52,6 +52,12 @@ namespace BepInEx.Bootstrap
 				try
 				{
 					var ass = AssemblyDefinition.ReadAssembly(dll, readerParameters);
+
+					if (!assemblyFilter?.Invoke(ass) ?? false)
+					{
+						ass.Dispose();
+						continue;
+					}
 
 					var matches = ass.MainModule.Types.Select(typeSelector).Where(t => t != null).ToList();
 
