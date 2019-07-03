@@ -87,7 +87,7 @@ namespace BepInEx.Bootstrap
 
 		private static Regex allowedGuidRegex { get; } = new Regex(@"^[a-zA-Z0-9\._]+$");
 
-        private static PluginInfo ToPluginInfo(TypeDefinition type)
+        public static PluginInfo ToPluginInfo(TypeDefinition type)
 		{
 			if (type.IsInterface || type.IsAbstract || !type.IsSubtypeOf(typeof(BaseUnityPlugin)))
 				return null;
