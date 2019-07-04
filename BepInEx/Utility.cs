@@ -132,7 +132,7 @@ namespace BepInEx
 		{
 			if (self.FullName == td.FullName)
 				return true;
-			return self.FullName != "System.Object" && (self.BaseType?.Resolve().IsSubtypeOf(td) ?? false);
+			return self.FullName != "System.Object" && (self.BaseType?.Resolve()?.IsSubtypeOf(td) ?? false);
 		}
 
 		/// <summary>
