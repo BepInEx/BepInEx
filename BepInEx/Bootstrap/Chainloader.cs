@@ -85,7 +85,7 @@ namespace BepInEx.Bootstrap
 			_initialized = true;
 		}
 
-		private static Regex allowedGuidRegex { get; } = new Regex(@"^[a-zA-Z0-9\._]+$");
+		private static Regex allowedGuidRegex { get; } = new Regex(@"^[a-zA-Z0-9\._\-]+$");
 
         public static PluginInfo ToPluginInfo(TypeDefinition type)
 		{
