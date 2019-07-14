@@ -24,7 +24,16 @@ namespace BepInEx
 			if (Chainloader.PluginInfos.TryGetValue(metadata.GUID, out var info))
 				Info = info;
 			else
-				Logging.Logger.LogDebug($"Plugin [{metadata.GUID}] wasn't registered through chainloader! PluginInfo property will not be initialized.");
+			{
+				Info = new PluginInfo
+				{
+					Metadata = metadata,
+					Instance = this,
+					Dependencies = MetadataHelper.GetDependencies(GetType()),
+					Processes = MetadataHelper.GetAttributes<BepInProcess>(GetType()),
+					Location = GetType().Assembly.Location
+				};
+			}
 
 			Logger = Logging.Logger.CreateLogSource(metadata.Name);
 
