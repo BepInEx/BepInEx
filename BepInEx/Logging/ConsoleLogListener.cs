@@ -16,7 +16,7 @@ namespace BepInEx.Logging
 			if (eventArgs.Level.GetHighestLevel() > DisplayedLogLevel)
 				return;
 
-			string log = $"[{eventArgs.Level, -7}:{((ILogSource)sender).SourceName, 10}] {eventArgs.Data}\r\n";
+			string log = $"[{eventArgs.Level,-7}:{((ILogSource)sender).SourceName,10}] {eventArgs.Data}\r\n";
 
 			Kon.ForegroundColor = eventArgs.Level.GetConsoleColor();
 			Console.Write(log);

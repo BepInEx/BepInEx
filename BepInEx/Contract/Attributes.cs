@@ -199,12 +199,12 @@ namespace BepInEx
 			=> GetAttributes<T>(plugin.GetType());
 
 
-        /// <summary>
-        /// Retrieves the dependencies of the specified plugin type.
-        /// </summary>
-        /// <param name="Plugin">The plugin type.</param>
-        /// <returns>A list of all plugin types that the specified plugin type depends upon.</returns>
-        public static IEnumerable<BepInDependency> GetDependencies(Type plugin)
+		/// <summary>
+		/// Retrieves the dependencies of the specified plugin type.
+		/// </summary>
+		/// <param name="Plugin">The plugin type.</param>
+		/// <returns>A list of all plugin types that the specified plugin type depends upon.</returns>
+		public static IEnumerable<BepInDependency> GetDependencies(Type plugin)
 		{
 			return plugin.GetCustomAttributes(typeof(BepInDependency), true).Cast<BepInDependency>();
 		}

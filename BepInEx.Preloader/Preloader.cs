@@ -63,13 +63,13 @@ namespace BepInEx.Preloader
 				{
 					if (!Utility.CLRSupportsDynamicAssemblies || ConfigShimHarmony.Value)
 						HarmonyDetourBridge.Init();
-                }, out var harmonyBridgeException);
+				}, out var harmonyBridgeException);
 
 				TryDo(() =>
 				{
 					if (ConfigApplyRuntimePatches.Value)
 						UnityPatches.Apply();
-                }, out var runtimePatchException);
+				}, out var runtimePatchException);
 
 				Logger.Sources.Add(TraceLogSource.CreateSource());
 
@@ -105,7 +105,7 @@ namespace BepInEx.Preloader
 					Logger.LogDebug(runtimePatchException);
 				}
 
-                Logger.LogMessage("Preloader started");
+				Logger.LogMessage("Preloader started");
 
 				AssemblyPatcher.AddPatcher(new PatcherPlugin
 				{
@@ -226,7 +226,7 @@ namespace BepInEx.Preloader
 
 					il.InsertBefore(ins,
 						il.Create(OpCodes.Ldnull)); // gameExePath (always null, we initialize the Paths class in Entrypoint
-                    il.InsertBefore(ins,
+					il.InsertBefore(ins,
 						il.Create(OpCodes.Ldc_I4_0)); //startConsole (always false, we already load the console in Preloader)
 					il.InsertBefore(ins,
 						il.Create(OpCodes.Call, initMethod)); // Chainloader.Initialize(string gamePath, string managedPath = null, bool startConsole = true)
@@ -291,7 +291,7 @@ namespace BepInEx.Preloader
 			"If enabled, basic Harmony functionality is patched to use MonoMod's RuntimeDetour instead.\nTry using this if Harmony does not work in a game.",
 			false);
 
-        private static readonly ConfigWrapper<bool> ConfigPreloaderCOutLogging = ConfigFile.CoreConfig.Wrap(
+		private static readonly ConfigWrapper<bool> ConfigPreloaderCOutLogging = ConfigFile.CoreConfig.Wrap(
 			"Logging",
 			"PreloaderConsoleOutRedirection",
 			"Redirects text from Console.Out during preloader patch loading to the BepInEx logging system.",

@@ -56,7 +56,6 @@ namespace BepInEx.Preloader
 
 		public void Dispose()
 		{
-
 			if (LoggerSource != null)
 			{
 				Console.SetOut(StandardOut);

@@ -44,21 +44,30 @@ namespace BepInEx
 		/// <param name="input">The string to parse</param>
 		/// <param name="defaultValue">The value to return if parsing is unsuccessful.</param>
 		/// <returns>Boolean value of input if able to be parsed, otherwise default value.</returns>
-		public static bool SafeParseBool(string input, bool defaultValue = false) { return Boolean.TryParse(input, out bool result) ? result : defaultValue; }
+		public static bool SafeParseBool(string input, bool defaultValue = false)
+		{
+			return Boolean.TryParse(input, out bool result) ? result : defaultValue;
+		}
 
 		/// <summary>
 		/// Converts a file path into a UnityEngine.WWW format.
 		/// </summary>
 		/// <param name="path">The file path to convert.</param>
 		/// <returns>A converted file path.</returns>
-		public static string ConvertToWWWFormat(string path) { return $"file://{path.Replace('\\', '/')}"; }
+		public static string ConvertToWWWFormat(string path)
+		{
+			return $"file://{path.Replace('\\', '/')}";
+		}
 
 		/// <summary>
 		/// Indicates whether a specified string is null, empty, or consists only of white-space characters.
 		/// </summary>
 		/// <param name="self">The string to test.</param>
 		/// <returns>True if the value parameter is null or empty, or if value consists exclusively of white-space characters.</returns>
-		public static bool IsNullOrWhiteSpace(this string self) { return self == null || self.All(Char.IsWhiteSpace); }
+		public static bool IsNullOrWhiteSpace(this string self)
+		{
+			return self == null || self.All(Char.IsWhiteSpace);
+		}
 
 		public static IEnumerable<TNode> TopologicalSort<TNode>(IEnumerable<TNode> nodes, Func<TNode, IEnumerable<TNode>> dependencySelector)
 		{
@@ -155,13 +164,16 @@ namespace BepInEx
 		}
 
 		/// <summary>
-        /// Try to resolve and load the given assembly DLL.
-        /// </summary>
-        /// <param name="assemblyName">Name of the assembly, of the type <see cref="AssemblyName" />.</param>
-        /// <param name="directory">Directory to search the assembly from.</param>
-        /// <param name="assembly">The loaded assembly.</param>
-        /// <returns>True, if the assembly was found and loaded. Otherwise, false.</returns>
-        public static bool TryResolveDllAssembly(AssemblyName assemblyName, string directory, out Assembly assembly) { return TryResolveDllAssembly(assemblyName, directory, Assembly.LoadFile, out assembly); }
+		/// Try to resolve and load the given assembly DLL.
+		/// </summary>
+		/// <param name="assemblyName">Name of the assembly, of the type <see cref="AssemblyName" />.</param>
+		/// <param name="directory">Directory to search the assembly from.</param>
+		/// <param name="assembly">The loaded assembly.</param>
+		/// <returns>True, if the assembly was found and loaded. Otherwise, false.</returns>
+		public static bool TryResolveDllAssembly(AssemblyName assemblyName, string directory, out Assembly assembly)
+		{
+			return TryResolveDllAssembly(assemblyName, directory, Assembly.LoadFile, out assembly);
+		}
 
 		/// <summary>
 		/// Try to resolve and load the given assembly DLL.
@@ -170,7 +182,10 @@ namespace BepInEx
 		/// <param name="directory">Directory to search the assembly from.</param>
 		/// <param name="assembly">The loaded assembly.</param>
 		/// <returns>True, if the assembly was found and loaded. Otherwise, false.</returns>
-		public static bool TryResolveDllAssembly(AssemblyName assemblyName, string directory, ReaderParameters readerParameters, out AssemblyDefinition assembly) { return TryResolveDllAssembly(assemblyName, directory, s => AssemblyDefinition.ReadAssembly(s, readerParameters), out assembly); }
+		public static bool TryResolveDllAssembly(AssemblyName assemblyName, string directory, ReaderParameters readerParameters, out AssemblyDefinition assembly)
+		{
+			return TryResolveDllAssembly(assemblyName, directory, s => AssemblyDefinition.ReadAssembly(s, readerParameters), out assembly);
+		}
 
 		/// <summary>
 		/// Tries to create a file with the given name
@@ -196,5 +211,5 @@ namespace BepInEx
 				return false;
 			}
 		}
-    }
+	}
 }

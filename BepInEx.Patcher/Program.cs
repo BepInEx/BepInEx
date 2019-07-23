@@ -32,7 +32,7 @@ namespace BepInEx.Patcher
 			if (File.Exists(path))
 				return path;
 			return Path.Combine(managedDir, "UnityEngine.dll");
-        }
+		}
 
 		static void Main(string[] args)
 		{

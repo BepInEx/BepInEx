@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
 using Mono.Cecil;
 
-namespace BepInEx.Contract {
+namespace BepInEx.Contract
+{
 	public class PluginInfo
 	{
 		public BepInPlugin Metadata { get; internal set; }

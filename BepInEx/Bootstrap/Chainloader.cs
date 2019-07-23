@@ -29,23 +29,23 @@ namespace BepInEx.Bootstrap
 		public static List<BaseUnityPlugin> Plugins { get; } = new List<BaseUnityPlugin>();
 
 		/// <summary>
-        /// The GameObject that all plugins are attached to as components.
-        /// </summary>
-        public static GameObject ManagerObject { get; private set; }
+		/// The GameObject that all plugins are attached to as components.
+		/// </summary>
+		public static GameObject ManagerObject { get; private set; }
 
 
 		private static bool _loaded = false;
 		private static bool _initialized = false;
 
 		/// <summary>
-        /// Initializes BepInEx to be able to start the chainloader.
-        /// </summary>
-        public static void Initialize(string gameExePath, bool startConsole = true)
+		/// Initializes BepInEx to be able to start the chainloader.
+		/// </summary>
+		public static void Initialize(string gameExePath, bool startConsole = true)
 		{
 			if (_initialized)
 				return;
 
-            // Set vitals
+			// Set vitals
 			if (gameExePath != null)
 			{
 				// Checking for null allows a more advanced initialization workflow, where the Paths class has been initialized before calling Chainloader.Initialize
@@ -53,12 +53,12 @@ namespace BepInEx.Bootstrap
 				Paths.SetExecutablePath(gameExePath);
 			}
 
-            // Start logging
-            if (ConsoleWindow.ConfigConsoleEnabled.Value && startConsole)
+			// Start logging
+			if (ConsoleWindow.ConfigConsoleEnabled.Value && startConsole)
 			{
 				ConsoleWindow.Attach();
 				Logger.Listeners.Add(new ConsoleLogListener());
-            }
+			}
 
 			// Fix for standard output getting overwritten by UnityLogger
 			if (ConsoleWindow.StandardOut != null)
@@ -70,7 +70,7 @@ namespace BepInEx.Bootstrap
 				Console.OutputEncoding = ConsoleEncoding.GetEncoding(encoding);
 			}
 
-            Logger.Listeners.Add(new UnityLogListener());
+			Logger.Listeners.Add(new UnityLogListener());
 			Logger.Listeners.Add(new DiskLogListener());
 
 			if (!TraceLogSource.IsListening)
@@ -87,7 +87,7 @@ namespace BepInEx.Bootstrap
 
 		private static Regex allowedGuidRegex { get; } = new Regex(@"^[a-zA-Z0-9\._\-]+$");
 
-        public static PluginInfo ToPluginInfo(TypeDefinition type)
+		public static PluginInfo ToPluginInfo(TypeDefinition type)
 		{
 			if (type.IsInterface || type.IsAbstract || !type.IsSubtypeOf(typeof(BaseUnityPlugin)))
 				return null;
@@ -118,8 +118,8 @@ namespace BepInEx.Bootstrap
 				return null;
 			}
 
-            //Perform a filter for currently running process
-            var filters = BepInProcess.FromCecilType(type);
+			//Perform a filter for currently running process
+			var filters = BepInProcess.FromCecilType(type);
 
 			bool invalidProcessName = filters.Any(x => !string.Equals(x.ProcessName.Replace(".exe", ""), Paths.ProcessName, StringComparison.InvariantCultureIgnoreCase));
 

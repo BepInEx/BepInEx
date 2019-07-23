@@ -29,7 +29,7 @@
 				return false;
 
 			return string.Equals(Key, other.Key)
-			       && string.Equals(Section, other.Section);
+				   && string.Equals(Section, other.Section);
 		}
 
 		public override int GetHashCode()

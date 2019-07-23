@@ -24,6 +24,7 @@ namespace BepInEx.Logging
 		}
 
 		private bool disposed = false;
+
 		public void Dispose()
 		{
 			if (!disposed)
