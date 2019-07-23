@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27130.2027
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28922.388
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BepInEx", "BepInEx\BepInEx.csproj", "{4FFBA620-F5ED-47F9-B90C-DAD1316FD9B9}"
 EndProject
@@ -29,42 +29,25 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MonoMod.Utils", "submodules
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Legacy|Any CPU = Legacy|Any CPU
-		v2018|Any CPU = v2018|Any CPU
+		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{4FFBA620-F5ED-47F9-B90C-DAD1316FD9B9}.Legacy|Any CPU.ActiveCfg = Legacy|Any CPU
-		{4FFBA620-F5ED-47F9-B90C-DAD1316FD9B9}.Legacy|Any CPU.Build.0 = Legacy|Any CPU
-		{4FFBA620-F5ED-47F9-B90C-DAD1316FD9B9}.v2018|Any CPU.ActiveCfg = v2018|Any CPU
-		{4FFBA620-F5ED-47F9-B90C-DAD1316FD9B9}.v2018|Any CPU.Build.0 = v2018|Any CPU
-		{DC89F18B-235B-4C01-AB31-AF40DCE5C4C7}.Legacy|Any CPU.ActiveCfg = Legacy|Any CPU
-		{DC89F18B-235B-4C01-AB31-AF40DCE5C4C7}.Legacy|Any CPU.Build.0 = Legacy|Any CPU
-		{DC89F18B-235B-4C01-AB31-AF40DCE5C4C7}.v2018|Any CPU.ActiveCfg = v2018|Any CPU
-		{DC89F18B-235B-4C01-AB31-AF40DCE5C4C7}.v2018|Any CPU.Build.0 = v2018|Any CPU
-		{6E6BC1E5-5BE8-4566-B3AE-52C4CB218AEB}.Legacy|Any CPU.ActiveCfg = Release|Any CPU
-		{6E6BC1E5-5BE8-4566-B3AE-52C4CB218AEB}.Legacy|Any CPU.Build.0 = Release|Any CPU
-		{6E6BC1E5-5BE8-4566-B3AE-52C4CB218AEB}.v2018|Any CPU.ActiveCfg = Release|Any CPU
-		{6E6BC1E5-5BE8-4566-B3AE-52C4CB218AEB}.v2018|Any CPU.Build.0 = Release|Any CPU
-		{54161CFE-FF42-4DDE-B161-3A49545DB5CD}.Legacy|Any CPU.ActiveCfg = Release|Any CPU
-		{54161CFE-FF42-4DDE-B161-3A49545DB5CD}.Legacy|Any CPU.Build.0 = Release|Any CPU
-		{54161CFE-FF42-4DDE-B161-3A49545DB5CD}.v2018|Any CPU.ActiveCfg = Release|Any CPU
-		{54161CFE-FF42-4DDE-B161-3A49545DB5CD}.v2018|Any CPU.Build.0 = Release|Any CPU
-		{A15D6EE6-F954-415B-8605-8A8470CC87DC}.Legacy|Any CPU.ActiveCfg = Release|Any CPU
-		{A15D6EE6-F954-415B-8605-8A8470CC87DC}.Legacy|Any CPU.Build.0 = Release|Any CPU
-		{A15D6EE6-F954-415B-8605-8A8470CC87DC}.v2018|Any CPU.ActiveCfg = Release|Any CPU
-		{A15D6EE6-F954-415B-8605-8A8470CC87DC}.v2018|Any CPU.Build.0 = Release|Any CPU
-		{F7ABBE07-C02F-4F7C-BF6E-C6656BF588CA}.Legacy|Any CPU.ActiveCfg = Legacy|Any CPU
-		{F7ABBE07-C02F-4F7C-BF6E-C6656BF588CA}.Legacy|Any CPU.Build.0 = Legacy|Any CPU
-		{F7ABBE07-C02F-4F7C-BF6E-C6656BF588CA}.v2018|Any CPU.ActiveCfg = v2018|Any CPU
-		{F7ABBE07-C02F-4F7C-BF6E-C6656BF588CA}.v2018|Any CPU.Build.0 = v2018|Any CPU
-		{D0C584C0-81D7-486E-B70E-D7F9256E0909}.Legacy|Any CPU.ActiveCfg = Release|Any CPU
-		{D0C584C0-81D7-486E-B70E-D7F9256E0909}.Legacy|Any CPU.Build.0 = Release|Any CPU
-		{D0C584C0-81D7-486E-B70E-D7F9256E0909}.v2018|Any CPU.ActiveCfg = Release|Any CPU
-		{D0C584C0-81D7-486E-B70E-D7F9256E0909}.v2018|Any CPU.Build.0 = Release|Any CPU
-		{1839CFE2-3DB0-45A8-B03D-9AA797479A3A}.Legacy|Any CPU.ActiveCfg = Release|Any CPU
-		{1839CFE2-3DB0-45A8-B03D-9AA797479A3A}.Legacy|Any CPU.Build.0 = Release|Any CPU
-		{1839CFE2-3DB0-45A8-B03D-9AA797479A3A}.v2018|Any CPU.ActiveCfg = Release|Any CPU
-		{1839CFE2-3DB0-45A8-B03D-9AA797479A3A}.v2018|Any CPU.Build.0 = Release|Any CPU
+		{4FFBA620-F5ED-47F9-B90C-DAD1316FD9B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4FFBA620-F5ED-47F9-B90C-DAD1316FD9B9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DC89F18B-235B-4C01-AB31-AF40DCE5C4C7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DC89F18B-235B-4C01-AB31-AF40DCE5C4C7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6E6BC1E5-5BE8-4566-B3AE-52C4CB218AEB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6E6BC1E5-5BE8-4566-B3AE-52C4CB218AEB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{54161CFE-FF42-4DDE-B161-3A49545DB5CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{54161CFE-FF42-4DDE-B161-3A49545DB5CD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A15D6EE6-F954-415B-8605-8A8470CC87DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A15D6EE6-F954-415B-8605-8A8470CC87DC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F7ABBE07-C02F-4F7C-BF6E-C6656BF588CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F7ABBE07-C02F-4F7C-BF6E-C6656BF588CA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D0C584C0-81D7-486E-B70E-D7F9256E0909}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D0C584C0-81D7-486E-B70E-D7F9256E0909}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1839CFE2-3DB0-45A8-B03D-9AA797479A3A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1839CFE2-3DB0-45A8-B03D-9AA797479A3A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

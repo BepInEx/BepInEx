@@ -19,20 +19,10 @@
   <PropertyGroup>
     <StartupObject>BepInEx.Patcher.Program</StartupObject>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Legacy|AnyCPU'">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>..\bin\patcher\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>embedded</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'v2018|AnyCPU'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>..\bin\patcher\</OutputPath>
-    <DefineConstants>TRACE;UNITY_2018</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>embedded</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -43,15 +33,6 @@
     <Reference Include="Mono.Cecil, Version=0.10.3.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e, processorArchitecture=MSIL">
       <HintPath>..\packages\Mono.Cecil.0.10.3\lib\net35\Mono.Cecil.dll</HintPath>
     </Reference>
-    <Reference Include="Mono.Cecil.Mdb, Version=0.10.3.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e, processorArchitecture=MSIL">
-      <HintPath>..\packages\Mono.Cecil.0.10.3\lib\net35\Mono.Cecil.Mdb.dll</HintPath>
-    </Reference>
-    <Reference Include="Mono.Cecil.Pdb, Version=0.10.3.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e, processorArchitecture=MSIL">
-      <HintPath>..\packages\Mono.Cecil.0.10.3\lib\net35\Mono.Cecil.Pdb.dll</HintPath>
-    </Reference>
-    <Reference Include="Mono.Cecil.Rocks, Version=0.10.3.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e, processorArchitecture=MSIL">
-      <HintPath>..\packages\Mono.Cecil.0.10.3\lib\net35\Mono.Cecil.Rocks.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
   </ItemGroup>
@@ -61,6 +42,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="ILRepack.targets" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup />
@@ -76,16 +58,4 @@
     <Error Condition="!Exists('..\packages\ILRepack.Lib.MSBuild.Task.2.0.16.1\build\ILRepack.Lib.MSBuild.Task.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ILRepack.Lib.MSBuild.Task.2.0.16.1\build\ILRepack.Lib.MSBuild.Task.targets'))" />
   </Target>
   <Import Project="..\packages\ILRepack.Lib.MSBuild.Task.2.0.16.1\build\ILRepack.Lib.MSBuild.Task.targets" Condition="Exists('..\packages\ILRepack.Lib.MSBuild.Task.2.0.16.1\build\ILRepack.Lib.MSBuild.Task.targets')" />
-  <!-- ILRepack -->
-  <Target Name="AfterBuild">
-    <Move SourceFiles="$(OutputPath)\$(AssemblyName).exe" DestinationFiles="$(OutputPath)\$(AssemblyName)1.exe" />
-    <ItemGroup>
-      <InputAssemblies Include="$(OutputPath)\$(AssemblyName)1.exe" />
-      <InputAssemblies Include="$(OutputPath)\Mono.Cecil.dll" />
-    </ItemGroup>
-    <ILRepack Parallel="true" Internalize="true" DebugInfo="true" InputAssemblies="@(InputAssemblies)" TargetKind="Exe" TargetPlatformVersion="v2" OutputFile="$(OutputPath)\$(AssemblyName).exe" />
-    <Delete Files="@(InputAssemblies)" />
-    <Delete Files="$(OutputPath)\BepInEx.Bootstrap.dll" />
-  </Target>
-  <!-- /ILRepack -->
 </Project>

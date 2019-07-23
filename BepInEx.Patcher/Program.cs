@@ -26,6 +26,14 @@ namespace BepInEx.Patcher
 			Console.ResetColor();
 		}
 
+		static string GetUnityEngineAssembly(string managedDir)
+		{
+			var path = Path.Combine(managedDir, "UnityEngine.CoreModule.dll");
+			if (File.Exists(path))
+				return path;
+			return Path.Combine(managedDir, "UnityEngine.dll");
+        }
+
 		static void Main(string[] args)
 		{
 			Console.WriteLine($"BepInEx Patcher v{Assembly.GetExecutingAssembly().GetName().Version}");
@@ -43,12 +51,7 @@ namespace BepInEx.Patcher
 
 				string managedDir = Environment.CurrentDirectory + $@"\{gameName}_Data\Managed";
 
-#if UNITY_2018
-				string unityOutputDLL = Path.GetFullPath($"{managedDir}\\UnityEngine.CoreModule.dll");
-#else
-				string unityOutputDLL = Path.GetFullPath($"{managedDir}\\UnityEngine.dll");
-#endif
-
+				string unityOutputDLL = GetUnityEngineAssembly(managedDir);
 
 				if (!Directory.Exists(managedDir) || !File.Exists(unityOutputDLL))
 					continue;
@@ -101,11 +104,7 @@ namespace BepInEx.Patcher
 					AssemblyResolver = defaultResolver
 				};
 
-#if UNITY_2018
-				string unityBackupDLL = Path.GetFullPath($"{managedDir}\\UnityEngine.CoreModule.dll.bak");
-#else
-				string unityBackupDLL = Path.GetFullPath($"{managedDir}\\UnityEngine.dll.bak");
-#endif
+				string unityBackupDLL = $"{GetUnityEngineAssembly(managedDir)}.bak";
 
 				//determine which assembly to use as a base
 				AssemblyDefinition unity = AssemblyDefinition.ReadAssembly(unityOutputDLL, rp);

@@ -52,12 +52,9 @@ namespace BepInEx.Preloader
 				Logger.Sources.Add(TraceLogSource.CreateSource());
 
 				PreloaderLog = new PreloaderConsoleListener(ConfigPreloaderCOutLogging.Value);
-
 				Logger.Listeners.Add(PreloaderLog);
 
-
 				string consoleTile = $"BepInEx {typeof(Paths).Assembly.GetName().Version} - {Process.GetCurrentProcess().ProcessName}";
-
 				ConsoleWindow.Title = consoleTile;
 				Logger.LogMessage(consoleTile);
 
@@ -67,15 +64,12 @@ namespace BepInEx.Preloader
 				if (attributes.Length > 0)
 				{
 					var attribute = (BuildInfoAttribute)attributes[0];
-
 					Logger.LogMessage(attribute.Info);
 				}
 
 				Logger.LogInfo($"Running under Unity v{FileVersionInfo.GetVersionInfo(Paths.ExecutablePath).FileVersion}");
 				Logger.LogInfo($"CLR runtime version: {Environment.Version}");
-
 				Logger.LogMessage("Preloader started");
-
 
 				AssemblyPatcher.AddPatcher(new PatcherPlugin
 				{
@@ -88,10 +82,7 @@ namespace BepInEx.Preloader
 
 				Logger.LogInfo($"{AssemblyPatcher.PatcherPlugins.Count} patcher plugin(s) loaded");
 
-
 				AssemblyPatcher.PatchAndLoad(Paths.ManagedPath);
-
-
 				AssemblyPatcher.DisposePatchers();
 
 
