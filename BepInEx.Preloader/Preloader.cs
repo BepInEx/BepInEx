@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using BepInEx.Configuration;
 using BepInEx.Logging;
@@ -11,6 +10,7 @@ using BepInEx.Preloader.Patching;
 using BepInEx.Preloader.RuntimeFixes;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
+using MonoMod.RuntimeDetour;
 using UnityInjector.ConsoleUtil;
 using MethodAttributes = Mono.Cecil.MethodAttributes;
 
@@ -45,6 +45,9 @@ namespace BepInEx.Preloader
 			try
 			{
 				AllocateConsole();
+
+				if (ConfigShimHarmony.Value)
+					HarmonyDetourBridge.Init();
 
 				if (ConfigApplyRuntimePatches.Value)
 					UnityPatches.Apply();
@@ -249,7 +252,13 @@ namespace BepInEx.Preloader
 			"Enables or disables runtime patches.\nThis should always be true, unless you cannot start the game due to a Harmony related issue (such as running .NET Standard runtime) or you know what you're doing.",
 			true);
 
-		private static readonly ConfigWrapper<bool> ConfigPreloaderCOutLogging = ConfigFile.CoreConfig.Wrap(
+		private static readonly ConfigWrapper<bool> ConfigShimHarmony = ConfigFile.CoreConfig.Wrap(
+			"Preloader",
+			"ShimHarmonySupport",
+			"If enabled, basic Harmony functionality is patched to use MonoMod's RuntimeDetour instead.\nTry using this if Harmony does not work in a game.",
+			false);
+
+        private static readonly ConfigWrapper<bool> ConfigPreloaderCOutLogging = ConfigFile.CoreConfig.Wrap(
 			"Logging",
 			"PreloaderConsoleOutRedirection",
 			"Redirects text from Console.Out during preloader patch loading to the BepInEx logging system.",
