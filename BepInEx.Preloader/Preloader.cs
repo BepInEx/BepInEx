@@ -40,17 +40,36 @@ namespace BepInEx.Preloader
 			);
 		}
 
+		private static void TryDo(Action action, out Exception exception)
+		{
+			exception = null;
+			try
+			{
+				action();
+			}
+			catch (Exception e)
+			{
+				exception = e;
+			}
+		}
+
 		public static void Run()
 		{
 			try
 			{
 				AllocateConsole();
 
-				if (ConfigShimHarmony.Value)
-					HarmonyDetourBridge.Init();
+				TryDo(() =>
+				{
+					if (!Utility.CLRSupportsDynamicAssemblies || ConfigShimHarmony.Value)
+						HarmonyDetourBridge.Init();
+                }, out var harmonyBridgeException);
 
-				if (ConfigApplyRuntimePatches.Value)
-					UnityPatches.Apply();
+				TryDo(() =>
+				{
+					if (ConfigApplyRuntimePatches.Value)
+						UnityPatches.Apply();
+                }, out var runtimePatchException);
 
 				Logger.Sources.Add(TraceLogSource.CreateSource());
 
@@ -72,7 +91,21 @@ namespace BepInEx.Preloader
 
 				Logger.LogInfo($"Running under Unity v{FileVersionInfo.GetVersionInfo(Paths.ExecutablePath).FileVersion}");
 				Logger.LogInfo($"CLR runtime version: {Environment.Version}");
-				Logger.LogMessage("Preloader started");
+				Logger.LogInfo($"Supports SRE: {Utility.CLRSupportsDynamicAssemblies}");
+
+				if (harmonyBridgeException != null)
+				{
+					Logger.LogWarning("Failed to enable fix for Harmony for .NET Standard API. See more info in the output log.");
+					Logger.LogDebug(harmonyBridgeException);
+				}
+
+				if (runtimePatchException != null)
+				{
+					Logger.LogWarning("Failed to apply runtime patches for Mono. See more info in the output log.");
+					Logger.LogDebug(runtimePatchException);
+				}
+
+                Logger.LogMessage("Preloader started");
 
 				AssemblyPatcher.AddPatcher(new PatcherPlugin
 				{

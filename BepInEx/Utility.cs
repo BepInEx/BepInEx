@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.Emit;
 using Mono.Cecil;
 
 namespace BepInEx
@@ -12,6 +13,24 @@ namespace BepInEx
 	/// </summary>
 	public static class Utility
 	{
+		/// <summary>
+		/// Whether current Common Language Runtime supports dynamic method generation using <see cref="System.Reflection.Emit"/> namespace.
+		/// </summary>
+		public static bool CLRSupportsDynamicAssemblies { get; }
+
+		static Utility()
+		{
+			try
+			{
+				var m = new DynamicMethod("SRE_Test", null, null);
+				CLRSupportsDynamicAssemblies = true;
+			}
+			catch (PlatformNotSupportedException)
+			{
+				CLRSupportsDynamicAssemblies = false;
+			}
+		}
+
 		/// <summary>
 		/// Combines multiple paths together, as the specific method is not available in .NET 3.5.
 		/// </summary>
