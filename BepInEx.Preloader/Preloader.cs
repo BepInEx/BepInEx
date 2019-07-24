@@ -38,7 +38,13 @@ namespace BepInEx.Preloader
 				"The local filename of the assembly to target.",
 				IsPostUnity2017 ? "UnityEngine.CoreModule.dll" : "UnityEngine.dll"
 			);
-		}
+
+			ConfigShimHarmony = ConfigFile.CoreConfig.Wrap(
+				"Preloader",
+				"ShimHarmonySupport",
+				"If enabled, basic Harmony functionality is patched to use MonoMod's RuntimeDetour instead.\nTry using this if Harmony does not work in a game.",
+				!Utility.CLRSupportsDynamicAssemblies);
+        }
 
 		private static void TryDo(Action action, out Exception exception)
 		{
@@ -61,7 +67,7 @@ namespace BepInEx.Preloader
 
 				TryDo(() =>
 				{
-					if (!Utility.CLRSupportsDynamicAssemblies || ConfigShimHarmony.Value)
+					if (ConfigShimHarmony.Value)
 						HarmonyDetourBridge.Init();
 				}, out var harmonyBridgeException);
 
@@ -94,16 +100,10 @@ namespace BepInEx.Preloader
 				Logger.LogInfo($"Supports SRE: {Utility.CLRSupportsDynamicAssemblies}");
 
 				if (harmonyBridgeException != null)
-				{
-					Logger.LogWarning("Failed to enable fix for Harmony for .NET Standard API. See more info in the output log.");
-					Logger.LogDebug(harmonyBridgeException);
-				}
+					Logger.LogWarning($"Failed to enable fix for Harmony for .NET Standard API. Error message: {harmonyBridgeException.Message}");
 
 				if (runtimePatchException != null)
-				{
-					Logger.LogWarning("Failed to apply runtime patches for Mono. See more info in the output log.");
-					Logger.LogDebug(runtimePatchException);
-				}
+					Logger.LogWarning($"Failed to apply runtime patches for Mono. See more info in the output log. Error message: {runtimePatchException.Message}");
 
 				Logger.LogMessage("Preloader started");
 
@@ -285,11 +285,7 @@ namespace BepInEx.Preloader
 			"Enables or disables runtime patches.\nThis should always be true, unless you cannot start the game due to a Harmony related issue (such as running .NET Standard runtime) or you know what you're doing.",
 			true);
 
-		private static readonly ConfigWrapper<bool> ConfigShimHarmony = ConfigFile.CoreConfig.Wrap(
-			"Preloader",
-			"ShimHarmonySupport",
-			"If enabled, basic Harmony functionality is patched to use MonoMod's RuntimeDetour instead.\nTry using this if Harmony does not work in a game.",
-			false);
+		private static readonly ConfigWrapper<bool> ConfigShimHarmony;
 
 		private static readonly ConfigWrapper<bool> ConfigPreloaderCOutLogging = ConfigFile.CoreConfig.Wrap(
 			"Logging",
