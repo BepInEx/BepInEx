@@ -123,7 +123,7 @@ namespace BepInEx
 			this.ProcessName = ProcessName;
 		}
 
-		internal static IEnumerable<BepInProcess> FromCecilType(TypeDefinition td)
+		internal static List<BepInProcess> FromCecilType(TypeDefinition td)
 		{
 			var attrs = MetadataHelper.GetCustomAttributes<BepInProcess>(td, true);
 			return attrs.Select(customAttribute => new BepInProcess((string)customAttribute.ConstructorArguments[0].Value)).ToList();

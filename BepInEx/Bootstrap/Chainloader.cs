@@ -120,8 +120,7 @@ namespace BepInEx.Bootstrap
 
 			//Perform a filter for currently running process
 			var filters = BepInProcess.FromCecilType(type);
-
-			bool invalidProcessName = filters.Any(x => !string.Equals(x.ProcessName.Replace(".exe", ""), Paths.ProcessName, StringComparison.InvariantCultureIgnoreCase));
+			bool invalidProcessName = filters.Count != 0 && filters.All(x => !string.Equals(x.ProcessName.Replace(".exe", ""), Paths.ProcessName, StringComparison.InvariantCultureIgnoreCase));
 
 			if (invalidProcessName)
 			{
@@ -183,9 +182,7 @@ namespace BepInEx.Bootstrap
 				UnityEngine.Object.DontDestroyOnLoad(ManagerObject);
 
 				var pluginsToLoad = TypeLoader.FindPluginTypes(Paths.PluginPath, ToPluginInfo, HasBepinPlugins);
-
 				var pluginInfos = pluginsToLoad.SelectMany(p => p.Value).ToList();
-
 				var loadedAssemblies = new Dictionary<AssemblyDefinition, Assembly>();
 
 				Logger.LogInfo($"{pluginInfos.Count} plugins to load");
