@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 
 namespace BepInEx.Configuration
 {
@@ -76,18 +77,18 @@ namespace BepInEx.Configuration
 
 			[typeof(float)] = new TypeConverter
 			{
-				ConvertToString = (obj) => obj.ToString(),
-				ConvertToObject = (str) => float.Parse(str),
+				ConvertToString = (obj) => ((float)obj).ToString(NumberFormatInfo.InvariantInfo),
+				ConvertToObject = (str) => float.Parse(str, NumberFormatInfo.InvariantInfo),
 			},
 			[typeof(double)] = new TypeConverter
 			{
-				ConvertToString = (obj) => obj.ToString(),
-				ConvertToObject = (str) => double.Parse(str),
+				ConvertToString = (obj) => ((double)obj).ToString(NumberFormatInfo.InvariantInfo),
+				ConvertToObject = (str) => double.Parse(str, NumberFormatInfo.InvariantInfo),
 			},
 			[typeof(decimal)] = new TypeConverter
 			{
-				ConvertToString = (obj) => obj.ToString(),
-				ConvertToObject = (str) => decimal.Parse(str),
+				ConvertToString = (obj) => ((decimal)obj).ToString(NumberFormatInfo.InvariantInfo),
+				ConvertToObject = (str) => decimal.Parse(str, NumberFormatInfo.InvariantInfo),
 			},
 		};
 
