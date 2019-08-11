@@ -1,19 +1,45 @@
-﻿namespace BepInEx.Configuration
+﻿using System;
+
+namespace BepInEx.Configuration
 {
-	public class ConfigDefinition
+	public class ConfigDescription
+	{
+		public ConfigDescription(string description, Type settingType, object defaultValue)
+		{
+			Description = description ?? throw new ArgumentNullException(nameof(description));
+			SettingType = settingType ?? throw new ArgumentNullException(nameof(settingType));
+			DefaultValue = defaultValue;
+
+			if(defaultValue == null && settingType.IsByRef)
+				throw new ArgumentException("defaultValue is null while settingType is a value type");
+
+			if(defaultValue != null && !settingType.IsInstanceOfType(defaultValue))
+				throw new ArgumentException("defaultValue can not be assigned to type " + settingType.Name);
+		}
+
+		public string Description { get; }
+		public Type SettingType { get; }
+		public object DefaultValue { get; }
+		//todo value range
+	}
+
+	public class ConfigDefinition : IEquatable<ConfigDefinition>
 	{
 		public string Section { get; }
 
 		public string Key { get; }
 
-		public string Description { get; internal set; }
-
-		public ConfigDefinition(string section, string key, string description = null)
+		public ConfigDefinition(string section, string key)
 		{
 			Key = key;
 			Section = section;
+		}
 
-			Description = description;
+		public bool Equals(ConfigDefinition other)
+		{
+			if (other == null) return false;
+			return string.Equals(Key, other.Key)
+			       && string.Equals(Section, other.Section);
 		}
 
 		public override bool Equals(object obj)
@@ -22,14 +48,8 @@
 				return false;
 			if (ReferenceEquals(this, obj))
 				return true;
-			if (obj.GetType() != this.GetType())
-				return false;
 
-			if (!(obj is ConfigDefinition other))
-				return false;
-
-			return string.Equals(Key, other.Key)
-			       && string.Equals(Section, other.Section);
+			return Equals(obj as ConfigDefinition);
 		}
 
 		public override int GetHashCode()
