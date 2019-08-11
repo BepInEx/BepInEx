@@ -111,7 +111,7 @@ namespace BepInEx.Preloader
 				{
 					TargetDLLs = () => new[] { ConfigEntrypointAssembly.Value },
 					Patcher = PatchEntrypoint,
-					Name = "BepInEx.Chainloader"
+					TypeName = "BepInEx.Chainloader"
 				});
 
 				AssemblyPatcher.AddPatchersFromDirectory(Paths.PatcherPluginPath);

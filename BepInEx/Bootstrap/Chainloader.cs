@@ -135,8 +135,7 @@ namespace BepInEx.Bootstrap
 				Metadata = metadata,
 				Processes = filters,
 				Dependencies = dependencies,
-				CecilType = type,
-				Location = type.Module.FileName
+				TypeName = type.FullName
 			};
 		}
 
@@ -181,9 +180,12 @@ namespace BepInEx.Bootstrap
 
 				UnityEngine.Object.DontDestroyOnLoad(ManagerObject);
 
-				var pluginsToLoad = TypeLoader.FindPluginTypes(Paths.PluginPath, ToPluginInfo, HasBepinPlugins);
+				var pluginsToLoad = TypeLoader.FindPluginTypes(Paths.PluginPath, ToPluginInfo, HasBepinPlugins, "chainloader");
+				foreach (var keyValuePair in pluginsToLoad)
+					foreach (var pluginInfo in keyValuePair.Value)
+						pluginInfo.Location = keyValuePair.Key;
 				var pluginInfos = pluginsToLoad.SelectMany(p => p.Value).ToList();
-				var loadedAssemblies = new Dictionary<AssemblyDefinition, Assembly>();
+				var loadedAssemblies = new Dictionary<string, Assembly>();
 
 				Logger.LogInfo($"{pluginInfos.Count} plugins to load");
 
@@ -266,12 +268,11 @@ namespace BepInEx.Bootstrap
 					{
 						Logger.LogInfo($"Loading [{pluginInfo.Metadata.Name} {pluginInfo.Metadata.Version}]");
 
-						if (!loadedAssemblies.TryGetValue(pluginInfo.CecilType.Module.Assembly, out var ass))
-							loadedAssemblies[pluginInfo.CecilType.Module.Assembly] = ass = Assembly.LoadFile(pluginInfo.Location);
+						if (!loadedAssemblies.TryGetValue(pluginInfo.Location, out var ass))
+							loadedAssemblies[pluginInfo.Location] = ass = Assembly.LoadFile(pluginInfo.Location);
 
 						PluginInfos[pluginGUID] = pluginInfo;
-						pluginInfo.Instance = (BaseUnityPlugin)ManagerObject.AddComponent(ass.GetType(pluginInfo.CecilType.FullName));
-						pluginInfo.CecilType = null;
+						pluginInfo.Instance = (BaseUnityPlugin)ManagerObject.AddComponent(ass.GetType(pluginInfo.TypeName));
 
 						Plugins.Add(pluginInfo.Instance);
 					}
@@ -286,11 +287,6 @@ namespace BepInEx.Bootstrap
 						else
 							Logger.LogDebug(ex);
 					}
-				}
-
-				foreach (var selectedTypesInfo in pluginsToLoad)
-				{
-					selectedTypesInfo.Key.Dispose();
 				}
 			}
 			catch (Exception ex)

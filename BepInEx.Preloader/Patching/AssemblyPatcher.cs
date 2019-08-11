@@ -67,8 +67,7 @@ namespace BepInEx.Preloader.Patching
 
 			return new PatcherPlugin
 			{
-				Type = type,
-				Name = type.FullName
+				TypeName = type.FullName
 			};
 		}
 
@@ -88,16 +87,16 @@ namespace BepInEx.Preloader.Patching
 
 			foreach (var keyValuePair in patchers)
 			{
-				var assembly = keyValuePair.Key;
+				var assemblyPath = keyValuePair.Key;
 				var patcherCollection = keyValuePair.Value;
 
-				var ass = Assembly.LoadFile(assembly.MainModule.FileName);
+				var ass = Assembly.LoadFile(assemblyPath);
 
 				foreach (var patcherPlugin in patcherCollection)
 				{
 					try
 					{
-						var type = ass.GetType(patcherPlugin.Type.FullName);
+						var type = ass.GetType(patcherPlugin.TypeName);
 
 						var methods = type.GetMethods(ALL);
 
@@ -128,11 +127,10 @@ namespace BepInEx.Preloader.Patching
 						};
 
 						sortedPatchers.Add($"{ass.GetName().Name}/{type.FullName}", patcherPlugin);
-						patcherPlugin.Type = null;
 					}
 					catch (Exception e)
 					{
-						Logger.LogError($"Failed to load patcher [{patcherPlugin.Type.FullName}]: {e.Message}");
+						Logger.LogError($"Failed to load patcher [{patcherPlugin.TypeName}]: {e.Message}");
 						if (e is ReflectionTypeLoadException re)
 							Logger.LogDebug(TypeLoader.TypeLoadExceptionToString(re));
 						else
@@ -141,14 +139,11 @@ namespace BepInEx.Preloader.Patching
 				}
 
 				Logger.Log(patcherCollection.Any() ? LogLevel.Info : LogLevel.Debug,
-					$"Loaded {patcherCollection.Count} patcher methods from {assembly.Name.Name}");
+					$"Loaded {patcherCollection.Count} patcher methods from {ass.GetName().FullName}");
 			}
 
 			foreach (KeyValuePair<string, PatcherPlugin> patcher in sortedPatchers)
 				AddPatcher(patcher.Value);
-
-			foreach (var assemblyDefinition in patchers.Keys)
-				assemblyDefinition.Dispose();
 		}
 
 		private static void InitializePatchers()
@@ -213,7 +208,7 @@ namespace BepInEx.Preloader.Patching
 				foreach (string targetDll in assemblyPatcher.TargetDLLs())
 					if (assemblies.TryGetValue(targetDll, out var assembly))
 					{
-						Logger.LogInfo($"Patching [{assembly.Name.Name}] with [{assemblyPatcher.Name}]");
+						Logger.LogInfo($"Patching [{assembly.Name.Name}] with [{assemblyPatcher.TypeName}]");
 
 						assemblyPatcher.Patcher?.Invoke(ref assembly);
 						assemblies[targetDll] = assembly;

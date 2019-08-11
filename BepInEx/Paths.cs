@@ -21,6 +21,7 @@ namespace BepInEx
 			PatcherPluginPath = Path.Combine(BepInExRootPath, "patchers");
 			BepInExAssemblyDirectory = Path.Combine(BepInExRootPath, "core");
 			BepInExAssemblyPath = Path.Combine(BepInExAssemblyDirectory, $"{Assembly.GetExecutingAssembly().GetName().Name}.dll");
+			CachePath = Path.Combine(BepInExRootPath, "cache");
 		}
 
 		internal static void SetManagedPath(string managedPath)
@@ -74,6 +75,11 @@ namespace BepInEx
 		///		The path to the global BepInEx configuration file.
 		/// </summary>
 		public static string BepInExConfigPath { get; private set; }
+
+		/// <summary>
+        ///		The path to temporary cache files.
+        /// </summary>
+		public static string CachePath { get; private set; }
 
 		/// <summary>
 		///     The path to the patcher plugin folder which resides in the BepInEx folder.

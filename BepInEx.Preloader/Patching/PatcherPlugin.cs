@@ -1,16 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using Mono.Cecil;
+using System.IO;
+using BepInEx.Bootstrap;
 
 namespace BepInEx.Preloader.Patching
 {
 	/// <summary>
 	///     A single assembly patcher.
 	/// </summary>
-	internal class PatcherPlugin
+	internal class PatcherPlugin : ICacheable
 	{
-		public TypeDefinition Type { get; set; }
-
 		/// <summary>
 		///     Target assemblies to patch.
 		/// </summary>
@@ -32,8 +31,18 @@ namespace BepInEx.Preloader.Patching
 		public AssemblyPatcherDelegate Patcher { get; set; } = null;
 
 		/// <summary>
-		///     Name of the patcher.
+		///     Type name of the patcher.
 		/// </summary>
-		public string Name { get; set; } = string.Empty;
+		public string TypeName { get; set; } = string.Empty;
+
+		public void Save(BinaryWriter bw)
+		{
+			bw.Write(TypeName);
+		}
+
+		public void Load(BinaryReader br)
+		{
+			TypeName = br.ReadString();
+		}
 	}
 }
