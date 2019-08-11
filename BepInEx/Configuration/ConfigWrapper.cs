@@ -2,11 +2,12 @@
 
 namespace BepInEx.Configuration
 {
-	public class ConfigWrapper<T>
+	public sealed class ConfigWrapper<T>
 	{
-		public ConfigDefinition Definition { get; protected set; }
+		public ConfigEntry ConfigEntry { get; }
 
-		public ConfigFile ConfigFile { get; protected set; }
+		public ConfigDefinition Definition => ConfigEntry.Definition;
+		public ConfigFile ConfigFile => ConfigEntry.ConfigFile;
 
 		/// <summary>
 		/// Fired when the setting is changed. Does not detect changes made outside from this object.
@@ -15,25 +16,18 @@ namespace BepInEx.Configuration
 
 		public T Value
 		{
-			get => TomlTypeConverter.ConvertToValue<T>(ConfigFile.Cache[Definition]);
-			set
-			{
-				ConfigFile.Cache[Definition] = TomlTypeConverter.ConvertToString(value);
-
-				if (ConfigFile.SaveOnConfigSet)
-					ConfigFile.Save();
-
-				SettingChanged?.Invoke(this, EventArgs.Empty);
-			}
+			get => (T)ConfigEntry.Value;
+			set => ConfigEntry.SetValue(value, true, this);
 		}
 
-		public ConfigWrapper(ConfigFile configFile, ConfigDefinition definition)
+		internal ConfigWrapper(ConfigEntry configEntry)
 		{
-			if (!TomlTypeConverter.TypeConverters.ContainsKey(typeof(T)))
-				throw new ArgumentException("Unsupported config wrapper type");
+			ConfigEntry = configEntry ?? throw new ArgumentNullException(nameof(configEntry));
 
-			ConfigFile = configFile;
-			Definition = definition;
+			configEntry.ConfigFile.SettingChanged += (sender, args) =>
+			{
+				if (args.ChangedSetting == configEntry) SettingChanged?.Invoke(sender, args);
+			};
 		}
 	}
 }

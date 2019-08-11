@@ -2,27 +2,6 @@
 
 namespace BepInEx.Configuration
 {
-	public class ConfigDescription
-	{
-		public ConfigDescription(string description, Type settingType, object defaultValue)
-		{
-			Description = description ?? throw new ArgumentNullException(nameof(description));
-			SettingType = settingType ?? throw new ArgumentNullException(nameof(settingType));
-			DefaultValue = defaultValue;
-
-			if(defaultValue == null && settingType.IsByRef)
-				throw new ArgumentException("defaultValue is null while settingType is a value type");
-
-			if(defaultValue != null && !settingType.IsInstanceOfType(defaultValue))
-				throw new ArgumentException("defaultValue can not be assigned to type " + settingType.Name);
-		}
-
-		public string Description { get; }
-		public Type SettingType { get; }
-		public object DefaultValue { get; }
-		//todo value range
-	}
-
 	public class ConfigDefinition : IEquatable<ConfigDefinition>
 	{
 		public string Section { get; }
@@ -39,7 +18,7 @@ namespace BepInEx.Configuration
 		{
 			if (other == null) return false;
 			return string.Equals(Key, other.Key)
-			       && string.Equals(Section, other.Section);
+				   && string.Equals(Section, other.Section);
 		}
 
 		public override bool Equals(object obj)
@@ -67,5 +46,10 @@ namespace BepInEx.Configuration
 
 		public static bool operator !=(ConfigDefinition left, ConfigDefinition right)
 			=> !Equals(left, right);
+
+		public override string ToString()
+		{
+			return Section + " / " + Key;
+		}
 	}
 }

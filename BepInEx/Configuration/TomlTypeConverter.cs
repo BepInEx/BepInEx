@@ -98,10 +98,8 @@ namespace BepInEx.Configuration
 			},
 		};
 
-		public static string ConvertToString<T>(T value)
+		public static string ConvertToString(object value, Type valueType)
 		{
-			var valueType = typeof(T);
-
 			var conv = GetConverter(valueType);
 			if (conv == null)
 				throw new InvalidOperationException($"Cannot convert from type {valueType}");
@@ -111,13 +109,16 @@ namespace BepInEx.Configuration
 
 		public static T ConvertToValue<T>(string value)
 		{
-			var valueType = typeof(T);
+			return (T)ConvertToValue(value, typeof(T));
+		}
 
+		public static object ConvertToValue(string value, Type valueType)
+		{
 			var conv = GetConverter(valueType);
 			if (conv == null)
 				throw new InvalidOperationException($"Cannot convert to type {valueType}");
 
-			return (T)conv.ConvertToObject(value, valueType);
+			return conv.ConvertToObject(value, valueType);
 		}
 
 		private static TypeConverter GetConverter(Type valueType)

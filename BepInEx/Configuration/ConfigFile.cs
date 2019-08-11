@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
+using System.Text;
+using BepInEx.Logging;
 
 namespace BepInEx.Configuration
 {
@@ -12,28 +13,30 @@ namespace BepInEx.Configuration
 	/// </summary>
 	public class ConfigFile
 	{
-		private static readonly Regex sanitizeKeyRegex = new Regex(@"[^a-zA-Z0-9\-\.]+");
+		// Need to be lazy evaluated to not cause problems for unit tests
+		private static ConfigFile _coreConfig;
+		internal static ConfigFile CoreConfig => _coreConfig ?? (_coreConfig = new ConfigFile(Paths.BepInExConfigPath, true));
 
-		internal static ConfigFile CoreConfig { get; } = new ConfigFile(Paths.BepInExConfigPath, true);
+		protected Dictionary<ConfigDefinition, ConfigEntry> Entries { get; } = new Dictionary<ConfigDefinition, ConfigEntry>();
 
-		protected internal Dictionary<ConfigDefinition, string> Cache { get; } = new Dictionary<ConfigDefinition, string>();
+		[Obsolete("Use ConfigEntries instead")]
+		public ReadOnlyCollection<ConfigDefinition> ConfigDefinitions => Entries.Keys.ToList().AsReadOnly();
 
-		public ReadOnlyCollection<ConfigDefinition> ConfigDefinitions => Cache.Keys.ToList().AsReadOnly();
-
-		/// <summary>
-		/// An event that is fired every time the config is reloaded.
-		/// </summary>
-		public event EventHandler ConfigReloaded;
+		public ReadOnlyCollection<ConfigEntry> ConfigEntries => Entries.Values.ToList().AsReadOnly();
 
 		public string ConfigFilePath { get; }
 
 		/// <summary>
-		/// If enabled, writes the config to disk every time a value is set.
+		/// If enabled, writes the config to disk every time a value is set. If disabled, you have to manually save or the changes will be lost!
 		/// </summary>
 		public bool SaveOnConfigSet { get; set; } = true;
 
 		public ConfigFile(string configPath, bool saveOnInit)
 		{
+			if (configPath == null) throw new ArgumentNullException(nameof(configPath));
+
+			configPath = Path.GetFullPath(configPath);
+
 			ConfigFilePath = configPath;
 
 			if (File.Exists(ConfigFilePath))
@@ -44,9 +47,13 @@ namespace BepInEx.Configuration
 			{
 				Save();
 			}
+
+			StartWatching();
 		}
 
-		private object _ioLock = new object();
+		#region Save/Load
+
+		private readonly object _ioLock = new object();
 
 		/// <summary>
 		/// Reloads the config from disk. Unsaved changes are lost.
@@ -55,9 +62,7 @@ namespace BepInEx.Configuration
 		{
 			lock (_ioLock)
 			{
-				Dictionary<ConfigDefinition, string> descriptions = Cache.ToDictionary(x => x.Key, x => x.Key.Description);
-
-				string currentSection = "";
+				string currentSection = string.Empty;
 
 				foreach (string rawLine in File.ReadAllLines(ConfigFilePath))
 				{
@@ -81,14 +86,18 @@ namespace BepInEx.Configuration
 
 					var definition = new ConfigDefinition(currentSection, currentKey);
 
-					if (descriptions.ContainsKey(definition))
-						definition.Description = descriptions[definition];
+					Entries.TryGetValue(definition, out ConfigEntry entry);
+					if (entry == null)
+					{
+						entry = new ConfigEntry(this, definition);
+						Entries[definition] = entry;
+					}
 
-					Cache[definition] = currentValue;
+					entry.SetSerializedValue(currentValue, true, this);
 				}
-
-				ConfigReloaded?.Invoke(this, EventArgs.Empty);
 			}
+
+			OnConfigReloaded();
 		}
 
 		/// <summary>
@@ -98,51 +107,177 @@ namespace BepInEx.Configuration
 		{
 			lock (_ioLock)
 			{
-				if (!Directory.Exists(Paths.ConfigPath))
-					Directory.CreateDirectory(Paths.ConfigPath);
+				StopWatching();
 
-				using (StreamWriter writer = new StreamWriter(File.Create(ConfigFilePath), System.Text.Encoding.UTF8))
-					foreach (var sectionKv in Cache.GroupBy(x => x.Key.Section).OrderBy(x => x.Key))
+				string directoryName = Path.GetDirectoryName(ConfigFilePath);
+				if (directoryName != null) Directory.CreateDirectory(directoryName);
+
+				using (var writer = new StreamWriter(File.Create(ConfigFilePath), Encoding.UTF8))
+				{
+					foreach (var sectionKv in Entries.GroupBy(x => x.Key.Section).OrderBy(x => x.Key))
 					{
+						// Section heading
 						writer.WriteLine($"[{sectionKv.Key}]");
 
-						foreach (var entryKv in sectionKv)
+						foreach (var configEntry in sectionKv.Select(x => x.Value))
 						{
 							writer.WriteLine();
 
-							if (!string.IsNullOrEmpty(entryKv.Key.Description))
-								writer.WriteLine($"# {entryKv.Key.Description.Replace("\n", "\n# ")}");
+							configEntry.WriteDescription(writer);
 
-							writer.WriteLine($"{entryKv.Key.Key} = {entryKv.Value}");
+							writer.WriteLine($"{configEntry.Definition.Key} = {configEntry.GetSerializedValue()}");
 						}
 
 						writer.WriteLine();
 					}
+				}
+
+				StartWatching();
 			}
 		}
 
-		public ConfigWrapper<T> Wrap<T>(ConfigDefinition configDefinition, T defaultValue = default(T))
+		#endregion
+
+		#region Wraps
+
+		public ConfigWrapper<T> Wrap<T>(ConfigDefinition configDefinition, T defaultValue, ConfigDescription configDescription = null)
 		{
-			if (!Cache.ContainsKey(configDefinition))
+			if (!TomlTypeConverter.CanConvert(typeof(T)))
+				throw new ArgumentException($"Type {typeof(T)} is not supported by the config system. Supported types: {string.Join(", ", TomlTypeConverter.GetSupportedTypes().Select(x => x.Name).ToArray())}");
+
+			Entries.TryGetValue(configDefinition, out var entry);
+
+			if (entry == null)
 			{
-				Cache.Add(configDefinition, TomlTypeConverter.ConvertToString(defaultValue));
-				Save();
+				entry = new ConfigEntry(this, configDefinition, typeof(T), defaultValue);
+				Entries[configDefinition] = entry;
 			}
 			else
 			{
-				var original = Cache.Keys.First(x => x.Equals(configDefinition));
+				entry.SetTypeAndDefaultValue(typeof(T), defaultValue, !Equals(defaultValue, default(T)));
+			}
 
-				if (original.Description != configDefinition.Description)
+			if (configDescription != null)
+			{
+				if (entry.Description != null)
+					Logger.Log(LogLevel.Warning, $"Tried to add configDescription to setting {configDefinition} when it already had one defined. Only add configDescription once or a random one will be used.");
+
+				entry.Description = configDescription;
+			}
+
+			return new ConfigWrapper<T>(entry);
+		}
+
+		[Obsolete("Use other Wrap overloads instead")]
+		public ConfigWrapper<T> Wrap<T>(string section, string key, string description = null, T defaultValue = default(T))
+			=> Wrap(new ConfigDefinition(section, key), defaultValue, string.IsNullOrEmpty(description) ? null : new ConfigDescription(description));
+
+		public ConfigWrapper<T> Wrap<T>(string section, string key, T defaultValue, ConfigDescription configDescription = null)
+			=> Wrap(new ConfigDefinition(section, key), defaultValue, configDescription);
+
+		#endregion
+
+		#region Events
+
+		/// <summary>
+		/// An event that is fired every time the config is reloaded.
+		/// </summary>
+		public event EventHandler ConfigReloaded;
+
+		/// <summary>
+		/// Fired when one of the settings is changed.
+		/// </summary>
+		public event EventHandler<SettingChangedEventArgs> SettingChanged;
+
+		protected internal void OnSettingChanged(object sender, ConfigEntry changedEntry)
+		{
+			if (changedEntry == null) throw new ArgumentNullException(nameof(changedEntry));
+
+			if (SettingChanged != null)
+			{
+				var args = new SettingChangedEventArgs(changedEntry);
+
+				foreach (var callback in SettingChanged.GetInvocationList().Cast<EventHandler<SettingChangedEventArgs>>())
 				{
-					original.Description = configDefinition.Description;
-					Save();
+					try
+					{
+						callback(sender, args);
+					}
+					catch (Exception e)
+					{
+						Logger.Log(LogLevel.Error, e);
+					}
 				}
 			}
 
-			return new ConfigWrapper<T>(this, configDefinition);
+			// todo better way to prevent write loop? maybe do some caching?
+			if (sender != this && SaveOnConfigSet)
+				Save();
 		}
 
-		public ConfigWrapper<T> Wrap<T>(string section, string key, string description = null, T defaultValue = default(T))
-			=> Wrap<T>(new ConfigDefinition(section, key, description), defaultValue);
+		protected void OnConfigReloaded()
+		{
+			if (ConfigReloaded != null)
+			{
+				foreach (var callback in ConfigReloaded.GetInvocationList().Cast<EventHandler>())
+				{
+					try
+					{
+						callback(this, EventArgs.Empty);
+					}
+					catch (Exception e)
+					{
+						Logger.Log(LogLevel.Error, e);
+					}
+				}
+			}
+		}
+
+		#endregion
+
+		#region File watcher
+
+		private FileSystemWatcher _watcher;
+
+		/// <summary>
+		/// Start watching the config file on disk for changes.
+		/// </summary>
+		public void StartWatching()
+		{
+			lock (_ioLock)
+			{
+				if (_watcher != null) return;
+
+				_watcher = new FileSystemWatcher
+				{
+					Path = Path.GetDirectoryName(ConfigFilePath) ?? throw new ArgumentException("Invalid config path"),
+					Filter = Path.GetFileName(ConfigFilePath),
+					IncludeSubdirectories = false,
+					NotifyFilter = NotifyFilters.LastWrite,
+					EnableRaisingEvents = true
+				};
+
+				_watcher.Changed += (sender, args) => Reload();
+			}
+		}
+
+		/// <summary>
+		/// Stop watching the config file on disk for changes.
+		/// </summary>
+		public void StopWatching()
+		{
+			lock (_ioLock)
+			{
+				_watcher?.Dispose();
+				_watcher = null;
+			}
+		}
+
+		~ConfigFile()
+		{
+			StopWatching();
+		}
+
+		#endregion
 	}
 }
