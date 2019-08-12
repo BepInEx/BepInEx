@@ -116,7 +116,7 @@ namespace BepInEx
 		/// <summary>
 		/// Retrieves the BepInPlugin metadata from a plugin type.
 		/// </summary>
-		/// <param name="plugin">The plugin type.</param>
+		/// <param name="pluginType">The plugin type.</param>
 		/// <returns>The BepInPlugin metadata of the plugin type.</returns>
 		public static BepInPlugin GetMetadata(Type pluginType)
 		{
