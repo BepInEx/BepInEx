@@ -4,15 +4,12 @@ using System.Globalization;
 
 namespace BepInEx.Configuration
 {
-	internal class TypeConverter
+	/// <summary>
+	/// Serializer/deserializer used by the config system.
+	/// </summary>
+	public static class TomlTypeConverter
 	{
-		public Func<object, Type, string> ConvertToString { get; set; }
-		public Func<string, Type, object> ConvertToObject { get; set; }
-	}
-
-	internal static class TomlTypeConverter
-	{
-		public static Dictionary<Type, TypeConverter> TypeConverters { get; } = new Dictionary<Type, TypeConverter>
+		private static Dictionary<Type, TypeConverter> TypeConverters { get; } = new Dictionary<Type, TypeConverter>
 		{
 			[typeof(string)] = new TypeConverter
 			{
@@ -91,6 +88,8 @@ namespace BepInEx.Configuration
 				ConvertToObject = (str, type) => decimal.Parse(str, NumberFormatInfo.InvariantInfo),
 			},
 
+			//enums are special
+
 			[typeof(Enum)] = new TypeConverter
 			{
 				ConvertToString = (obj, type) => obj.ToString(),
@@ -116,17 +115,29 @@ namespace BepInEx.Configuration
 		{
 			var conv = GetConverter(valueType);
 			if (conv == null)
-				throw new InvalidOperationException($"Cannot convert to type {valueType}");
+				throw new InvalidOperationException($"Cannot convert to type {valueType.Name}");
 
 			return conv.ConvertToObject(value, valueType);
 		}
 
-		private static TypeConverter GetConverter(Type valueType)
+		public static TypeConverter GetConverter(Type valueType)
 		{
+			if (valueType == null) throw new ArgumentNullException(nameof(valueType));
+
 			if (valueType.IsEnum)
 				return TypeConverters[typeof(Enum)];
 
-			return TypeConverters[valueType];
+			TypeConverters.TryGetValue(valueType, out var result);
+			return result;
+		}
+
+		public static void AddConverter(Type type, TypeConverter converter)
+		{
+			if (type == null) throw new ArgumentNullException(nameof(type));
+			if (converter == null) throw new ArgumentNullException(nameof(converter));
+			if (CanConvert(type)) throw new ArgumentException("The specified type already has a converter assigned to it", nameof(type));
+
+			TypeConverters.Add(type, converter);
 		}
 
 		public static bool CanConvert(Type type)

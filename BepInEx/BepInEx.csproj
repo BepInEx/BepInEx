@@ -75,8 +75,10 @@
     <Compile Include="Configuration\ConfigEntry.cs" />
     <Compile Include="Configuration\ConfigFile.cs" />
     <Compile Include="Configuration\ConfigWrapper.cs" />
+    <Compile Include="Configuration\KeyboardShortcut.cs" />
     <Compile Include="Configuration\SettingChangedEventArgs.cs" />
     <Compile Include="Configuration\TomlTypeConverter.cs" />
+    <Compile Include="Configuration\TypeConverter.cs" />
     <Compile Include="Contract\Attributes.cs" />
     <Compile Include="ConsoleUtil\ConsoleEncoding\ConsoleEncoding.Buffers.cs" />
     <Compile Include="ConsoleUtil\ConsoleEncoding\ConsoleEncoding.cs" />

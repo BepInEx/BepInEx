@@ -4,6 +4,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using UnityEngine;
 
 namespace BepInEx.Configuration.Tests
 {
@@ -234,6 +235,23 @@ namespace BepInEx.Configuration.Tests
 			Assert.AreEqual("lel", w.Value);
 			w.Value = null;
 			Assert.AreEqual("lel", w.Value);
+		}
+
+		[TestMethod]
+		public void KeyShortcutTest()
+		{
+			var shortcut = new KeyboardShortcut(KeyCode.H, KeyCode.O, KeyCode.R, KeyCode.S, KeyCode.E, KeyCode.Y);
+			var s = shortcut.Serialize();
+			var d = KeyboardShortcut.Deserialize(s);
+			Assert.AreEqual(shortcut, d);
+
+			var c = MakeConfig();
+			var w = c.Wrap("Cat", "Key", new KeyboardShortcut(KeyCode.A, KeyCode.LeftShift));
+			Assert.AreEqual(new KeyboardShortcut(KeyCode.A, KeyCode.LeftShift), w.Value);
+
+			w.Value = shortcut;
+			c.Reload();
+			Assert.AreEqual(shortcut, w.Value);
 		}
 	}
 }
