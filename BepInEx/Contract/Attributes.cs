@@ -29,21 +29,21 @@ namespace BepInEx
 		/// </summary>
 		public Version Version { get; protected set; }
 
-		/// <param name="GUID">The unique identifier of the plugin. Should not change between plugin versions.</param>
-		/// <param name="Name">The user friendly name of the plugin. Is able to be changed between versions.</param>
-		/// <param name="Version">The specfic version of the plugin.</param>
-		public BepInPlugin(string GUID, string Name, string Version)
+		/// <param name="guid">The unique identifier of the plugin. Should not change between plugin versions.</param>
+		/// <param name="name">The user friendly name of the plugin. Is able to be changed between versions.</param>
+		/// <param name="version">The specfic version of the plugin.</param>
+		public BepInPlugin(string guid, string name, string version)
 		{
-			this.GUID = GUID;
-			this.Name = Name;
+			GUID = guid;
+			Name = name;
 
 			try
 			{
-				this.Version = new Version(Version);
+				Version = new Version(version);
 			}
 			catch
 			{
-				this.Version = null;
+				Version = null;
 			}
 		}
 	}
@@ -140,7 +140,7 @@ namespace BepInEx
 		/// Gets the specified attributes of a type, if they exist.
 		/// </summary>
 		/// <typeparam name="T">The attribute type to retrieve.</typeparam>
-		/// <param name="plugin">The plugin type.</param>
+		/// <param name="pluginType">The plugin type.</param>
 		/// <returns>The attributes of the type, if existing.</returns>
 		public static T[] GetAttributes<T>(Type pluginType) where T : Attribute
 		{
@@ -159,18 +159,19 @@ namespace BepInEx
 		/// <summary>
 		/// Retrieves the dependencies of the specified plugin type.
 		/// </summary>
-		/// <param name="Plugin">The plugin type.</param>
-		/// <param name="AllPlugins">All currently loaded plugin types.</param>
+		/// <param name="plugin">The plugin type.</param>
+		/// <param name="allPlugins">All currently loaded plugin types.</param>
 		/// <returns>A list of all plugin types that the specified plugin type depends upon.</returns>
-		public static IEnumerable<BepInDependency> GetDependencies(Type Plugin, IEnumerable<Type> AllPlugins)
+		public static IEnumerable<BepInDependency> GetDependencies(Type plugin, IEnumerable<Type> allPlugins)
 		{
-			return Plugin.GetCustomAttributes(typeof(BepInDependency), true).Cast<BepInDependency>();
+			return plugin.GetCustomAttributes(typeof(BepInDependency), true).Cast<BepInDependency>();
 		}
 	}
 
 	/// <summary>
 	/// An exception which is thrown when a plugin's dependencies cannot be found.
 	/// </summary>
+	[Obsolete]
 	public class MissingDependencyException : Exception
 	{
 		public MissingDependencyException(string message) : base(message) { }

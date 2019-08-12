@@ -37,7 +37,7 @@ namespace BepInEx.Configuration
 			{
 				throw new ArgumentException($"Tried to define setting \"{Definition}\" as type {settingType.Name} " +
 				                            $"while it was already defined as type {SettingType.Name}. Use the same " +
-				                            $"Type for all Wrappers of a single setting.");
+				                            "Type for all Wrappers of a single setting.");
 			}
 
 			if (defaultValue == null && settingType.IsValueType)
