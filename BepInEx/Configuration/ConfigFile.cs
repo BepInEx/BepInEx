@@ -13,9 +13,7 @@ namespace BepInEx.Configuration
 	/// </summary>
 	public class ConfigFile
 	{
-		// Need to be lazy evaluated to not cause problems for unit tests
-		private static ConfigFile _coreConfig;
-		internal static ConfigFile CoreConfig => _coreConfig ?? (_coreConfig = new ConfigFile(Paths.BepInExConfigPath, true));
+		internal static ConfigFile CoreConfig { get; } = new ConfigFile(Paths.BepInExConfigPath, true);
 
 		protected Dictionary<ConfigDefinition, ConfigEntry> Entries { get; } = new Dictionary<ConfigDefinition, ConfigEntry>();
 
