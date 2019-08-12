@@ -15,20 +15,40 @@ namespace BepInEx.Configuration
 	{
 		internal static ConfigFile CoreConfig { get; } = new ConfigFile(Paths.BepInExConfigPath, true);
 
+		/// <summary>
+		/// All config entries inside 
+		/// </summary>
 		protected Dictionary<ConfigDefinition, ConfigEntry> Entries { get; } = new Dictionary<ConfigDefinition, ConfigEntry>();
 
-		[Obsolete("Use ConfigEntries instead")]
+		/// <summary>
+		/// Create a list with all config entries inside of this config file.
+		/// </summary>
+		[Obsolete("Use GetConfigEntries instead")]
 		public ReadOnlyCollection<ConfigDefinition> ConfigDefinitions => Entries.Keys.ToList().AsReadOnly();
 
-		public ReadOnlyCollection<ConfigEntry> ConfigEntries => Entries.Values.ToList().AsReadOnly();
+		/// <summary>
+		/// Create an array with all config entries inside of this config file. Should be only used for metadata purposes.
+		/// If you want to access and modify an existing setting then use <see cref="Wrap{T}(ConfigDefinition,T,ConfigDescription)"/> 
+		/// instead with no description.
+		/// </summary>
+		public ConfigEntry[] GetConfigEntries() => Entries.Values.ToArray();
 
+		/// <summary>
+		/// Full path to the config file. The file might not exist until a setting is added and changed, or <see cref="Save"/> is called.
+		/// </summary>
 		public string ConfigFilePath { get; }
 
 		/// <summary>
-		/// If enabled, writes the config to disk every time a value is set. If disabled, you have to manually save or the changes will be lost!
+		/// If enabled, writes the config to disk every time a value is set. 
+		/// If disabled, you have to manually use <see cref="Save"/> or the changes will be lost!
 		/// </summary>
 		public bool SaveOnConfigSet { get; set; } = true;
 
+		/// <summary>
+		/// Create a new config file at the specified config path.
+		/// </summary>
+		/// <param name="configPath">Full path to a file that contains settings. The file will be created as needed.</param>
+		/// <param name="saveOnInit">If the config file/directory doesn't exist, create it immediately.</param>
 		public ConfigFile(string configPath, bool saveOnInit)
 		{
 			if (configPath == null) throw new ArgumentNullException(nameof(configPath));
@@ -138,6 +158,16 @@ namespace BepInEx.Configuration
 
 		#region Wraps
 
+		/// <summary>
+		/// Create a new setting or access one of the existing ones. The setting is saved to drive and loaded automatically.
+		/// If you are the creator of the setting, provide a ConfigDescription object to give user information about the setting.
+		/// If you are using a setting created by another plugin/class, do not provide any ConfigDescription.
+		/// </summary>
+		/// <typeparam name="T">Type of the value contained in this setting.</typeparam>
+		/// <param name="configDefinition">Section and Key of the setting.</param>
+		/// <param name="defaultValue">Value of the setting if the setting was not created yet.</param>
+		/// <param name="configDescription">Description of the setting shown to the user.</param>
+		/// <returns></returns>
 		public ConfigWrapper<T> Wrap<T>(ConfigDefinition configDefinition, T defaultValue, ConfigDescription configDescription = null)
 		{
 			if (!TomlTypeConverter.CanConvert(typeof(T)))
@@ -166,10 +196,26 @@ namespace BepInEx.Configuration
 			return new ConfigWrapper<T>(entry);
 		}
 
+		/// <summary>
+		/// Create a new setting or access one of the existing ones. The setting is saved to drive and loaded automatically.
+		/// If you are the creator of the setting, provide a ConfigDescription object to give user information about the setting.
+		/// If you are using a setting created by another plugin/class, do not provide any ConfigDescription.
+		/// </summary>
 		[Obsolete("Use other Wrap overloads instead")]
 		public ConfigWrapper<T> Wrap<T>(string section, string key, string description = null, T defaultValue = default(T))
 			=> Wrap(new ConfigDefinition(section, key), defaultValue, string.IsNullOrEmpty(description) ? null : new ConfigDescription(description));
 
+		/// <summary>
+		/// Create a new setting or access one of the existing ones. The setting is saved to drive and loaded automatically.
+		/// If you are the creator of the setting, provide a ConfigDescription object to give user information about the setting.
+		/// If you are using a setting created by another plugin/class, do not provide any ConfigDescription.
+		/// </summary>
+		/// <typeparam name="T">Type of the value contained in this setting.</typeparam>
+		/// <param name="section">Section/category/group of the setting. Settings are grouped by this.</param>
+		/// <param name="key">Name of the setting.</param>
+		/// <param name="defaultValue">Value of the setting if the setting was not created yet.</param>
+		/// <param name="configDescription">Description of the setting shown to the user.</param>
+		/// <returns></returns>
 		public ConfigWrapper<T> Wrap<T>(string section, string key, T defaultValue, ConfigDescription configDescription = null)
 			=> Wrap(new ConfigDefinition(section, key), defaultValue, configDescription);
 
@@ -187,7 +233,7 @@ namespace BepInEx.Configuration
 		/// </summary>
 		public event EventHandler<SettingChangedEventArgs> SettingChanged;
 
-		protected internal void OnSettingChanged(object sender, ConfigEntry changedEntry)
+		internal void OnSettingChanged(object sender, ConfigEntry changedEntry)
 		{
 			if (changedEntry == null) throw new ArgumentNullException(nameof(changedEntry));
 
@@ -208,12 +254,13 @@ namespace BepInEx.Configuration
 				}
 			}
 
-			// todo better way to prevent write loop? maybe do some caching?
+			// Check sender to prevent infinite loops
+			// todo batching / async?
 			if (sender != this && SaveOnConfigSet)
 				Save();
 		}
 
-		protected void OnConfigReloaded()
+		private void OnConfigReloaded()
 		{
 			if (ConfigReloaded != null)
 			{
@@ -266,11 +313,16 @@ namespace BepInEx.Configuration
 		{
 			lock (_ioLock)
 			{
-				_watcher?.Dispose();
-				_watcher = null;
+				if (_watcher != null)
+				{
+					_watcher.EnableRaisingEvents = false;
+					_watcher.Dispose();
+					_watcher = null;
+				}
 			}
 		}
 
+		/// <inheritdoc />
 		~ConfigFile()
 		{
 			StopWatching();

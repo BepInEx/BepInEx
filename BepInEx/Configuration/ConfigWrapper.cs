@@ -2,11 +2,25 @@
 
 namespace BepInEx.Configuration
 {
+	/// <summary>
+	/// Provides access to a single setting inside of a <see cref="Configuration.ConfigFile"/>.
+	/// </summary>
+	/// <typeparam name="T">Type of the setting.</typeparam>
 	public sealed class ConfigWrapper<T>
 	{
+		/// <summary>
+		/// Entry of this setting in the <see cref="Configuration.ConfigFile"/>.
+		/// </summary>
 		public ConfigEntry ConfigEntry { get; }
 
+		/// <summary>
+		/// Unique definition of this setting.
+		/// </summary>
 		public ConfigDefinition Definition => ConfigEntry.Definition;
+
+		/// <summary>
+		/// Config file this setting is inside of.
+		/// </summary>
 		public ConfigFile ConfigFile => ConfigEntry.ConfigFile;
 
 		/// <summary>
@@ -14,6 +28,9 @@ namespace BepInEx.Configuration
 		/// </summary>
 		public event EventHandler SettingChanged;
 
+		/// <summary>
+		/// Value of this setting.
+		/// </summary>
 		public T Value
 		{
 			get => (T)ConfigEntry.Value;

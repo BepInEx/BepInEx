@@ -5,6 +5,10 @@ using BepInEx.Logging;
 
 namespace BepInEx.Configuration
 {
+	/// <summary>
+	/// Container for a single setting of a <see cref="Configuration.ConfigFile"/>. 
+	/// Each config entry is linked to one config file.
+	/// </summary>
 	public sealed class ConfigEntry
 	{
 		internal ConfigEntry(ConfigFile configFile, ConfigDefinition definition, Type settingType, object defaultValue) : this(configFile, definition)
@@ -49,12 +53,29 @@ namespace BepInEx.Configuration
 		private object _convertedValue;
 		private string _serializedValue;
 
+		/// <summary>
+		/// Config file this entry is a part of.
+		/// </summary>
 		public ConfigFile ConfigFile { get; }
+
+		/// <summary>
+		/// Category and name of this setting. Used as a unique key for identification within a <see cref="Configuration.ConfigFile"/>.
+		/// </summary>
 		public ConfigDefinition Definition { get; }
 
+		/// <summary>
+		/// Description / metadata of this setting.
+		/// </summary>
 		public ConfigDescription Description { get; internal set; }
 
+		/// <summary>
+		/// Type of the <see cref="Value"/> that this setting holds.
+		/// </summary>
 		public Type SettingType { get; private set; }
+
+		/// <summary>
+		/// Default value of this setting (set only if the setting was not changed before).
+		/// </summary>
 		public object DefaultValue { get; private set; }
 
 		/// <summary>
@@ -64,6 +85,7 @@ namespace BepInEx.Configuration
 		public bool IsDefined => SettingType != null;
 
 		/// <summary>
+		/// Get or set the value of the setting.
 		/// Can't be used when <see cref="IsDefined"/> is false.
 		/// </summary>
 		public object Value
@@ -91,6 +113,9 @@ namespace BepInEx.Configuration
 			}
 		}
 
+		/// <summary>
+		/// Get the serialized representation of the value.
+		/// </summary>
 		public string GetSerializedValue()
 		{
 			if (_serializedValue != null)
@@ -102,7 +127,12 @@ namespace BepInEx.Configuration
 			return TomlTypeConverter.ConvertToString(Value, SettingType);
 		}
 
-		public void SetSerializedValue(string newValue, bool fireEvent, object sender)
+		/// <summary>
+		/// Set the value by using its serialized form.
+		/// </summary>
+		public void SetSerializedValue(string newValue) => SetSerializedValue(newValue, true, this);
+
+		internal void SetSerializedValue(string newValue, bool fireEvent, object sender)
 		{
 			string current = GetSerializedValue();
 			if (string.Equals(current, newValue)) return;
@@ -162,6 +192,9 @@ namespace BepInEx.Configuration
 			ConfigFile.OnSettingChanged(sender, this);
 		}
 
+		/// <summary>
+		/// Write a description of this setting using all available metadata.
+		/// </summary>
 		public void WriteDescription(StreamWriter writer)
 		{
 			if (Description != null)
