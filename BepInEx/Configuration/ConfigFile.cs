@@ -200,7 +200,14 @@ namespace BepInEx.Configuration
 				if (entry.Description != null)
 					Logger.Log(LogLevel.Warning, $"Tried to add configDescription to setting {configDefinition} when it already had one defined. Only add configDescription once or a random one will be used.");
 
-				entry.Description = configDescription;
+				if (configDescription.AcceptableValues != null)
+				{
+					var genericArguments = configDescription.AcceptableValues.GetType().GetGenericArguments();
+					if (genericArguments.Length > 0 && genericArguments[0] != typeof(T))
+						throw new ArgumentException("AcceptableValues has a different type than the setting type", nameof(configDefinition));
+				}
+
+				entry.SetDescription(configDescription);
 			}
 
 			return new ConfigWrapper<T>(entry);

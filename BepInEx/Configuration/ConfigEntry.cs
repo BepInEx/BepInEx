@@ -36,8 +36,8 @@ namespace BepInEx.Configuration
 			if (SettingType != null)
 			{
 				throw new ArgumentException($"Tried to define setting \"{Definition}\" as type {settingType.Name} " +
-				                            $"while it was already defined as type {SettingType.Name}. Use the same " +
-				                            "Type for all Wrappers of a single setting.");
+											$"while it was already defined as type {SettingType.Name}. Use the same " +
+											"Type for all Wrappers of a single setting.");
 			}
 
 			if (defaultValue == null && settingType.IsValueType)
@@ -66,7 +66,7 @@ namespace BepInEx.Configuration
 		/// <summary>
 		/// Description / metadata of this setting.
 		/// </summary>
-		public ConfigDescription Description { get; internal set; }
+		public ConfigDescription Description { get; private set; }
 
 		/// <summary>
 		/// Type of the <see cref="Value"/> that this setting holds.
@@ -102,6 +102,7 @@ namespace BepInEx.Configuration
 		internal void SetValue(object newValue, bool fireEvent, object sender)
 		{
 			bool wasChanged = ProcessSerializedValue();
+			newValue = ClampValue(newValue);
 			wasChanged = wasChanged || !Equals(newValue, _convertedValue);
 
 			if (wasChanged)
@@ -140,7 +141,7 @@ namespace BepInEx.Configuration
 			_serializedValue = newValue;
 
 			if (!IsDefined) return;
-			
+
 			if (ProcessSerializedValue())
 			{
 				if (fireEvent)
@@ -163,6 +164,7 @@ namespace BepInEx.Configuration
 					try
 					{
 						var newValue = TomlTypeConverter.ConvertToValue(value, SettingType);
+						newValue = ClampValue(newValue);
 						if (!Equals(newValue, _convertedValue))
 						{
 							_convertedValue = newValue;
@@ -173,7 +175,7 @@ namespace BepInEx.Configuration
 					catch (Exception e)
 					{
 						Logger.Log(LogLevel.Warning, $"Config value of setting \"{Definition}\" could not be " +
-						                             $"parsed and will be ignored. Reason: {e.Message}; Value: {value}");
+													 $"parsed and will be ignored. Reason: {e.Message}; Value: {value}");
 					}
 				}
 			}
@@ -187,6 +189,19 @@ namespace BepInEx.Configuration
 			return false;
 		}
 
+		internal void SetDescription(ConfigDescription configDescription)
+		{
+			Description = configDescription;
+			SetValue(ClampValue(Value), true, this);
+		}
+
+		private object ClampValue(object value)
+		{
+			if (Description?.AcceptableValues != null)
+				return Description.AcceptableValues.Clamp(value);
+			return value;
+		}
+
 		private void OnSettingChanged(object sender)
 		{
 			ConfigFile.OnSettingChanged(sender, this);
@@ -197,18 +212,35 @@ namespace BepInEx.Configuration
 		/// </summary>
 		public void WriteDescription(StreamWriter writer)
 		{
-			if (Description != null)
+			bool hasDescription = Description != null;
+			bool hasType = SettingType != null;
+
+			if (hasDescription)
 				writer.WriteLine(Description.ToSerializedString());
 
-			if (SettingType != null)
+			if (hasType)
 			{
 				writer.WriteLine("# Setting type: " + SettingType.Name);
-				writer.WriteLine("# Default value: " + DefaultValue);
-
-				// todo acceptable values
 
 				if (SettingType.IsEnum && SettingType.GetCustomAttributes(typeof(FlagsAttribute), true).Any())
 					writer.WriteLine("# Multiple values can be set at the same time by separating them with , (e.g. Debug, Warning)");
+
+				writer.WriteLine("# Default value: " + DefaultValue);
+			}
+
+			if (hasDescription)
+			{
+				if (Description.AcceptableValues != null)
+				{
+					writer.WriteLine(Description.AcceptableValues.ToSerializedString());
+				}
+				else if (hasType)
+				{
+					if (SettingType == typeof(bool))
+						writer.WriteLine("# Acceptable values: True, False");
+					else if (SettingType.IsEnum)
+						writer.WriteLine("# Acceptable values: " + string.Join(", ", Enum.GetNames(SettingType)));
+				}
 			}
 		}
 	}

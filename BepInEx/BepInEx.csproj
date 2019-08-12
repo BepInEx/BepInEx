@@ -67,6 +67,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Configuration\AcceptableValueBase.cs" />
+    <Compile Include="Configuration\AcceptableValueList.cs" />
+    <Compile Include="Configuration\AcceptableValueRange.cs" />
     <Compile Include="Configuration\ConfigDefinition.cs" />
     <Compile Include="Configuration\ConfigDescription.cs" />
     <Compile Include="Configuration\ConfigEntry.cs" />

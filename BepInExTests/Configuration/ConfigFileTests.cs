@@ -168,5 +168,72 @@ namespace BepInEx.Configuration.Tests
 
 			Assert.IsTrue(eventFired);
 		}
+
+		[TestMethod]
+		public void ValueRangeTest()
+		{
+			var c = MakeConfig();
+			var w = c.Wrap("Cat", "Key", 0, new ConfigDescription("Test", new AcceptableValueRange<int>(0, 2)));
+
+			Assert.AreEqual(0, w.Value);
+			w.Value = 2;
+			Assert.AreEqual(2, w.Value);
+			w.Value = -2;
+			Assert.AreEqual(0, w.Value);
+			w.Value = 4;
+			Assert.AreEqual(2, w.Value);
+		}
+
+		[TestMethod]
+		[ExpectedException(typeof(ArgumentException))]
+		public void ValueRangeBadTypeTest()
+		{
+			var c = MakeConfig();
+			c.Wrap("Cat", "Key", 0, new ConfigDescription("Test", new AcceptableValueRange<float>(1, 2)));
+			Assert.Fail();
+		}
+
+		[TestMethod]
+		public void ValueRangeDefaultTest()
+		{
+			var c = MakeConfig();
+			var w = c.Wrap("Cat", "Key", 0, new ConfigDescription("Test", new AcceptableValueRange<int>(1, 2)));
+
+			Assert.AreEqual(w.Value, 1);
+		}
+
+		[TestMethod]
+		public void ValueRangeLoadTest()
+		{
+			var c = MakeConfig();
+			c.StopWatching();
+
+			File.WriteAllText(c.ConfigFilePath, "[Cat]\nKey = 1\n");
+			c.Reload();
+
+			var w = c.Wrap("Cat", "Key", 0, new ConfigDescription("Test", new AcceptableValueRange<int>(0, 2)));
+
+			Assert.AreEqual(w.Value, 1);
+
+			File.WriteAllText(c.ConfigFilePath, "[Cat]\nKey = 5\n");
+			c.Reload();
+
+			Assert.AreEqual(w.Value, 2);
+		}
+
+		[TestMethod]
+		public void ValueListTest()
+		{
+			var c = MakeConfig();
+			var w = c.Wrap<string>("Cat", "Key", "kek", new ConfigDescription("Test", new AcceptableValueList<string>("lel", "kek", "wew", "why")));
+
+			Assert.AreEqual("kek", w.Value);
+			w.Value = "wew";
+			Assert.AreEqual("wew", w.Value);
+			w.Value = "no";
+			Assert.AreEqual("lel", w.Value);
+			w.Value = null;
+			Assert.AreEqual("lel", w.Value);
+		}
 	}
 }
