@@ -13,6 +13,8 @@ namespace BepInEx.Configuration
 	/// </summary>
 	public class ConfigFile
 	{
+		private readonly BepInPlugin _ownerMetadata;
+
 		internal static ConfigFile CoreConfig { get; } = new ConfigFile(Paths.BepInExConfigPath, true);
 
 		/// <summary>
@@ -49,12 +51,13 @@ namespace BepInEx.Configuration
 		/// </summary>
 		/// <param name="configPath">Full path to a file that contains settings. The file will be created as needed.</param>
 		/// <param name="saveOnInit">If the config file/directory doesn't exist, create it immediately.</param>
-		public ConfigFile(string configPath, bool saveOnInit)
+		/// <param name="owner">The plugin that owns this setting.</param>
+		public ConfigFile(string configPath, bool saveOnInit, BaseUnityPlugin owner = null)
 		{
+			_ownerMetadata = owner?.Metadata;
+
 			if (configPath == null) throw new ArgumentNullException(nameof(configPath));
-
 			configPath = Path.GetFullPath(configPath);
-
 			ConfigFilePath = configPath;
 
 			if (File.Exists(ConfigFilePath))
@@ -132,6 +135,13 @@ namespace BepInEx.Configuration
 
 				using (var writer = new StreamWriter(File.Create(ConfigFilePath), Encoding.UTF8))
 				{
+					if (_ownerMetadata != null)
+					{
+						writer.WriteLine($"## Settings file was created by plugin {_ownerMetadata.Name} v{_ownerMetadata.Version}");
+						writer.WriteLine($"## Plugin GUID: {_ownerMetadata.GUID}");
+						writer.WriteLine();
+					}
+
 					foreach (var sectionKv in Entries.GroupBy(x => x.Key.Section).OrderBy(x => x.Key))
 					{
 						// Section heading
