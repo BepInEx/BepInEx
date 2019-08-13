@@ -4,7 +4,7 @@ using System.Security.Permissions;
 
 namespace BepInEx.ConsoleUtil
 {
-	internal class Kon
+	public class Kon
 	{
 		#region pinvoke
 
@@ -16,6 +16,12 @@ namespace BepInEx.ConsoleUtil
 
 		[DllImport("kernel32.dll", SetLastError = true)]
 		private static extern IntPtr GetStdHandle(int nStdHandle);
+
+		[DllImport("Kernel32.dll")]
+		private static extern int FillConsoleOutputCharacter(IntPtr hConsoleOutput, char cCharacter, uint nLength, COORD dwWriteCoord, out uint lpNumberOfCharsWritten);
+
+		[DllImport("Kernel32.dll")]
+		private static extern int SetConsoleCursorPosition(IntPtr hConsoleOutput, COORD dwCursorPosition);
 
 		#endregion
 
@@ -137,6 +143,19 @@ namespace BepInEx.ConsoleUtil
 		{
 			get { return GetConsoleColor(true); }
 			set { SetConsoleColor(true, value); }
+		}
+
+		public static void SetCursorPosition(int x, int y)
+		{
+			SetConsoleCursorPosition(conOut, new COORD() { X = (short)x, Y = (short)y });
+		}
+
+		public static void ClearConsole()
+		{
+			var location = new COORD() { X = 0, Y = 0 };
+			GetConsoleScreenBufferInfo(conOut, out CONSOLE_SCREEN_BUFFER_INFO info);
+			FillConsoleOutputCharacter(conOut, ' ', (uint)(info.dwSize.X * info.dwSize.Y), location, out _);
+			SetCursorPosition(0, 0);
 		}
 
 		#endregion
