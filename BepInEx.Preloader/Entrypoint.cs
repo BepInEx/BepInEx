@@ -55,7 +55,8 @@ namespace BepInEx.Preloader
 
 			AppDomain.CurrentDomain.AssemblyResolve += ResolveCurrentDirectory;
 
-			// We have to use reflection and a separate startup class in order to not trigger premature assembly resolving
+			// In some versions of Unity 4, Mono tries to resolve BepInEx.dll prematurely because of the call to Paths.SetExecutablePath
+			// To prevent that, we have to use reflection and a separate startup class so that we can install required assembly resolvers before the main code
 			typeof(Entrypoint).Assembly.GetType($"BepInEx.Preloader.{nameof(PreloaderRunner)}")
 							  ?.GetMethod(nameof(PreloaderRunner.PreloaderMain))
 							  ?.Invoke(null, new object[] { args });
