@@ -39,14 +39,5 @@ namespace BepInEx.Preloader.RuntimeFixes
 			if (AssemblyLocations.TryGetValue(__instance.FullName, out string location))
 				__result = $"file://{location.Replace('\\', '/')}";
 		}
-
-		[HarmonyPostfix, HarmonyPatch(typeof(AppDomain), nameof(AppDomain.SetupInformation), MethodType.Getter)]
-		public static void GetExeConfigName(AppDomainSetup __result)
-		{
-			if (!Preloader.IsDotNet46)
-				return;
-			__result.ApplicationBase = $"file://{Paths.GameRootPath}";
-			__result.ConfigurationFile = "app.config";
-		}
 	}
 }
