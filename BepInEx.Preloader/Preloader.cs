@@ -28,7 +28,7 @@ namespace BepInEx.Preloader
 
 		public static bool IsPostUnity2017 { get; } = File.Exists(Path.Combine(Paths.ManagedPath, "UnityEngine.CoreModule.dll"));
 
-		public static bool IsDotNet46 { get; } = string.Compare("4.0.30319.42000", Environment.Version.ToString(), StringComparison.Ordinal) <= 0;
+		public static bool IsDotNet46 { get; } = new Version("4.0.30319.42000") <= Environment.Version;
 
 		static Preloader()
 		{
