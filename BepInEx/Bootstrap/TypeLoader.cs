@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using BepInEx.Configuration;
 using BepInEx.Logging;
 using Mono.Cecil;
 
@@ -138,9 +139,12 @@ namespace BepInEx.Bootstrap
 		/// </summary>
 		/// <param name="cacheName">Name of the cache</param>
 		/// <typeparam name="T">Cacheable item</typeparam>
-		/// <returns>Cached type metadatas indexed by the path of the assembly that defines the type</returns>
+		/// <returns>Cached type metadatas indexed by the path of the assembly that defines the type. If no cache is defined, return null.</returns>
 		public static Dictionary<string, CachedAssembly<T>> LoadAssemblyCache<T>(string cacheName) where T : ICacheable, new()
 		{
+			if (!EnableAssemblyCache.Value)
+				return null;
+
 			var result = new Dictionary<string, CachedAssembly<T>>();
 			try
 			{
@@ -186,6 +190,9 @@ namespace BepInEx.Bootstrap
 		/// <typeparam name="T">Cacheable item</typeparam>
 		public static void SaveAssemblyCache<T>(string cacheName, Dictionary<string, List<T>> entries) where T : ICacheable
 		{
+			if (!EnableAssemblyCache.Value)
+				return;
+
 			try
 			{
 				if (!Directory.Exists(Paths.CachePath))
@@ -247,5 +254,15 @@ namespace BepInEx.Bootstrap
 
 			return sb.ToString();
 		}
+
+		#region Config
+
+		private static ConfigWrapper<bool> EnableAssemblyCache = ConfigFile.CoreConfig.Wrap(
+			"Caching", 
+			"EnableAssemblyCache", 
+			"Enable/disable assembly metadata cache\nEnabling this will speed up discovery of plugins and patchers by caching the metadata of all types BepInEx discovers.", 
+			true);
+
+		#endregion
 	}
 }
