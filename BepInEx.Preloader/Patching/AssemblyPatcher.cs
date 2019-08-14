@@ -234,7 +234,7 @@ namespace BepInEx.Preloader.Patching
 
 			if (ConfigBreakBeforeLoadAssemblies.Value)
 			{
-				Logger.LogInfo($"BepInEx is about load the following assemblies:\n{String.Join("\n", patchedAssemblies.ToArray())}");
+				Logger.LogInfo(data: $"BepInEx is about load the following assemblies:\n{String.Join("\n", patchedAssemblies.ToArray())}");
 				Logger.LogInfo($"The assemblies were dumped into {DumpedAssembliesPath}");
 				Logger.LogInfo("Load any assemblies into the debugger, set breakpoints and continue execution.");
 				Debugger.Break();
