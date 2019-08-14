@@ -30,22 +30,6 @@ namespace BepInEx.Preloader
 
 		public static bool IsDotNet46 { get; } = new Version("4.0.30319.42000") <= Environment.Version;
 
-		static Preloader()
-		{
-			ConfigEntrypointAssembly = ConfigFile.CoreConfig.Wrap(
-				"Preloader.Entrypoint",
-				"Assembly",
-				"The local filename of the assembly to target.",
-				IsPostUnity2017 ? "UnityEngine.CoreModule.dll" : "UnityEngine.dll"
-			);
-
-			ConfigShimHarmony = ConfigFile.CoreConfig.Wrap(
-				"Preloader",
-				"ShimHarmonySupport",
-				"If enabled, basic Harmony functionality is patched to use MonoMod's RuntimeDetour instead.\nTry using this if Harmony does not work in a game.",
-				!Utility.CLRSupportsDynamicAssemblies);
-		}
-
 		public static void Run()
 		{
 			try
@@ -252,7 +236,12 @@ namespace BepInEx.Preloader
 
 		#region Config
 
-		private static readonly ConfigWrapper<string> ConfigEntrypointAssembly;
+		private static readonly ConfigWrapper<string> ConfigEntrypointAssembly = ConfigFile.CoreConfig.Wrap(
+			"Preloader.Entrypoint",
+			"Assembly",
+			"The local filename of the assembly to target.",
+			IsPostUnity2017 ? "UnityEngine.CoreModule.dll" : "UnityEngine.dll"
+		);
 
 		private static readonly ConfigWrapper<string> ConfigEntrypointType = ConfigFile.CoreConfig.Wrap(
 			"Preloader.Entrypoint",
@@ -272,7 +261,11 @@ namespace BepInEx.Preloader
 			"Enables or disables runtime patches.\nThis should always be true, unless you cannot start the game due to a Harmony related issue (such as running .NET Standard runtime) or you know what you're doing.",
 			true);
 
-		private static readonly ConfigWrapper<bool> ConfigShimHarmony;
+		private static readonly ConfigWrapper<bool> ConfigShimHarmony = ConfigFile.CoreConfig.Wrap(
+			"Preloader",
+			"ShimHarmonySupport",
+			"If enabled, basic Harmony functionality is patched to use MonoMod's RuntimeDetour instead.\nTry using this if Harmony does not work in a game.",
+			!Utility.CLRSupportsDynamicAssemblies);
 
 		private static readonly ConfigWrapper<bool> ConfigPreloaderCOutLogging = ConfigFile.CoreConfig.Wrap(
 			"Logging",
