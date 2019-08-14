@@ -32,11 +32,32 @@ namespace BepInEx
 		}
 
 		/// <summary>
-		/// Combines multiple paths together, as the specific method is not available in .NET 3.5.
+		/// Try to perform an action.
 		/// </summary>
-		/// <param name="parts">The multiple paths to combine together.</param>
-		/// <returns>A combined path.</returns>
-		public static string CombinePaths(params string[] parts) => parts.Aggregate(Path.Combine);
+		/// <param name="action">Action to perform.</param>
+		/// <param name="exception">Possible exception that gets returned.</param>
+		/// <returns>True, if action succeeded, false if an exception occured.</returns>
+		public static bool TryDo(Action action, out Exception exception)
+		{
+			exception = null;
+			try
+			{
+				action();
+				return true;
+			}
+			catch (Exception e)
+			{
+				exception = e;
+				return false;
+			}
+		}
+
+        /// <summary>
+        /// Combines multiple paths together, as the specific method is not available in .NET 3.5.
+        /// </summary>
+        /// <param name="parts">The multiple paths to combine together.</param>
+        /// <returns>A combined path.</returns>
+        public static string CombinePaths(params string[] parts) => parts.Aggregate(Path.Combine);
 
 		/// <summary>
 		/// Tries to parse a bool, with a default value if unable to parse.

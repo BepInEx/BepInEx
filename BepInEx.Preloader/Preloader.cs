@@ -44,19 +44,6 @@ namespace BepInEx.Preloader
 				"ShimHarmonySupport",
 				"If enabled, basic Harmony functionality is patched to use MonoMod's RuntimeDetour instead.\nTry using this if Harmony does not work in a game.",
 				!Utility.CLRSupportsDynamicAssemblies);
-        }
-
-		private static void TryDo(Action action, out Exception exception)
-		{
-			exception = null;
-			try
-			{
-				action();
-			}
-			catch (Exception e)
-			{
-				exception = e;
-			}
 		}
 
 		public static void Run()
@@ -65,13 +52,13 @@ namespace BepInEx.Preloader
 			{
 				AllocateConsole();
 
-				TryDo(() =>
+				Utility.TryDo(() =>
 				{
 					if (ConfigShimHarmony.Value)
 						HarmonyDetourBridge.Init();
 				}, out var harmonyBridgeException);
 
-				TryDo(() =>
+				Utility.TryDo(() =>
 				{
 					if (ConfigApplyRuntimePatches.Value)
 						UnityPatches.Apply();
