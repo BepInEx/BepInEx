@@ -9,11 +9,9 @@ namespace BepInEx.Logging
 	/// </summary>
 	public class ConsoleLogListener : ILogListener
 	{
-		protected LogLevel DisplayedLogLevel = (LogLevel)Enum.Parse(typeof(LogLevel), ConfigConsoleDisplayedLevel.Value, true);
-
 		public void LogEvent(object sender, LogEventArgs eventArgs)
 		{
-			if (eventArgs.Level.GetHighestLevel() > DisplayedLogLevel)
+			if (eventArgs.Level.GetHighestLevel() > ConfigConsoleDisplayedLevel.Value)
 				return;
 
 			string log = $"[{eventArgs.Level,-7}:{((ILogSource)sender).SourceName,10}] {eventArgs.Data}\r\n";
@@ -25,10 +23,9 @@ namespace BepInEx.Logging
 
 		public void Dispose() { }
 
-		private static readonly ConfigWrapper<string> ConfigConsoleDisplayedLevel = ConfigFile.CoreConfig.Wrap(
-			"Logging.Console",
-			"DisplayedLogLevel",
-			"Only displays the specified log level and above in the console output.",
-			"Info");
+		private static readonly ConfigWrapper<LogLevel> ConfigConsoleDisplayedLevel = ConfigFile.CoreConfig.Wrap(
+			"Logging.Console","DisplayedLogLevel",
+			LogLevel.Info,
+			new ConfigDescription("Only displays the specified log level and above in the console output."));
 	}
 }

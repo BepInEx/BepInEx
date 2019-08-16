@@ -2,13 +2,11 @@
 using BepInEx.Logging;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
-using BepInEx.Contract;
 using Mono.Cecil;
 using UnityEngine;
 using UnityInjector.ConsoleUtil;
@@ -304,9 +302,15 @@ namespace BepInEx.Bootstrap
 
 		#region Config
 
-		private static readonly ConfigWrapper<string> ConfigPluginsDirectory = ConfigFile.CoreConfig.Wrap("Paths", "PluginsDirectory", "The relative directory to the BepInEx folder where plugins are loaded.", "plugins");
+		private static readonly ConfigWrapper<string> ConfigPluginsDirectory = ConfigFile.CoreConfig.Wrap<string>(
+			"Paths", "PluginsDirectory",
+			"plugins",
+			new ConfigDescription("The relative directory to the BepInEx folder where plugins are loaded."));
 
-		private static readonly ConfigWrapper<bool> ConfigUnityLogging = ConfigFile.CoreConfig.Wrap("Logging", "UnityLogListening", "Enables showing unity log messages in the BepInEx logging system.", true);
+		private static readonly ConfigWrapper<bool> ConfigUnityLogging = ConfigFile.CoreConfig.Wrap(
+			"Logging", "UnityLogListening",
+			true,
+			new ConfigDescription("Enables showing unity log messages in the BepInEx logging system."));
 
 		#endregion
 	}

@@ -1,6 +1,5 @@
 ﻿using BepInEx.Bootstrap;
 using BepInEx.Configuration;
-using BepInEx.Contract;
 using BepInEx.Logging;
 using UnityEngine;
 

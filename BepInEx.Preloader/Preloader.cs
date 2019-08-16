@@ -234,42 +234,35 @@ namespace BepInEx.Preloader
 
 		#region Config
 
-		private static readonly ConfigWrapper<string> ConfigEntrypointAssembly = ConfigFile.CoreConfig.Wrap(
-			"Preloader.Entrypoint",
-			"Assembly",
-			"The local filename of the assembly to target.",
-			IsPostUnity2017 ? "UnityEngine.CoreModule.dll" : "UnityEngine.dll"
-		);
+		private static readonly ConfigWrapper<string> ConfigEntrypointAssembly = ConfigFile.CoreConfig.Wrap<string>(
+			"Preloader.Entrypoint", "Assembly",
+			IsPostUnity2017 ? "UnityEngine.CoreModule.dll" : "UnityEngine.dll",
+			new ConfigDescription("The local filename of the assembly to target."));
 
-		private static readonly ConfigWrapper<string> ConfigEntrypointType = ConfigFile.CoreConfig.Wrap(
-			"Preloader.Entrypoint",
-			"Type",
-			"The name of the type in the entrypoint assembly to search for the entrypoint method.",
-			"Application");
+		private static readonly ConfigWrapper<string> ConfigEntrypointType = ConfigFile.CoreConfig.Wrap<string>(
+			"Preloader.Entrypoint", "Type",
+			"Application",
+			new ConfigDescription("The name of the type in the entrypoint assembly to search for the entrypoint method."));
 
-		private static readonly ConfigWrapper<string> ConfigEntrypointMethod = ConfigFile.CoreConfig.Wrap(
-			"Preloader.Entrypoint",
-			"Method",
-			"The name of the method in the specified entrypoint assembly and type to hook and load Chainloader from.",
-			".cctor");
+		private static readonly ConfigWrapper<string> ConfigEntrypointMethod = ConfigFile.CoreConfig.Wrap<string>(
+			"Preloader.Entrypoint", "Method",
+			".cctor",
+			new ConfigDescription("The name of the method in the specified entrypoint assembly and type to hook and load Chainloader from."));
 
 		private static readonly ConfigWrapper<bool> ConfigApplyRuntimePatches = ConfigFile.CoreConfig.Wrap(
-			"Preloader",
-			"ApplyRuntimePatches",
-			"Enables or disables runtime patches.\nThis should always be true, unless you cannot start the game due to a Harmony related issue (such as running .NET Standard runtime) or you know what you're doing.",
-			true);
+			"Preloader", "ApplyRuntimePatches",
+			true,
+			new ConfigDescription("Enables or disables runtime patches.\nThis should always be true, unless you cannot start the game due to a Harmony related issue (such as running .NET Standard runtime) or you know what you're doing."));
 
 		private static readonly ConfigWrapper<bool> ConfigShimHarmony = ConfigFile.CoreConfig.Wrap(
-			"Preloader",
-			"ShimHarmonySupport",
-			"If enabled, basic Harmony functionality is patched to use MonoMod's RuntimeDetour instead.\nTry using this if Harmony does not work in a game.",
-			!Utility.CLRSupportsDynamicAssemblies);
+			"Preloader", "ShimHarmonySupport",
+			!Utility.CLRSupportsDynamicAssemblies,
+			new ConfigDescription("If enabled, basic Harmony functionality is patched to use MonoMod's RuntimeDetour instead.\nTry using this if Harmony does not work in a game."));
 
 		private static readonly ConfigWrapper<bool> ConfigPreloaderCOutLogging = ConfigFile.CoreConfig.Wrap(
-			"Logging",
-			"PreloaderConsoleOutRedirection",
-			"Redirects text from Console.Out during preloader patch loading to the BepInEx logging system.",
-			true);
+			"Logging", "PreloaderConsoleOutRedirection",
+			true,
+			new ConfigDescription("Redirects text from Console.Out during preloader patch loading to the BepInEx logging system."));
 
 		#endregion
 	}
