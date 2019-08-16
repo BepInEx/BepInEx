@@ -1,6 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using BepInEx.Logging;
+using Mono.Cecil;
+using Mono.Collections.Generic;
 
 namespace BepInEx
 {
@@ -46,6 +50,16 @@ namespace BepInEx
 				this.Version = null;
 			}
 		}
+
+		internal static BepInPlugin FromCecilType(TypeDefinition td)
+		{
+			var attr = MetadataHelper.GetCustomAttributes<BepInPlugin>(td, false).FirstOrDefault();
+
+			if (attr == null)
+				return null;
+
+			return new BepInPlugin((string)attr.ConstructorArguments[0].Value, (string)attr.ConstructorArguments[1].Value, (string)attr.ConstructorArguments[2].Value);
+		}
 	}
 
 	/// <summary>
@@ -84,6 +98,12 @@ namespace BepInEx
 			this.DependencyGUID = DependencyGUID;
 			this.Flags = Flags;
 		}
+
+		internal static IEnumerable<BepInDependency> FromCecilType(TypeDefinition td)
+		{
+			var attrs = MetadataHelper.GetCustomAttributes<BepInDependency>(td, true);
+			return attrs.Select(customAttribute => new BepInDependency((string)customAttribute.ConstructorArguments[0].Value, (DependencyFlags)customAttribute.ConstructorArguments[1].Value)).ToList();
+		}
 	}
 
 	/// <summary>
@@ -102,6 +122,12 @@ namespace BepInEx
 		{
 			this.ProcessName = ProcessName;
 		}
+
+		internal static List<BepInProcess> FromCecilType(TypeDefinition td)
+		{
+			var attrs = MetadataHelper.GetCustomAttributes<BepInProcess>(td, true);
+			return attrs.Select(customAttribute => new BepInProcess((string)customAttribute.ConstructorArguments[0].Value)).ToList();
+		}
 	}
 
 	#endregion
@@ -113,6 +139,22 @@ namespace BepInEx
 	/// </summary>
 	public static class MetadataHelper
 	{
+		internal static IEnumerable<CustomAttribute> GetCustomAttributes<T>(TypeDefinition td, bool inherit) where T : Attribute
+		{
+			var result = new List<CustomAttribute>();
+			var type = typeof(T);
+			var currentType = td;
+
+			do
+			{
+				result.AddRange(currentType.CustomAttributes.Where(ca => ca.AttributeType.FullName == type.FullName));
+				currentType = currentType.BaseType?.Resolve();
+			} while (inherit && currentType?.FullName != "System.Object");
+
+
+			return result;
+		}
+
 		/// <summary>
 		/// Retrieves the BepInPlugin metadata from a plugin type.
 		/// </summary>
@@ -156,15 +198,15 @@ namespace BepInEx
 		public static IEnumerable<T> GetAttributes<T>(object plugin) where T : Attribute
 			=> GetAttributes<T>(plugin.GetType());
 
+
 		/// <summary>
 		/// Retrieves the dependencies of the specified plugin type.
 		/// </summary>
 		/// <param name="Plugin">The plugin type.</param>
-		/// <param name="AllPlugins">All currently loaded plugin types.</param>
 		/// <returns>A list of all plugin types that the specified plugin type depends upon.</returns>
-		public static IEnumerable<BepInDependency> GetDependencies(Type Plugin, IEnumerable<Type> AllPlugins)
+		public static IEnumerable<BepInDependency> GetDependencies(Type plugin)
 		{
-			return Plugin.GetCustomAttributes(typeof(BepInDependency), true).Cast<BepInDependency>();
+			return plugin.GetCustomAttributes(typeof(BepInDependency), true).Cast<BepInDependency>();
 		}
 	}
 

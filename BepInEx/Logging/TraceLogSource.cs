@@ -76,7 +76,7 @@ namespace BepInEx.Logging
 					level = LogLevel.Debug;
 					break;
 			}
-			
+
 			LogSource.Log(level, $"{message}".Trim());
 		}
 	}

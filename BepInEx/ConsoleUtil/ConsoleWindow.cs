@@ -25,7 +25,7 @@ namespace UnityInjector.ConsoleUtil
 			"If true, console is set to the Shift-JIS encoding, otherwise UTF-8 encoding.",
 			false);
 
-        public static bool IsAttached { get; private set; }
+		public static bool IsAttached { get; private set; }
 		private static IntPtr _cOut;
 		private static IntPtr _oOut;
 

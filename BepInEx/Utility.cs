@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.Emit;
+using Mono.Cecil;
 
 namespace BepInEx
 {
@@ -12,11 +14,50 @@ namespace BepInEx
 	public static class Utility
 	{
 		/// <summary>
-		/// Combines multiple paths together, as the specific method is not available in .NET 3.5.
+		/// Whether current Common Language Runtime supports dynamic method generation using <see cref="System.Reflection.Emit"/> namespace.
 		/// </summary>
-		/// <param name="parts">The multiple paths to combine together.</param>
-		/// <returns>A combined path.</returns>
-		public static string CombinePaths(params string[] parts) => parts.Aggregate(Path.Combine);
+		public static bool CLRSupportsDynamicAssemblies { get; }
+
+		static Utility()
+		{
+			try
+			{
+				var m = new DynamicMethod("SRE_Test", null, null);
+				CLRSupportsDynamicAssemblies = true;
+			}
+			catch (PlatformNotSupportedException)
+			{
+				CLRSupportsDynamicAssemblies = false;
+			}
+		}
+
+		/// <summary>
+		/// Try to perform an action.
+		/// </summary>
+		/// <param name="action">Action to perform.</param>
+		/// <param name="exception">Possible exception that gets returned.</param>
+		/// <returns>True, if action succeeded, false if an exception occured.</returns>
+		public static bool TryDo(Action action, out Exception exception)
+		{
+			exception = null;
+			try
+			{
+				action();
+				return true;
+			}
+			catch (Exception e)
+			{
+				exception = e;
+				return false;
+			}
+		}
+
+        /// <summary>
+        /// Combines multiple paths together, as the specific method is not available in .NET 3.5.
+        /// </summary>
+        /// <param name="parts">The multiple paths to combine together.</param>
+        /// <returns>A combined path.</returns>
+        public static string CombinePaths(params string[] parts) => parts.Aggregate(Path.Combine);
 
 		/// <summary>
 		/// Tries to parse a bool, with a default value if unable to parse.
@@ -26,7 +67,7 @@ namespace BepInEx
 		/// <returns>Boolean value of input if able to be parsed, otherwise default value.</returns>
 		public static bool SafeParseBool(string input, bool defaultValue = false)
 		{
-			return bool.TryParse(input, out bool result) ? result : defaultValue;
+			return Boolean.TryParse(input, out bool result) ? result : defaultValue;
 		}
 
 		/// <summary>
@@ -46,7 +87,7 @@ namespace BepInEx
 		/// <returns>True if the value parameter is null or empty, or if value consists exclusively of white-space characters.</returns>
 		public static bool IsNullOrWhiteSpace(this string self)
 		{
-			return self == null || self.All(char.IsWhiteSpace);
+			return self == null || self.All(Char.IsWhiteSpace);
 		}
 
 		public static IEnumerable<TNode> TopologicalSort<TNode>(IEnumerable<TNode> nodes, Func<TNode, IEnumerable<TNode>> dependencySelector)
@@ -61,9 +102,8 @@ namespace BepInEx
 				Stack<TNode> currentStack = new Stack<TNode>();
 				if (!Visit(input, currentStack))
 				{
-					throw new Exception("Cyclic Dependency:\r\n" + currentStack
-																   .Select(x => $" - {x}") //append dashes
-																   .Aggregate((a, b) => $"{a}\r\n{b}")); //add new lines inbetween
+					throw new Exception("Cyclic Dependency:\r\n" + currentStack.Select(x => $" - {x}") //append dashes
+																			   .Aggregate((a, b) => $"{a}\r\n{b}")); //add new lines inbetween
 				}
 			}
 
@@ -107,7 +147,7 @@ namespace BepInEx
 		/// <param name="directory">Directory to search the assembly from.</param>
 		/// <param name="assembly">The loaded assembly.</param>
 		/// <returns>True, if the assembly was found and loaded. Otherwise, false.</returns>
-		public static bool TryResolveDllAssembly(AssemblyName assemblyName, string directory, out Assembly assembly)
+		private static bool TryResolveDllAssembly<T>(AssemblyName assemblyName, string directory, Func<string, T> loader, out T assembly) where T : class
 		{
 			assembly = null;
 
@@ -124,7 +164,7 @@ namespace BepInEx
 
 				try
 				{
-					assembly = Assembly.LoadFile(path);
+					assembly = loader(path);
 				}
 				catch (Exception)
 				{
@@ -137,7 +177,47 @@ namespace BepInEx
 			return false;
 		}
 
-		public static bool TryOpenFileStream(string path, FileMode mode, out FileStream fileStream, FileAccess access = FileAccess.ReadWrite, FileShare share = FileShare.None)
+		public static bool IsSubtypeOf(this TypeDefinition self, Type td)
+		{
+			if (self.FullName == td.FullName)
+				return true;
+			return self.FullName != "System.Object" && (self.BaseType?.Resolve()?.IsSubtypeOf(td) ?? false);
+		}
+
+		/// <summary>
+		/// Try to resolve and load the given assembly DLL.
+		/// </summary>
+		/// <param name="assemblyName">Name of the assembly, of the type <see cref="AssemblyName" />.</param>
+		/// <param name="directory">Directory to search the assembly from.</param>
+		/// <param name="assembly">The loaded assembly.</param>
+		/// <returns>True, if the assembly was found and loaded. Otherwise, false.</returns>
+		public static bool TryResolveDllAssembly(AssemblyName assemblyName, string directory, out Assembly assembly)
+		{
+			return TryResolveDllAssembly(assemblyName, directory, Assembly.LoadFile, out assembly);
+		}
+
+		/// <summary>
+		/// Try to resolve and load the given assembly DLL.
+		/// </summary>
+		/// <param name="assemblyName">Name of the assembly, of the type <see cref="AssemblyName" />.</param>
+		/// <param name="directory">Directory to search the assembly from.</param>
+		/// <param name="assembly">The loaded assembly.</param>
+		/// <returns>True, if the assembly was found and loaded. Otherwise, false.</returns>
+		public static bool TryResolveDllAssembly(AssemblyName assemblyName, string directory, ReaderParameters readerParameters, out AssemblyDefinition assembly)
+		{
+			return TryResolveDllAssembly(assemblyName, directory, s => AssemblyDefinition.ReadAssembly(s, readerParameters), out assembly);
+		}
+
+		/// <summary>
+		/// Tries to create a file with the given name
+		/// </summary>
+		/// <param name="path">Path of the file to create</param>
+		/// <param name="mode">File open mode</param>
+		/// <param name="fileStream">Resulting filestream</param>
+		/// <param name="access">File access options</param>
+		/// <param name="share">File share options</param>
+		/// <returns></returns>
+		public static bool TryOpenFileStream(string path, FileMode mode, out FileStream fileStream, FileAccess access = FileAccess.ReadWrite, FileShare share = FileShare.Read)
 		{
 			try
 			{

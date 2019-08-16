@@ -3,4 +3,4 @@
 	url = https://github.com/BepInEx/BepInEx.Harmony
 [submodule "submodules/MonoMod"]
 	path = submodules/MonoMod
-	url = https://github.com/0x0ade/MonoMod.git
+	url = https://github.com/MonoMod/MonoMod.git
