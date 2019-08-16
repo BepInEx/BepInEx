@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using BepInEx.Bootstrap;
 
-namespace BepInEx.Contract
+namespace BepInEx
 {
 	public class PluginInfo : ICacheable
 	{
