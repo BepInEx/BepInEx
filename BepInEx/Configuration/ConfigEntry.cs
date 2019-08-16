@@ -220,10 +220,10 @@ namespace BepInEx.Configuration
 
 			if (hasType)
 			{
-				writer.WriteLine("# Setting type: " + SettingType.Name);
-
 				if (SettingType.IsEnum && SettingType.GetCustomAttributes(typeof(FlagsAttribute), true).Any())
 					writer.WriteLine("# Multiple values can be set at the same time by separating them with , (e.g. Debug, Warning)");
+
+				writer.WriteLine("# Setting type: " + SettingType.Name);
 
 				writer.WriteLine("# Default value: " + DefaultValue);
 			}
@@ -236,9 +236,9 @@ namespace BepInEx.Configuration
 				}
 				else if (hasType)
 				{
-					if (SettingType == typeof(bool))
+					/*if (SettingType == typeof(bool))
 						writer.WriteLine("# Acceptable values: True, False");
-					else if (SettingType.IsEnum)
+					else*/ if (SettingType.IsEnum)
 						writer.WriteLine("# Acceptable values: " + string.Join(", ", Enum.GetNames(SettingType)));
 				}
 			}

@@ -40,7 +40,7 @@ namespace BepInEx.Configuration
 		/// </summary>
 		public string ToSerializedString()
 		{
-			return $"# {Description.Replace("\n", "\n# ")}";
+			return $"## {Description.Replace("\n", "\n## ")}";
 		}
 	}
 }
