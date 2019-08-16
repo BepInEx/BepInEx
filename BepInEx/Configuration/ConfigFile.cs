@@ -183,12 +183,15 @@ namespace BepInEx.Configuration
 			if (!TomlTypeConverter.CanConvert(typeof(T)))
 				throw new ArgumentException($"Type {typeof(T)} is not supported by the config system. Supported types: {string.Join(", ", TomlTypeConverter.GetSupportedTypes().Select(x => x.Name).ToArray())}");
 
+			var forceSave = false;
+
 			Entries.TryGetValue(configDefinition, out var entry);
 
 			if (entry == null)
 			{
 				entry = new ConfigEntry(this, configDefinition, typeof(T), defaultValue);
 				Entries[configDefinition] = entry;
+				forceSave = true;
 			}
 			else
 			{
@@ -209,6 +212,9 @@ namespace BepInEx.Configuration
 
 				entry.SetDescription(configDescription);
 			}
+
+			if(forceSave)
+				Save();
 
 			return new ConfigWrapper<T>(entry);
 		}
