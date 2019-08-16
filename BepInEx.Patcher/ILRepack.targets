@@ -3,12 +3,15 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Target Name="ILRepacker" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
 
+    <Copy SourceFiles="$(OutputPath)\$(AssemblyName).exe" DestinationFiles="$(OutputPath)\$(AssemblyName)1.exe"/>
+
     <ItemGroup>
+      <InputAssemblies Include="$(OutputPath)\$(AssemblyName)1.exe" />
       <InputAssemblies Include="$(OutputPath)\Mono.Cecil.dll" />
     </ItemGroup>
 
     <ILRepack
-      Parallel="true"
+      Parallel="false"
       Internalize="true"
       DebugInfo="true"
       InputAssemblies="@(InputAssemblies)"
