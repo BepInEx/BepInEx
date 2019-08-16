@@ -8,6 +8,8 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using BepInEx.Contract;
+using Mono.Cecil;
 using UnityEngine;
 using UnityInjector.ConsoleUtil;
 using Logger = BepInEx.Logging.Logger;
@@ -22,7 +24,9 @@ namespace BepInEx.Bootstrap
 		/// <summary>
 		/// The loaded and initialized list of plugins.
 		/// </summary>
-		public static List<BaseUnityPlugin> Plugins { get; private set; } = new List<BaseUnityPlugin>();
+		public static Dictionary<string, PluginInfo> PluginInfos { get; } = new Dictionary<string, PluginInfo>();
+
+		public static List<BaseUnityPlugin> Plugins { get; } = new List<BaseUnityPlugin>();
 
 		/// <summary>
 		/// The GameObject that all plugins are attached to as components.
@@ -34,15 +38,14 @@ namespace BepInEx.Bootstrap
 		private static bool _initialized = false;
 
 		/// <summary>
-        /// Initializes BepInEx to be able to start the chainloader.
-        /// </summary>
-        public static void Initialize(string gameExePath, bool startConsole = true)
+		/// Initializes BepInEx to be able to start the chainloader.
+		/// </summary>
+		public static void Initialize(string gameExePath, bool startConsole = true)
 		{
 			if (_initialized)
 				return;
 
 			// Set vitals
-
 			if (gameExePath != null)
 			{
 				// Checking for null allows a more advanced initialization workflow, where the Paths class has been initialized before calling Chainloader.Initialize
@@ -50,14 +53,12 @@ namespace BepInEx.Bootstrap
 				Paths.SetExecutablePath(gameExePath);
 			}
 
-			Paths.SetPluginPath(ConfigPluginsDirectory.Value);
-
-            // Start logging
-            if (ConsoleWindow.ConfigConsoleEnabled.Value && startConsole)
+			// Start logging
+			if (ConsoleWindow.ConfigConsoleEnabled.Value && startConsole)
 			{
 				ConsoleWindow.Attach();
 				Logger.Listeners.Add(new ConsoleLogListener());
-            }
+			}
 
 			// Fix for standard output getting overwritten by UnityLogger
 			if (ConsoleWindow.StandardOut != null)
@@ -69,7 +70,7 @@ namespace BepInEx.Bootstrap
 				Console.OutputEncoding = ConsoleEncoding.GetEncoding(encoding);
 			}
 
-            Logger.Listeners.Add(new UnityLogListener());
+			Logger.Listeners.Add(new UnityLogListener());
 			Logger.Listeners.Add(new DiskLogListener());
 
 			if (!TraceLogSource.IsListening)
@@ -84,7 +85,71 @@ namespace BepInEx.Bootstrap
 			_initialized = true;
 		}
 
-		private static Regex allowedGuidRegex { get; } = new Regex(@"^[a-zA-Z0-9\._]+$");
+		private static Regex allowedGuidRegex { get; } = new Regex(@"^[a-zA-Z0-9\._\-]+$");
+
+		public static PluginInfo ToPluginInfo(TypeDefinition type)
+		{
+			if (type.IsInterface || type.IsAbstract || !type.IsSubtypeOf(typeof(BaseUnityPlugin)))
+				return null;
+
+			var metadata = BepInPlugin.FromCecilType(type);
+
+			if (metadata == null)
+			{
+				Logger.LogWarning($"Skipping over type [{type.FullName}] as no metadata attribute is specified");
+				return null;
+			}
+
+			if (string.IsNullOrEmpty(metadata.GUID) || !allowedGuidRegex.IsMatch(metadata.GUID))
+			{
+				Logger.LogWarning($"Skipping type [{type.FullName}] because its GUID [{metadata.GUID}] is of an illegal format.");
+				return null;
+			}
+
+			if (metadata.Version == null)
+			{
+				Logger.LogWarning($"Skipping type [{type.FullName}] because its version is invalid.");
+				return null;
+			}
+
+			if (metadata.Name == null)
+			{
+				Logger.LogWarning($"Skipping type [{type.FullName}] because its name is null.");
+				return null;
+			}
+
+			//Perform a filter for currently running process
+			var filters = BepInProcess.FromCecilType(type);
+			bool invalidProcessName = filters.Count != 0 && filters.All(x => !string.Equals(x.ProcessName.Replace(".exe", ""), Paths.ProcessName, StringComparison.InvariantCultureIgnoreCase));
+
+			if (invalidProcessName)
+			{
+				Logger.LogWarning($"Skipping over plugin [{metadata.GUID}] due to process filter");
+				return null;
+			}
+
+			var dependencies = BepInDependency.FromCecilType(type);
+
+			return new PluginInfo
+			{
+				Metadata = metadata,
+				Processes = filters,
+				Dependencies = dependencies,
+				TypeName = type.FullName
+			};
+		}
+
+		private static readonly string CurrentAssemblyName = Assembly.GetExecutingAssembly().GetName().Name;
+
+		private static bool HasBepinPlugins(AssemblyDefinition ass)
+		{
+			if (ass.MainModule.AssemblyReferences.All(r => r.Name != CurrentAssemblyName))
+				return false;
+			if (ass.MainModule.GetTypeReferences().All(r => r.FullName != typeof(BaseUnityPlugin).FullName))
+				return false;
+
+			return true;
+		}
 
 		/// <summary>
 		/// The entrypoint for the BepInEx plugin system.
@@ -107,8 +172,7 @@ namespace BepInEx.Bootstrap
 			{
 				var productNameProp = typeof(Application).GetProperty("productName", BindingFlags.Public | BindingFlags.Static);
 				if (productNameProp != null)
-					ConsoleWindow.Title =
-						$"BepInEx {Assembly.GetExecutingAssembly().GetName().Version} - {productNameProp.GetValue(null, null)}";
+					ConsoleWindow.Title = $"BepInEx {Assembly.GetExecutingAssembly().GetName().Version} - {productNameProp.GetValue(null, null)}";
 
 				Logger.LogMessage("Chainloader started");
 
@@ -116,76 +180,34 @@ namespace BepInEx.Bootstrap
 
 				UnityEngine.Object.DontDestroyOnLoad(ManagerObject);
 
+				var pluginsToLoad = TypeLoader.FindPluginTypes(Paths.PluginPath, ToPluginInfo, HasBepinPlugins, "chainloader");
+				foreach (var keyValuePair in pluginsToLoad)
+					foreach (var pluginInfo in keyValuePair.Value)
+						pluginInfo.Location = keyValuePair.Key;
+				var pluginInfos = pluginsToLoad.SelectMany(p => p.Value).ToList();
+				var loadedAssemblies = new Dictionary<string, Assembly>();
 
-				string currentProcess = Process.GetCurrentProcess().ProcessName.ToLower();
-				
-				var globalPluginTypes = TypeLoader.LoadTypes<BaseUnityPlugin>(Paths.PluginPath).ToList();
-
-				Dictionary<Type, BepInPlugin> selectedPluginTypes = new Dictionary<Type, BepInPlugin>(globalPluginTypes.Count);
-
-				foreach (var pluginType in globalPluginTypes)
-				{
-					//Ensure metadata exists
-					var metadata = MetadataHelper.GetMetadata(pluginType);
-
-					if (metadata == null)
-					{
-						Logger.LogWarning($"Skipping type [{pluginType.FullName}] as no metadata attribute is specified");
-						continue;
-					}
-
-					if (string.IsNullOrEmpty(metadata.GUID) || !allowedGuidRegex.IsMatch(metadata.GUID))
-					{
-						Logger.LogWarning($"Skipping type [{pluginType.FullName}] because its GUID [{metadata.GUID}] is of an illegal format.");
-						continue;
-					}
-
-					if (selectedPluginTypes.Any(x => x.Value.GUID.Equals(metadata.GUID, StringComparison.OrdinalIgnoreCase)))
-					{
-						Logger.LogWarning($"Skipping type [{pluginType.FullName}] because its GUID [{metadata.GUID}] is already used by another plugin.");
-						continue;
-					}
-
-					if (metadata.Version == null)
-					{
-						Logger.LogWarning($"Skipping type [{pluginType.FullName}] because its version is invalid.");
-						continue;
-					}
-
-					if (metadata.Name == null)
-					{
-						Logger.LogWarning($"Skipping type [{pluginType.FullName}] because its name is null.");
-						continue;
-					}
-
-					//Perform a filter for currently running process
-					var filters = MetadataHelper.GetAttributes<BepInProcess>(pluginType);
-
-					if (filters.Length != 0)
-					{
-						var result = filters.Any(x => x.ProcessName.ToLower().Replace(".exe", "") == currentProcess);
-
-						if (!result)
-						{
-							Logger.LogInfo($"Skipping over plugin [{metadata.GUID}] due to process filter");
-							continue;
-						}
-					}
-
-					selectedPluginTypes.Add(pluginType, metadata);
-				}
-
-				Logger.LogInfo($"{selectedPluginTypes.Count} / {globalPluginTypes.Count} plugins to load");
+				Logger.LogInfo($"{pluginInfos.Count} plugins to load");
 
 				var dependencyDict = new Dictionary<string, IEnumerable<string>>();
-				var pluginsByGUID = new Dictionary<string, Type>();
+				var pluginsByGUID = new Dictionary<string, PluginInfo>();
 
-				foreach (var kv in selectedPluginTypes)
+				foreach (var pluginInfo in pluginInfos)
 				{
-					var dependencies = MetadataHelper.GetDependencies(kv.Key, selectedPluginTypes.Keys);
+					if (pluginInfo.Metadata.GUID == null)
+					{
+						Logger.LogWarning($"Skipping [{pluginInfo.Metadata.Name}] because it does not have a valid GUID.");
+						continue;
+					}
 
-					dependencyDict[kv.Value.GUID] = dependencies.Select(d => d.DependencyGUID);
-					pluginsByGUID[kv.Value.GUID] = kv.Key;
+					if (dependencyDict.ContainsKey(pluginInfo.Metadata.GUID))
+					{
+						Logger.LogWarning($"Skipping [{pluginInfo.Metadata.Name}] because its GUID ({pluginInfo.Metadata.GUID}) is already used by another plugin.");
+						continue;
+					}
+
+					dependencyDict[pluginInfo.Metadata.GUID] = pluginInfo.Dependencies.Select(d => d.DependencyGUID);
+					pluginsByGUID[pluginInfo.Metadata.GUID] = pluginInfo;
 				}
 
 				var emptyDependencies = new string[0];
@@ -200,14 +222,12 @@ namespace BepInEx.Bootstrap
 				foreach (var pluginGUID in sortedPlugins)
 				{
 					// If the plugin is missing, don't process it
-					if (!pluginsByGUID.TryGetValue(pluginGUID, out var pluginType))
+					if (!pluginsByGUID.TryGetValue(pluginGUID, out var pluginInfo))
 						continue;
 
-					var metadata = MetadataHelper.GetMetadata(pluginType);
-					var dependencies = MetadataHelper.GetDependencies(pluginType, selectedPluginTypes.Keys);
 					var dependsOnInvalidPlugin = false;
 					var missingDependencies = new List<string>();
-					foreach (var dependency in dependencies)
+					foreach (var dependency in pluginInfo.Dependencies)
 					{
 						// If the depenency wasn't already processed, it's missing altogether
 						if (!processedPlugins.Contains(dependency.DependencyGUID))
@@ -230,14 +250,14 @@ namespace BepInEx.Bootstrap
 
 					if (dependsOnInvalidPlugin)
 					{
-						Logger.LogWarning($"Skipping [{metadata.Name}] because it has a dependency that was not loaded. See above errors for details.");
+						Logger.LogWarning($"Skipping [{pluginInfo.Metadata.Name}] because it has a dependency that was not loaded. See above errors for details.");
 						continue;
 					}
 
 					if (missingDependencies.Count != 0)
 					{
-						Logger.LogError($@"Missing the following dependencies for [{metadata.Name}]: {"\r\n"}{
-							string.Join("\r\n", missingDependencies.Select(s => $"- {s}").ToArray())
+						Logger.LogError($@"Missing the following dependencies for [{pluginInfo.Metadata.Name}]: {"\r\n"}{
+								string.Join("\r\n", missingDependencies.Select(s => $"- {s}").ToArray())
 							}{"\r\n"}Loading will be skipped; expect further errors and unstabilities.");
 
 						invalidPlugins.Add(pluginGUID);
@@ -246,14 +266,26 @@ namespace BepInEx.Bootstrap
 
 					try
 					{
-						Logger.LogInfo($"Loading [{metadata.Name} {metadata.Version}]");
-						Plugins.Add((BaseUnityPlugin)ManagerObject.AddComponent(pluginType));
+						Logger.LogInfo($"Loading [{pluginInfo.Metadata.Name} {pluginInfo.Metadata.Version}]");
+
+						if (!loadedAssemblies.TryGetValue(pluginInfo.Location, out var ass))
+							loadedAssemblies[pluginInfo.Location] = ass = Assembly.LoadFile(pluginInfo.Location);
+
+						PluginInfos[pluginGUID] = pluginInfo;
+						pluginInfo.Instance = (BaseUnityPlugin)ManagerObject.AddComponent(ass.GetType(pluginInfo.TypeName));
+
+						Plugins.Add(pluginInfo.Instance);
 					}
 					catch (Exception ex)
 					{
 						invalidPlugins.Add(pluginGUID);
-						Logger.LogError($"Error loading [{metadata.Name}] : {ex.Message}");
-						Logger.LogDebug(ex);
+						PluginInfos.Remove(pluginGUID);
+
+						Logger.LogError($"Error loading [{pluginInfo.Metadata.Name}] : {ex.Message}");
+						if (ex is ReflectionTypeLoadException re)
+							Logger.LogDebug(TypeLoader.TypeLoadExceptionToString(re));
+						else
+							Logger.LogDebug(ex);
 					}
 				}
 			}
@@ -272,17 +304,9 @@ namespace BepInEx.Bootstrap
 
 		#region Config
 
-		private static readonly ConfigWrapper<string> ConfigPluginsDirectory = ConfigFile.CoreConfig.Wrap(
-				"Paths",
-				"PluginsDirectory",
-				"The relative directory to the BepInEx folder where plugins are loaded.",
-				"plugins");
+		private static readonly ConfigWrapper<string> ConfigPluginsDirectory = ConfigFile.CoreConfig.Wrap("Paths", "PluginsDirectory", "The relative directory to the BepInEx folder where plugins are loaded.", "plugins");
 
-		private static readonly ConfigWrapper<bool> ConfigUnityLogging = ConfigFile.CoreConfig.Wrap(
-				"Logging",
-				"UnityLogListening",
-				"Enables showing unity log messages in the BepInEx logging system.",
-				true);
+		private static readonly ConfigWrapper<bool> ConfigUnityLogging = ConfigFile.CoreConfig.Wrap("Logging", "UnityLogListening", "Enables showing unity log messages in the BepInEx logging system.", true);
 
 		#endregion
 	}

@@ -27,7 +27,7 @@ namespace BepInEx.Logging
 				WriteStringToUnityLog = (Action<string>)Delegate.CreateDelegate(typeof(Action<string>), methodInfo);
 				break;
 			}
-			
+
 			if (WriteStringToUnityLog == null)
 				Logger.LogError("Unable to start Unity log writer");
 		}

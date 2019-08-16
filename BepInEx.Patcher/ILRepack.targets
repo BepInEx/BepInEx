@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Target Name="ILRepacker" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
+
+    <Copy SourceFiles="$(OutputPath)\$(AssemblyName).exe" DestinationFiles="$(OutputPath)\$(AssemblyName)1.exe"/>
+
+    <ItemGroup>
+      <InputAssemblies Include="$(OutputPath)\$(AssemblyName)1.exe" />
+      <InputAssemblies Include="$(OutputPath)\Mono.Cecil.dll" />
+    </ItemGroup>
+
+    <ILRepack
+      Parallel="false"
+      Internalize="true"
+      DebugInfo="true"
+      InputAssemblies="@(InputAssemblies)"
+      TargetKind="Exe"
+      TargetPlatformVersion="v2"
+      OutputFile="$(OutputPath)\$(AssemblyName).exe" />
+
+    <Delete Files="@(InputAssemblies)" />
+    <Delete Files="$(OutputPath)\BepInEx.Bootstrap.dll" />
+
+  </Target>
+</Project>

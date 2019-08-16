@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using BepInEx.Configuration;
 using BepInEx.Logging;
@@ -11,6 +10,7 @@ using BepInEx.Preloader.Patching;
 using BepInEx.Preloader.RuntimeFixes;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
+using MonoMod.RuntimeDetour;
 using UnityInjector.ConsoleUtil;
 using MethodAttributes = Mono.Cecil.MethodAttributes;
 
@@ -26,24 +26,32 @@ namespace BepInEx.Preloader
 		/// </summary>
 		private static PreloaderConsoleListener PreloaderLog { get; set; }
 
+		public static bool IsPostUnity2017 { get; } = File.Exists(Path.Combine(Paths.ManagedPath, "UnityEngine.CoreModule.dll"));
+
 		public static void Run()
 		{
 			try
 			{
 				AllocateConsole();
 
-				if (ConfigApplyRuntimePatches.Value)
-					UnityPatches.Apply();
+				Utility.TryDo(() =>
+				{
+					if (ConfigShimHarmony.Value)
+						HarmonyDetourBridge.Init();
+				}, out var harmonyBridgeException);
+
+				Utility.TryDo(() =>
+				{
+					if (ConfigApplyRuntimePatches.Value)
+						UnityPatches.Apply();
+				}, out var runtimePatchException);
 
 				Logger.Sources.Add(TraceLogSource.CreateSource());
 
 				PreloaderLog = new PreloaderConsoleListener(ConfigPreloaderCOutLogging.Value);
-
 				Logger.Listeners.Add(PreloaderLog);
 
-				
-				string consoleTile = $"BepInEx {typeof(Paths).Assembly.GetName().Version} RC1 - {Process.GetCurrentProcess().ProcessName}";
-
+				string consoleTile = $"BepInEx {typeof(Paths).Assembly.GetName().Version} - {Process.GetCurrentProcess().ProcessName}";
 				ConsoleWindow.Title = consoleTile;
 				Logger.LogMessage(consoleTile);
 
@@ -53,35 +61,33 @@ namespace BepInEx.Preloader
 				if (attributes.Length > 0)
 				{
 					var attribute = (BuildInfoAttribute)attributes[0];
-
 					Logger.LogMessage(attribute.Info);
 				}
 
-#if UNITY_2018
-				Logger.LogMessage("Compiled in Unity v2018 mode");
-#else
-				Logger.LogMessage("Compiled in Legacy Unity mode");
-#endif
+				Logger.LogInfo($"Running under Unity v{FileVersionInfo.GetVersionInfo(Paths.ExecutablePath).FileVersion}");
+				Logger.LogInfo($"CLR runtime version: {Environment.Version}");
+				Logger.LogInfo($"Supports SRE: {Utility.CLRSupportsDynamicAssemblies}");
 
-				Logger.LogInfo($"Running under Unity v{Process.GetCurrentProcess().MainModule.FileVersionInfo.FileVersion}");
+				if (harmonyBridgeException != null)
+					Logger.LogWarning($"Failed to enable fix for Harmony for .NET Standard API. Error message: {harmonyBridgeException.Message}");
+
+				if (runtimePatchException != null)
+					Logger.LogWarning($"Failed to apply runtime patches for Mono. See more info in the output log. Error message: {runtimePatchException.Message}");
 
 				Logger.LogMessage("Preloader started");
 
-
 				AssemblyPatcher.AddPatcher(new PatcherPlugin
-					{ TargetDLLs = new[] { ConfigEntrypointAssembly.Value },
-						Patcher = PatchEntrypoint,
-						Name = "BepInEx.Chainloader"
-					});
+				{
+					TargetDLLs = () => new[] { ConfigEntrypointAssembly.Value },
+					Patcher = PatchEntrypoint,
+					TypeName = "BepInEx.Chainloader"
+				});
 
-				AssemblyPatcher.AddPatchersFromDirectory(Paths.PatcherPluginPath, GetPatcherMethods);
+				AssemblyPatcher.AddPatchersFromDirectory(Paths.PatcherPluginPath);
 
 				Logger.LogInfo($"{AssemblyPatcher.PatcherPlugins.Count} patcher plugin(s) loaded");
 
-
 				AssemblyPatcher.PatchAndLoad(Paths.ManagedPath);
-
-
 				AssemblyPatcher.DisposePatchers();
 
 
@@ -120,97 +126,6 @@ namespace BepInEx.Preloader
 					PreloaderLog = null;
 				}
 			}
-		}
-
-		/// <summary>
-		///     Scans the assembly for classes that use the patcher contract, and returns a list of valid patchers.
-		/// </summary>
-		/// <param name="assembly">The assembly to scan.</param>
-		/// <returns>A list of assembly patchers that were found in the assembly.</returns>
-		public static List<PatcherPlugin> GetPatcherMethods(Assembly assembly)
-		{
-			var patcherMethods = new List<PatcherPlugin>();
-			var flags = BindingFlags.Public | BindingFlags.Static | BindingFlags.IgnoreCase;
-
-			foreach (var type in assembly.GetExportedTypes())
-				try
-				{
-					if (type.IsInterface)
-						continue;
-
-					var targetsProperty = type.GetProperty("TargetDLLs",
-						flags,
-						null,
-						typeof(IEnumerable<string>),
-						Type.EmptyTypes,
-						null);
-
-					//first try get the ref patcher method
-					var patcher = type.GetMethod("Patch",
-						flags,
-						null,
-						CallingConventions.Any,
-						new[] { typeof(AssemblyDefinition).MakeByRefType() },
-						null);
-
-					if (patcher == null) //otherwise try getting the non-ref patcher method
-						patcher = type.GetMethod("Patch",
-							flags,
-							null,
-							CallingConventions.Any,
-							new[] { typeof(AssemblyDefinition) },
-							null);
-
-					if (targetsProperty == null || !targetsProperty.CanRead || patcher == null)
-						continue;
-
-					var assemblyPatcher = new PatcherPlugin();
-
-					assemblyPatcher.Name = $"{assembly.GetName().Name}/{type.FullName}";
-					assemblyPatcher.Patcher = (ref AssemblyDefinition ass) =>
-					{
-						//we do the array fuckery here to get the ref result out
-						object[] args = { ass };
-
-						patcher.Invoke(null, args);
-
-						ass = (AssemblyDefinition)args[0];
-					};
-
-					assemblyPatcher.TargetDLLs = (IEnumerable<string>)targetsProperty.GetValue(null, null);
-
-					var initMethod = type.GetMethod("Initialize",
-						flags,
-						null,
-						CallingConventions.Any,
-						Type.EmptyTypes,
-						null);
-
-					if (initMethod != null)
-						assemblyPatcher.Initializer = () => initMethod.Invoke(null, null);
-
-					var finalizeMethod = type.GetMethod("Finish",
-						flags,
-						null,
-						CallingConventions.Any,
-						Type.EmptyTypes,
-						null);
-
-					if (finalizeMethod != null)
-						assemblyPatcher.Finalizer = () => finalizeMethod.Invoke(null, null);
-
-					patcherMethods.Add(assemblyPatcher);
-				}
-				catch (Exception ex)
-				{
-					Logger.LogWarning($"Could not load patcher methods from {assembly.GetName().Name}");
-					Logger.LogWarning(ex);
-				}
-
-			Logger.Log(patcherMethods.Count > 0 ? LogLevel.Info : LogLevel.Debug,
-				$"Loaded {patcherMethods.Count} patcher methods from {assembly.GetName().Name}");
-
-			return patcherMethods;
 		}
 
 		/// <summary>
@@ -281,9 +196,9 @@ namespace BepInEx.Preloader
 					il.InsertBefore(ins,
 						il.Create(OpCodes.Ldnull)); // gameExePath (always null, we initialize the Paths class in Entrypoint
 					il.InsertBefore(ins,
-						il.Create(OpCodes.Ldc_I4_0)); // startConsole (always false, we already load the console in Preloader)
+						il.Create(OpCodes.Ldc_I4_0)); //startConsole (always false, we already load the console in Preloader)
 					il.InsertBefore(ins,
-						il.Create(OpCodes.Call, initMethod)); // Chainloader.Initialize(string gameExePath, bool startConsole = true)
+						il.Create(OpCodes.Call, initMethod)); // Chainloader.Initialize(string gamePath, string managedPath = null, bool startConsole = true)
 					il.InsertBefore(ins,
 						il.Create(OpCodes.Call, startMethod));
 				}
@@ -323,12 +238,8 @@ namespace BepInEx.Preloader
 			"Preloader.Entrypoint",
 			"Assembly",
 			"The local filename of the assembly to target.",
-#if UNITY_2018
-			"UnityEngine.CoreModule.dll"
-#else
-			"UnityEngine.dll"
-#endif
-			);
+			IsPostUnity2017 ? "UnityEngine.CoreModule.dll" : "UnityEngine.dll"
+		);
 
 		private static readonly ConfigWrapper<string> ConfigEntrypointType = ConfigFile.CoreConfig.Wrap(
 			"Preloader.Entrypoint",
@@ -347,6 +258,12 @@ namespace BepInEx.Preloader
 			"ApplyRuntimePatches",
 			"Enables or disables runtime patches.\nThis should always be true, unless you cannot start the game due to a Harmony related issue (such as running .NET Standard runtime) or you know what you're doing.",
 			true);
+
+		private static readonly ConfigWrapper<bool> ConfigShimHarmony = ConfigFile.CoreConfig.Wrap(
+			"Preloader",
+			"ShimHarmonySupport",
+			"If enabled, basic Harmony functionality is patched to use MonoMod's RuntimeDetour instead.\nTry using this if Harmony does not work in a game.",
+			!Utility.CLRSupportsDynamicAssemblies);
 
 		private static readonly ConfigWrapper<bool> ConfigPreloaderCOutLogging = ConfigFile.CoreConfig.Wrap(
 			"Logging",

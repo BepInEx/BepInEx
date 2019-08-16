@@ -54,7 +54,7 @@ namespace BepInEx.Configuration
 		/// <param name="owner">The plugin that owns this setting.</param>
 		public ConfigFile(string configPath, bool saveOnInit, BaseUnityPlugin owner = null)
 		{
-			_ownerMetadata = owner?.Metadata;
+			_ownerMetadata = owner?.Info.Metadata;
 
 			if (configPath == null) throw new ArgumentNullException(nameof(configPath));
 			configPath = Path.GetFullPath(configPath);

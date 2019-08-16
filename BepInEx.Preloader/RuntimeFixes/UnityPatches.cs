@@ -39,18 +39,5 @@ namespace BepInEx.Preloader.RuntimeFixes
 			if (AssemblyLocations.TryGetValue(__instance.FullName, out string location))
 				__result = $"file://{location.Replace('\\', '/')}";
 		}
-
-#if UNITY_2018
-/*
- * DESC: Workaround for Trace class not working because of missing .config file
- * AFFECTS: Unity 2018+ (not .NET Standard / MonoBleedingEdge runtimes)
- */
-		[HarmonyPostfix, HarmonyPatch(typeof(AppDomain), nameof(AppDomain.SetupInformation), MethodType.Getter)]
-		public static void GetExeConfigName(AppDomainSetup __result)
-		{
-			__result.ApplicationBase = $"file://{Paths.GameRootPath}";
-			__result.ConfigurationFile = "app.config";
-		}
-#endif
 	}
 }

@@ -39,12 +39,9 @@ namespace BepInEx.Logging
 			}
 
 			LogWriter = TextWriter.Synchronized(new StreamWriter(fileStream, Encoding.UTF8));
-			
 
-			FlushTimer = new Timer(o =>
-			{
-				LogWriter?.Flush();
-			}, null, 2000, 2000);
+
+			FlushTimer = new Timer(o => { LogWriter?.Flush(); }, null, 2000, 2000);
 		}
 
 		public void LogEvent(object sender, LogEventArgs eventArgs)

@@ -1,4 +1,6 @@
-﻿using BepInEx.Configuration;
+﻿using BepInEx.Bootstrap;
+using BepInEx.Configuration;
+using BepInEx.Contract;
 using BepInEx.Logging;
 using UnityEngine;
 
@@ -12,8 +14,7 @@ namespace BepInEx
 		/// <summary>
 		/// Information about this plugin as it was loaded.
 		/// </summary>
-		public BepInPlugin Metadata { get; }
-
+		public PluginInfo Info { get; }
 		/// <summary>
 		/// Logger instance tied to this plugin.
 		/// </summary>
@@ -30,11 +31,25 @@ namespace BepInEx
 		/// </summary>
 		protected BaseUnityPlugin()
 		{
-			Metadata = MetadataHelper.GetMetadata(this);
+			var metadata = MetadataHelper.GetMetadata(this);
 
-			Logger = Logging.Logger.CreateLogSource(Metadata.Name);
+			if (Chainloader.PluginInfos.TryGetValue(metadata.GUID, out var info))
+				Info = info;
+			else
+			{
+				Info = new PluginInfo
+				{
+					Metadata = metadata,
+					Instance = this,
+					Dependencies = MetadataHelper.GetDependencies(GetType()),
+					Processes = MetadataHelper.GetAttributes<BepInProcess>(GetType()),
+					Location = GetType().Assembly.Location
+				};
+			}
 
-			Config = new ConfigFile(Utility.CombinePaths(Paths.ConfigPath, Metadata.GUID + ".cfg"), false, this);
+			Logger = Logging.Logger.CreateLogSource(metadata.Name);
+
+			Config = new ConfigFile(Utility.CombinePaths(Paths.ConfigPath, metadata.GUID + ".cfg"), false, this);
 		}
 	}
 }
