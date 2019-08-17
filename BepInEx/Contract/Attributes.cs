@@ -33,21 +33,21 @@ namespace BepInEx
 		/// </summary>
 		public Version Version { get; protected set; }
 
-		/// <param name="guid">The unique identifier of the plugin. Should not change between plugin versions.</param>
-		/// <param name="name">The user friendly name of the plugin. Is able to be changed between versions.</param>
-		/// <param name="version">The specfic version of the plugin.</param>
-		public BepInPlugin(string guid, string name, string version)
+		/// <param name="GUID">The unique identifier of the plugin. Should not change between plugin versions.</param>
+		/// <param name="Name">The user friendly name of the plugin. Is able to be changed between versions.</param>
+		/// <param name="Version">The specfic version of the plugin.</param>
+		public BepInPlugin(string GUID, string Name, string Version)
 		{
-			GUID = guid;
-			Name = name;
+			this.GUID = GUID;
+			this.Name = Name;
 
 			try
 			{
-				Version = new Version(version);
+				this.Version = new Version(Version);
 			}
 			catch
 			{
-				Version = null;
+				this.Version = null;
 			}
 		}
 
