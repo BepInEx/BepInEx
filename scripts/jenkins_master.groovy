@@ -79,48 +79,31 @@ Changes since ${latestTag}:
                 }
             }
         }
-        stage('Build Legacy BepInEx') {
+        stage('Build BepInEx') {
             steps {
                 sh 'cp -f Unity/5.6/UnityEngine.dll BepInEx/lib/UnityEngine.dll'
                 dir('BepInEx') {
-                    sh 'msbuild /p:Configuration=Legacy /t:Build /p:DebugType=none BepInEx.sln'
+                    sh 'msbuild /p:Configuration=Release /t:Build /p:DebugType=none BepInEx.sln'
                 }
 
-                dir('Build/Legacy/bin') {
-                    sh 'cp -fr ../../../BepInEx/bin/* .'
+                dir('Build/bin') {
+                    sh 'cp -fr ../../BepInEx/bin/* .'
                 }
                 dir('BepInEx/bin') {
                     deleteDir()
                 }
             }
         }
-        stage('Build 2018 BepInEx') {
+        stage('Package') {
             steps {
-                // sh 'cp -f Unity/2018/UnityEngine.CoreModule.dll BepInEx/lib/UnityEngine.CoreModule.dll'
-                // TODO: Switch to 2018 version of UnityEngine.dll?
-                sh 'cp -f Unity/5.6/UnityEngine.dll BepInEx/lib/UnityEngine.dll'
-                dir('BepInEx') {
-                    sh 'msbuild /p:Configuration=v2018 /t:Build /p:DebugType=none BepInEx.sln'
-                }
-
-                dir('Build/v2018/bin') {
-                    sh 'cp -fr ../../../BepInEx/bin/* .'
-                }
-                dir('BepInEx/bin') {
-                    deleteDir()
-                }
-            }
-        }
-        stage('Package Legacy') {
-            steps {
-                dir('Build/Legacy/dist') {
+                dir('Build/dist') {
                     sh 'mkdir -p BepInEx/core BepInEx/patchers BepInEx/plugins'
                     sh 'cp -fr -t BepInEx/core ../bin/*'
                     sh 'rm -f BepInEx/core/UnityEngine.dll'
                     sh 'rm -rf BepInEx/core/patcher'
 
-                    sh 'cp -f ../../../BepInEx/doorstop/doorstop_config.ini doorstop_config.ini'
-                    sh 'cp -f ../../../Doorstop/x86/version.dll version.dll'
+                    sh 'cp -f ../../BepInEx/doorstop/doorstop_config.ini doorstop_config.ini'
+                    sh 'cp -f ../../Doorstop/x86/version.dll version.dll'
                     
                     script {
                         if(params.IS_BE) {
@@ -132,18 +115,17 @@ Changes since ${latestTag}:
                             commitPrefix = "_"
                     }
 
-                    sh "zip -r9 BepInEx_Legacy_x86${commitPrefix}${versionNumber}.zip ./*"
+                    sh "zip -r9 BepInEx_x86${commitPrefix}${versionNumber}.zip ./*"
                     
-                    sh 'cp -f ../../../Doorstop/x64/version.dll version.dll'
+                    sh 'cp -f ../../Doorstop/x64/version.dll version.dll'
                     
                     sh 'unix2dos doorstop_config.ini'
                     
-                    
-                    sh "zip -r9 BepInEx_Legacy_x64${commitPrefix}${versionNumber}.zip ./* -x \\*.zip"
+                    sh "zip -r9 BepInEx_x64${commitPrefix}${versionNumber}.zip ./* -x \\*.zip"
 
                     archiveArtifacts "*.zip"
                 }
-                dir('Build/Legacy/patcher') {
+                dir('Build/patcher') {
                     sh 'cp -fr ../bin/patcher/* .'
                     script {
                         if(params.IS_BE) {
@@ -151,83 +133,28 @@ Changes since ${latestTag}:
                             sh 'unix2dos changelog.txt'
                         }
                     }
-                    sh "zip -r9 BepInEx_Legacy_Patcher${commitPrefix}${versionNumber}.zip ./*"
-
-                    archiveArtifacts "*.zip"
-                }
-            }
-        }
-        stage('Package v2018') {
-            steps {
-                dir('Build/v2018/dist') {
-                    sh 'mkdir -p BepInEx/core BepInEx/patchers BepInEx/plugins'
-                    sh 'cp -fr -t BepInEx/core ../bin/*'
-                    sh 'rm -rf BepInEx/core/patcher'
-                    sh 'rm -f BepInEx/core/UnityEngine.dll'
-                    sh 'rm -f BepInEx/core/UnityEngine.CoreModule.dll'
-
-                    sh 'cp -f ../../../BepInEx/doorstop/doorstop_config.ini doorstop_config.ini'
-                    sh 'cp -f ../../../Doorstop/x86/version.dll version.dll'
-                    
-                    script {
-                        if(params.IS_BE) {
-                            writeFile encoding: 'UTF-8', file: 'changelog.txt', text: changelog
-                            sh 'unix2dos changelog.txt'
-                            commitPrefix = "_${shortCommit}_"
-                        } 
-                        else
-                            commitPrefix = "_"
-                    }
-
-                    sh "zip -r9 BepInEx_v2018_x86${commitPrefix}${versionNumber}.zip ./*"
-                    
-                    sh 'cp -f ../../../Doorstop/x64/version.dll version.dll'
-                    
-                    sh 'unix2dos doorstop_config.ini'
-                    
-                    sh "zip -r9 BepInEx_v2018_x64${commitPrefix}${versionNumber}.zip ./* -x \\*.zip"
-
-                    archiveArtifacts "*.zip"
-                }
-                dir('Build/v2018/patcher') {
-                    sh 'cp -fr ../bin/patcher/* .'
-                    script {
-                        if(params.IS_BE) {
-                            writeFile encoding: 'UTF-8', file: 'changelog.txt', text: changelog
-                            sh 'unix2dos changelog.txt'
-                        }
-                    }
-                    sh "zip -r9 BepInEx_v2018_Patcher${commitPrefix}${versionNumber}.zip ./*"
+                    sh "zip -r9 BepInEx_Patcher${commitPrefix}${versionNumber}.zip ./*"
 
                     archiveArtifacts "*.zip"
                 }
             }
         }
     }
-    post {
+       post {
         success {
             script {
                 if(params.IS_BE) {
                     // Write built BepInEx into bepisbuilds
-                    dir('Build/Legacy/dist') {
-                        sh "cp BepInEx_Legacy_x86_${shortCommit}_${versionNumber}.zip /var/www/bepisbuilds/builds/bepinex_be"
-                        sh "cp BepInEx_Legacy_x64_${shortCommit}_${versionNumber}.zip /var/www/bepisbuilds/builds/bepinex_be"
+                    dir('Build/dist') {
+                        sh "cp BepInEx_x86_${shortCommit}_${versionNumber}.zip /var/www/bepisbuilds/builds/bepinex_be"
+                        sh "cp BepInEx_x64_${shortCommit}_${versionNumber}.zip /var/www/bepisbuilds/builds/bepinex_be"
                     }
-
-                    dir('Build/Legacy/patcher') {
-                        sh "cp BepInEx_Legacy_Patcher_${shortCommit}_${versionNumber}.zip /var/www/bepisbuilds/builds/bepinex_be"
-                    }
-
-                    dir('Build/v2018/dist') {
-                        sh "cp BepInEx_v2018_x86_${shortCommit}_${versionNumber}.zip /var/www/bepisbuilds/builds/bepinex_be"
-                        sh "cp BepInEx_v2018_x64_${shortCommit}_${versionNumber}.zip /var/www/bepisbuilds/builds/bepinex_be"
-                    }
-
+/*
                     dir('Build/v2018/patcher') {
                         sh "cp BepInEx_v2018_Patcher_${shortCommit}_${versionNumber}.zip /var/www/bepisbuilds/builds/bepinex_be"
                     }
-
-                    sh "echo \"`date -Iseconds -u`;${env.BUILD_NUMBER};${shortCommit};BepInEx_Legacy_x86_${shortCommit}_${versionNumber}.zip;BepInEx_Legacy_x64_${shortCommit}_${versionNumber}.zip;BepInEx_v2018_x86_${shortCommit}_${versionNumber}.zip;BepInEx_v2018_x64_${shortCommit}_${versionNumber}.zip;BepInEx_Legacy_Patcher_${shortCommit}_${versionNumber}.zip;BepInEx_v2018_Patcher_${shortCommit}_${versionNumber}.zip\" >> /var/www/bepisbuilds/builds/bepinex_be/artifacts_list"
+*/
+                    sh "echo \"`date -Iseconds -u`;${env.BUILD_NUMBER};${shortCommit};BepInEx_x86_${shortCommit}_${versionNumber}.zip;BepInEx_x64_${shortCommit}_${versionNumber}.zip\" >> /var/www/bepisbuilds/builds/bepinex_be/artifacts_list"
                 }
             }
 
