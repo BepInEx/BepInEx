@@ -22,12 +22,17 @@ namespace BepInEx
 		{
 			try
 			{
-				var m = new DynamicMethod("SRE_Test", null, null);
 				CLRSupportsDynamicAssemblies = true;
+				// ReSharper disable once AssignNullToNotNullAttribute
+				var m = new CustomAttributeBuilder(null, new object[0]);
 			}
 			catch (PlatformNotSupportedException)
 			{
 				CLRSupportsDynamicAssemblies = false;
+			}
+			catch (ArgumentNullException)
+			{
+				// Suppress ArgumentNullException
 			}
 		}
 
