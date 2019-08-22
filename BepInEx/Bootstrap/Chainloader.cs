@@ -71,7 +71,12 @@ namespace BepInEx.Bootstrap
 			}
 
 			Logger.Listeners.Add(new UnityLogListener());
-			Logger.Listeners.Add(new DiskLogListener());
+
+			if (ConfigDiskLogging.Value)
+			{
+				var logLevel = (LogLevel)Enum.Parse(typeof(LogLevel), ConfigDiskConsoleDisplayedLevel.Value, true);
+				Logger.Listeners.Add(new DiskLogListener("LogOutput.log", logLevel, ConfigDiskAppend.Value, ConfigDiskWriteUnityLog.Value));
+			}
 
 			if (!TraceLogSource.IsListening)
 				Logger.Sources.Add(TraceLogSource.CreateSource());
@@ -304,10 +309,35 @@ namespace BepInEx.Bootstrap
 
 		#region Config
 
-		private static readonly ConfigWrapper<string> ConfigPluginsDirectory = ConfigFile.CoreConfig.Wrap("Paths", "PluginsDirectory", "The relative directory to the BepInEx folder where plugins are loaded.", "plugins");
+		private static readonly ConfigWrapper<bool> ConfigUnityLogging = ConfigFile.CoreConfig.Wrap(
+			"Logging", 
+			"UnityLogListening", 
+			"Enables showing unity log messages in the BepInEx logging system.", 
+			true);
 
-		private static readonly ConfigWrapper<bool> ConfigUnityLogging = ConfigFile.CoreConfig.Wrap("Logging", "UnityLogListening", "Enables showing unity log messages in the BepInEx logging system.", true);
+		private static readonly ConfigWrapper<bool> ConfigDiskLogging = ConfigFile.CoreConfig.Wrap(
+			"Logging.Disk", 
+			"Enabled", 
+			"Enables writing log messages to disk.", 
+			true);
 
+		private static readonly ConfigWrapper<string> ConfigDiskConsoleDisplayedLevel = ConfigFile.CoreConfig.Wrap(
+			"Logging.Disk",
+			"DisplayedLogLevel",
+			"Only displays the specified log level and above in the console output.",
+			"Info");
+
+		private static readonly ConfigWrapper<bool> ConfigDiskWriteUnityLog = ConfigFile.CoreConfig.Wrap(
+			"Logging.Disk",
+			"WriteUnityLog",
+			"Include unity log messages in log file output.",
+			false);
+
+		private static readonly ConfigWrapper<bool> ConfigDiskAppend = ConfigFile.CoreConfig.Wrap(
+			"Logging.Disk",
+			"AppendLog",
+			"Appends to the log file instead of overwriting, on game startup.",
+			false);
 		#endregion
 	}
 }

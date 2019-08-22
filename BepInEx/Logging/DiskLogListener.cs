@@ -1,8 +1,6 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Text;
 using System.Threading;
-using BepInEx.Configuration;
 
 namespace BepInEx.Logging
 {
@@ -11,20 +9,24 @@ namespace BepInEx.Logging
 	/// </summary>
 	public class DiskLogListener : ILogListener
 	{
-		protected LogLevel DisplayedLogLevel = (LogLevel)Enum.Parse(typeof(LogLevel), ConfigConsoleDisplayedLevel.Value, true);
+		public LogLevel DisplayedLogLevel { get; set; }
 
-		protected TextWriter LogWriter { get; set; }
+		public TextWriter LogWriter { get; protected set; }
 
-		protected Timer FlushTimer { get; set; }
+		public Timer FlushTimer { get; protected set; }
 
-		public DiskLogListener()
+		public bool WriteFromUnityLog { get; set; }
+
+		public DiskLogListener(string localPath, LogLevel displayedLogLevel = LogLevel.Info, bool appendLog = false, bool includeUnityLog = false)
 		{
+			WriteFromUnityLog = includeUnityLog;
+			DisplayedLogLevel = displayedLogLevel;
+
 			int counter = 1;
-			string localPath = "LogOutput.log";
 
 			FileStream fileStream;
 
-			while (!Utility.TryOpenFileStream(Path.Combine(Paths.BepInExRootPath, localPath), ConfigAppendLog.Value ? FileMode.Append : FileMode.Create, out fileStream, share: FileShare.Read))
+			while (!Utility.TryOpenFileStream(Path.Combine(Paths.BepInExRootPath, localPath), appendLog ? FileMode.Append : FileMode.Create, out fileStream, share: FileShare.Read))
 			{
 				if (counter == 5)
 				{
@@ -46,7 +48,7 @@ namespace BepInEx.Logging
 
 		public void LogEvent(object sender, LogEventArgs eventArgs)
 		{
-			if (!ConfigWriteUnityLog.Value && eventArgs.Source is UnityLogSource)
+			if (!WriteFromUnityLog && eventArgs.Source is UnityLogSource)
 				return;
 
 			if (eventArgs.Level.GetHighestLevel() > DisplayedLogLevel)
@@ -66,23 +68,5 @@ namespace BepInEx.Logging
 		{
 			Dispose();
 		}
-
-		private static readonly ConfigWrapper<string> ConfigConsoleDisplayedLevel = ConfigFile.CoreConfig.Wrap(
-			"Logging.Disk",
-			"DisplayedLogLevel",
-			"Only displays the specified log level and above in the console output.",
-			"Info");
-
-		private static readonly ConfigWrapper<bool> ConfigWriteUnityLog = ConfigFile.CoreConfig.Wrap(
-			"Logging.Disk",
-			"WriteUnityLog",
-			"Include unity log messages in log file output.",
-			false);
-
-		private static readonly ConfigWrapper<bool> ConfigAppendLog = ConfigFile.CoreConfig.Wrap(
-			"Logging.Disk",
-			"AppendLog",
-			"Appends to the log file instead of overwriting, on game startup.",
-			false);
 	}
 }
