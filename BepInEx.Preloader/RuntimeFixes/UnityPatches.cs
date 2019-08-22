@@ -8,14 +8,13 @@ namespace BepInEx.Preloader.RuntimeFixes
 {
 	internal static class UnityPatches
 	{
-		public static HarmonyLib.Harmony HarmonyInstance { get; } = new HarmonyLib.Harmony("com.bepinex.unitypatches");
+		private static HarmonyLib.Harmony HarmonyInstance { get; set; }
 
-		public static Dictionary<string, string> AssemblyLocations { get; } =
-			new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+		public static Dictionary<string, string> AssemblyLocations { get; } = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
 
 		public static void Apply()
 		{
-			HarmonyWrapper.PatchAll(typeof(UnityPatches), HarmonyInstance);
+			HarmonyInstance = HarmonyWrapper.PatchAll(typeof(UnityPatches), HarmonyInstance);
 
 			try
 			{

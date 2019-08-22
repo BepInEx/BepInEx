@@ -34,17 +34,19 @@ namespace BepInEx.Preloader
 			{
 				AllocateConsole();
 
-				Utility.TryDo(() =>
+				bool bridgeInitialized = Utility.TryDo(() =>
 				{
 					if (ConfigShimHarmony.Value)
 						HarmonyDetourBridge.Init();
 				}, out var harmonyBridgeException);
 
-				Utility.TryDo(() =>
-				{
-					if (ConfigApplyRuntimePatches.Value)
-						UnityPatches.Apply();
-				}, out var runtimePatchException);
+				Exception runtimePatchException = null;
+				if(bridgeInitialized)
+					Utility.TryDo(() =>
+					{
+						if (ConfigApplyRuntimePatches.Value)
+							UnityPatches.Apply();
+					}, out runtimePatchException);
 
 				Logger.Sources.Add(TraceLogSource.CreateSource());
 
@@ -100,6 +102,7 @@ namespace BepInEx.Preloader
 			}
 			catch (Exception ex)
 			{
+				File.WriteAllText("err.log", ex.ToString());
 				try
 				{
 					Logger.LogFatal("Could not run preloader!");
