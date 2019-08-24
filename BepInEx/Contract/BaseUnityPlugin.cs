@@ -48,7 +48,7 @@ namespace BepInEx
 
 			Logger = Logging.Logger.CreateLogSource(metadata.Name);
 
-			Config = new ConfigFile(Utility.CombinePaths(Paths.ConfigPath, metadata.GUID + ".cfg"), false, this);
+			Config = new ConfigFile(Utility.CombinePaths(Paths.ConfigPath, metadata.GUID + ".cfg"), false, metadata);
 		}
 	}
 }

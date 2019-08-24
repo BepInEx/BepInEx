@@ -62,10 +62,10 @@ namespace BepInEx.Configuration
 		/// </summary>
 		/// <param name="configPath">Full path to a file that contains settings. The file will be created as needed.</param>
 		/// <param name="saveOnInit">If the config file/directory doesn't exist, create it immediately.</param>
-		/// <param name="owner">The plugin that owns this setting.</param>
-		public ConfigFile(string configPath, bool saveOnInit, BaseUnityPlugin owner = null)
+		/// <param name="ownerMetadata">Information about the plugin that owns this setting file.</param>
+		public ConfigFile(string configPath, bool saveOnInit, BepInPlugin ownerMetadata = null)
 		{
-			_ownerMetadata = owner?.Info.Metadata;
+			_ownerMetadata = ownerMetadata;
 
 			if (configPath == null) throw new ArgumentNullException(nameof(configPath));
 			configPath = Path.GetFullPath(configPath);
