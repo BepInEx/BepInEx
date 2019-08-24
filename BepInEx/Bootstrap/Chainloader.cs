@@ -43,6 +43,8 @@ namespace BepInEx.Bootstrap
 			if (_initialized)
 				return;
 
+			ThreadingHelper.Initialize();
+
 			// Set vitals
 			if (gameExePath != null)
 			{
