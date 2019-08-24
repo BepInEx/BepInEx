@@ -71,7 +71,9 @@ namespace BepInEx.Bootstrap
 			}
 
 			Logger.Listeners.Add(new UnityLogListener());
-			Logger.Listeners.Add(new DiskLogListener());
+
+			if (ConfigDiskLogging.Value)
+				Logger.Listeners.Add(new DiskLogListener("LogOutput.log", ConfigDiskConsoleDisplayedLevel.Value, ConfigDiskAppend.Value, ConfigDiskWriteUnityLog.Value));
 
 			if (!TraceLogSource.IsListening)
 				Logger.Sources.Add(TraceLogSource.CreateSource());
@@ -304,16 +306,31 @@ namespace BepInEx.Bootstrap
 
 		#region Config
 
-		private static readonly ConfigWrapper<string> ConfigPluginsDirectory = ConfigFile.CoreConfig.Wrap<string>(
-			"Paths", "PluginsDirectory",
-			"plugins",
-			new ConfigDescription("The relative directory to the BepInEx folder where plugins are loaded."));
 
 		private static readonly ConfigWrapper<bool> ConfigUnityLogging = ConfigFile.CoreConfig.Wrap(
 			"Logging", "UnityLogListening",
 			true,
 			new ConfigDescription("Enables showing unity log messages in the BepInEx logging system."));
 
+		private static readonly ConfigWrapper<bool> ConfigDiskWriteUnityLog = ConfigFile.CoreConfig.Wrap(
+			"Logging.Disk", "WriteUnityLog",
+			false,
+			new ConfigDescription("Include unity log messages in log file output."));
+
+		private static readonly ConfigWrapper<bool> ConfigDiskAppend = ConfigFile.CoreConfig.Wrap(
+			"Logging.Disk", "AppendLog",
+			false,
+			new ConfigDescription("Appends to the log file instead of overwriting, on game startup."));
+
+		private static readonly ConfigWrapper<bool> ConfigDiskLogging = ConfigFile.CoreConfig.Wrap(
+			"Logging.Disk", "Enabled",
+			true,
+			new ConfigDescription("Enables writing log messages to disk."));
+
+		private static readonly ConfigWrapper<LogLevel> ConfigDiskConsoleDisplayedLevel = ConfigFile.CoreConfig.Wrap(
+			"Logging.Disk", "DisplayedLogLevel",
+			LogLevel.Info,
+			new ConfigDescription("Only displays the specified log level and above in the console output."));
 		#endregion
 	}
 }
