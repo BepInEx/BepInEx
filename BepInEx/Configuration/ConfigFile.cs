@@ -255,7 +255,7 @@ namespace BepInEx.Configuration
 		/// </summary>
 		[Obsolete("Use other Wrap overloads instead")]
 		public ConfigWrapper<T> Wrap<T>(string section, string key, string description = null, T defaultValue = default(T))
-			=> Wrap(new ConfigDefinition(section, key), defaultValue, string.IsNullOrEmpty(description) ? null : new ConfigDescription(description));
+			=> Wrap(new ConfigDefinition(section ?? "", key), defaultValue, string.IsNullOrEmpty(description) ? null : new ConfigDescription(description));
 
 		/// <summary>
 		/// Create a new setting or access one of the existing ones. The setting is saved to drive and loaded automatically.

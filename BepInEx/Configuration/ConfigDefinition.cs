@@ -26,8 +26,8 @@ namespace BepInEx.Configuration
 		/// <param name="key">Name of the setting, case sensitive.</param>
 		public ConfigDefinition(string section, string key)
 		{
-			Key = key;
-			Section = section;
+			Key = key ?? throw new ArgumentNullException(nameof(key));
+			Section = section ?? throw new ArgumentNullException(nameof(section));
 		}
 
 		/// <summary>
