@@ -11,7 +11,7 @@ namespace BepInEx.Configuration
 		/// <summary>
 		/// Entry of this setting in the <see cref="Configuration.ConfigFile"/>.
 		/// </summary>
-		public ConfigEntry ConfigEntry { get; }
+		public ConfigEntry<T> ConfigEntry { get; }
 
 		/// <summary>
 		/// Unique definition of this setting.
@@ -33,11 +33,11 @@ namespace BepInEx.Configuration
 		/// </summary>
 		public T Value
 		{
-			get => (T)ConfigEntry.Value;
-			set => ConfigEntry.SetValue(value, true, this);
+			get => ConfigEntry.TypedValue;
+			set => ConfigEntry.TypedValue = value;
 		}
 
-		internal ConfigWrapper(ConfigEntry configEntry)
+		internal ConfigWrapper(ConfigEntry<T> configEntry)
 		{
 			ConfigEntry = configEntry ?? throw new ArgumentNullException(nameof(configEntry));
 

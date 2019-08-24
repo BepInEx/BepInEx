@@ -9,49 +9,21 @@ namespace BepInEx.Configuration
 	/// Container for a single setting of a <see cref="Configuration.ConfigFile"/>. 
 	/// Each config entry is linked to one config file.
 	/// </summary>
-	public sealed class ConfigEntry
+	public abstract class ConfigEntryBase
 	{
-		internal ConfigEntry(ConfigFile configFile, ConfigDefinition definition, Type settingType, object defaultValue) : this(configFile, definition)
-		{
-			SetTypeAndDefaultValue(settingType, defaultValue, true);
-		}
-
-		internal ConfigEntry(ConfigFile configFile, ConfigDefinition definition)
+		/// <summary>
+		/// Types of defaultValue and definition.AcceptableValues have to be the same as settingType.
+		/// </summary>
+		internal ConfigEntryBase(ConfigFile configFile, ConfigDefinition definition, Type settingType, object defaultValue)
 		{
 			ConfigFile = configFile ?? throw new ArgumentNullException(nameof(configFile));
 			Definition = definition ?? throw new ArgumentNullException(nameof(definition));
-		}
+			SettingType = settingType ?? throw new ArgumentNullException(nameof(settingType));
 
-		internal void SetTypeAndDefaultValue(Type settingType, object defaultValue, bool uniqueDefaultValue)
-		{
-			if (settingType == null) throw new ArgumentNullException(nameof(settingType));
-
-			if (settingType == SettingType)
-			{
-				if (uniqueDefaultValue)
-					DefaultValue = defaultValue;
-				return;
-			}
-
-			if (SettingType != null)
-			{
-				throw new ArgumentException($"Tried to define setting \"{Definition}\" as type {settingType.Name} " +
-											$"while it was already defined as type {SettingType.Name}. Use the same " +
-											"Type for all Wrappers of a single setting.");
-			}
-
-			if (defaultValue == null && settingType.IsValueType)
-				throw new ArgumentException("defaultValue is null while settingType is a value type");
-
-			if (defaultValue != null && !settingType.IsInstanceOfType(defaultValue))
-				throw new ArgumentException("defaultValue can not be assigned to type " + settingType.Name);
-
-			SettingType = settingType;
+			// Free type check
+			Value = defaultValue;
 			DefaultValue = defaultValue;
 		}
-
-		private object _convertedValue;
-		private string _serializedValue;
 
 		/// <summary>
 		/// Config file this entry is a part of.
@@ -71,138 +43,69 @@ namespace BepInEx.Configuration
 		/// <summary>
 		/// Type of the <see cref="Value"/> that this setting holds.
 		/// </summary>
-		public Type SettingType { get; private set; }
+		public Type SettingType { get; }
 
 		/// <summary>
 		/// Default value of this setting (set only if the setting was not changed before).
 		/// </summary>
-		public object DefaultValue { get; private set; }
-
-		/// <summary>
-		/// Is the type of this setting defined, and by extension can <see cref="Value"/> of this setting be accessed.
-		/// Setting is defined when any <see cref="ConfigWrapper{T}"/> objects reference it.
-		/// </summary>
-		public bool IsDefined => SettingType != null;
+		public object DefaultValue { get; }
 
 		/// <summary>
 		/// Get or set the value of the setting.
-		/// Can't be used when <see cref="IsDefined"/> is false.
 		/// </summary>
-		public object Value
-		{
-			get
-			{
-				ProcessSerializedValue();
-
-				return _convertedValue;
-			}
-			set => SetValue(value, true, this);
-		}
-
-		internal void SetValue(object newValue, bool fireEvent, object sender)
-		{
-			bool wasChanged = ProcessSerializedValue();
-			newValue = ClampValue(newValue);
-			wasChanged = wasChanged || !Equals(newValue, _convertedValue);
-
-			if (wasChanged)
-			{
-				_convertedValue = newValue;
-
-				if (fireEvent)
-					OnSettingChanged(sender);
-			}
-		}
+		public abstract object Value { get; set; }
 
 		/// <summary>
 		/// Get the serialized representation of the value.
 		/// </summary>
 		public string GetSerializedValue()
 		{
-			if (_serializedValue != null)
-				return _serializedValue;
-
-			if (!IsDefined)
-				return null;
-
 			return TomlTypeConverter.ConvertToString(Value, SettingType);
 		}
 
 		/// <summary>
 		/// Set the value by using its serialized form.
 		/// </summary>
-		public void SetSerializedValue(string newValue) => SetSerializedValue(newValue, true, this);
-
-		internal void SetSerializedValue(string newValue, bool fireEvent, object sender)
+		public void SetSerializedValue(string value)
 		{
-			string current = GetSerializedValue();
-			if (string.Equals(current, newValue)) return;
-
-			_serializedValue = newValue;
-
-			if (!IsDefined) return;
-
-			if (ProcessSerializedValue())
+			try
 			{
-				if (fireEvent)
-					OnSettingChanged(sender);
+				var newValue = TomlTypeConverter.ConvertToValue(value, SettingType);
+				Value = newValue;
 			}
-		}
-
-		private bool ProcessSerializedValue()
-		{
-			if (!IsDefined)
-				throw new InvalidOperationException("Can't get the value before the SettingType is specified");
-
-			if (_serializedValue != null)
+			catch (Exception e)
 			{
-				string value = _serializedValue;
-				_serializedValue = null;
-
-				if (value != "")
-				{
-					try
-					{
-						var newValue = TomlTypeConverter.ConvertToValue(value, SettingType);
-						newValue = ClampValue(newValue);
-						if (!Equals(newValue, _convertedValue))
-						{
-							_convertedValue = newValue;
-							return true;
-						}
-						return false;
-					}
-					catch (Exception e)
-					{
-						Logger.Log(LogLevel.Warning, $"Config value of setting \"{Definition}\" could not be " +
-													 $"parsed and will be ignored. Reason: {e.Message}; Value: {value}");
-					}
-				}
+				Logger.Log(LogLevel.Warning, $"Config value of setting \"{Definition}\" could not be " +
+											 $"parsed and will be ignored. Reason: {e.Message}; Value: {value}");
 			}
-
-			if (_convertedValue == null && DefaultValue != null)
-			{
-				_convertedValue = DefaultValue;
-				return true;
-			}
-
-			return false;
 		}
 
 		internal void SetDescription(ConfigDescription configDescription)
 		{
+			if (configDescription == null) throw new ArgumentNullException(nameof(configDescription));
+			if (configDescription.AcceptableValues != null && !SettingType.IsAssignableFrom(configDescription.AcceptableValues.ValueType))
+				throw new ArgumentException("configDescription.AcceptableValues is for a different type than the type of this setting");
+
 			Description = configDescription;
-			SetValue(ClampValue(Value), true, this);
+
+			// Automatically calls ClampValue in case it changed
+			Value = Value;
 		}
 
-		private object ClampValue(object value)
+		/// <summary>
+		/// If necessary, clamp the value to acceptable value range. T has to be equal to settingType.
+		/// </summary>
+		protected T ClampValue<T>(T value)
 		{
 			if (Description?.AcceptableValues != null)
-				return Description.AcceptableValues.Clamp(value);
+				return (T)Description.AcceptableValues.Clamp(value);
 			return value;
 		}
 
-		private void OnSettingChanged(object sender)
+		/// <summary>
+		/// Trigger setting changed event.
+		/// </summary>
+		protected void OnSettingChanged(object sender)
 		{
 			ConfigFile.OnSettingChanged(sender, this);
 		}
@@ -228,20 +131,49 @@ namespace BepInEx.Configuration
 				writer.WriteLine("# Default value: " + DefaultValue);
 			}
 
-			if (hasDescription)
+			if (hasDescription && Description.AcceptableValues != null)
 			{
-				if (Description.AcceptableValues != null)
-				{
-					writer.WriteLine(Description.AcceptableValues.ToSerializedString());
-				}
-				else if (hasType)
-				{
-					/*if (SettingType == typeof(bool))
-						writer.WriteLine("# Acceptable values: True, False");
-					else*/ if (SettingType.IsEnum)
-						writer.WriteLine("# Acceptable values: " + string.Join(", ", Enum.GetNames(SettingType)));
-				}
+				writer.WriteLine(Description.AcceptableValues.ToSerializedString());
 			}
+			else if (hasType)
+			{
+				/*if (SettingType == typeof(bool))
+					writer.WriteLine("# Acceptable values: True, False");
+				else*/
+				if (SettingType.IsEnum)
+					writer.WriteLine("# Acceptable values: " + string.Join(", ", Enum.GetNames(SettingType)));
+			}
+		}
+	}
+
+	/// <inheritdoc />
+	public class ConfigEntry<T> : ConfigEntryBase
+	{
+		private T _typedValue;
+		internal ConfigEntry(ConfigFile configFile, ConfigDefinition definition, T defaultValue) : base(configFile, definition, typeof(T), defaultValue) { }
+
+		/// <summary>
+		/// Get or set the value of the setting without boxing.
+		/// </summary>
+		public T TypedValue
+		{
+			get => _typedValue;
+			set
+			{
+				value = ClampValue(value);
+				if (Equals(_typedValue, value))
+					return;
+
+				_typedValue = value;
+				OnSettingChanged(this);
+			}
+		}
+
+		/// <inheritdoc />
+		public override object Value
+		{
+			get => TypedValue;
+			set => TypedValue = (T)value;
 		}
 	}
 }

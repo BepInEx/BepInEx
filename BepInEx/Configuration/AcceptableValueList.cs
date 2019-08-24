@@ -14,7 +14,7 @@ namespace BepInEx.Configuration
 		/// Specify the list of acceptable values for a setting.
 		/// If the setting does not equal any of the values, it will be set to the first one.
 		/// </summary>
-		public AcceptableValueList(params T[] acceptableValues)
+		public AcceptableValueList(params T[] acceptableValues) : base(typeof(T))
 		{
 			if (acceptableValues == null) throw new ArgumentNullException(nameof(acceptableValues));
 			if (acceptableValues.Length == 0) throw new ArgumentException("At least one acceptable value is needed", nameof(acceptableValues));

@@ -3,7 +3,7 @@
 namespace BepInEx.Configuration
 {
 	/// <summary>
-	/// Metadata of a <see cref="ConfigEntry"/>.
+	/// Metadata of a <see cref="ConfigEntryBase"/>.
 	/// </summary>
 	public class ConfigDescription
 	{

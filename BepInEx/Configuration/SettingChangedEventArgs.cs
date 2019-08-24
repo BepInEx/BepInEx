@@ -9,7 +9,7 @@ namespace BepInEx.Configuration
 	public sealed class SettingChangedEventArgs : EventArgs
 	{
 		/// <inheritdoc />
-		public SettingChangedEventArgs(ConfigEntry changedSetting)
+		public SettingChangedEventArgs(ConfigEntryBase changedSetting)
 		{
 			ChangedSetting = changedSetting;
 		}
@@ -17,6 +17,6 @@ namespace BepInEx.Configuration
 		/// <summary>
 		/// Setting that was changed
 		/// </summary>
-		public ConfigEntry ChangedSetting { get; }
+		public ConfigEntryBase ChangedSetting { get; }
 	}
 }

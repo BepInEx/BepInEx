@@ -23,10 +23,7 @@ namespace BepInEx.Configuration.Tests
 		public static void Cleanup()
 		{
 			foreach (var configFile in _toRemove)
-			{
-				configFile.StopWatching();
 				File.Delete(configFile.ConfigFilePath);
-			}
 		}
 
 		private static ConfigFile MakeConfig()
@@ -51,20 +48,20 @@ namespace BepInEx.Configuration.Tests
 
 			var w = c.Wrap("Cat", "Key", 0, new ConfigDescription("Test"));
 			var lines = File.ReadAllLines(c.ConfigFilePath);
-			Assert.AreEqual(0, lines.Count(x => x.Equals("[Cat]")));
-			Assert.AreEqual(0, lines.Count(x => x.Equals("# Test")));
-			Assert.AreEqual(0, lines.Count(x => x.Equals("Key = 0")));
+			Assert.AreEqual(1, lines.Count(x => x.Equals("[Cat]")));
+			Assert.AreEqual(1, lines.Count(x => x.Equals("## Test")));
+			Assert.AreEqual(1, lines.Count(x => x.Equals("Key = 0")));
 
 			c.Save();
 			lines = File.ReadAllLines(c.ConfigFilePath);
 			Assert.AreEqual(1, lines.Count(x => x.Equals("[Cat]")));
-			Assert.AreEqual(1, lines.Count(x => x.Equals("# Test")));
+			Assert.AreEqual(1, lines.Count(x => x.Equals("## Test")));
 			Assert.AreEqual(1, lines.Count(x => x.Equals("Key = 0")));
 
 			w.Value = 69;
 			lines = File.ReadAllLines(c.ConfigFilePath);
 			Assert.AreEqual(1, lines.Count(x => x.Equals("[Cat]")));
-			Assert.AreEqual(1, lines.Count(x => x.Equals("# Test")));
+			Assert.AreEqual(1, lines.Count(x => x.Equals("## Test")));
 			Assert.AreEqual(1, lines.Count(x => x.Equals("Key = 69")));
 		}
 
@@ -106,24 +103,7 @@ namespace BepInEx.Configuration.Tests
 			c.Reload();
 			Assert.AreEqual(w.Value, 1);
 		}
-
-		[TestMethod]
-		public void FileWatchTest()
-		{
-			var c = MakeConfig();
-			var w = c.Wrap("Cat", "Key", 0, new ConfigDescription("Test"));
-			Assert.AreEqual(w.Value, 0);
-
-			var eventFired = new AutoResetEvent(false);
-			w.SettingChanged += (sender, args) => eventFired.Set();
-
-			File.WriteAllText(c.ConfigFilePath, "[Cat]\n# Test\nKey = 1 \n");
-
-			Assert.IsTrue(eventFired.WaitOne(500));
-
-			Assert.AreEqual(w.Value, 1);
-		}
-
+		
 		[TestMethod]
 		public void FileWatchTestNoSelfReload()
 		{
@@ -207,7 +187,6 @@ namespace BepInEx.Configuration.Tests
 		public void ValueRangeLoadTest()
 		{
 			var c = MakeConfig();
-			c.StopWatching();
 
 			File.WriteAllText(c.ConfigFilePath, "[Cat]\nKey = 1\n");
 			c.Reload();

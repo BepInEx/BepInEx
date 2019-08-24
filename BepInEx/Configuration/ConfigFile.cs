@@ -20,20 +20,31 @@ namespace BepInEx.Configuration
 		/// <summary>
 		/// All config entries inside 
 		/// </summary>
-		protected Dictionary<ConfigDefinition, ConfigEntry> Entries { get; } = new Dictionary<ConfigDefinition, ConfigEntry>();
+		protected Dictionary<ConfigDefinition, ConfigEntryBase> Entries { get; } = new Dictionary<ConfigDefinition, ConfigEntryBase>();
+
+		private Dictionary<ConfigDefinition, string> HomelessEntries { get; } = new Dictionary<ConfigDefinition, string>();
 
 		/// <summary>
 		/// Create a list with all config entries inside of this config file.
 		/// </summary>
 		[Obsolete("Use GetConfigEntries instead")]
-		public ReadOnlyCollection<ConfigDefinition> ConfigDefinitions => Entries.Keys.ToList().AsReadOnly();
+		public ReadOnlyCollection<ConfigDefinition> ConfigDefinitions
+		{
+			get
+			{
+				lock (_ioLock) return Entries.Keys.ToList().AsReadOnly();
+			}
+		}
 
 		/// <summary>
 		/// Create an array with all config entries inside of this config file. Should be only used for metadata purposes.
 		/// If you want to access and modify an existing setting then use <see cref="Wrap{T}(ConfigDefinition,T,ConfigDescription)"/> 
 		/// instead with no description.
 		/// </summary>
-		public ConfigEntry[] GetConfigEntries() => Entries.Values.ToArray();
+		public ConfigEntryBase[] GetConfigEntries()
+		{
+			lock (_ioLock) return Entries.Values.ToArray();
+		}
 
 		/// <summary>
 		/// Full path to the config file. The file might not exist until a setting is added and changed, or <see cref="Save"/> is called.
@@ -68,13 +79,12 @@ namespace BepInEx.Configuration
 			{
 				Save();
 			}
-
-			StartWatching();
 		}
 
 		#region Save/Load
 
 		private readonly object _ioLock = new object();
+		private bool _disableSaving;
 
 		/// <summary>
 		/// Reloads the config from disk. Unsaved changes are lost.
@@ -83,38 +93,45 @@ namespace BepInEx.Configuration
 		{
 			lock (_ioLock)
 			{
-				string currentSection = string.Empty;
-
-				foreach (string rawLine in File.ReadAllLines(ConfigFilePath))
+				try
 				{
-					string line = rawLine.Trim();
+					_disableSaving = true;
 
-					if (line.StartsWith("#")) //comment
-						continue;
+					string currentSection = string.Empty;
 
-					if (line.StartsWith("[") && line.EndsWith("]")) //section
+					foreach (string rawLine in File.ReadAllLines(ConfigFilePath))
 					{
-						currentSection = line.Substring(1, line.Length - 2);
-						continue;
+						string line = rawLine.Trim();
+
+						if (line.StartsWith("#")) //comment
+							continue;
+
+						if (line.StartsWith("[") && line.EndsWith("]")) //section
+						{
+							currentSection = line.Substring(1, line.Length - 2);
+							continue;
+						}
+
+						string[] split = line.Split('='); //actual config line
+						if (split.Length != 2)
+							continue; //empty/invalid line
+
+						string currentKey = split[0].Trim();
+						string currentValue = split[1].Trim();
+
+						var definition = new ConfigDefinition(currentSection, currentKey);
+
+						Entries.TryGetValue(definition, out ConfigEntryBase entry);
+
+						if (entry != null)
+							entry.SetSerializedValue(currentValue);
+						else
+							HomelessEntries[definition] = currentValue;
 					}
-
-					string[] split = line.Split('='); //actual config line
-					if (split.Length != 2)
-						continue; //empty/invalid line
-
-					string currentKey = split[0].Trim();
-					string currentValue = split[1].Trim();
-
-					var definition = new ConfigDefinition(currentSection, currentKey);
-
-					Entries.TryGetValue(definition, out ConfigEntry entry);
-					if (entry == null)
-					{
-						entry = new ConfigEntry(this, definition);
-						Entries[definition] = entry;
-					}
-
-					entry.SetSerializedValue(currentValue, true, this);
+				}
+				finally
+				{
+					_disableSaving = false;
 				}
 			}
 
@@ -128,7 +145,7 @@ namespace BepInEx.Configuration
 		{
 			lock (_ioLock)
 			{
-				StopWatching();
+				if (_disableSaving) return;
 
 				string directoryName = Path.GetDirectoryName(ConfigFilePath);
 				if (directoryName != null) Directory.CreateDirectory(directoryName);
@@ -159,8 +176,6 @@ namespace BepInEx.Configuration
 						writer.WriteLine();
 					}
 				}
-
-				StartWatching();
 			}
 		}
 
@@ -177,46 +192,55 @@ namespace BepInEx.Configuration
 		/// <param name="configDefinition">Section and Key of the setting.</param>
 		/// <param name="defaultValue">Value of the setting if the setting was not created yet.</param>
 		/// <param name="configDescription">Description of the setting shown to the user.</param>
-		/// <returns></returns>
 		public ConfigWrapper<T> Wrap<T>(ConfigDefinition configDefinition, T defaultValue, ConfigDescription configDescription = null)
 		{
-			if (!TomlTypeConverter.CanConvert(typeof(T)))
-				throw new ArgumentException($"Type {typeof(T)} is not supported by the config system. Supported types: {string.Join(", ", TomlTypeConverter.GetSupportedTypes().Select(x => x.Name).ToArray())}");
-
-			var forceSave = false;
-
-			Entries.TryGetValue(configDefinition, out var entry);
-
-			if (entry == null)
+			try
 			{
-				entry = new ConfigEntry(this, configDefinition, typeof(T), defaultValue);
-				Entries[configDefinition] = entry;
-				forceSave = true;
-			}
-			else
-			{
-				entry.SetTypeAndDefaultValue(typeof(T), defaultValue, !Equals(defaultValue, default(T)));
-			}
+				if (!TomlTypeConverter.CanConvert(typeof(T)))
+					throw new ArgumentException($"Type {typeof(T)} is not supported by the config system. Supported types: {string.Join(", ", TomlTypeConverter.GetSupportedTypes().Select(x => x.Name).ToArray())}");
 
-			if (configDescription != null)
-			{
-				if (entry.Description != null)
-					Logger.Log(LogLevel.Warning, $"Tried to add configDescription to setting {configDefinition} when it already had one defined. Only add configDescription once or a random one will be used.");
-
-				if (configDescription.AcceptableValues != null)
+				lock (_ioLock)
 				{
-					var genericArguments = configDescription.AcceptableValues.GetType().GetGenericArguments();
-					if (genericArguments.Length > 0 && genericArguments[0] != typeof(T))
-						throw new ArgumentException("AcceptableValues has a different type than the setting type", nameof(configDefinition));
+					_disableSaving = true;
+
+					Entries.TryGetValue(configDefinition, out var existingEntry);
+
+					if (existingEntry != null && !(existingEntry is ConfigEntry<T>))
+						throw new ArgumentException("The defined setting already exists with a different setting type - " + existingEntry.SettingType.Name);
+
+					var entry = (ConfigEntry<T>)existingEntry;
+
+					if (entry == null)
+					{
+						entry = new ConfigEntry<T>(this, configDefinition, defaultValue);
+						Entries[configDefinition] = entry;
+					}
+
+					if (configDescription != null)
+					{
+						if (entry.Description != null)
+							Logger.Log(LogLevel.Warning, $"Tried to add configDescription to setting {configDefinition} when it already had one defined. Only add configDescription once or a random one will be used.");
+
+						entry.SetDescription(configDescription);
+					}
+
+					if (HomelessEntries.TryGetValue(configDefinition, out string homelessValue))
+					{
+						entry.SetSerializedValue(homelessValue);
+						HomelessEntries.Remove(configDefinition);
+					}
+
+					_disableSaving = false;
+					if (SaveOnConfigSet)
+						Save();
+
+					return new ConfigWrapper<T>(entry);
 				}
-
-				entry.SetDescription(configDescription);
 			}
-
-			if(forceSave)
-				Save();
-
-			return new ConfigWrapper<T>(entry);
+			finally
+			{
+				_disableSaving = false;
+			}
 		}
 
 		/// <summary>
@@ -238,7 +262,6 @@ namespace BepInEx.Configuration
 		/// <param name="key">Name of the setting.</param>
 		/// <param name="defaultValue">Value of the setting if the setting was not created yet.</param>
 		/// <param name="configDescription">Description of the setting shown to the user.</param>
-		/// <returns></returns>
 		public ConfigWrapper<T> Wrap<T>(string section, string key, T defaultValue, ConfigDescription configDescription = null)
 			=> Wrap(new ConfigDefinition(section, key), defaultValue, configDescription);
 
@@ -256,99 +279,34 @@ namespace BepInEx.Configuration
 		/// </summary>
 		public event EventHandler<SettingChangedEventArgs> SettingChanged;
 
-		internal void OnSettingChanged(object sender, ConfigEntry changedEntry)
+		internal void OnSettingChanged(object sender, ConfigEntryBase changedEntryBase)
 		{
-			if (changedEntry == null) throw new ArgumentNullException(nameof(changedEntry));
+			if (changedEntryBase == null) throw new ArgumentNullException(nameof(changedEntryBase));
 
-			if (SettingChanged != null)
-			{
-				var args = new SettingChangedEventArgs(changedEntry);
-
-				foreach (var callback in SettingChanged.GetInvocationList().Cast<EventHandler<SettingChangedEventArgs>>())
-				{
-					try
-					{
-						callback(sender, args);
-					}
-					catch (Exception e)
-					{
-						Logger.Log(LogLevel.Error, e);
-					}
-				}
-			}
-
-			// Check sender to prevent infinite loops
-			// todo batching / async?
-			if (sender != this && SaveOnConfigSet)
+			if (SaveOnConfigSet)
 				Save();
+
+			var settingChanged = SettingChanged;
+			if (settingChanged == null) return;
+
+			var args = new SettingChangedEventArgs(changedEntryBase);
+			foreach (var callback in settingChanged.GetInvocationList().Cast<EventHandler<SettingChangedEventArgs>>())
+			{
+				try { callback(sender, args); }
+				catch (Exception e) { Logger.Log(LogLevel.Error, e); }
+			}
 		}
 
 		private void OnConfigReloaded()
 		{
-			if (ConfigReloaded != null)
+			var configReloaded = ConfigReloaded;
+			if (configReloaded == null) return;
+
+			foreach (var callback in configReloaded.GetInvocationList().Cast<EventHandler>())
 			{
-				foreach (var callback in ConfigReloaded.GetInvocationList().Cast<EventHandler>())
-				{
-					try
-					{
-						callback(this, EventArgs.Empty);
-					}
-					catch (Exception e)
-					{
-						Logger.Log(LogLevel.Error, e);
-					}
-				}
+				try { callback(this, EventArgs.Empty); }
+				catch (Exception e) { Logger.Log(LogLevel.Error, e); }
 			}
-		}
-
-		#endregion
-
-		#region File watcher
-
-		private FileSystemWatcher _watcher;
-
-		/// <summary>
-		/// Start watching the config file on disk for changes.
-		/// </summary>
-		public void StartWatching()
-		{
-			lock (_ioLock)
-			{
-				if (_watcher != null) return;
-
-				_watcher = new FileSystemWatcher
-				{
-					Path = Path.GetDirectoryName(ConfigFilePath) ?? throw new ArgumentException("Invalid config path"),
-					Filter = Path.GetFileName(ConfigFilePath),
-					IncludeSubdirectories = false,
-					NotifyFilter = NotifyFilters.LastWrite,
-					EnableRaisingEvents = true
-				};
-
-				_watcher.Changed += (sender, args) => Reload();
-			}
-		}
-
-		/// <summary>
-		/// Stop watching the config file on disk for changes.
-		/// </summary>
-		public void StopWatching()
-		{
-			lock (_ioLock)
-			{
-				if (_watcher != null)
-				{
-					_watcher.EnableRaisingEvents = false;
-					_watcher.Dispose();
-					_watcher = null;
-				}
-			}
-		}
-
-		/// <inheritdoc />
-		~ConfigFile()
-		{
-			StopWatching();
 		}
 
 		#endregion

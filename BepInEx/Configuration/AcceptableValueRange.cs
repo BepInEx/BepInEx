@@ -9,7 +9,7 @@ namespace BepInEx.Configuration
 	{
 		/// <param name="minValue">Lowest acceptable value</param>
 		/// <param name="maxValue">Highest acceptable value</param>
-		public AcceptableValueRange(T minValue, T maxValue)
+		public AcceptableValueRange(T minValue, T maxValue) : base(typeof(T))
 		{
 			if (maxValue == null)
 				throw new ArgumentNullException(nameof(maxValue));
