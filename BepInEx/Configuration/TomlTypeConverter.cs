@@ -97,6 +97,9 @@ namespace BepInEx.Configuration
 			},
 		};
 
+		/// <summary>
+		/// Convert object of a given type to a string using available converters.
+		/// </summary>
 		public static string ConvertToString(object value, Type valueType)
 		{
 			var conv = GetConverter(valueType);
@@ -106,11 +109,17 @@ namespace BepInEx.Configuration
 			return conv.ConvertToString(value, valueType);
 		}
 
+		/// <summary>
+		/// Convert string to an object of a given type using available converters.
+		/// </summary>
 		public static T ConvertToValue<T>(string value)
 		{
 			return (T)ConvertToValue(value, typeof(T));
 		}
 
+		/// <summary>
+		/// Convert string to an object of a given type using available converters.
+		/// </summary>
 		public static object ConvertToValue(string value, Type valueType)
 		{
 			var conv = GetConverter(valueType);
@@ -120,6 +129,9 @@ namespace BepInEx.Configuration
 			return conv.ConvertToObject(value, valueType);
 		}
 
+		/// <summary>
+		/// Get a converter for a given type if there is any.
+		/// </summary>
 		public static TypeConverter GetConverter(Type valueType)
 		{
 			if (valueType == null) throw new ArgumentNullException(nameof(valueType));
@@ -131,6 +143,9 @@ namespace BepInEx.Configuration
 			return result;
 		}
 
+		/// <summary>
+		/// Add a new type converter for a given type.
+		/// </summary>
 		public static void AddConverter(Type type, TypeConverter converter)
 		{
 			if (type == null) throw new ArgumentNullException(nameof(type));
@@ -140,11 +155,17 @@ namespace BepInEx.Configuration
 			TypeConverters.Add(type, converter);
 		}
 
+		/// <summary>
+		/// Check if a given type can be converted to and from string.
+		/// </summary>
 		public static bool CanConvert(Type type)
 		{
 			return GetConverter(type) != null;
 		}
 
+		/// <summary>		
+		/// Give a list of types with registered converters.
+		/// </summary>
 		public static IEnumerable<Type> GetSupportedTypes()
 		{
 			return TypeConverters.Keys;

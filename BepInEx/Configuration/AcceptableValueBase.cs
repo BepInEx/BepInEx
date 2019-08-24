@@ -7,6 +7,7 @@ namespace BepInEx.Configuration
 	/// </summary>
 	public abstract class AcceptableValueBase
 	{
+		/// <param name="valueType">Type of values that this class can Clamp.</param>
 		protected AcceptableValueBase(Type valueType)
 		{
 			ValueType = valueType;

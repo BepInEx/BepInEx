@@ -55,6 +55,9 @@ namespace BepInEx.Configuration
 			_allKeysLookup = new HashSet<KeyCode>(_allKeys);
 		}
 
+		/// <summary>
+		/// Create a new empty shortcut.
+		/// </summary>
 		public KeyboardShortcut()
 		{
 			_allKeys = SanitizeKeys();
