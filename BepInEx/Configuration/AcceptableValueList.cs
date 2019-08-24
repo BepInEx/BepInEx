@@ -25,7 +25,7 @@ namespace BepInEx.Configuration
 		/// <inheritdoc />
 		public override object Clamp(object value)
 		{
-			if (value is T v && _acceptableValues.Any(x => x.Equals(v)))
+			if (IsValid(value))
 				return value;
 
 			return _acceptableValues[0];
