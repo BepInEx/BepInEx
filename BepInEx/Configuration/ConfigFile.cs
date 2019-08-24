@@ -93,6 +93,8 @@ namespace BepInEx.Configuration
 		{
 			lock (_ioLock)
 			{
+				HomelessEntries.Clear();
+
 				try
 				{
 					_disableSaving = true;
@@ -159,18 +161,21 @@ namespace BepInEx.Configuration
 						writer.WriteLine();
 					}
 
-					foreach (var sectionKv in Entries.GroupBy(x => x.Key.Section).OrderBy(x => x.Key))
+					var allConfigEntries = Entries.Select(x => new { x.Key, entry = x.Value, value = x.Value.GetSerializedValue() })
+						.Concat(HomelessEntries.Select(x => new { x.Key, entry = (ConfigEntryBase)null, value = x.Value }));
+
+					foreach (var sectionKv in allConfigEntries.GroupBy(x => x.Key.Section).OrderBy(x => x.Key))
 					{
 						// Section heading
 						writer.WriteLine($"[{sectionKv.Key}]");
 
-						foreach (var configEntry in sectionKv.Select(x => x.Value))
+						foreach (var configEntry in sectionKv)
 						{
 							writer.WriteLine();
 
-							configEntry.WriteDescription(writer);
+							configEntry.entry?.WriteDescription(writer);
 
-							writer.WriteLine($"{configEntry.Definition.Key} = {configEntry.GetSerializedValue()}");
+							writer.WriteLine($"{configEntry.Key.Key} = {configEntry.value}");
 						}
 
 						writer.WriteLine();

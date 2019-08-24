@@ -3,7 +3,8 @@ using System.IO;
 using System.Linq;
 using BepInEx.Logging;
 
-namespace BepInEx.Configuration {
+namespace BepInEx.Configuration
+{
 	/// <summary>
 	/// Container for a single setting of a <see cref="Configuration.ConfigFile"/>. 
 	/// Each config entry is linked to one config file.
@@ -75,7 +76,7 @@ namespace BepInEx.Configuration {
 			catch (Exception e)
 			{
 				Logger.Log(LogLevel.Warning, $"Config value of setting \"{Definition}\" could not be " +
-				                             $"parsed and will be ignored. Reason: {e.Message}; Value: {value}");
+											 $"parsed and will be ignored. Reason: {e.Message}; Value: {value}");
 			}
 		}
 
@@ -86,7 +87,7 @@ namespace BepInEx.Configuration {
 				throw new ArgumentException("configDescription.AcceptableValues is for a different type than the type of this setting");
 
 			Description = configDescription;
-			
+
 			// Automatically calls ClampValue in case it changed
 			Value = Value;
 		}

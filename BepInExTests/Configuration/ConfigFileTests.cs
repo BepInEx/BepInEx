@@ -103,7 +103,7 @@ namespace BepInEx.Configuration.Tests
 			c.Reload();
 			Assert.AreEqual(w.Value, 1);
 		}
-		
+
 		[TestMethod]
 		public void FileWatchTestNoSelfReload()
 		{
@@ -131,6 +131,21 @@ namespace BepInEx.Configuration.Tests
 			c.Reload();
 
 			Assert.IsTrue(eventFired);
+		}
+
+		[TestMethod]
+		public void PersistHomeless()
+		{
+			var c = MakeConfig();
+
+			File.WriteAllText(c.ConfigFilePath, "[Cat]\n# Test\nKey=1\nHomeless=0");
+			c.Reload();
+
+			var w = c.Wrap("Cat", "Key", 0, new ConfigDescription("Test"));
+
+			c.Save();
+
+			Assert.IsTrue(File.ReadAllLines(c.ConfigFilePath).Single(x => x.StartsWith("Homeless") && x.EndsWith("0")) != null);
 		}
 
 		[TestMethod]
