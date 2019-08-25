@@ -247,5 +247,50 @@ namespace BepInEx.Configuration.Tests
 			c.Reload();
 			Assert.AreEqual(shortcut, w.Value);
 		}
+		
+		[TestMethod]
+		public void StringEscapeChars()
+		{
+			const string testVal = "new line\n test \t\0";
+
+			var c = MakeConfig();
+			var w = c.Wrap<string>("Cat", "Key", testVal, new ConfigDescription("Test"));
+
+			Assert.AreEqual(testVal, w.Value);
+			Assert.IsFalse(w.ConfigEntry.GetSerializedValue().Any(x => x == '\n'));
+
+			w.ConfigEntry.SetSerializedValue(w.ConfigEntry.GetSerializedValue());
+			Assert.AreEqual(testVal, w.Value);
+
+			c.Save();
+			c.Reload();
+
+			Assert.AreEqual(testVal, w.Value);
+		}
+
+		[TestMethod]
+		public void UnescapedPathString()
+		{
+			var c = MakeConfig();
+
+			var unescaped = @"D:\test\p ath";
+			foreach (string testVal in new[]{ unescaped , @"D:\\test\\p ath" })
+			{
+				File.WriteAllText(c.ConfigFilePath, $"[Cat]\n# Test\nKey={testVal}\n");
+				c.Reload();
+
+				var w = c.Wrap<string>("Cat", "Key", "", new ConfigDescription("Test"));
+
+				Assert.AreEqual(unescaped, w.Value);
+
+				w.ConfigEntry.SetSerializedValue(w.ConfigEntry.GetSerializedValue());
+				Assert.AreEqual(unescaped, w.Value);
+
+				c.Save();
+				c.Reload();
+
+				Assert.AreEqual(unescaped, w.Value);
+			}
+		}
 	}
 }

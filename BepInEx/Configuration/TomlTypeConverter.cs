@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Text.RegularExpressions;
 
 namespace BepInEx.Configuration
 {
@@ -13,8 +14,14 @@ namespace BepInEx.Configuration
 		{
 			[typeof(string)] = new TypeConverter
 			{
-				ConvertToString = (obj, type) => (string)obj,
-				ConvertToObject = (str, type) => str,
+				ConvertToString = (obj, type) => Regex.Escape((string)obj),
+				ConvertToObject = (str, type) =>
+				{
+					// Check if the string is a file path with unescaped \ path separators (e.g. D:\test and not D:\\test)
+					if (Regex.IsMatch(str, @"^""?\w:\\(?!\\)(?!.+\\\\)"))
+						return str;
+					return Regex.Unescape(str);
+				},
 			},
 			[typeof(bool)] = new TypeConverter
 			{
