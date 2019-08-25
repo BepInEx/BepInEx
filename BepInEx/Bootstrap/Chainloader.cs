@@ -27,6 +27,8 @@ namespace BepInEx.Bootstrap
 
 		public static List<BaseUnityPlugin> Plugins { get; } = new List<BaseUnityPlugin>();
 
+		public static List<string> DependencyErrors { get; } = new List<string>();
+
 		/// <summary>
 		/// The GameObject that all plugins are attached to as components.
 		/// </summary>
@@ -255,7 +257,9 @@ namespace BepInEx.Bootstrap
 
 					if (dependsOnInvalidPlugin)
 					{
-						Logger.LogWarning($"Skipping [{pluginInfo.Metadata.Name}] because it has a dependency that was not loaded. See above errors for details.");
+						string message = $"Skipping [{pluginInfo.Metadata.Name}] because it has a dependency that was not loaded. See above errors for details.";
+						DependencyErrors.Add(message);
+						Logger.LogWarning(message);
 						continue;
 					}
 
@@ -267,9 +271,11 @@ namespace BepInEx.Bootstrap
 							return $"- {s.DependencyGUID} (at least v{s.MinimumVersion})";
 						}
 
-						Logger.LogError($@"Missing the following dependencies for [{pluginInfo.Metadata.Name}]: {"\r\n"}{
+						string message = $@"Missing the following dependencies for [{pluginInfo.Metadata.Name}]: {"\r\n"}{
 								string.Join("\r\n", missingDependencies.Select(ToMissingString).ToArray())
-							}{"\r\n"}Loading will be skipped; expect further errors and unstabilities.");
+							}{"\r\n"}Loading will be skipped; expect further errors and unstabilities.";
+						DependencyErrors.Add(message);
+						Logger.LogError(message);
 
 						invalidPlugins.Add(pluginGUID);
 						continue;
