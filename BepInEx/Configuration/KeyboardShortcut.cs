@@ -17,7 +17,7 @@ namespace BepInEx.Configuration
 	/// 
 	/// How to use: Use <see cref="IsDown"/> in this class instead of <see cref="Input.GetKeyDown(KeyCode)"/> in the Update loop.
 	/// </summary>
-	public class KeyboardShortcut
+	public struct KeyboardShortcut
 	{
 		static KeyboardShortcut()
 		{
@@ -25,10 +25,15 @@ namespace BepInEx.Configuration
 				typeof(KeyboardShortcut),
 				new TypeConverter
 				{
-					ConvertToString = (o, type) => (o as KeyboardShortcut)?.Serialize() ?? "",
+					ConvertToString = (o, type) => ((KeyboardShortcut)o).Serialize(),
 					ConvertToObject = (s, type) => Deserialize(s)
 				});
 		}
+
+		/// <summary>
+		/// Shortcut that never triggers.
+		/// </summary>
+		public static readonly KeyboardShortcut Empty = new KeyboardShortcut();
 
 		/// <summary>
 		/// All KeyCode values that can be used in a keyboard shortcut.
@@ -55,15 +60,6 @@ namespace BepInEx.Configuration
 			_allKeysLookup = new HashSet<KeyCode>(_allKeys);
 		}
 
-		/// <summary>
-		/// Create a new empty shortcut.
-		/// </summary>
-		public KeyboardShortcut()
-		{
-			_allKeys = SanitizeKeys();
-			_allKeysLookup = new HashSet<KeyCode>(_allKeys);
-		}
-
 		private static KeyCode[] SanitizeKeys(params KeyCode[] keys)
 		{
 			if (keys.Length == 0 || keys[0] == KeyCode.None)
@@ -76,12 +72,12 @@ namespace BepInEx.Configuration
 		/// Main key of the key combination. It has to be pressed / let go last for the combination to be triggered.
 		/// If the combination is empty, <see cref="KeyCode.None"/> is returned.
 		/// </summary>
-		public KeyCode MainKey => _allKeys.Length > 0 ? _allKeys[0] : KeyCode.None;
+		public KeyCode MainKey => _allKeys != null && _allKeys.Length > 0 ? _allKeys[0] : KeyCode.None;
 
 		/// <summary>
 		/// Modifiers of the key combination, if any.
 		/// </summary>
-		public IEnumerable<KeyCode> Modifiers => _allKeys.Skip(1);
+		public IEnumerable<KeyCode> Modifiers => _allKeys?.Skip(1) ?? Enumerable.Empty<KeyCode>();
 
 		/// <summary>
 		/// Attempt to deserialize key combination from the string.
@@ -97,7 +93,7 @@ namespace BepInEx.Configuration
 			catch (SystemException ex)
 			{
 				Logger.Log(LogLevel.Error, "Failed to read keybind from settings: " + ex.Message);
-				return new KeyboardShortcut();
+				return Empty;
 			}
 		}
 
@@ -106,6 +102,7 @@ namespace BepInEx.Configuration
 		/// </summary>
 		public string Serialize()
 		{
+			if (_allKeys == null) return string.Empty;
 			return string.Join(" + ", _allKeys.Select(x => x.ToString()).ToArray());
 		}
 
@@ -144,11 +141,13 @@ namespace BepInEx.Configuration
 
 		private bool ModifierKeyTest()
 		{
+			var lookup = _allKeysLookup;
+			var mainKey = MainKey;
 			return AllKeyCodes.All(c =>
 			{
-				if (_allKeysLookup.Contains(c))
+				if (lookup.Contains(c))
 				{
-					if (_allKeys[0] == c)
+					if (mainKey == c)
 						return true;
 					return Input.GetKey(c);
 				}
@@ -167,12 +166,14 @@ namespace BepInEx.Configuration
 		/// <inheritdoc />
 		public override bool Equals(object obj)
 		{
-			return obj is KeyboardShortcut shortcut && _allKeys.SequenceEqual(shortcut._allKeys);
+			return obj is KeyboardShortcut shortcut && MainKey == shortcut.MainKey && Modifiers.SequenceEqual(shortcut.Modifiers);
 		}
 
 		/// <inheritdoc />
 		public override int GetHashCode()
 		{
+			if (_allKeys == null || _allKeys.Length == 0) return 0;
+
 			var hc = _allKeys.Length;
 			for (var i = 0; i < _allKeys.Length; i++)
 				hc = unchecked(hc * 31 + (int)_allKeys[i]);

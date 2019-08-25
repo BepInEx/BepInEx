@@ -232,7 +232,7 @@ namespace BepInEx.Configuration.Tests
 		}
 
 		[TestMethod]
-		public void KeyShortcutTest()
+		public void KeyboardShortcutTest()
 		{
 			var shortcut = new KeyboardShortcut(KeyCode.H, KeyCode.O, KeyCode.R, KeyCode.S, KeyCode.E, KeyCode.Y);
 			var s = shortcut.Serialize();
@@ -247,7 +247,33 @@ namespace BepInEx.Configuration.Tests
 			c.Reload();
 			Assert.AreEqual(shortcut, w.Value);
 		}
-		
+
+		[TestMethod]
+		public void KeyboardShortcutTest2()
+		{
+			Assert.AreEqual(KeyboardShortcut.Empty, new KeyboardShortcut());
+
+			var c = MakeConfig();
+
+			var w = c.GetSetting("Cat", "Key", KeyboardShortcut.Empty, new ConfigDescription("Test"));
+
+			Assert.AreEqual("", w.ConfigEntry.GetSerializedValue());
+
+			w.ConfigEntry.SetSerializedValue(w.ConfigEntry.GetSerializedValue());
+			Assert.AreEqual(KeyboardShortcut.Empty, w.Value);
+
+			var testShortcut = new KeyboardShortcut(KeyCode.A, KeyCode.B, KeyCode.C);
+			w.Value = testShortcut;
+
+			w.ConfigEntry.SetSerializedValue(w.ConfigEntry.GetSerializedValue());
+			Assert.AreEqual(testShortcut, w.Value);
+
+			c.Save();
+			c.Reload();
+
+			Assert.AreEqual(testShortcut, w.Value);
+		}
+
 		[TestMethod]
 		public void StringEscapeChars()
 		{
@@ -274,7 +300,7 @@ namespace BepInEx.Configuration.Tests
 			var c = MakeConfig();
 
 			var unescaped = @"D:\test\p ath";
-			foreach (string testVal in new[]{ unescaped , @"D:\\test\\p ath" })
+			foreach (string testVal in new[] { unescaped, @"D:\\test\\p ath" })
 			{
 				File.WriteAllText(c.ConfigFilePath, $"[Cat]\n# Test\nKey={testVal}\n");
 				c.Reload();
