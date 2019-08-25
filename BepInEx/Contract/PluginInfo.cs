@@ -38,6 +38,7 @@ namespace BepInEx.Contract
 			{
 				bw.Write(bepInDependency.DependencyGUID);
 				bw.Write((int)bepInDependency.Flags);
+				bw.Write(bepInDependency.MinimumVersion.ToString());
 			}
 		}
 
@@ -56,7 +57,7 @@ namespace BepInEx.Contract
 			var depCount = br.ReadInt32();
 			var depList = new List<BepInDependency>(depCount);
 			for (int i = 0; i < depCount; i++)
-				depList.Add(new BepInDependency(br.ReadString(), (BepInDependency.DependencyFlags) br.ReadInt32()));
+				depList.Add(new BepInDependency(br.ReadString(), (BepInDependency.DependencyFlags) br.ReadInt32(), br.ReadString()));
 			Dependencies = depList;
 		}
 	}

@@ -91,18 +91,51 @@ namespace BepInEx
 		/// </summary>
 		public DependencyFlags Flags { get; protected set; }
 
+		/// <summary>
+		/// The minimum version of the referenced plugin.
+		/// </summary>
+		public Version MinimumVersion { get; protected set; }
+
+		/// <summary>
+		/// Marks this <see cref="BaseUnityPlugin"/> as depenant on another plugin. The other plugin will be loaded before this one.
+		/// If the other plugin doesn't exist, what happens depends on the <see cref="Flags"/> parameter.
+		/// </summary>
 		/// <param name="DependencyGUID">The GUID of the referenced plugin.</param>
 		/// <param name="Flags">The flags associated with this dependency definition.</param>
 		public BepInDependency(string DependencyGUID, DependencyFlags Flags = DependencyFlags.HardDependency)
 		{
 			this.DependencyGUID = DependencyGUID;
 			this.Flags = Flags;
+			MinimumVersion = new Version();
+		}
+
+		/// <summary>
+		/// Marks this <see cref="BaseUnityPlugin"/> as depenant on another plugin. The other plugin will be loaded before this one.
+		/// If the other plugin doesn't exist or is of a version below <see cref="MinimumDependencyVersion"/>, this plugin will not load and an error will be logged instead.
+		/// </summary>
+		/// <param name="DependencyGUID">The GUID of the referenced plugin.</param>
+		/// <param name="MinimumDependencyVersion">The minimum version of the referenced plugin.</param>
+		public BepInDependency(string DependencyGUID, string MinimumDependencyVersion) : this(DependencyGUID)
+		{
+			MinimumVersion = new Version(MinimumDependencyVersion);
+		}
+
+		internal BepInDependency(string DependencyGUID, DependencyFlags Flags, string MinimumDependencyVersion) : this(DependencyGUID, Flags)
+		{
+			if (!string.IsNullOrEmpty(MinimumDependencyVersion))
+				MinimumVersion = new Version(MinimumDependencyVersion);
 		}
 
 		internal static IEnumerable<BepInDependency> FromCecilType(TypeDefinition td)
 		{
 			var attrs = MetadataHelper.GetCustomAttributes<BepInDependency>(td, true);
-			return attrs.Select(customAttribute => new BepInDependency((string)customAttribute.ConstructorArguments[0].Value, (DependencyFlags)customAttribute.ConstructorArguments[1].Value)).ToList();
+			return attrs.Select(customAttribute =>
+			{
+				var dependencyGuid = (string)customAttribute.ConstructorArguments[0].Value;
+				var secondArg = customAttribute.ConstructorArguments[1].Value;
+				if (secondArg is string minVersion) return new BepInDependency(dependencyGuid, minVersion);
+				return new BepInDependency(dependencyGuid, (DependencyFlags)secondArg);
+			}).ToList();
 		}
 	}
 

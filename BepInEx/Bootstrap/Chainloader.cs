@@ -2,7 +2,6 @@
 using BepInEx.Logging;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -222,7 +221,7 @@ namespace BepInEx.Bootstrap
 				var sortedPlugins = Utility.TopologicalSort(dependencyDict.Keys, x => dependencyDict.TryGetValue(x, out var deps) ? deps : emptyDependencies).ToList();
 
 				var invalidPlugins = new HashSet<string>();
-				var processedPlugins = new HashSet<string>();
+				var processedPlugins = new Dictionary<string, Version>();
 
 				foreach (var pluginGUID in sortedPlugins)
 				{
@@ -231,15 +230,16 @@ namespace BepInEx.Bootstrap
 						continue;
 
 					var dependsOnInvalidPlugin = false;
-					var missingDependencies = new List<string>();
+					var missingDependencies = new List<BepInDependency>();
 					foreach (var dependency in pluginInfo.Dependencies)
 					{
 						// If the depenency wasn't already processed, it's missing altogether
-						if (!processedPlugins.Contains(dependency.DependencyGUID))
+						bool depenencyExists = processedPlugins.TryGetValue(dependency.DependencyGUID, out var pluginVersion);
+						if (!depenencyExists || pluginVersion < dependency.MinimumVersion)
 						{
 							// If the dependency is hard, collect it into a list to show
 							if ((dependency.Flags & BepInDependency.DependencyFlags.HardDependency) != 0)
-								missingDependencies.Add(dependency.DependencyGUID);
+								missingDependencies.Add(dependency);
 							continue;
 						}
 
@@ -251,7 +251,7 @@ namespace BepInEx.Bootstrap
 						}
 					}
 
-					processedPlugins.Add(pluginGUID);
+					processedPlugins.Add(pluginGUID, pluginInfo.Metadata.Version);
 
 					if (dependsOnInvalidPlugin)
 					{
@@ -261,8 +261,14 @@ namespace BepInEx.Bootstrap
 
 					if (missingDependencies.Count != 0)
 					{
+						string ToMissingString(BepInDependency s)
+						{
+							if (s.MinimumVersion.IsZero()) return "- " + s.DependencyGUID;
+							return $"- {s.DependencyGUID} (at least v{s.MinimumVersion})";
+						}
+
 						Logger.LogError($@"Missing the following dependencies for [{pluginInfo.Metadata.Name}]: {"\r\n"}{
-								string.Join("\r\n", missingDependencies.Select(s => $"- {s}").ToArray())
+								string.Join("\r\n", missingDependencies.Select(ToMissingString).ToArray())
 							}{"\r\n"}Loading will be skipped; expect further errors and unstabilities.");
 
 						invalidPlugins.Add(pluginGUID);
@@ -310,15 +316,15 @@ namespace BepInEx.Bootstrap
 		#region Config
 
 		private static readonly ConfigWrapper<bool> ConfigUnityLogging = ConfigFile.CoreConfig.Wrap(
-			"Logging", 
-			"UnityLogListening", 
-			"Enables showing unity log messages in the BepInEx logging system.", 
+			"Logging",
+			"UnityLogListening",
+			"Enables showing unity log messages in the BepInEx logging system.",
 			true);
 
 		private static readonly ConfigWrapper<bool> ConfigDiskLogging = ConfigFile.CoreConfig.Wrap(
-			"Logging.Disk", 
-			"Enabled", 
-			"Enables writing log messages to disk.", 
+			"Logging.Disk",
+			"Enabled",
+			"Enables writing log messages to disk.",
 			true);
 
 		private static readonly ConfigWrapper<string> ConfigDiskConsoleDisplayedLevel = ConfigFile.CoreConfig.Wrap(

@@ -237,5 +237,10 @@ namespace BepInEx
 				return false;
 			}
 		}
+
+		internal static bool IsZero(this Version v)
+		{
+			return v.Major == 0 && v.Minor == 0 && v.Build == 0 && v.Revision == 0;
+		}
 	}
 }
