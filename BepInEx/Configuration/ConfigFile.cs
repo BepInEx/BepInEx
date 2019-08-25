@@ -38,7 +38,7 @@ namespace BepInEx.Configuration
 
 		/// <summary>
 		/// Create an array with all config entries inside of this config file. Should be only used for metadata purposes.
-		/// If you want to access and modify an existing setting then use <see cref="Wrap{T}(ConfigDefinition,T,ConfigDescription)"/> 
+		/// If you want to access and modify an existing setting then use <see cref="GetSetting{T}(ConfigDefinition,T,ConfigDescription)"/> 
 		/// instead with no description.
 		/// </summary>
 		public ConfigEntryBase[] GetConfigEntries()
@@ -200,13 +200,13 @@ namespace BepInEx.Configuration
 		/// <param name="configDefinition">Section and Key of the setting.</param>
 		/// <param name="defaultValue">Value of the setting if the setting was not created yet.</param>
 		/// <param name="configDescription">Description of the setting shown to the user.</param>
-		public ConfigWrapper<T> Wrap<T>(ConfigDefinition configDefinition, T defaultValue, ConfigDescription configDescription = null)
+		public ConfigWrapper<T> GetSetting<T>(ConfigDefinition configDefinition, T defaultValue = default(T), ConfigDescription configDescription = null)
 		{
+			if (!TomlTypeConverter.CanConvert(typeof(T)))
+				throw new ArgumentException($"Type {typeof(T)} is not supported by the config system. Supported types: {string.Join(", ", TomlTypeConverter.GetSupportedTypes().Select(x => x.Name).ToArray())}");
+
 			try
 			{
-				if (!TomlTypeConverter.CanConvert(typeof(T)))
-					throw new ArgumentException($"Type {typeof(T)} is not supported by the config system. Supported types: {string.Join(", ", TomlTypeConverter.GetSupportedTypes().Select(x => x.Name).ToArray())}");
-
 				lock (_ioLock)
 				{
 					_disableSaving = true;
@@ -256,22 +256,23 @@ namespace BepInEx.Configuration
 		/// If you are the creator of the setting, provide a ConfigDescription object to give user information about the setting.
 		/// If you are using a setting created by another plugin/class, do not provide any ConfigDescription.
 		/// </summary>
-		[Obsolete("Use other Wrap overloads instead")]
-		public ConfigWrapper<T> Wrap<T>(string section, string key, string description = null, T defaultValue = default(T))
-			=> Wrap(new ConfigDefinition(section ?? "", key), defaultValue, string.IsNullOrEmpty(description) ? null : new ConfigDescription(description));
-
-		/// <summary>
-		/// Create a new setting or access one of the existing ones. The setting is saved to drive and loaded automatically.
-		/// If you are the creator of the setting, provide a ConfigDescription object to give user information about the setting.
-		/// If you are using a setting created by another plugin/class, do not provide any ConfigDescription.
-		/// </summary>
 		/// <typeparam name="T">Type of the value contained in this setting.</typeparam>
 		/// <param name="section">Section/category/group of the setting. Settings are grouped by this.</param>
 		/// <param name="key">Name of the setting.</param>
 		/// <param name="defaultValue">Value of the setting if the setting was not created yet.</param>
 		/// <param name="configDescription">Description of the setting shown to the user.</param>
-		public ConfigWrapper<T> Wrap<T>(string section, string key, T defaultValue, ConfigDescription configDescription = null)
-			=> Wrap(new ConfigDefinition(section, key), defaultValue, configDescription);
+		public ConfigWrapper<T> GetSetting<T>(string section, string key, T defaultValue = default(T), ConfigDescription configDescription = null)
+			=> GetSetting(new ConfigDefinition(section, key), defaultValue, configDescription);
+
+		/// <inheritdoc cref="GetSetting{T}(string,string,T,ConfigDescription)"/>
+		[Obsolete("Use GetSetting instead")]
+		public ConfigWrapper<T> Wrap<T>(string section, string key, string description = null, T defaultValue = default(T))
+			=> GetSetting(new ConfigDefinition(section ?? "", key), defaultValue, string.IsNullOrEmpty(description) ? null : new ConfigDescription(description));
+
+		/// <inheritdoc cref="GetSetting{T}(ConfigDefinition,T,ConfigDescription)"/>
+		[Obsolete("Use GetSetting instead")]
+		public ConfigWrapper<T> Wrap<T>(ConfigDefinition configDefinition, T defaultValue = default(T))
+			=> GetSetting(configDefinition, defaultValue);
 
 		#endregion
 

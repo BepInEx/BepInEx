@@ -30,6 +30,10 @@ namespace BepInEx.Configuration
 			Section = section ?? throw new ArgumentNullException(nameof(section));
 		}
 
+		/// <inheritdoc />
+		[Obsolete("description argument is no longer used, put it in a ConfigDescription instead")]
+		public ConfigDefinition(string section, string key, string description) : this(section, key) { }
+
 		/// <summary>
 		/// Check if the definitions are the same.
 		/// </summary>

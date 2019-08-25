@@ -12,7 +12,7 @@ namespace BepInEx.Configuration
 	/// triggered when the user presses the exact combination. For example, <c>F + LeftCtrl</c> will trigger only if user 
 	/// presses and holds only LeftCtrl, and then presses F. If any other keys are pressed, the shortcut will not trigger.
 	/// 
-	/// Can be used as a value of a setting in <see cref="ConfigFile.Wrap{T}(ConfigDefinition,T,ConfigDescription)"/> 
+	/// Can be used as a value of a setting in <see cref="ConfigFile.GetSetting{T}(ConfigDefinition,T,ConfigDescription)"/> 
 	/// to allow user to change this shortcut and have the changes saved.
 	/// 
 	/// How to use: Use <see cref="IsDown"/> in this class instead of <see cref="Input.GetKeyDown(KeyCode)"/> in the Update loop.
@@ -25,7 +25,7 @@ namespace BepInEx.Configuration
 				typeof(KeyboardShortcut),
 				new TypeConverter
 				{
-					ConvertToString = (o, type) => (o as KeyboardShortcut)?.Serialize(),
+					ConvertToString = (o, type) => (o as KeyboardShortcut)?.Serialize() ?? "",
 					ConvertToObject = (s, type) => Deserialize(s)
 				});
 		}

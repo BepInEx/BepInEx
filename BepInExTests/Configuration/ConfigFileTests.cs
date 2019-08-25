@@ -46,7 +46,7 @@ namespace BepInEx.Configuration.Tests
 		{
 			var c = MakeConfig();
 
-			var w = c.Wrap("Cat", "Key", 0, new ConfigDescription("Test"));
+			var w = c.GetSetting("Cat", "Key", 0, new ConfigDescription("Test"));
 			var lines = File.ReadAllLines(c.ConfigFilePath);
 			Assert.AreEqual(1, lines.Count(x => x.Equals("[Cat]")));
 			Assert.AreEqual(1, lines.Count(x => x.Equals("## Test")));
@@ -69,7 +69,7 @@ namespace BepInEx.Configuration.Tests
 		public void AutoSaveTest()
 		{
 			var c = MakeConfig();
-			c.Wrap("Cat", "Key", 0, new ConfigDescription("Test"));
+			c.GetSetting("Cat", "Key", 0, new ConfigDescription("Test"));
 
 			var eventFired = new AutoResetEvent(false);
 			c.ConfigReloaded += (sender, args) => eventFired.Set();
@@ -85,9 +85,9 @@ namespace BepInEx.Configuration.Tests
 			var c = MakeConfig();
 			File.WriteAllText(c.ConfigFilePath, "[Cat]\n# Test\nKey=1\n");
 			c.Reload();
-			var w = c.Wrap("Cat", "Key", 0, new ConfigDescription("Test"));
+			var w = c.GetSetting("Cat", "Key", 0, new ConfigDescription("Test"));
 			Assert.AreEqual(w.Value, 1);
-			var w2 = c.Wrap("Cat", "Key2", 0, new ConfigDescription("Test"));
+			var w2 = c.GetSetting("Cat", "Key2", 0, new ConfigDescription("Test"));
 			Assert.AreEqual(w2.Value, 0);
 		}
 
@@ -95,7 +95,7 @@ namespace BepInEx.Configuration.Tests
 		public void ReadTest2()
 		{
 			var c = MakeConfig();
-			var w = c.Wrap("Cat", "Key", 0, new ConfigDescription("Test"));
+			var w = c.GetSetting("Cat", "Key", 0, new ConfigDescription("Test"));
 			Assert.AreEqual(w.Value, 0);
 
 			File.WriteAllText(c.ConfigFilePath, "[Cat]\n# Test\nKey = 1 \n");
@@ -121,7 +121,7 @@ namespace BepInEx.Configuration.Tests
 		public void EventTestWrapper()
 		{
 			var c = MakeConfig();
-			var w = c.Wrap("Cat", "Key", 0, new ConfigDescription("Test"));
+			var w = c.GetSetting("Cat", "Key", 0, new ConfigDescription("Test"));
 
 			File.WriteAllText(c.ConfigFilePath, "[Cat]\n# Test\nKey=1\n");
 
@@ -141,7 +141,7 @@ namespace BepInEx.Configuration.Tests
 			File.WriteAllText(c.ConfigFilePath, "[Cat]\n# Test\nKey=1\nHomeless=0");
 			c.Reload();
 
-			var w = c.Wrap("Cat", "Key", 0, new ConfigDescription("Test"));
+			var w = c.GetSetting("Cat", "Key", 0, new ConfigDescription("Test"));
 
 			c.Save();
 
@@ -154,7 +154,7 @@ namespace BepInEx.Configuration.Tests
 			var c = MakeConfig();
 			var eventFired = false;
 
-			var w = c.Wrap("Cat", "Key", 0, new ConfigDescription("Test"));
+			var w = c.GetSetting("Cat", "Key", 0, new ConfigDescription("Test"));
 			w.SettingChanged += (sender, args) => eventFired = true;
 
 			Assert.IsFalse(eventFired);
@@ -169,7 +169,7 @@ namespace BepInEx.Configuration.Tests
 		public void ValueRangeTest()
 		{
 			var c = MakeConfig();
-			var w = c.Wrap("Cat", "Key", 0, new ConfigDescription("Test", new AcceptableValueRange<int>(0, 2)));
+			var w = c.GetSetting("Cat", "Key", 0, new ConfigDescription("Test", new AcceptableValueRange<int>(0, 2)));
 
 			Assert.AreEqual(0, w.Value);
 			w.Value = 2;
@@ -185,7 +185,7 @@ namespace BepInEx.Configuration.Tests
 		public void ValueRangeBadTypeTest()
 		{
 			var c = MakeConfig();
-			c.Wrap("Cat", "Key", 0, new ConfigDescription("Test", new AcceptableValueRange<float>(1, 2)));
+			c.GetSetting("Cat", "Key", 0, new ConfigDescription("Test", new AcceptableValueRange<float>(1, 2)));
 			Assert.Fail();
 		}
 
@@ -193,7 +193,7 @@ namespace BepInEx.Configuration.Tests
 		public void ValueRangeDefaultTest()
 		{
 			var c = MakeConfig();
-			var w = c.Wrap("Cat", "Key", 0, new ConfigDescription("Test", new AcceptableValueRange<int>(1, 2)));
+			var w = c.GetSetting("Cat", "Key", 0, new ConfigDescription("Test", new AcceptableValueRange<int>(1, 2)));
 
 			Assert.AreEqual(w.Value, 1);
 		}
@@ -206,7 +206,7 @@ namespace BepInEx.Configuration.Tests
 			File.WriteAllText(c.ConfigFilePath, "[Cat]\nKey = 1\n");
 			c.Reload();
 
-			var w = c.Wrap("Cat", "Key", 0, new ConfigDescription("Test", new AcceptableValueRange<int>(0, 2)));
+			var w = c.GetSetting("Cat", "Key", 0, new ConfigDescription("Test", new AcceptableValueRange<int>(0, 2)));
 
 			Assert.AreEqual(w.Value, 1);
 
@@ -220,7 +220,7 @@ namespace BepInEx.Configuration.Tests
 		public void ValueListTest()
 		{
 			var c = MakeConfig();
-			var w = c.Wrap<string>("Cat", "Key", "kek", new ConfigDescription("Test", new AcceptableValueList<string>("lel", "kek", "wew", "why")));
+			var w = c.GetSetting("Cat", "Key", "kek", new ConfigDescription("Test", new AcceptableValueList<string>("lel", "kek", "wew", "why")));
 
 			Assert.AreEqual("kek", w.Value);
 			w.Value = "wew";
@@ -240,7 +240,7 @@ namespace BepInEx.Configuration.Tests
 			Assert.AreEqual(shortcut, d);
 
 			var c = MakeConfig();
-			var w = c.Wrap("Cat", "Key", new KeyboardShortcut(KeyCode.A, KeyCode.LeftShift));
+			var w = c.GetSetting("Cat", "Key", new KeyboardShortcut(KeyCode.A, KeyCode.LeftShift));
 			Assert.AreEqual(new KeyboardShortcut(KeyCode.A, KeyCode.LeftShift), w.Value);
 
 			w.Value = shortcut;
@@ -254,7 +254,7 @@ namespace BepInEx.Configuration.Tests
 			const string testVal = "new line\n test \t\0";
 
 			var c = MakeConfig();
-			var w = c.Wrap<string>("Cat", "Key", testVal, new ConfigDescription("Test"));
+			var w = c.GetSetting("Cat", "Key", testVal, new ConfigDescription("Test"));
 
 			Assert.AreEqual(testVal, w.Value);
 			Assert.IsFalse(w.ConfigEntry.GetSerializedValue().Any(x => x == '\n'));
@@ -279,7 +279,7 @@ namespace BepInEx.Configuration.Tests
 				File.WriteAllText(c.ConfigFilePath, $"[Cat]\n# Test\nKey={testVal}\n");
 				c.Reload();
 
-				var w = c.Wrap<string>("Cat", "Key", "", new ConfigDescription("Test"));
+				var w = c.GetSetting("Cat", "Key", "", new ConfigDescription("Test"));
 
 				Assert.AreEqual(unescaped, w.Value);
 
