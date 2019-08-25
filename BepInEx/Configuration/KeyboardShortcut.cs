@@ -172,11 +172,11 @@ namespace BepInEx.Configuration
 		/// <inheritdoc />
 		public override int GetHashCode()
 		{
-			if (_allKeys == null || _allKeys.Length == 0) return 0;
+			if (MainKey == KeyCode.None) return 0;
 
 			var hc = _allKeys.Length;
 			for (var i = 0; i < _allKeys.Length; i++)
-				hc = unchecked(hc * 31 + (int)_allKeys[i]);
+				hc = unchecked(hc * 31 + (int)i);
 			return hc;
 		}
 	}
