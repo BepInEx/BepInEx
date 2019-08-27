@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using BepInEx.Logging;
+using UnityEngine;
 
 namespace BepInEx.Configuration
 {
@@ -75,8 +76,7 @@ namespace BepInEx.Configuration
 			}
 			catch (Exception e)
 			{
-				Logger.Log(LogLevel.Warning, $"Config value of setting \"{Definition}\" could not be " +
-											 $"parsed and will be ignored. Reason: {e.Message}; Value: {value}");
+				Logging.Logger.Log(LogLevel.Warning, $"Config value of setting \"{Definition}\" could not be parsed and will be ignored. Reason: {e.Message}; Value: {value}");
 			}
 		}
 
@@ -116,32 +116,31 @@ namespace BepInEx.Configuration
 		public void WriteDescription(StreamWriter writer)
 		{
 			bool hasDescription = Description != null;
-			bool hasType = SettingType != null;
 
 			if (hasDescription)
 				writer.WriteLine(Description.ToSerializedString());
 
-			if (hasType)
-			{
-				if (SettingType.IsEnum && SettingType.GetCustomAttributes(typeof(FlagsAttribute), true).Any())
-					writer.WriteLine("# Multiple values can be set at the same time by separating them with , (e.g. Debug, Warning)");
+			writer.WriteLine("# Setting type: " + SettingType.Name);
 
-				writer.WriteLine("# Setting type: " + SettingType.Name);
-
-				writer.WriteLine("# Default value: " + DefaultValue);
-			}
+			writer.WriteLine("# Default value: " + DefaultValue);
 
 			if (hasDescription && Description.AcceptableValues != null)
 			{
 				writer.WriteLine(Description.AcceptableValues.ToSerializedString());
 			}
-			else if (hasType)
+			else
 			{
-				/*if (SettingType == typeof(bool))
-					writer.WriteLine("# Acceptable values: True, False");
-				else*/
 				if (SettingType.IsEnum)
+				{
 					writer.WriteLine("# Acceptable values: " + string.Join(", ", Enum.GetNames(SettingType)));
+
+					if (SettingType.GetCustomAttributes(typeof(FlagsAttribute), true).Any())
+						writer.WriteLine("# Multiple values can be set at the same time by separating them with , (e.g. Debug, Warning)");
+				}
+				else if (SettingType == typeof(bool))
+					writer.WriteLine("# Acceptable values: True, False");
+				else if (SettingType == typeof(Color))
+					writer.WriteLine("# Acceptable values: Hex HTML color codes");
 			}
 		}
 	}

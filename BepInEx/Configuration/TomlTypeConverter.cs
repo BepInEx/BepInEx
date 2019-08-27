@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text.RegularExpressions;
+using UnityEngine;
 
 namespace BepInEx.Configuration
 {
@@ -101,6 +102,21 @@ namespace BepInEx.Configuration
 			{
 				ConvertToString = (obj, type) => obj.ToString(),
 				ConvertToObject = (str, type) => Enum.Parse(type, str, true),
+			},
+
+			//unity types
+
+			[typeof(Color)] = new TypeConverter
+			{
+				ConvertToString = (obj, type) => ColorUtility.ToHtmlStringRGBA((Color)obj),
+				ConvertToObject = (str, type) =>
+				{
+					if (string.IsNullOrEmpty(str)) return Color.clear;
+					Color c;
+					if (!ColorUtility.TryParseHtmlString("#" + str.Trim('#', ' '), out c))
+						throw new FormatException("Invalid color string, expected hex #RRGGBBAA");
+					return c;
+				},
 			},
 		};
 
