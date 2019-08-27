@@ -96,6 +96,7 @@ namespace BepInEx.Bootstrap
 
 			var metadata = BepInPlugin.FromCecilType(type);
 
+			// Perform checks that will prevent the plugin from being loaded in ALL cases
 			if (metadata == null)
 			{
 				Logger.LogWarning($"Skipping over type [{type.FullName}] as no metadata attribute is specified");
@@ -120,16 +121,7 @@ namespace BepInEx.Bootstrap
 				return null;
 			}
 
-			//Perform a filter for currently running process
 			var filters = BepInProcess.FromCecilType(type);
-			bool invalidProcessName = filters.Count != 0 && filters.All(x => !string.Equals(x.ProcessName.Replace(".exe", ""), Paths.ProcessName, StringComparison.InvariantCultureIgnoreCase));
-
-			if (invalidProcessName)
-			{
-				Logger.LogWarning($"Skipping over plugin [{metadata.GUID}] due to process filter");
-				return null;
-			}
-
 			var dependencies = BepInDependency.FromCecilType(type);
 
 			return new PluginInfo
@@ -196,9 +188,13 @@ namespace BepInEx.Bootstrap
 
 				foreach (var pluginInfo in pluginInfos)
 				{
-					if (pluginInfo.Metadata.GUID == null)
+					// Perform checks that will prevent loading plugins in this run
+					var filters = pluginInfo.Processes.ToList();
+					bool invalidProcessName = filters.Count != 0 && filters.All(x => !string.Equals(x.ProcessName.Replace(".exe", ""), Paths.ProcessName, StringComparison.InvariantCultureIgnoreCase));
+
+					if (invalidProcessName)
 					{
-						Logger.LogWarning($"Skipping [{pluginInfo.Metadata.Name}] because it does not have a valid GUID.");
+						Logger.LogWarning($"Skipping over plugin [{pluginInfo.Metadata.GUID}] due to process filter");
 						continue;
 					}
 
