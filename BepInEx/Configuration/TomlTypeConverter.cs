@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
+using UnityEngine;
+using Logger = BepInEx.Logging.Logger;
 
 namespace BepInEx.Configuration
 {
@@ -10,7 +13,7 @@ namespace BepInEx.Configuration
 	/// </summary>
 	public static class TomlTypeConverter
 	{
-		// Don't put anything from UnityEngine here or it will break preloader (loads the assembly before it's patched)
+		// Don't put anything from UnityEngine here or it will break preloader, use LazyTomlConverterLoader instead
 		private static Dictionary<Type, TypeConverter> TypeConverters { get; } = new Dictionary<Type, TypeConverter>
 		{
 			[typeof(string)] = new TypeConverter
@@ -147,7 +150,12 @@ namespace BepInEx.Configuration
 			if (valueType.IsEnum)
 				return TypeConverters[typeof(Enum)];
 
-			TypeConverters.TryGetValue(valueType, out var result);
+			if (!TypeConverters.TryGetValue(valueType, out var result) && !_lazyLoadedConverters)
+			{
+				_lazyLoadedConverters = true;
+				LazyLoadConverters();
+				TypeConverters.TryGetValue(valueType, out result);
+			}
 			return result;
 		}
 
@@ -159,7 +167,11 @@ namespace BepInEx.Configuration
 		{
 			if (type == null) throw new ArgumentNullException(nameof(type));
 			if (converter == null) throw new ArgumentNullException(nameof(converter));
-			if (CanConvert(type)) return false;
+			if (CanConvert(type))
+			{
+				Logger.LogWarning("Tried to add a TomlConverter when one already exists for type " + type.FullName);
+				return false;
+			}
 
 			TypeConverters.Add(type, converter);
 			return true;
@@ -179,6 +191,47 @@ namespace BepInEx.Configuration
 		public static IEnumerable<Type> GetSupportedTypes()
 		{
 			return TypeConverters.Keys;
+		}
+
+		private static bool _lazyLoadedConverters;
+		private static void LazyLoadConverters()
+		{
+			try { LazyTomlConverterLoader.AddUnityEngineConverters(); }
+			catch (Exception ex) { Logger.LogWarning("Failed to load UnityEngine Toml converters - " + ex.Message); }
+		}
+	}
+
+	/// <summary>
+	/// For types that are in assemblies that can't get loaded before preloader runs (or it won't work on these assemblies)
+	/// </summary>
+	internal static class LazyTomlConverterLoader
+	{
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		public static void AddUnityEngineConverters()
+		{
+			var colorConverter = new TypeConverter
+			{
+				ConvertToString = (obj, type) => ColorUtility.ToHtmlStringRGBA((Color)obj),
+				ConvertToObject = (str, type) =>
+				{
+					if (!ColorUtility.TryParseHtmlString("#" + str.Trim('#', ' '), out var c))
+						throw new FormatException("Invalid color string, expected hex #RRGGBBAA");
+					return c;
+				},
+			};
+
+			TomlTypeConverter.AddConverter(typeof(Color), colorConverter);
+
+			var jsonConverter = new TypeConverter
+			{
+				ConvertToString = (obj, type) => JsonUtility.ToJson(obj),
+				ConvertToObject = (str, type) => JsonUtility.FromJson(type: type, json: str),
+			};
+
+			TomlTypeConverter.AddConverter(typeof(Vector2), jsonConverter);
+			TomlTypeConverter.AddConverter(typeof(Vector3), jsonConverter);
+			TomlTypeConverter.AddConverter(typeof(Vector4), jsonConverter);
+			TomlTypeConverter.AddConverter(typeof(Quaternion), jsonConverter);
 		}
 	}
 }
