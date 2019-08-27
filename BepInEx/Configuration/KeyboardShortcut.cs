@@ -174,10 +174,7 @@ namespace BepInEx.Configuration
 		{
 			if (MainKey == KeyCode.None) return 0;
 
-			var hc = _allKeys.Length;
-			for (var i = 0; i < _allKeys.Length; i++)
-				hc = unchecked(hc * 31 + (int)i);
-			return hc;
+			return _allKeys.Aggregate(_allKeys.Length, (current, item) => unchecked(current * 31 + (int)item));
 		}
 	}
 }
