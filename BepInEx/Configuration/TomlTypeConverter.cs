@@ -153,15 +153,16 @@ namespace BepInEx.Configuration
 
 		/// <summary>
 		/// Add a new type converter for a given type. 
-		/// If a different converter is already added, an ArgumentException is thrown.
+		/// If a different converter is already added, this call is ignored and false is returned.
 		/// </summary>
-		public static void AddConverter(Type type, TypeConverter converter)
+		public static bool AddConverter(Type type, TypeConverter converter)
 		{
 			if (type == null) throw new ArgumentNullException(nameof(type));
 			if (converter == null) throw new ArgumentNullException(nameof(converter));
-			if (CanConvert(type)) throw new ArgumentException("The specified type already has a converter assigned to it", nameof(type));
+			if (CanConvert(type)) return false;
 
 			TypeConverters.Add(type, converter);
+			return true;
 		}
 
 		/// <summary>
