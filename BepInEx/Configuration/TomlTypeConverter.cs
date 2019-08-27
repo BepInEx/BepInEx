@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text.RegularExpressions;
-using UnityEngine;
 
 namespace BepInEx.Configuration
 {
@@ -11,6 +10,7 @@ namespace BepInEx.Configuration
 	/// </summary>
 	public static class TomlTypeConverter
 	{
+		// Don't put anything from UnityEngine here or it will break preloader (loads the assembly before it's patched)
 		private static Dictionary<Type, TypeConverter> TypeConverters { get; } = new Dictionary<Type, TypeConverter>
 		{
 			[typeof(string)] = new TypeConverter
@@ -103,21 +103,6 @@ namespace BepInEx.Configuration
 				ConvertToString = (obj, type) => obj.ToString(),
 				ConvertToObject = (str, type) => Enum.Parse(type, str, true),
 			},
-
-			//unity types
-
-			[typeof(Color)] = new TypeConverter
-			{
-				ConvertToString = (obj, type) => ColorUtility.ToHtmlStringRGBA((Color)obj),
-				ConvertToObject = (str, type) =>
-				{
-					if (string.IsNullOrEmpty(str)) return Color.clear;
-					Color c;
-					if (!ColorUtility.TryParseHtmlString("#" + str.Trim('#', ' '), out c))
-						throw new FormatException("Invalid color string, expected hex #RRGGBBAA");
-					return c;
-				},
-			},
 		};
 
 		/// <summary>
@@ -167,7 +152,8 @@ namespace BepInEx.Configuration
 		}
 
 		/// <summary>
-		/// Add a new type converter for a given type.
+		/// Add a new type converter for a given type. 
+		/// If a different converter is already added, an ArgumentException is thrown.
 		/// </summary>
 		public static void AddConverter(Type type, TypeConverter converter)
 		{

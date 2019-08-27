@@ -2,7 +2,6 @@
 using System.IO;
 using System.Linq;
 using BepInEx.Logging;
-using UnityEngine;
 
 namespace BepInEx.Configuration
 {
@@ -128,19 +127,12 @@ namespace BepInEx.Configuration
 			{
 				writer.WriteLine(Description.AcceptableValues.ToSerializedString());
 			}
-			else
+			else if (SettingType.IsEnum)
 			{
-				if (SettingType.IsEnum)
-				{
-					writer.WriteLine("# Acceptable values: " + string.Join(", ", Enum.GetNames(SettingType)));
+				writer.WriteLine("# Acceptable values: " + string.Join(", ", Enum.GetNames(SettingType)));
 
-					if (SettingType.GetCustomAttributes(typeof(FlagsAttribute), true).Any())
-						writer.WriteLine("# Multiple values can be set at the same time by separating them with , (e.g. Debug, Warning)");
-				}
-				else if (SettingType == typeof(bool))
-					writer.WriteLine("# Acceptable values: True, False");
-				else if (SettingType == typeof(Color))
-					writer.WriteLine("# Acceptable values: Hex HTML color codes");
+				if (SettingType.GetCustomAttributes(typeof(FlagsAttribute), true).Any())
+					writer.WriteLine("# Multiple values can be set at the same time by separating them with , (e.g. Debug, Warning)");
 			}
 		}
 	}
