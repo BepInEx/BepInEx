@@ -127,12 +127,14 @@ namespace BepInEx.Bootstrap
 
 			var filters = BepInProcess.FromCecilType(type);
 			var dependencies = BepInDependency.FromCecilType(type);
+			var incompatibilities = BepInIncompatibility.FromCecilType(type);
 
 			return new PluginInfo
 			{
 				Metadata = metadata,
 				Processes = filters,
 				Dependencies = dependencies,
+				Incompatibilities = incompatibilities,
 				TypeName = type.FullName
 			};
 		}
@@ -208,7 +210,7 @@ namespace BepInEx.Bootstrap
 						continue;
 					}
 
-					dependencyDict[pluginInfo.Metadata.GUID] = pluginInfo.Dependencies.Select(d => d.DependencyGUID);
+					dependencyDict[pluginInfo.Metadata.GUID] = pluginInfo.Dependencies.Select(d => d.DependencyGUID).Concat(pluginInfo.Incompatibilities.Select(i => i.IncompatibilityGUID));
 					pluginsByGUID[pluginInfo.Metadata.GUID] = pluginInfo;
 				}
 
@@ -249,6 +251,13 @@ namespace BepInEx.Bootstrap
 						}
 					}
 
+					var incompatibilities = new List<BepInIncompatibility>();
+					foreach (var incompatibility in pluginInfo.Incompatibilities)
+					{
+						if (processedPlugins.ContainsKey(incompatibility.IncompatibilityGUID))
+							incompatibilities.Add(incompatibility);
+					}
+
 					processedPlugins.Add(pluginGUID, pluginInfo.Metadata.Version);
 
 					if (dependsOnInvalidPlugin)
@@ -269,6 +278,18 @@ namespace BepInEx.Bootstrap
 
 						string message = $@"Missing the following dependencies for [{pluginInfo.Metadata.Name}]: {"\r\n"}{
 								string.Join("\r\n", missingDependencies.Select(ToMissingString).ToArray())
+							}{"\r\n"}Loading will be skipped; expect further errors and unstabilities.";
+						DependencyErrors.Add(message);
+						Logger.LogError(message);
+
+						invalidPlugins.Add(pluginGUID);
+						continue;
+					}
+
+					if (incompatibilities.Count != 0)
+					{
+						string message = $@"Found incompatible plugins for [{pluginInfo.Metadata.Name}]: {"\r\n"}{
+								string.Join("\r\n", incompatibilities.Select(i => i.IncompatibilityGUID).ToArray())
 							}{"\r\n"}Loading will be skipped; expect further errors and unstabilities.";
 						DependencyErrors.Add(message);
 						Logger.LogError(message);

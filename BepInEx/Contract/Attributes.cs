@@ -114,6 +114,7 @@ namespace BepInEx
 		/// </summary>
 		/// <param name="DependencyGUID">The GUID of the referenced plugin.</param>
 		/// <param name="MinimumDependencyVersion">The minimum version of the referenced plugin.</param>
+		/// <remarks>When version is supplied the dependency is always treated as HardDependency</remarks>
 		public BepInDependency(string DependencyGUID, string MinimumDependencyVersion) : this(DependencyGUID)
 		{
 			MinimumVersion = new Version(MinimumDependencyVersion);
@@ -143,6 +144,48 @@ namespace BepInEx
 			DependencyGUID = br.ReadString();
 			Flags = (DependencyFlags)br.ReadInt32();
 			MinimumVersion = new Version(br.ReadString());
+		}
+	}
+
+	/// <summary>
+	/// This attribute specifies other plugins that are incompatible with this plugin.
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
+	public class BepInIncompatibility : Attribute, ICacheable
+	{
+		/// <summary>
+		/// The GUID of the referenced plugin.
+		/// </summary>
+		public string IncompatibilityGUID { get; protected set; }
+		
+		/// <summary>
+		/// Marks this <see cref="BaseUnityPlugin"/> as incompatible with another plugin. 
+		/// If the other plugin exists, this plugin will not be loaded and a warning will be shown.
+		/// </summary>
+		/// <param name="IncompatibilityGUID">The GUID of the referenced plugin.</param>
+		public BepInIncompatibility(string IncompatibilityGUID)
+		{
+			this.IncompatibilityGUID = IncompatibilityGUID;
+		}
+
+		internal static IEnumerable<BepInIncompatibility> FromCecilType(TypeDefinition td)
+		{
+			var attrs = MetadataHelper.GetCustomAttributes<BepInIncompatibility>(td, true);
+			return attrs.Select(customAttribute =>
+			{
+				var dependencyGuid = (string)customAttribute.ConstructorArguments[0].Value;
+				return new BepInIncompatibility(dependencyGuid);
+			}).ToList();
+		}
+
+		void ICacheable.Save(BinaryWriter bw)
+		{
+			bw.Write(IncompatibilityGUID);
+		}
+
+		void ICacheable.Load(BinaryReader br)
+		{
+			IncompatibilityGUID = br.ReadString();
 		}
 	}
 

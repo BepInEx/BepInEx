@@ -13,6 +13,8 @@ namespace BepInEx.Contract
 
 		public IEnumerable<BepInDependency> Dependencies { get; internal set; }
 
+		public IEnumerable<BepInIncompatibility> Incompatibilities { get; set; }
+
 		public string Location { get; internal set; }
 
 		public BaseUnityPlugin Instance { get; internal set; }
@@ -36,6 +38,11 @@ namespace BepInEx.Contract
 			bw.Write(depList.Count);
 			foreach (var bepInDependency in depList)
 				((ICacheable)bepInDependency).Save(bw);
+
+			var incList = Incompatibilities.ToList();
+			bw.Write(incList.Count);
+			foreach (var bepInIncompatibility in incList)
+				((ICacheable)bepInIncompatibility).Save(bw);
 		}
 
 		void ICacheable.Load(BinaryReader br)
@@ -60,6 +67,17 @@ namespace BepInEx.Contract
 			}
 
 			Dependencies = depList;
+
+			var incCount = br.ReadInt32();
+			var incList = new List<BepInIncompatibility>(incCount);
+			for (int i = 0; i < incCount; i++)
+			{
+				var inc = new BepInIncompatibility("");
+				((ICacheable)inc).Load(br);
+				incList.Add(inc);
+			}
+
+			Incompatibilities = incList;
 		}
 	}
 }
