@@ -13,7 +13,7 @@ namespace BepInEx.Contract
 
 		public IEnumerable<BepInDependency> Dependencies { get; internal set; }
 
-		public IEnumerable<BepInIncompatibility> Incompatibilities { get; set; }
+		public IEnumerable<BepInIncompatibility> Incompatibilities { get; internal set; }
 
 		public string Location { get; internal set; }
 
