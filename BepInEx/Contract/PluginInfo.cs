@@ -19,7 +19,7 @@ namespace BepInEx.Contract
 
 		internal string TypeName { get; set; }
 
-		public void Save(BinaryWriter bw)
+		void ICacheable.Save(BinaryWriter bw)
 		{
 			bw.Write(TypeName);
 
@@ -35,14 +35,10 @@ namespace BepInEx.Contract
 			var depList = Dependencies.ToList();
 			bw.Write(depList.Count);
 			foreach (var bepInDependency in depList)
-			{
-				bw.Write(bepInDependency.DependencyGUID);
-				bw.Write((int)bepInDependency.Flags);
-				bw.Write(bepInDependency.MinimumVersion.ToString());
-			}
+				((ICacheable)bepInDependency).Save(bw);
 		}
 
-		public void Load(BinaryReader br)
+		void ICacheable.Load(BinaryReader br)
 		{
 			TypeName = br.ReadString();
 
@@ -57,7 +53,12 @@ namespace BepInEx.Contract
 			var depCount = br.ReadInt32();
 			var depList = new List<BepInDependency>(depCount);
 			for (int i = 0; i < depCount; i++)
-				depList.Add(new BepInDependency(br.ReadString(), (BepInDependency.DependencyFlags) br.ReadInt32(), br.ReadString()));
+			{
+				var dep = new BepInDependency("");
+				((ICacheable)dep).Load(br);
+				depList.Add(dep);
+			}
+
 			Dependencies = depList;
 		}
 	}

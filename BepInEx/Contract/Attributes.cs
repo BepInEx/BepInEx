@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Reflection;
-using BepInEx.Logging;
+using BepInEx.Bootstrap;
 using Mono.Cecil;
-using Mono.Collections.Generic;
 
 namespace BepInEx
 {
@@ -66,7 +65,7 @@ namespace BepInEx
 	/// This attribute specifies any dependencies that this plugin has on other plugins.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
-	public class BepInDependency : Attribute
+	public class BepInDependency : Attribute, ICacheable
 	{
 		public enum DependencyFlags
 		{
@@ -120,12 +119,6 @@ namespace BepInEx
 			MinimumVersion = new Version(MinimumDependencyVersion);
 		}
 
-		internal BepInDependency(string DependencyGUID, DependencyFlags Flags, string MinimumDependencyVersion) : this(DependencyGUID, Flags)
-		{
-			if (!string.IsNullOrEmpty(MinimumDependencyVersion))
-				MinimumVersion = new Version(MinimumDependencyVersion);
-		}
-
 		internal static IEnumerable<BepInDependency> FromCecilType(TypeDefinition td)
 		{
 			var attrs = MetadataHelper.GetCustomAttributes<BepInDependency>(td, true);
@@ -136,6 +129,20 @@ namespace BepInEx
 				if (secondArg is string minVersion) return new BepInDependency(dependencyGuid, minVersion);
 				return new BepInDependency(dependencyGuid, (DependencyFlags)secondArg);
 			}).ToList();
+		}
+
+		void ICacheable.Save(BinaryWriter bw)
+		{
+			bw.Write(DependencyGUID);
+			bw.Write((int)Flags);
+			bw.Write(MinimumVersion.ToString());
+		}
+
+		void ICacheable.Load(BinaryReader br)
+		{
+			DependencyGUID = br.ReadString();
+			Flags = (DependencyFlags)br.ReadInt32();
+			MinimumVersion = new Version(br.ReadString());
 		}
 	}
 
