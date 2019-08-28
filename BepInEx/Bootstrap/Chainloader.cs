@@ -276,9 +276,7 @@ namespace BepInEx.Bootstrap
 							return $"- {s.DependencyGUID} (at least v{s.MinimumVersion})";
 						}
 
-						string message = $@"Missing the following dependencies for [{pluginInfo.Metadata.Name}]: {"\r\n"}{
-								string.Join("\r\n", missingDependencies.Select(ToMissingString).ToArray())
-							}{"\r\n"}Loading will be skipped; expect further errors and unstabilities.";
+						string message = $@"Could not load [{pluginInfo.Metadata.Name}] because it has missing dependencies: {string.Join(", ", missingDependencies.Select(ToMissingString).ToArray())}";
 						DependencyErrors.Add(message);
 						Logger.LogError(message);
 
@@ -288,9 +286,7 @@ namespace BepInEx.Bootstrap
 
 					if (incompatibilities.Count != 0)
 					{
-						string message = $@"Found incompatible plugins for [{pluginInfo.Metadata.Name}]: {"\r\n"}{
-								string.Join("\r\n", incompatibilities.Select(i => i.IncompatibilityGUID).ToArray())
-							}{"\r\n"}Loading will be skipped; expect further errors and unstabilities.";
+						string message = $@"Could not load [{pluginInfo.Metadata.Name}] because it is incompatible with: {string.Join(", ", incompatibilities.Select(i => i.IncompatibilityGUID).ToArray())}";
 						DependencyErrors.Add(message);
 						Logger.LogError(message);
 
