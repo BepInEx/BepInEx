@@ -228,8 +228,8 @@ namespace BepInEx.Configuration
 					{
 						if (entry.Description != null)
 							Logger.Log(LogLevel.Warning, $"Tried to add configDescription to setting {configDefinition} when it already had one defined. Only add configDescription once or a random one will be used.");
-
-						entry.SetDescription(configDescription);
+						else
+							entry.SetDescription(configDescription);
 					}
 
 					if (HomelessEntries.TryGetValue(configDefinition, out string homelessValue))
