@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Reflection;
-using BepInEx.Logging;
+using BepInEx.Bootstrap;
 using Mono.Cecil;
-using Mono.Collections.Generic;
 
 namespace BepInEx
 {
@@ -66,7 +65,7 @@ namespace BepInEx
 	/// This attribute specifies any dependencies that this plugin has on other plugins.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
-	public class BepInDependency : Attribute
+	public class BepInDependency : Attribute, ICacheable
 	{
 		public enum DependencyFlags
 		{
@@ -91,18 +90,102 @@ namespace BepInEx
 		/// </summary>
 		public DependencyFlags Flags { get; protected set; }
 
+		/// <summary>
+		/// The minimum version of the referenced plugin.
+		/// </summary>
+		public Version MinimumVersion { get; protected set; }
+
+		/// <summary>
+		/// Marks this <see cref="BaseUnityPlugin"/> as depenant on another plugin. The other plugin will be loaded before this one.
+		/// If the other plugin doesn't exist, what happens depends on the <see cref="Flags"/> parameter.
+		/// </summary>
 		/// <param name="DependencyGUID">The GUID of the referenced plugin.</param>
 		/// <param name="Flags">The flags associated with this dependency definition.</param>
 		public BepInDependency(string DependencyGUID, DependencyFlags Flags = DependencyFlags.HardDependency)
 		{
 			this.DependencyGUID = DependencyGUID;
 			this.Flags = Flags;
+			MinimumVersion = new Version();
+		}
+
+		/// <summary>
+		/// Marks this <see cref="BaseUnityPlugin"/> as depenant on another plugin. The other plugin will be loaded before this one.
+		/// If the other plugin doesn't exist or is of a version below <see cref="MinimumDependencyVersion"/>, this plugin will not load and an error will be logged instead.
+		/// </summary>
+		/// <param name="DependencyGUID">The GUID of the referenced plugin.</param>
+		/// <param name="MinimumDependencyVersion">The minimum version of the referenced plugin.</param>
+		/// <remarks>When version is supplied the dependency is always treated as HardDependency</remarks>
+		public BepInDependency(string DependencyGUID, string MinimumDependencyVersion) : this(DependencyGUID)
+		{
+			MinimumVersion = new Version(MinimumDependencyVersion);
 		}
 
 		internal static IEnumerable<BepInDependency> FromCecilType(TypeDefinition td)
 		{
 			var attrs = MetadataHelper.GetCustomAttributes<BepInDependency>(td, true);
-			return attrs.Select(customAttribute => new BepInDependency((string)customAttribute.ConstructorArguments[0].Value, (DependencyFlags)customAttribute.ConstructorArguments[1].Value)).ToList();
+			return attrs.Select(customAttribute =>
+			{
+				var dependencyGuid = (string)customAttribute.ConstructorArguments[0].Value;
+				var secondArg = customAttribute.ConstructorArguments[1].Value;
+				if (secondArg is string minVersion) return new BepInDependency(dependencyGuid, minVersion);
+				return new BepInDependency(dependencyGuid, (DependencyFlags)secondArg);
+			}).ToList();
+		}
+
+		void ICacheable.Save(BinaryWriter bw)
+		{
+			bw.Write(DependencyGUID);
+			bw.Write((int)Flags);
+			bw.Write(MinimumVersion.ToString());
+		}
+
+		void ICacheable.Load(BinaryReader br)
+		{
+			DependencyGUID = br.ReadString();
+			Flags = (DependencyFlags)br.ReadInt32();
+			MinimumVersion = new Version(br.ReadString());
+		}
+	}
+
+	/// <summary>
+	/// This attribute specifies other plugins that are incompatible with this plugin.
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
+	public class BepInIncompatibility : Attribute, ICacheable
+	{
+		/// <summary>
+		/// The GUID of the referenced plugin.
+		/// </summary>
+		public string IncompatibilityGUID { get; protected set; }
+		
+		/// <summary>
+		/// Marks this <see cref="BaseUnityPlugin"/> as incompatible with another plugin. 
+		/// If the other plugin exists, this plugin will not be loaded and a warning will be shown.
+		/// </summary>
+		/// <param name="IncompatibilityGUID">The GUID of the referenced plugin.</param>
+		public BepInIncompatibility(string IncompatibilityGUID)
+		{
+			this.IncompatibilityGUID = IncompatibilityGUID;
+		}
+
+		internal static IEnumerable<BepInIncompatibility> FromCecilType(TypeDefinition td)
+		{
+			var attrs = MetadataHelper.GetCustomAttributes<BepInIncompatibility>(td, true);
+			return attrs.Select(customAttribute =>
+			{
+				var dependencyGuid = (string)customAttribute.ConstructorArguments[0].Value;
+				return new BepInIncompatibility(dependencyGuid);
+			}).ToList();
+		}
+
+		void ICacheable.Save(BinaryWriter bw)
+		{
+			bw.Write(IncompatibilityGUID);
+		}
+
+		void ICacheable.Load(BinaryReader br)
+		{
+			IncompatibilityGUID = br.ReadString();
 		}
 	}
 

@@ -13,13 +13,15 @@ namespace BepInEx
 
 		public IEnumerable<BepInDependency> Dependencies { get; internal set; }
 
+		public IEnumerable<BepInIncompatibility> Incompatibilities { get; internal set; }
+
 		public string Location { get; internal set; }
 
 		public BaseUnityPlugin Instance { get; internal set; }
 
 		internal string TypeName { get; set; }
 
-		public void Save(BinaryWriter bw)
+		void ICacheable.Save(BinaryWriter bw)
 		{
 			bw.Write(TypeName);
 
@@ -35,13 +37,15 @@ namespace BepInEx
 			var depList = Dependencies.ToList();
 			bw.Write(depList.Count);
 			foreach (var bepInDependency in depList)
-			{
-				bw.Write(bepInDependency.DependencyGUID);
-				bw.Write((int)bepInDependency.Flags);
-			}
+				((ICacheable)bepInDependency).Save(bw);
+
+			var incList = Incompatibilities.ToList();
+			bw.Write(incList.Count);
+			foreach (var bepInIncompatibility in incList)
+				((ICacheable)bepInIncompatibility).Save(bw);
 		}
 
-		public void Load(BinaryReader br)
+		void ICacheable.Load(BinaryReader br)
 		{
 			TypeName = br.ReadString();
 
@@ -56,8 +60,24 @@ namespace BepInEx
 			var depCount = br.ReadInt32();
 			var depList = new List<BepInDependency>(depCount);
 			for (int i = 0; i < depCount; i++)
-				depList.Add(new BepInDependency(br.ReadString(), (BepInDependency.DependencyFlags) br.ReadInt32()));
+			{
+				var dep = new BepInDependency("");
+				((ICacheable)dep).Load(br);
+				depList.Add(dep);
+			}
+
 			Dependencies = depList;
+
+			var incCount = br.ReadInt32();
+			var incList = new List<BepInIncompatibility>(incCount);
+			for (int i = 0; i < incCount; i++)
+			{
+				var inc = new BepInIncompatibility("");
+				((ICacheable)inc).Load(br);
+				incList.Add(inc);
+			}
+
+			Incompatibilities = incList;
 		}
 	}
 }

@@ -26,6 +26,8 @@ namespace BepInEx.Bootstrap
 
 		public static List<BaseUnityPlugin> Plugins { get; } = new List<BaseUnityPlugin>();
 
+		public static List<string> DependencyErrors { get; } = new List<string>();
+
 		/// <summary>
 		/// The GameObject that all plugins are attached to as components.
 		/// </summary>
@@ -123,12 +125,14 @@ namespace BepInEx.Bootstrap
 
 			var filters = BepInProcess.FromCecilType(type);
 			var dependencies = BepInDependency.FromCecilType(type);
+			var incompatibilities = BepInIncompatibility.FromCecilType(type);
 
 			return new PluginInfo
 			{
 				Metadata = metadata,
 				Processes = filters,
 				Dependencies = dependencies,
+				Incompatibilities = incompatibilities,
 				TypeName = type.FullName
 			};
 		}
@@ -204,7 +208,7 @@ namespace BepInEx.Bootstrap
 						continue;
 					}
 
-					dependencyDict[pluginInfo.Metadata.GUID] = pluginInfo.Dependencies.Select(d => d.DependencyGUID);
+					dependencyDict[pluginInfo.Metadata.GUID] = pluginInfo.Dependencies.Select(d => d.DependencyGUID).Concat(pluginInfo.Incompatibilities.Select(i => i.IncompatibilityGUID));
 					pluginsByGUID[pluginInfo.Metadata.GUID] = pluginInfo;
 				}
 
@@ -215,7 +219,7 @@ namespace BepInEx.Bootstrap
 				var sortedPlugins = Utility.TopologicalSort(dependencyDict.Keys, x => dependencyDict.TryGetValue(x, out var deps) ? deps : emptyDependencies).ToList();
 
 				var invalidPlugins = new HashSet<string>();
-				var processedPlugins = new HashSet<string>();
+				var processedPlugins = new Dictionary<string, Version>();
 
 				foreach (var pluginGUID in sortedPlugins)
 				{
@@ -224,15 +228,16 @@ namespace BepInEx.Bootstrap
 						continue;
 
 					var dependsOnInvalidPlugin = false;
-					var missingDependencies = new List<string>();
+					var missingDependencies = new List<BepInDependency>();
 					foreach (var dependency in pluginInfo.Dependencies)
 					{
 						// If the depenency wasn't already processed, it's missing altogether
-						if (!processedPlugins.Contains(dependency.DependencyGUID))
+						bool depenencyExists = processedPlugins.TryGetValue(dependency.DependencyGUID, out var pluginVersion);
+						if (!depenencyExists || pluginVersion < dependency.MinimumVersion)
 						{
 							// If the dependency is hard, collect it into a list to show
 							if ((dependency.Flags & BepInDependency.DependencyFlags.HardDependency) != 0)
-								missingDependencies.Add(dependency.DependencyGUID);
+								missingDependencies.Add(dependency);
 							continue;
 						}
 
@@ -244,19 +249,45 @@ namespace BepInEx.Bootstrap
 						}
 					}
 
-					processedPlugins.Add(pluginGUID);
+					var incompatibilities = new List<BepInIncompatibility>();
+					foreach (var incompatibility in pluginInfo.Incompatibilities)
+					{
+						if (processedPlugins.ContainsKey(incompatibility.IncompatibilityGUID))
+							incompatibilities.Add(incompatibility);
+					}
+
+					processedPlugins.Add(pluginGUID, pluginInfo.Metadata.Version);
 
 					if (dependsOnInvalidPlugin)
 					{
-						Logger.LogWarning($"Skipping [{pluginInfo.Metadata.Name}] because it has a dependency that was not loaded. See above errors for details.");
+						string message = $"Skipping [{pluginInfo.Metadata.Name}] because it has a dependency that was not loaded. See above errors for details.";
+						DependencyErrors.Add(message);
+						Logger.LogWarning(message);
 						continue;
 					}
 
 					if (missingDependencies.Count != 0)
 					{
-						Logger.LogError($@"Missing the following dependencies for [{pluginInfo.Metadata.Name}]: {"\r\n"}{
-								string.Join("\r\n", missingDependencies.Select(s => $"- {s}").ToArray())
-							}{"\r\n"}Loading will be skipped; expect further errors and unstabilities.");
+						string ToMissingString(BepInDependency s)
+						{
+							bool emptyVersion = s.MinimumVersion.Major == 0 && s.MinimumVersion.Minor == 0 && s.MinimumVersion.Build == 0 && s.MinimumVersion.Revision == 0;
+							if (emptyVersion) return "- " + s.DependencyGUID;
+							return $"- {s.DependencyGUID} (at least v{s.MinimumVersion})";
+						}
+
+						string message = $@"Could not load [{pluginInfo.Metadata.Name}] because it has missing dependencies: {string.Join(", ", missingDependencies.Select(ToMissingString).ToArray())}";
+						DependencyErrors.Add(message);
+						Logger.LogError(message);
+
+						invalidPlugins.Add(pluginGUID);
+						continue;
+					}
+
+					if (incompatibilities.Count != 0)
+					{
+						string message = $@"Could not load [{pluginInfo.Metadata.Name}] because it is incompatible with: {string.Join(", ", incompatibilities.Select(i => i.IncompatibilityGUID).ToArray())}";
+						DependencyErrors.Add(message);
+						Logger.LogError(message);
 
 						invalidPlugins.Add(pluginGUID);
 						continue;
