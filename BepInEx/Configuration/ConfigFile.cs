@@ -200,7 +200,7 @@ namespace BepInEx.Configuration
 		/// <param name="configDefinition">Section and Key of the setting.</param>
 		/// <param name="defaultValue">Value of the setting if the setting was not created yet.</param>
 		/// <param name="configDescription">Description of the setting shown to the user.</param>
-		public ConfigWrapper<T> GetSetting<T>(ConfigDefinition configDefinition, T defaultValue = default(T), ConfigDescription configDescription = null)
+		public ConfigWrapper<T> GetSetting<T>(ConfigDefinition configDefinition, T defaultValue, ConfigDescription configDescription = null)
 		{
 			if (!TomlTypeConverter.CanConvert(typeof(T)))
 				throw new ArgumentException($"Type {typeof(T)} is not supported by the config system. Supported types: {string.Join(", ", TomlTypeConverter.GetSupportedTypes().Select(x => x.Name).ToArray())}");
@@ -261,7 +261,7 @@ namespace BepInEx.Configuration
 		/// <param name="key">Name of the setting.</param>
 		/// <param name="defaultValue">Value of the setting if the setting was not created yet.</param>
 		/// <param name="configDescription">Description of the setting shown to the user.</param>
-		public ConfigWrapper<T> GetSetting<T>(string section, string key, T defaultValue = default(T), ConfigDescription configDescription = null)
+		public ConfigWrapper<T> GetSetting<T>(string section, string key, T defaultValue, ConfigDescription configDescription = null)
 			=> GetSetting(new ConfigDefinition(section, key), defaultValue, configDescription);
 
 		/// <inheritdoc cref="GetSetting{T}(string,string,T,ConfigDescription)"/>
