@@ -5,7 +5,7 @@ namespace BepInEx.Configuration
 	/// <summary>
 	/// Specify the range of acceptable values for a setting.
 	/// </summary>
-	public sealed class AcceptableValueRange<T> : AcceptableValueBase where T : IComparable
+	public class AcceptableValueRange<T> : AcceptableValueBase where T : IComparable
 	{
 		/// <param name="minValue">Lowest acceptable value</param>
 		/// <param name="maxValue">Highest acceptable value</param>
@@ -25,12 +25,12 @@ namespace BepInEx.Configuration
 		/// <summary>
 		/// Lowest acceptable value
 		/// </summary>
-		public T MinValue { get; }
+		public virtual T MinValue { get; }
 
 		/// <summary>
 		/// Highest acceptable value
 		/// </summary>
-		public T MaxValue { get; }
+		public virtual T MaxValue { get; }
 
 		/// <inheritdoc />
 		public override object Clamp(object value)

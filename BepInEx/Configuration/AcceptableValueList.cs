@@ -6,12 +6,12 @@ namespace BepInEx.Configuration
 	/// <summary>
 	/// Specify the list of acceptable values for a setting.
 	/// </summary>
-	public sealed class AcceptableValueList<T> : AcceptableValueBase where T : IEquatable<T>
+	public class AcceptableValueList<T> : AcceptableValueBase where T : IEquatable<T>
 	{
 		/// <summary>
 		/// List of values that a setting can take.
 		/// </summary>
-		public T[] AcceptableValues { get; }
+		public virtual T[] AcceptableValues { get; }
 
 		/// <summary>
 		/// Specify the list of acceptable values for a setting.
