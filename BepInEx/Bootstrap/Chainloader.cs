@@ -272,7 +272,8 @@ namespace BepInEx.Bootstrap
 					{
 						string ToMissingString(BepInDependency s)
 						{
-							if (s.MinimumVersion.IsZero()) return "- " + s.DependencyGUID;
+							bool emptyVersion = s.MinimumVersion.Major == 0 && s.MinimumVersion.Minor == 0 && s.MinimumVersion.Build == 0 && s.MinimumVersion.Revision == 0;
+							if (emptyVersion) return "- " + s.DependencyGUID;
 							return $"- {s.DependencyGUID} (at least v{s.MinimumVersion})";
 						}
 
