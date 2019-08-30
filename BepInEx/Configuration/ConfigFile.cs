@@ -213,14 +213,14 @@ namespace BepInEx.Configuration
 
 					Entries.TryGetValue(configDefinition, out var existingEntry);
 
-					if (existingEntry != null && !(existingEntry is ConfigEntry<T>))
+					if (existingEntry != null && !(existingEntry is ConfigWrapper<T>))
 						throw new ArgumentException("The defined setting already exists with a different setting type - " + existingEntry.SettingType.Name);
 
-					var entry = (ConfigEntry<T>)existingEntry;
+					var entry = (ConfigWrapper<T>)existingEntry;
 
 					if (entry == null)
 					{
-						entry = new ConfigEntry<T>(this, configDefinition, defaultValue);
+						entry = new ConfigWrapper<T>(this, configDefinition, defaultValue);
 						Entries[configDefinition] = entry;
 					}
 
@@ -242,7 +242,7 @@ namespace BepInEx.Configuration
 					if (SaveOnConfigSet)
 						Save();
 
-					return new ConfigWrapper<T>(entry);
+					return entry;
 				}
 			}
 			finally

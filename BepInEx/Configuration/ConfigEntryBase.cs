@@ -21,7 +21,7 @@ namespace BepInEx.Configuration
 			SettingType = settingType ?? throw new ArgumentNullException(nameof(settingType));
 
 			// Free type check
-			Value = defaultValue;
+			BoxedValue = defaultValue;
 			DefaultValue = defaultValue;
 		}
 
@@ -41,7 +41,7 @@ namespace BepInEx.Configuration
 		public ConfigDescription Description { get; private set; }
 
 		/// <summary>
-		/// Type of the <see cref="Value"/> that this setting holds.
+		/// Type of the <see cref="BoxedValue"/> that this setting holds.
 		/// </summary>
 		public Type SettingType { get; }
 
@@ -53,14 +53,14 @@ namespace BepInEx.Configuration
 		/// <summary>
 		/// Get or set the value of the setting.
 		/// </summary>
-		public abstract object Value { get; set; }
+		public abstract object BoxedValue { get; set; }
 
 		/// <summary>
 		/// Get the serialized representation of the value.
 		/// </summary>
 		public string GetSerializedValue()
 		{
-			return TomlTypeConverter.ConvertToString(Value, SettingType);
+			return TomlTypeConverter.ConvertToString(BoxedValue, SettingType);
 		}
 
 		/// <summary>
@@ -71,7 +71,7 @@ namespace BepInEx.Configuration
 			try
 			{
 				var newValue = TomlTypeConverter.ConvertToValue(value, SettingType);
-				Value = newValue;
+				BoxedValue = newValue;
 			}
 			catch (Exception e)
 			{
@@ -88,7 +88,7 @@ namespace BepInEx.Configuration
 			Description = configDescription;
 
 			// Automatically calls ClampValue in case it changed
-			Value = Value;
+			BoxedValue = BoxedValue;
 		}
 
 		/// <summary>
