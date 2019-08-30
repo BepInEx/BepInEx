@@ -84,7 +84,7 @@ namespace BepInEx.Configuration
 		/// <inheritdoc />
 		public override string ToString()
 		{
-			return Section + " / " + Key;
+			return Section + "." + Key;
 		}
 	}
 }
