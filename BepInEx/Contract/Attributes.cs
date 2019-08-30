@@ -292,15 +292,6 @@ namespace BepInEx
 		}
 	}
 
-	/// <summary>
-	/// An exception which is thrown when a plugin's dependencies cannot be found.
-	/// </summary>
-	[Obsolete]
-	public class MissingDependencyException : Exception
-	{
-		public MissingDependencyException(string message) : base(message) { }
-	}
-
 	#endregion
 
 	#region Build configuration
