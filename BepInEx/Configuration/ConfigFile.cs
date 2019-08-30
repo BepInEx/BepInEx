@@ -205,9 +205,9 @@ namespace BepInEx.Configuration
 			if (!TomlTypeConverter.CanConvert(typeof(T)))
 				throw new ArgumentException($"Type {typeof(T)} is not supported by the config system. Supported types: {string.Join(", ", TomlTypeConverter.GetSupportedTypes().Select(x => x.Name).ToArray())}");
 
-			try
+			lock (_ioLock)
 			{
-				lock (_ioLock)
+				try
 				{
 					_disableSaving = true;
 
@@ -244,10 +244,10 @@ namespace BepInEx.Configuration
 
 					return entry;
 				}
-			}
-			finally
-			{
-				_disableSaving = false;
+				finally
+				{
+					_disableSaving = false;
+				}
 			}
 		}
 
