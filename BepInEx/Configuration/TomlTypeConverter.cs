@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Text.RegularExpressions;
 using UnityEngine;
 using Logger = BepInEx.Logging.Logger;
@@ -18,13 +19,13 @@ namespace BepInEx.Configuration
 		{
 			[typeof(string)] = new TypeConverter
 			{
-				ConvertToString = (obj, type) => Regex.Escape((string)obj),
+				ConvertToString = (obj, type) => Escape((string)obj),
 				ConvertToObject = (str, type) =>
 				{
 					// Check if the string is a file path with unescaped \ path separators (e.g. D:\test and not D:\\test)
 					if (Regex.IsMatch(str, @"^""?\w:\\(?!\\)(?!.+\\\\)"))
 						return str;
-					return Regex.Unescape(str);
+					return Unescape(str);
 				},
 			},
 			[typeof(bool)] = new TypeConverter
@@ -198,6 +199,112 @@ namespace BepInEx.Configuration
 		{
 			try { LazyTomlConverterLoader.AddUnityEngineConverters(); }
 			catch (Exception ex) { Logger.LogWarning("Failed to load UnityEngine Toml converters - " + ex.Message); }
+		}
+
+		private static string Escape(this string txt)
+		{
+			var stringBuilder = new StringBuilder(txt.Length + 2);
+			foreach (char c in txt)
+				switch (c)
+				{
+					case '\0':
+						stringBuilder.Append(@"\0");
+						break;
+					case '\a':
+						stringBuilder.Append(@"\a");
+						break;
+					case '\b':
+						stringBuilder.Append(@"\b");
+						break;
+					case '\t':
+						stringBuilder.Append(@"\t");
+						break;
+					case '\n':
+						stringBuilder.Append(@"\n");
+						break;
+					case '\v':
+						stringBuilder.Append(@"\v");
+						break;
+					case '\f':
+						stringBuilder.Append(@"\f");
+						break;
+					case '\r':
+						stringBuilder.Append(@"\r");
+						break;
+					case '\'':
+						stringBuilder.Append(@"\'");
+						break;
+					case '\\':
+						stringBuilder.Append(@"\");
+						break;
+					case '\"':
+						stringBuilder.Append(@"\""");
+						break;
+					default:
+						stringBuilder.Append(c);
+						break;
+				}
+			return stringBuilder.ToString();
+		}
+
+		private static string Unescape(this string txt)
+		{
+			if (string.IsNullOrEmpty(txt))
+				return txt;
+			var stringBuilder = new StringBuilder(txt.Length);
+			for (int i = 0; i < txt.Length;)
+			{
+				int num = txt.IndexOf('\\', i);
+				if (num < 0 || num == txt.Length - 1)
+					num = txt.Length;
+				stringBuilder.Append(txt, i, num - i);
+				if (num >= txt.Length)
+					break;
+				char c = txt[num + 1];
+				switch (c)
+				{
+					case '0':
+						stringBuilder.Append('\0');
+						break;
+					case 'a':
+						stringBuilder.Append('\a');
+						break;
+					case 'b':
+						stringBuilder.Append('\b');
+						break;
+					case 't':
+						stringBuilder.Append('\t');
+						break;
+					case 'n':
+						stringBuilder.Append('\n');
+						break;
+					case 'v':
+						stringBuilder.Append('\v');
+						break;
+					case 'f':
+						stringBuilder.Append('\f');
+						break;
+					case 'r':
+						stringBuilder.Append('\r');
+						break;
+					case '\'':
+						stringBuilder.Append('\'');
+						break;
+					case '\"':
+						stringBuilder.Append('\"');
+						break;
+					case '\\':
+						stringBuilder.Append('\\');
+						break;
+					default:
+						stringBuilder.Append('\\').Append(c);
+						break;
+				}
+
+				i = num + 2;
+			}
+
+			return stringBuilder.ToString();
 		}
 	}
 
