@@ -23,7 +23,7 @@ namespace BepInEx
 		/// Default config file tied to this plugin. The config file will not be created until 
 		/// any settings are added and changed, or <see cref="ConfigFile.Save"/> is called.
 		/// </summary>
-		protected ConfigFile Config { get; }
+		public ConfigFile Config { get; }
 
 		/// <summary>
 		/// Create a new instance of a plugin and all of its tied in objects.
