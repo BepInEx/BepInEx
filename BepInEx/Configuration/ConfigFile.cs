@@ -299,7 +299,7 @@ namespace BepInEx.Configuration
 		public event EventHandler<SettingChangedEventArgs> SettingChanged;
 
 		internal void OnSettingChanged(object sender, ConfigEntryBase changedEntryBase)
-		{ThreadingHelper.SynchronizingObject.InvokeRequired
+		{
 			if (changedEntryBase == null) throw new ArgumentNullException(nameof(changedEntryBase));
 
 			if (SaveOnConfigSet)
