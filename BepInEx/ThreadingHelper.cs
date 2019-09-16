@@ -10,6 +10,7 @@ namespace BepInEx
 	/// <summary>
 	/// Provides methods for running code on other threads and synchronizing with the main thread.
 	/// </summary>
+	[DefaultExecutionOrder(int.MinValue)]
 	public sealed class ThreadingHelper : MonoBehaviour, ISynchronizeInvoke
 	{
 		private readonly object _invokeLock = new object();
@@ -47,6 +48,7 @@ namespace BepInEx
 
 		private void Update()
 		{
+			// The CurrentThread can change between Awake and later methods, it's safest to get it here.
 			if (_mainThread == null)
 				_mainThread = Thread.CurrentThread;
 
