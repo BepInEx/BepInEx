@@ -36,11 +36,8 @@ namespace BepInEx.Configuration
 		public object[] Tags { get; }
 
 		/// <summary>
-		/// Convert the description object into a form suitable for writing into a config file.
+		/// An empty description.
 		/// </summary>
-		public string ToSerializedString()
-		{
-			return $"## {Description.Replace("\n", "\n## ")}";
-		}
+		public static ConfigDescription Empty { get; } = new ConfigDescription("");
 	}
 }

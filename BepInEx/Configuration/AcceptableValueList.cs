@@ -41,7 +41,7 @@ namespace BepInEx.Configuration
 		}
 
 		/// <inheritdoc />
-		public override string ToSerializedString()
+		public override string ToDescriptionString()
 		{
 			return "# Acceptable values: " + string.Join(", ", AcceptableValues.Select(x => x.ToString()).ToArray());
 		}

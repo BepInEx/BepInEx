@@ -51,7 +51,7 @@ namespace BepInEx.Configuration
 		}
 
 		/// <inheritdoc />
-		public override string ToSerializedString()
+		public override string ToDescriptionString()
 		{
 			return $"# Acceptable value range: From {MinValue} to {MaxValue}";
 		}

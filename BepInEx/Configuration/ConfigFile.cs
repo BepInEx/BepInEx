@@ -9,7 +9,7 @@ using BepInEx.Logging;
 namespace BepInEx.Configuration
 {
 	/// <summary>
-	/// A helper class to handle persistent data.
+	/// A helper class to handle persistent data. All public methods are thread-safe.
 	/// </summary>
 	public class ConfigFile
 	{
@@ -38,7 +38,7 @@ namespace BepInEx.Configuration
 
 		/// <summary>
 		/// Create an array with all config entries inside of this config file. Should be only used for metadata purposes.
-		/// If you want to access and modify an existing setting then use <see cref="GetSetting{T}(ConfigDefinition,T,ConfigDescription)"/> 
+		/// If you want to access and modify an existing setting then use <see cref="AddSetting{T}(ConfigDefinition,T,ConfigDescription)"/> 
 		/// instead with no description.
 		/// </summary>
 		public ConfigEntryBase[] GetConfigEntries()
@@ -192,45 +192,46 @@ namespace BepInEx.Configuration
 		#region Wraps
 
 		/// <summary>
-		/// Create a new setting or access one of the existing ones. The setting is saved to drive and loaded automatically.
-		/// If you are the creator of the setting, provide a ConfigDescription object to give user information about the setting.
-		/// If you are using a setting created by another plugin/class, do not provide any ConfigDescription.
+		/// Access one of the existing settings. If the setting has not been added yet, null is returned.
+		/// If the setting exists but has a different type than T, an exception is thrown.
+		/// New settings should be added with <see cref="AddSetting{T}(ConfigDefinition,T,ConfigDescription)"/>.
+		/// </summary>
+		/// <typeparam name="T">Type of the value contained in this setting.</typeparam>
+		/// <param name="section">Section/category/group of the setting. Settings are grouped by this.</param>
+		/// <param name="key">Name of the setting.</param>
+		public ConfigEntry<T> GetSetting<T>(string section, string key)
+		{
+			lock (_ioLock)
+			{
+				Entries.TryGetValue(new ConfigDefinition(section, key), out var entry);
+				return (ConfigEntry<T>)entry;
+			}
+		}
+
+		/// <summary>
+		/// Create a new setting. The setting is saved to drive and loaded automatically.
+		/// Each definition can be used to add only one setting, trying to add a second setting will throw an exception.
 		/// </summary>
 		/// <typeparam name="T">Type of the value contained in this setting.</typeparam>
 		/// <param name="configDefinition">Section and Key of the setting.</param>
 		/// <param name="defaultValue">Value of the setting if the setting was not created yet.</param>
 		/// <param name="configDescription">Description of the setting shown to the user.</param>
-		public ConfigWrapper<T> GetSetting<T>(ConfigDefinition configDefinition, T defaultValue, ConfigDescription configDescription = null)
+		public ConfigEntry<T> AddSetting<T>(ConfigDefinition configDefinition, T defaultValue, ConfigDescription configDescription = null)
 		{
 			if (!TomlTypeConverter.CanConvert(typeof(T)))
 				throw new ArgumentException($"Type {typeof(T)} is not supported by the config system. Supported types: {string.Join(", ", TomlTypeConverter.GetSupportedTypes().Select(x => x.Name).ToArray())}");
 
 			lock (_ioLock)
 			{
+				if (Entries.ContainsKey(configDefinition))
+					throw new ArgumentException("The setting " + configDefinition + " has already been created. Use GetSetting to get it.");
+
 				try
 				{
 					_disableSaving = true;
 
-					Entries.TryGetValue(configDefinition, out var existingEntry);
-
-					if (existingEntry != null && !(existingEntry is ConfigWrapper<T>))
-						throw new ArgumentException("The defined setting already exists with a different setting type - " + existingEntry.SettingType.Name);
-
-					var entry = (ConfigWrapper<T>)existingEntry;
-
-					if (entry == null)
-					{
-						entry = new ConfigWrapper<T>(this, configDefinition, defaultValue);
-						Entries[configDefinition] = entry;
-					}
-
-					if (configDescription != null)
-					{
-						if (entry.Description != null)
-							Logger.Log(LogLevel.Warning, $"Tried to add configDescription to setting {configDefinition} when it already had one defined. Only add configDescription once or a random one will be used.");
-						else
-							entry.SetDescription(configDescription);
-					}
+					var entry = new ConfigEntry<T>(this, configDefinition, defaultValue, configDescription);
+					Entries[configDefinition] = entry;
 
 					if (HomelessEntries.TryGetValue(configDefinition, out string homelessValue))
 					{
@@ -252,27 +253,36 @@ namespace BepInEx.Configuration
 		}
 
 		/// <summary>
-		/// Create a new setting or access one of the existing ones. The setting is saved to drive and loaded automatically.
-		/// If you are the creator of the setting, provide a ConfigDescription object to give user information about the setting.
-		/// If you are using a setting created by another plugin/class, do not provide any ConfigDescription.
+		/// Create a new setting. The setting is saved to drive and loaded automatically.
+		/// Each section and key pair can be used to add only one setting, trying to add a second setting will throw an exception.
 		/// </summary>
 		/// <typeparam name="T">Type of the value contained in this setting.</typeparam>
 		/// <param name="section">Section/category/group of the setting. Settings are grouped by this.</param>
 		/// <param name="key">Name of the setting.</param>
 		/// <param name="defaultValue">Value of the setting if the setting was not created yet.</param>
 		/// <param name="configDescription">Description of the setting shown to the user.</param>
-		public ConfigWrapper<T> GetSetting<T>(string section, string key, T defaultValue, ConfigDescription configDescription = null)
-			=> GetSetting(new ConfigDefinition(section, key), defaultValue, configDescription);
+		public ConfigEntry<T> AddSetting<T>(string section, string key, T defaultValue, ConfigDescription configDescription = null)
+			=> AddSetting(new ConfigDefinition(section, key), defaultValue, configDescription);
 
-		/// <inheritdoc cref="GetSetting{T}(string,string,T,ConfigDescription)"/>
-		[Obsolete("Use GetSetting instead")]
+		/// <summary>
+		/// Access a setting. Use AddSetting and GetSetting instead.
+		/// </summary>
+		[Obsolete("Use AddSetting and GetSetting instead")]
 		public ConfigWrapper<T> Wrap<T>(string section, string key, string description = null, T defaultValue = default(T))
-			=> GetSetting(new ConfigDefinition(section ?? "", key), defaultValue, string.IsNullOrEmpty(description) ? null : new ConfigDescription(description));
+		{
+			lock (_ioLock)
+			{
+				var setting = GetSetting<T>(section, key) ?? AddSetting(section, key, defaultValue, string.IsNullOrEmpty(description) ? null : new ConfigDescription(description));
+				return new ConfigWrapper<T>(setting);
+			}
+		}
 
-		/// <inheritdoc cref="GetSetting{T}(ConfigDefinition,T,ConfigDescription)"/>
-		[Obsolete("Use GetSetting instead")]
+		/// <summary>
+		/// Access a setting. Use AddSetting and GetSetting instead.
+		/// </summary>
+		[Obsolete("Use AddSetting and GetSetting instead")]
 		public ConfigWrapper<T> Wrap<T>(ConfigDefinition configDefinition, T defaultValue = default(T))
-			=> GetSetting(configDefinition, defaultValue);
+			=> Wrap(configDefinition.Section, configDefinition.Key, null, defaultValue);
 
 		#endregion
 
@@ -289,7 +299,7 @@ namespace BepInEx.Configuration
 		public event EventHandler<SettingChangedEventArgs> SettingChanged;
 
 		internal void OnSettingChanged(object sender, ConfigEntryBase changedEntryBase)
-		{
+		{ThreadingHelper.SynchronizingObject.InvokeRequired
 			if (changedEntryBase == null) throw new ArgumentNullException(nameof(changedEntryBase));
 
 			if (SaveOnConfigSet)

@@ -6,6 +6,52 @@ using BepInEx.Logging;
 namespace BepInEx.Configuration
 {
 	/// <summary>
+	/// Provides access to a single setting inside of a <see cref="Configuration.ConfigFile"/>.
+	/// </summary>
+	/// <typeparam name="T">Type of the setting.</typeparam>
+	public sealed class ConfigEntry<T> : ConfigEntryBase
+	{
+		/// <summary>
+		/// Fired when the setting is changed. Does not detect changes made outside from this object.
+		/// </summary>
+		public event EventHandler SettingChanged;
+
+		private T _typedValue;
+
+		/// <summary>
+		/// Value of this setting.
+		/// </summary>
+		public T Value
+		{
+			get => _typedValue;
+			set
+			{
+				value = ClampValue(value);
+				if (Equals(_typedValue, value))
+					return;
+
+				_typedValue = value;
+				OnSettingChanged(this);
+			}
+		}
+
+		/// <inheritdoc />
+		public override object BoxedValue
+		{
+			get => Value;
+			set => Value = (T)value;
+		}
+
+		internal ConfigEntry(ConfigFile configFile, ConfigDefinition definition, T defaultValue, ConfigDescription configDescription) : base(configFile, definition, typeof(T), defaultValue, configDescription)
+		{
+			configFile.SettingChanged += (sender, args) =>
+			{
+				if (args.ChangedSetting == this) SettingChanged?.Invoke(sender, args);
+			};
+		}
+	}
+
+	/// <summary>
 	/// Container for a single setting of a <see cref="Configuration.ConfigFile"/>. 
 	/// Each config entry is linked to one config file.
 	/// </summary>
@@ -14,15 +60,20 @@ namespace BepInEx.Configuration
 		/// <summary>
 		/// Types of defaultValue and definition.AcceptableValues have to be the same as settingType.
 		/// </summary>
-		internal ConfigEntryBase(ConfigFile configFile, ConfigDefinition definition, Type settingType, object defaultValue)
+		internal ConfigEntryBase(ConfigFile configFile, ConfigDefinition definition, Type settingType, object defaultValue, ConfigDescription configDescription)
 		{
 			ConfigFile = configFile ?? throw new ArgumentNullException(nameof(configFile));
 			Definition = definition ?? throw new ArgumentNullException(nameof(definition));
 			SettingType = settingType ?? throw new ArgumentNullException(nameof(settingType));
 
-			// Free type check
-			BoxedValue = defaultValue;
+			Description = configDescription ?? ConfigDescription.Empty;
+			if (Description.AcceptableValues != null && !SettingType.IsAssignableFrom(Description.AcceptableValues.ValueType))
+				throw new ArgumentException("configDescription.AcceptableValues is for a different type than the type of this setting");
+
 			DefaultValue = defaultValue;
+
+			// Free type check and automatically calls ClampValue in case AcceptableValues were provided
+			BoxedValue = defaultValue;
 		}
 
 		/// <summary>
@@ -38,7 +89,7 @@ namespace BepInEx.Configuration
 		/// <summary>
 		/// Description / metadata of this setting.
 		/// </summary>
-		public ConfigDescription Description { get; private set; }
+		public ConfigDescription Description { get; }
 
 		/// <summary>
 		/// Type of the <see cref="BoxedValue"/> that this setting holds.
@@ -75,20 +126,8 @@ namespace BepInEx.Configuration
 			}
 			catch (Exception e)
 			{
-				Logging.Logger.Log(LogLevel.Warning, $"Config value of setting \"{Definition}\" could not be parsed and will be ignored. Reason: {e.Message}; Value: {value}");
+				Logger.Log(LogLevel.Warning, $"Config value of setting \"{Definition}\" could not be parsed and will be ignored. Reason: {e.Message}; Value: {value}");
 			}
-		}
-
-		internal void SetDescription(ConfigDescription configDescription)
-		{
-			if (configDescription == null) throw new ArgumentNullException(nameof(configDescription));
-			if (configDescription.AcceptableValues != null && !SettingType.IsAssignableFrom(configDescription.AcceptableValues.ValueType))
-				throw new ArgumentException("configDescription.AcceptableValues is for a different type than the type of this setting");
-
-			Description = configDescription;
-
-			// Automatically calls ClampValue in case it changed
-			BoxedValue = BoxedValue;
 		}
 
 		/// <summary>
@@ -96,7 +135,7 @@ namespace BepInEx.Configuration
 		/// </summary>
 		protected T ClampValue<T>(T value)
 		{
-			if (Description?.AcceptableValues != null)
+			if (Description.AcceptableValues != null)
 				return (T)Description.AcceptableValues.Clamp(value);
 			return value;
 		}
@@ -114,18 +153,16 @@ namespace BepInEx.Configuration
 		/// </summary>
 		public void WriteDescription(StreamWriter writer)
 		{
-			bool hasDescription = Description != null;
-
-			if (hasDescription)
-				writer.WriteLine(Description.ToSerializedString());
+			if (!string.IsNullOrEmpty(Description.Description))
+				writer.WriteLine($"## {Description.Description.Replace("\n", "\n## ")}");
 
 			writer.WriteLine("# Setting type: " + SettingType.Name);
 
 			writer.WriteLine("# Default value: " + DefaultValue);
 
-			if (hasDescription && Description.AcceptableValues != null)
+			if (Description.AcceptableValues != null)
 			{
-				writer.WriteLine(Description.AcceptableValues.ToSerializedString());
+				writer.WriteLine(Description.AcceptableValues.ToDescriptionString());
 			}
 			else if (SettingType.IsEnum)
 			{

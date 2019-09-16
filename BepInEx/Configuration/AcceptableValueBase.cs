@@ -31,6 +31,6 @@ namespace BepInEx.Configuration
 		/// <summary>
 		/// Get the string for use in config files.
 		/// </summary>
-		public abstract string ToSerializedString();
+		public abstract string ToDescriptionString();
 	}
 }
