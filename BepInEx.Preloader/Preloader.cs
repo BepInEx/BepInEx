@@ -240,32 +240,32 @@ namespace BepInEx.Preloader
 		private static readonly ConfigEntry<string> ConfigEntrypointAssembly = ConfigFile.CoreConfig.AddSetting(
 			"Preloader.Entrypoint", "Assembly",
 			IsPostUnity2017 ? "UnityEngine.CoreModule.dll" : "UnityEngine.dll",
-			new ConfigDescription("The local filename of the assembly to target."));
+			"The local filename of the assembly to target.");
 
 		private static readonly ConfigEntry<string> ConfigEntrypointType = ConfigFile.CoreConfig.AddSetting(
 			"Preloader.Entrypoint", "Type",
 			"Application",
-			new ConfigDescription("The name of the type in the entrypoint assembly to search for the entrypoint method."));
+			"The name of the type in the entrypoint assembly to search for the entrypoint method.");
 
 		private static readonly ConfigEntry<string> ConfigEntrypointMethod = ConfigFile.CoreConfig.AddSetting(
 			"Preloader.Entrypoint", "Method",
 			".cctor",
-			new ConfigDescription("The name of the method in the specified entrypoint assembly and type to hook and load Chainloader from."));
+			"The name of the method in the specified entrypoint assembly and type to hook and load Chainloader from.");
 
 		private static readonly ConfigEntry<bool> ConfigApplyRuntimePatches = ConfigFile.CoreConfig.AddSetting(
 			"Preloader", "ApplyRuntimePatches",
 			true,
-			new ConfigDescription("Enables or disables runtime patches.\nThis should always be true, unless you cannot start the game due to a Harmony related issue (such as running .NET Standard runtime) or you know what you're doing."));
+			"Enables or disables runtime patches.\nThis should always be true, unless you cannot start the game due to a Harmony related issue (such as running .NET Standard runtime) or you know what you're doing.");
 
 		private static readonly ConfigEntry<bool> ConfigShimHarmony = ConfigFile.CoreConfig.AddSetting(
 			"Preloader", "ShimHarmonySupport",
 			!Utility.CLRSupportsDynamicAssemblies,
-			new ConfigDescription("If enabled, basic Harmony functionality is patched to use MonoMod's RuntimeDetour instead.\nTry using this if Harmony does not work in a game."));
+			"If enabled, basic Harmony functionality is patched to use MonoMod's RuntimeDetour instead.\nTry using this if Harmony does not work in a game.");
 
 		private static readonly ConfigEntry<bool> ConfigPreloaderCOutLogging = ConfigFile.CoreConfig.AddSetting(
 			"Logging", "PreloaderConsoleOutRedirection",
 			true,
-			new ConfigDescription("Redirects text from Console.Out during preloader patch loading to the BepInEx logging system."));
+			"Redirects text from Console.Out during preloader patch loading to the BepInEx logging system.");
 
 		#endregion
 	}

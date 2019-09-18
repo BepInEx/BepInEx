@@ -280,17 +280,17 @@ namespace BepInEx.Preloader.Patching
 		private static readonly ConfigEntry<bool> ConfigDumpAssemblies = ConfigFile.CoreConfig.AddSetting(
 			"Preloader", "DumpAssemblies",
 			false,
-			new ConfigDescription("If enabled, BepInEx will save patched assemblies into BepInEx/DumpedAssemblies.\nThis can be used by developers to inspect and debug preloader patchers."));
+			"If enabled, BepInEx will save patched assemblies into BepInEx/DumpedAssemblies.\nThis can be used by developers to inspect and debug preloader patchers.");
 
 		private static readonly ConfigEntry<bool> ConfigLoadDumpedAssemblies = ConfigFile.CoreConfig.AddSetting(
 			"Preloader", "LoadDumpedAssemblies",
 			false,
-			new ConfigDescription("If enabled, BepInEx will load patched assemblies from BepInEx/DumpedAssemblies instead of memory.\nThis can be used to be able to load patched assemblies into debuggers like dnSpy.\nIf set to true, will override DumpAssemblies."));
+			"If enabled, BepInEx will load patched assemblies from BepInEx/DumpedAssemblies instead of memory.\nThis can be used to be able to load patched assemblies into debuggers like dnSpy.\nIf set to true, will override DumpAssemblies.");
 
 		private static readonly ConfigEntry<bool> ConfigBreakBeforeLoadAssemblies = ConfigFile.CoreConfig.AddSetting(
 			"Preloader", "BreakBeforeLoadAssemblies",
 			false,
-			new ConfigDescription("If enabled, BepInEx will call Debugger.Break() once before loading patched assemblies.\nThis can be used with debuggers like dnSpy to install breakpoints into patched assemblies before they are loaded."));
+			"If enabled, BepInEx will call Debugger.Break() once before loading patched assemblies.\nThis can be used with debuggers like dnSpy to install breakpoints into patched assemblies before they are loaded.");
 
 		#endregion
 	}
