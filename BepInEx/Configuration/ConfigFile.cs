@@ -208,15 +208,15 @@ namespace BepInEx.Configuration
 			}
 		}
 
-		/// <summary>
-		/// Create a new setting. The setting is saved to drive and loaded automatically.
-		/// Each definition can be used to add only one setting, trying to add a second setting will throw an exception.
-		/// </summary>
-		/// <typeparam name="T">Type of the value contained in this setting.</typeparam>
-		/// <param name="configDefinition">Section and Key of the setting.</param>
-		/// <param name="defaultValue">Value of the setting if the setting was not created yet.</param>
-		/// <param name="configDescription">Description of the setting shown to the user.</param>
-		public ConfigEntry<T> AddSetting<T>(ConfigDefinition configDefinition, T defaultValue, ConfigDescription configDescription = null)
+        /// <summary>
+        /// Create a new setting. The setting is saved to drive and loaded automatically.
+        /// Each definition can be used to add only one setting, trying to add a second setting will throw an exception.
+        /// </summary>
+        /// <typeparam name="T">Type of the value contained in this setting.</typeparam>
+        /// <param name="configDefinition">Section and Key of the setting.</param>
+        /// <param name="defaultValue">Value of the setting if the setting was not created yet.</param>
+        /// <param name="configDescription">Description of the setting shown to the user and other metadata.</param>
+        public ConfigEntry<T> AddSetting<T>(ConfigDefinition configDefinition, T defaultValue, ConfigDescription configDescription = null)
 		{
 			if (!TomlTypeConverter.CanConvert(typeof(T)))
 				throw new ArgumentException($"Type {typeof(T)} is not supported by the config system. Supported types: {string.Join(", ", TomlTypeConverter.GetSupportedTypes().Select(x => x.Name).ToArray())}");
@@ -260,14 +260,26 @@ namespace BepInEx.Configuration
 		/// <param name="section">Section/category/group of the setting. Settings are grouped by this.</param>
 		/// <param name="key">Name of the setting.</param>
 		/// <param name="defaultValue">Value of the setting if the setting was not created yet.</param>
-		/// <param name="configDescription">Description of the setting shown to the user.</param>
+		/// <param name="configDescription">Description of the setting shown to the user and other metadata.</param>
 		public ConfigEntry<T> AddSetting<T>(string section, string key, T defaultValue, ConfigDescription configDescription = null)
 			=> AddSetting(new ConfigDefinition(section, key), defaultValue, configDescription);
 
 		/// <summary>
-		/// Access a setting. Use AddSetting and GetSetting instead.
+		/// Create a new setting. The setting is saved to drive and loaded automatically.
+		/// Each section and key pair can be used to add only one setting, trying to add a second setting will throw an exception.
 		/// </summary>
-		[Obsolete("Use AddSetting and GetSetting instead")]
+		/// <typeparam name="T">Type of the value contained in this setting.</typeparam>
+		/// <param name="section">Section/category/group of the setting. Settings are grouped by this.</param>
+		/// <param name="key">Name of the setting.</param>
+		/// <param name="defaultValue">Value of the setting if the setting was not created yet.</param>
+		/// <param name="description">Simple description of the setting shown to the user.</param>
+		public ConfigEntry<T> AddSetting<T>(string section, string key, T defaultValue, string description)
+			=> AddSetting(new ConfigDefinition(section, key), defaultValue, new ConfigDescription(description));
+
+        /// <summary>
+        /// Access a setting. Use AddSetting and GetSetting instead.
+        /// </summary>
+        [Obsolete("Use AddSetting and GetSetting instead")]
 		public ConfigWrapper<T> Wrap<T>(string section, string key, string description = null, T defaultValue = default(T))
 		{
 			lock (_ioLock)
