@@ -298,14 +298,13 @@ namespace BepInEx.Configuration.Tests
 		public void UnescapedPathString()
 		{
 			var c = MakeConfig();
+			var w = c.AddSetting("Cat", "Key", "", new ConfigDescription("Test"));
 
 			var unescaped = @"D:\test\p ath";
 			foreach (string testVal in new[] { unescaped, @"D:\\test\\p ath" })
 			{
 				File.WriteAllText(c.ConfigFilePath, $"[Cat]\n# Test\nKey={testVal}\n");
 				c.Reload();
-
-				var w = c.AddSetting("Cat", "Key", "", new ConfigDescription("Test"));
 
 				Assert.AreEqual(unescaped, w.Value);
 
