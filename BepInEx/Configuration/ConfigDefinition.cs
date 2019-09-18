@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 namespace BepInEx.Configuration
 {
@@ -26,8 +27,18 @@ namespace BepInEx.Configuration
 		/// <param name="key">Name of the setting, case sensitive.</param>
 		public ConfigDefinition(string section, string key)
 		{
-			Key = key ?? throw new ArgumentNullException(nameof(key));
-			Section = section ?? throw new ArgumentNullException(nameof(section));
+			CheckInvalidConfigChars(section, nameof(section));
+			CheckInvalidConfigChars(key, nameof(key));
+			Key = key;
+			Section = section;
+		}
+
+		private static readonly char[] _invalidConfigChars = { '=', '\n', '\t', '\\', '"', '\'' };
+		private static void CheckInvalidConfigChars(string val, string name)
+		{
+			if (val == null) throw new ArgumentNullException(name);
+			if (val != val.Trim()) throw new ArgumentException("Cannot use whitespace characters at start or end of section and key names", name);
+			if (val.Any(c => _invalidConfigChars.Contains(c))) throw new ArgumentException(@"Cannot use any of the following characters in section and key names: = \n \t \ "" '", name);
 		}
 
 		/// <inheritdoc />
