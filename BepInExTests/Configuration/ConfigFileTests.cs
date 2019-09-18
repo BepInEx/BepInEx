@@ -85,7 +85,7 @@ namespace BepInEx.Configuration.Tests
 			var c = MakeConfig();
 			File.WriteAllText(c.ConfigFilePath, "[Cat]\n# Test\nKey=1\n");
 			c.Reload();
-			var w = c.AddSetting("Cat", "Key", 0, new ConfigDescription("Test"));
+			var w = c.AddSetting("Cat", "Key", 0, "Test");
 			Assert.AreEqual(w.Value, 1);
 			var w2 = c.AddSetting("Cat", "Key2", 0, new ConfigDescription("Test"));
 			Assert.AreEqual(w2.Value, 0);
@@ -257,15 +257,15 @@ namespace BepInEx.Configuration.Tests
 
 			var w = c.AddSetting("Cat", "Key", KeyboardShortcut.Empty, new ConfigDescription("Test"));
 
-			Assert.AreEqual("", w.ConfigEntry.GetSerializedValue());
+			Assert.AreEqual("", w.GetSerializedValue());
 
-			w.ConfigEntry.SetSerializedValue(w.ConfigEntry.GetSerializedValue());
+			w.SetSerializedValue(w.GetSerializedValue());
 			Assert.AreEqual(KeyboardShortcut.Empty, w.Value);
 
 			var testShortcut = new KeyboardShortcut(KeyCode.A, KeyCode.B, KeyCode.C);
 			w.Value = testShortcut;
 
-			w.ConfigEntry.SetSerializedValue(w.ConfigEntry.GetSerializedValue());
+			w.SetSerializedValue(w.GetSerializedValue());
 			Assert.AreEqual(testShortcut, w.Value);
 
 			c.Save();
@@ -283,9 +283,9 @@ namespace BepInEx.Configuration.Tests
 			var w = c.AddSetting("Cat", "Key", testVal, new ConfigDescription("Test"));
 
 			Assert.AreEqual(testVal, w.Value);
-			Assert.IsFalse(w.ConfigEntry.GetSerializedValue().Any(x => x == '\n'));
+			Assert.IsFalse(w.GetSerializedValue().Any(x => x == '\n'));
 
-			w.ConfigEntry.SetSerializedValue(w.ConfigEntry.GetSerializedValue());
+			w.SetSerializedValue(w.GetSerializedValue());
 			Assert.AreEqual(testVal, w.Value);
 
 			c.Save();
@@ -309,7 +309,7 @@ namespace BepInEx.Configuration.Tests
 
 				Assert.AreEqual(unescaped, w.Value);
 
-				w.ConfigEntry.SetSerializedValue(w.ConfigEntry.GetSerializedValue());
+				w.SetSerializedValue(w.GetSerializedValue());
 				Assert.AreEqual(unescaped, w.Value);
 
 				c.Save();
