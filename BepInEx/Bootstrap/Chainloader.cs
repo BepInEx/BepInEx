@@ -260,7 +260,7 @@ namespace BepInEx.Bootstrap
 
 					if (dependsOnInvalidPlugin)
 					{
-						string message = $"Skipping [{pluginInfo.Metadata.Name}] because it has a dependency that was not loaded. See above errors for details.";
+						string message = $"Skipping [{pluginInfo.Metadata.Name}] because it has a dependency that was not loaded. See previous errors for details.";
 						DependencyErrors.Add(message);
 						Logger.LogWarning(message);
 						continue;
@@ -268,14 +268,11 @@ namespace BepInEx.Bootstrap
 
 					if (missingDependencies.Count != 0)
 					{
-						string ToMissingString(BepInDependency s)
-						{
-							bool emptyVersion = s.MinimumVersion.Major == 0 && s.MinimumVersion.Minor == 0 && s.MinimumVersion.Build == 0 && s.MinimumVersion.Revision == 0;
-							if (emptyVersion) return "- " + s.DependencyGUID;
-							return $"- {s.DependencyGUID} (at least v{s.MinimumVersion})";
-						}
+						bool IsEmptyVersion(Version v) => v.Major == 0 && v.Minor == 0 && v.Build <= 0 && v.Revision <= 0;
 
-						string message = $@"Could not load [{pluginInfo.Metadata.Name}] because it has missing dependencies: {string.Join(", ", missingDependencies.Select(ToMissingString).ToArray())}";
+						string message = $@"Could not load [{pluginInfo.Metadata.Name}] because it has missing dependencies: {
+							string.Join(", ", missingDependencies.Select(s => IsEmptyVersion(s.MinimumVersion) ? s.DependencyGUID : $"{s.DependencyGUID} (v{s.MinimumVersion} or newer)").ToArray())
+							}";
 						DependencyErrors.Add(message);
 						Logger.LogError(message);
 
@@ -285,7 +282,9 @@ namespace BepInEx.Bootstrap
 
 					if (incompatibilities.Count != 0)
 					{
-						string message = $@"Could not load [{pluginInfo.Metadata.Name}] because it is incompatible with: {string.Join(", ", incompatibilities.Select(i => i.IncompatibilityGUID).ToArray())}";
+						string message = $@"Could not load [{pluginInfo.Metadata.Name}] because it is incompatible with: {
+							string.Join(", ", incompatibilities.Select(i => i.IncompatibilityGUID).ToArray())
+							}";
 						DependencyErrors.Add(message);
 						Logger.LogError(message);
 
