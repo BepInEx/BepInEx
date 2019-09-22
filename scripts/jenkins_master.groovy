@@ -42,12 +42,14 @@ Changes since ${latestTag}:
                 }
 
                 dir('Unity') {
-                    git credentialsId: 'b1f2f78b-f0c5-4a81-8b4a-55b6b8bdbbe3', url: 'http://localhost:6000/JenkinsStuff/UnityDLL.git'
+                     withCredentials([string(credentialsId: 'bepis_dll_git_url', variable: 'bepis_dll_git_url')]) {
+                        git credentialsId: 'b1f2f78b-f0c5-4a81-8b4a-55b6b8bdbbe3', url: "${bepis_dll_git_url}/JenkinsStuff/UnityDLL.git"
+                     }
                 }
 
                 dir('Doorstop') {
-                    sh '''  tag="v2.11.0.0";
-                    version="2.11.0.0";
+                    sh '''  tag="v2.11.1.0";
+                    version="2.11.1.0";
                     wget https://github.com/NeighTools/UnityDoorstop/releases/download/$tag/Doorstop_x64_$version.zip;
                     wget https://github.com/NeighTools/UnityDoorstop/releases/download/$tag/Doorstop_x86_$version.zip;
                     unzip -o Doorstop_x86_$version.zip version.dll -d x86;
@@ -143,6 +145,7 @@ Changes since ${latestTag}:
        post {
         success {
             script {
+/*
                 if(params.IS_BE) {
                     // Write built BepInEx into bepisbuilds
                     dir('Build/dist') {
@@ -156,6 +159,7 @@ Changes since ${latestTag}:
 */
                     sh "echo \"`date -Iseconds -u`;${env.BUILD_NUMBER};${shortCommit};BepInEx_x86_${shortCommit}_${versionNumber}.zip;BepInEx_x64_${shortCommit}_${versionNumber}.zip\" >> /var/www/bepisbuilds/builds/bepinex_be/artifacts_list"
                 }
+*/
             }
 
             //Notify Bepin Discord of successfull build
