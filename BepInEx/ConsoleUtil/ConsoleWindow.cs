@@ -13,17 +13,15 @@ namespace UnityInjector.ConsoleUtil
 {
 	internal class ConsoleWindow
 	{
-		public static readonly ConfigWrapper<bool> ConfigConsoleEnabled = ConfigFile.CoreConfig.Wrap(
-			"Logging.Console",
-			"Enabled",
-			"Enables showing a console for log output.",
-			false);
+		public static readonly ConfigEntry<bool> ConfigConsoleEnabled = ConfigFile.CoreConfig.AddSetting(
+			"Logging.Console", "Enabled",
+			false,
+			"Enables showing a console for log output.");
 
-		public static readonly ConfigWrapper<bool> ConfigConsoleShiftJis = ConfigFile.CoreConfig.Wrap(
-			"Logging.Console",
-			"ShiftJisEncoding",
-			"If true, console is set to the Shift-JIS encoding, otherwise UTF-8 encoding.",
-			false);
+		public static readonly ConfigEntry<bool> ConfigConsoleShiftJis = ConfigFile.CoreConfig.AddSetting(
+			"Logging.Console", "ShiftJisEncoding",
+			false,
+			"If true, console is set to the Shift-JIS encoding, otherwise UTF-8 encoding.");
 
 		public static bool IsAttached { get; private set; }
 		private static IntPtr _cOut;
@@ -106,7 +104,7 @@ namespace UnityInjector.ConsoleUtil
 
 		[DllImport("user32.dll")]
 		[return: MarshalAs(UnmanagedType.Bool)]
-		static extern bool SetForegroundWindow(IntPtr hWnd);
+		private static extern bool SetForegroundWindow(IntPtr hWnd);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
 		private static extern bool AllocConsole();

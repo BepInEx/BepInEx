@@ -241,7 +241,7 @@ namespace BepInEx
 		/// <summary>
 		/// Retrieves the BepInPlugin metadata from a plugin type.
 		/// </summary>
-		/// <param name="plugin">The plugin type.</param>
+		/// <param name="pluginType">The plugin type.</param>
 		/// <returns>The BepInPlugin metadata of the plugin type.</returns>
 		public static BepInPlugin GetMetadata(Type pluginType)
 		{
@@ -265,7 +265,7 @@ namespace BepInEx
 		/// Gets the specified attributes of a type, if they exist.
 		/// </summary>
 		/// <typeparam name="T">The attribute type to retrieve.</typeparam>
-		/// <param name="plugin">The plugin type.</param>
+		/// <param name="pluginType">The plugin type.</param>
 		/// <returns>The attributes of the type, if existing.</returns>
 		public static T[] GetAttributes<T>(Type pluginType) where T : Attribute
 		{
@@ -281,7 +281,6 @@ namespace BepInEx
 		public static IEnumerable<T> GetAttributes<T>(object plugin) where T : Attribute
 			=> GetAttributes<T>(plugin.GetType());
 
-
 		/// <summary>
 		/// Retrieves the dependencies of the specified plugin type.
 		/// </summary>
@@ -291,14 +290,6 @@ namespace BepInEx
 		{
 			return plugin.GetCustomAttributes(typeof(BepInDependency), true).Cast<BepInDependency>();
 		}
-	}
-
-	/// <summary>
-	/// An exception which is thrown when a plugin's dependencies cannot be found.
-	/// </summary>
-	public class MissingDependencyException : Exception
-	{
-		public MissingDependencyException(string message) : base(message) { }
 	}
 
 	#endregion

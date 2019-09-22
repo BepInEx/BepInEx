@@ -25,6 +25,7 @@ using BepInEx;
 [assembly: Guid("4ffba620-f5ed-47f9-b90c-dad1316fd9b9")]
 
 [assembly: InternalsVisibleTo("BepInEx.Preloader")]
+[assembly: InternalsVisibleTo("BepInExTests")]
 
 // Version information for an assembly consists of the following four values:
 //
