@@ -144,19 +144,21 @@ Changes since ${latestTag}:
     }
        post {
         success {
-            script {
 /*
+            script {
                 if(params.IS_BE) {
                     // Write built BepInEx into bepisbuilds
                     dir('Build/dist') {
                         sh "cp BepInEx_x86_${shortCommit}_${versionNumber}.zip /var/www/bepisbuilds/builds/bepinex_be"
                         sh "cp BepInEx_x64_${shortCommit}_${versionNumber}.zip /var/www/bepisbuilds/builds/bepinex_be"
                     }
+                    dir('Build/v2018/patcher') {
+                        sh "cp BepInEx_v2018_Patcher_${shortCommit}_${versionNumber}.zip /var/www/bepisbuilds/builds/bepinex_be"
+                    }
                     sh "echo \"`date -Iseconds -u`;${env.BUILD_NUMBER};${shortCommit};BepInEx_x86_${shortCommit}_${versionNumber}.zip;BepInEx_x64_${shortCommit}_${versionNumber}.zip\" >> /var/www/bepisbuilds/builds/bepinex_be/artifacts_list"
                 }
-*/
             }
-
+*/
             //Notify Bepin Discord of successfull build
             withCredentials([string(credentialsId: 'discord-notify-webhook', variable: 'DISCORD_WEBHOOK')]) {
                 discordSend description: "**Build:** [${currentBuild.id}](${env.BUILD_URL})\n**Status:** [${currentBuild.currentResult}](${env.BUILD_URL})\n\n[**Artifacts on BepisBuilds**](http://builds.bepis.io/bepinex_be)", footer: 'Jenkins via Discord Notifier', link: env.BUILD_URL, successful: currentBuild.resultIsBetterOrEqualTo('SUCCESS'), title: "${env.JOB_NAME} #${currentBuild.id}", webhookURL: DISCORD_WEBHOOK
