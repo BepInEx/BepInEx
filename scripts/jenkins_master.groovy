@@ -52,8 +52,8 @@ Changes since ${latestTag}:
                     version="2.11.1.0";
                     wget https://github.com/NeighTools/UnityDoorstop/releases/download/$tag/Doorstop_x64_$version.zip;
                     wget https://github.com/NeighTools/UnityDoorstop/releases/download/$tag/Doorstop_x86_$version.zip;
-                    unzip -o Doorstop_x86_$version.zip version.dll -d x86;
-                    unzip -o Doorstop_x64_$version.zip version.dll -d x64;'''
+                    unzip -o Doorstop_x86_$version.zip winhttp.dll -d x86;
+                    unzip -o Doorstop_x64_$version.zip winhttp.dll -d x64;'''
                 }
             }
         }
@@ -105,7 +105,7 @@ Changes since ${latestTag}:
                     sh 'rm -rf BepInEx/core/patcher'
 
                     sh 'cp -f ../../BepInEx/doorstop/doorstop_config.ini doorstop_config.ini'
-                    sh 'cp -f ../../Doorstop/x86/version.dll version.dll'
+                    sh 'cp -f ../../Doorstop/x86/winhttp.dll winhttp.dll'
                     
                     script {
                         if(params.IS_BE) {
@@ -119,7 +119,7 @@ Changes since ${latestTag}:
 
                     sh "zip -r9 BepInEx_x86${commitPrefix}${versionNumber}.zip ./*"
                     
-                    sh 'cp -f ../../Doorstop/x64/version.dll version.dll'
+                    sh 'cp -f ../../Doorstop/x64/winhttp.dll winhttp.dll'
                     
                     sh 'unix2dos doorstop_config.ini'
                     
