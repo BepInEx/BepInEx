@@ -93,8 +93,19 @@ namespace BepInEx.Bootstrap
 
 		public static PluginInfo ToPluginInfo(TypeDefinition type)
 		{
-			if (type.IsInterface || type.IsAbstract || !type.IsSubtypeOf(typeof(BaseUnityPlugin)))
+			if (type.IsInterface || type.IsAbstract)
 				return null;
+
+			try
+			{
+				if (!type.IsSubtypeOf(typeof(BaseUnityPlugin)))
+					return null;
+			}
+			catch (AssemblyResolutionException)
+			{
+				// Can happen if this type inherits a type from an assembly that can't be found. Safe to assume it's not a plugin.
+				return null;
+			}
 
 			var metadata = BepInPlugin.FromCecilType(type);
 
