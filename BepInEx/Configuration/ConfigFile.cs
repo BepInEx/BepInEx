@@ -197,26 +197,38 @@ namespace BepInEx.Configuration
 		/// New settings should be added with <see cref="AddSetting{T}(ConfigDefinition,T,ConfigDescription)"/>.
 		/// </summary>
 		/// <typeparam name="T">Type of the value contained in this setting.</typeparam>
-		/// <param name="section">Section/category/group of the setting. Settings are grouped by this.</param>
-		/// <param name="key">Name of the setting.</param>
-		public ConfigEntry<T> GetSetting<T>(string section, string key)
+		/// <param name="configDefinition">Section and Key of the setting.</param>
+		public ConfigEntry<T> GetSetting<T>(ConfigDefinition configDefinition)
 		{
 			lock (_ioLock)
 			{
-				Entries.TryGetValue(new ConfigDefinition(section, key), out var entry);
+				Entries.TryGetValue(configDefinition, out var entry);
 				return (ConfigEntry<T>)entry;
 			}
 		}
 
-        /// <summary>
-        /// Create a new setting. The setting is saved to drive and loaded automatically.
-        /// Each definition can be used to add only one setting, trying to add a second setting will throw an exception.
-        /// </summary>
-        /// <typeparam name="T">Type of the value contained in this setting.</typeparam>
-        /// <param name="configDefinition">Section and Key of the setting.</param>
-        /// <param name="defaultValue">Value of the setting if the setting was not created yet.</param>
-        /// <param name="configDescription">Description of the setting shown to the user and other metadata.</param>
-        public ConfigEntry<T> AddSetting<T>(ConfigDefinition configDefinition, T defaultValue, ConfigDescription configDescription = null)
+		/// <summary>
+		/// Access one of the existing settings. If the setting has not been added yet, null is returned.
+		/// If the setting exists but has a different type than T, an exception is thrown.
+		/// New settings should be added with <see cref="AddSetting{T}(ConfigDefinition,T,ConfigDescription)"/>.
+		/// </summary>
+		/// <typeparam name="T">Type of the value contained in this setting.</typeparam>
+		/// <param name="section">Section/category/group of the setting. Settings are grouped by this.</param>
+		/// <param name="key">Name of the setting.</param>
+		public ConfigEntry<T> GetSetting<T>(string section, string key)
+		{
+			return GetSetting<T>(new ConfigDefinition(section, key));
+		}
+
+		/// <summary>
+		/// Create a new setting. The setting is saved to drive and loaded automatically.
+		/// Each definition can be used to add only one setting, trying to add a second setting will throw an exception.
+		/// </summary>
+		/// <typeparam name="T">Type of the value contained in this setting.</typeparam>
+		/// <param name="configDefinition">Section and Key of the setting.</param>
+		/// <param name="defaultValue">Value of the setting if the setting was not created yet.</param>
+		/// <param name="configDescription">Description of the setting shown to the user and other metadata.</param>
+		public ConfigEntry<T> AddSetting<T>(ConfigDefinition configDefinition, T defaultValue, ConfigDescription configDescription = null)
 		{
 			if (!TomlTypeConverter.CanConvert(typeof(T)))
 				throw new ArgumentException($"Type {typeof(T)} is not supported by the config system. Supported types: {string.Join(", ", TomlTypeConverter.GetSupportedTypes().Select(x => x.Name).ToArray())}");
@@ -284,7 +296,8 @@ namespace BepInEx.Configuration
 		{
 			lock (_ioLock)
 			{
-				var setting = GetSetting<T>(section, key) ?? AddSetting(section, key, defaultValue, string.IsNullOrEmpty(description) ? null : new ConfigDescription(description));
+				var definition = new ConfigDefinition(section, key, description);
+				var setting = GetSetting<T>(definition) ?? AddSetting(definition, defaultValue, string.IsNullOrEmpty(description) ? null : new ConfigDescription(description));
 				return new ConfigWrapper<T>(setting);
 			}
 		}

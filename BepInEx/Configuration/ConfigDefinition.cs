@@ -43,7 +43,11 @@ namespace BepInEx.Configuration
 
 		/// <inheritdoc />
 		[Obsolete("description argument is no longer used, put it in a ConfigDescription instead")]
-		public ConfigDefinition(string section, string key, string description) : this(section, key) { }
+		public ConfigDefinition(string section, string key, string description)
+		{
+			Key = key ?? "";
+			Section = section ?? "";
+		}
 
 		/// <summary>
 		/// Check if the definitions are the same.
