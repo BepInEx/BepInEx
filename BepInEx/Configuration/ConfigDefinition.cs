@@ -33,12 +33,12 @@ namespace BepInEx.Configuration
 			Section = section;
 		}
 
-		private static readonly char[] _invalidConfigChars = { '=', '\n', '\t', '\\', '"', '\'' };
+		private static readonly char[] _invalidConfigChars = { '=', '\n', '\t', '\\', '"', '\'', '[', ']' };
 		private static void CheckInvalidConfigChars(string val, string name)
 		{
 			if (val == null) throw new ArgumentNullException(name);
 			if (val != val.Trim()) throw new ArgumentException("Cannot use whitespace characters at start or end of section and key names", name);
-			if (val.Any(c => _invalidConfigChars.Contains(c))) throw new ArgumentException(@"Cannot use any of the following characters in section and key names: = \n \t \ "" '", name);
+			if (val.Any(c => _invalidConfigChars.Contains(c))) throw new ArgumentException(@"Cannot use any of the following characters in section and key names: = \n \t \ "" ' [ ]", name);
 		}
 
 		/// <inheritdoc />
