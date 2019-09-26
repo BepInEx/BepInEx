@@ -10,7 +10,6 @@ namespace BepInEx
 	/// <summary>
 	/// Provides methods for running code on other threads and synchronizing with the main thread.
 	/// </summary>
-	[DefaultExecutionOrder(int.MinValue)]
 	public sealed class ThreadingHelper : MonoBehaviour, ISynchronizeInvoke
 	{
 		private readonly object _invokeLock = new object();
