@@ -208,6 +208,9 @@ namespace BepInEx.Preloader.Patching
 				foreach (string targetDll in assemblyPatcher.TargetDLLs())
 					if (assemblies.TryGetValue(targetDll, out var assembly))
 					{
+						if (AppDomain.CurrentDomain.GetAssemblies().Any(x => x.GetName().Name == assembly.Name.Name))
+							Logger.LogWarning($"Trying to patch an already loaded assembly [{assembly.Name.Name}] with [{assemblyPatcher.TypeName}]");
+
 						Logger.LogInfo($"Patching [{assembly.Name.Name}] with [{assemblyPatcher.TypeName}]");
 
 						assemblyPatcher.Patcher?.Invoke(ref assembly);
@@ -234,7 +237,7 @@ namespace BepInEx.Preloader.Patching
 
 			if (ConfigBreakBeforeLoadAssemblies.Value)
 			{
-				Logger.LogInfo(data: $"BepInEx is about load the following assemblies:\n{String.Join("\n", patchedAssemblies.ToArray())}");
+				Logger.LogInfo($"BepInEx is about load the following assemblies:\n{String.Join("\n", patchedAssemblies.ToArray())}");
 				Logger.LogInfo($"The assemblies were dumped into {DumpedAssembliesPath}");
 				Logger.LogInfo("Load any assemblies into the debugger, set breakpoints and continue execution.");
 				Debugger.Break();
