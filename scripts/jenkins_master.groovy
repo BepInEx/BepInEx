@@ -23,7 +23,6 @@ pipeline {
                     git 'https://github.com/BepInEx/BepInEx.git'
                     
                     script {
-                        echo(env.LAST_BUILD_HASH)
                         shortCommit = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%h'").trim()
                         longCommit = sh(returnStdout: true, script: "git rev-parse HEAD").trim()
                         branchName = sh(returnStdout: true, script: "git rev-parse --abbrev-ref HEAD").trim()
@@ -162,7 +161,10 @@ Changes since ${latestTag}:
     }
     post {
         cleanup {
-            writeFile file: 'last_build_commit', text: lastBuildCommit
+            script {
+                if(params.IS_BE)
+                    writeFile file: 'last_build_commit', text: lastBuildCommit
+            }
         }
         success {
             script {
