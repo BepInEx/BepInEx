@@ -15,7 +15,6 @@ pipeline {
                         lastBuildCommit = readFile 'last_build_commit'
                     else 
                         lastBuildCommit = ""
-                    echo(lastBuildCommit)
                 }
                 // Clean up old project before starting
                 cleanWs()
