@@ -11,10 +11,10 @@ pipeline {
         stage('Pull Projects') {
             steps {
                 script {
-                    if(fileExists('last_build_commit'))
+                    if(fileExists('./last_build_commit'))
                         lastBuildCommit = readFile 'last_build_commit'
                     else 
-                        lastBuildCommit = null
+                        lastBuildCommit = ""
                     echo(lastBuildCommit)
                 }
                 // Clean up old project before starting
@@ -44,7 +44,7 @@ Changes since ${latestTag}:
 {{/merge}}
 {{/commits}}""", to: [type: 'COMMIT', value: "${longCommit}"]
 
-                        if(lastBuildCommit != null) {
+                        if(lastBuildCommit != "") {
                             htmlChangelog = gitChangelog from: [type: 'COMMIT', value: lastBuildCommit], returnType: 'STRING',
                             template: """<ul>{{#commits}}{{^merge}}<li>[<code>{{hash}}</code>] ({{authorName}}) {{messageTitle}}</li>{{/merge}}{{/commits}}</ul>""", to: [type: 'COMMIT', value: "${longCommit}"] }
                         else
@@ -163,8 +163,7 @@ Changes since ${latestTag}:
     post {
         cleanup {
             script {
-                if(params.IS_BE)
-                    writeFile file: 'last_build_commit', text: lastBuildCommit
+                writeFile file: 'last_build_commit', text: lastBuildCommit
             }
         }
         success {
