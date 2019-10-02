@@ -31,7 +31,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Mono.Cecil, Version=0.10.3.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e, processorArchitecture=MSIL">
-      <HintPath>..\packages\Mono.Cecil.0.10.3\lib\net35\Mono.Cecil.dll</HintPath>
+      <HintPath>$(SolutionDir)\packages\Mono.Cecil.0.10.3\lib\net35\Mono.Cecil.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -54,8 +54,8 @@
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\ILRepack.2.0.16\build\ILRepack.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ILRepack.2.0.16\build\ILRepack.props'))" />
-    <Error Condition="!Exists('..\packages\ILRepack.Lib.MSBuild.Task.2.0.16.1\build\ILRepack.Lib.MSBuild.Task.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ILRepack.Lib.MSBuild.Task.2.0.16.1\build\ILRepack.Lib.MSBuild.Task.targets'))" />
+    <Error Condition="!Exists('$(SolutionDir)\packages\ILRepack.2.0.16\build\ILRepack.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ILRepack.2.0.16\build\ILRepack.props'))" />
+    <Error Condition="!Exists('$(SolutionDir)\packages\ILRepack.Lib.MSBuild.Task.2.0.16.1\build\ILRepack.Lib.MSBuild.Task.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\packages\ILRepack.Lib.MSBuild.Task.2.0.16.1\build\ILRepack.Lib.MSBuild.Task.targets'))" />
   </Target>
-  <Import Project="..\packages\ILRepack.Lib.MSBuild.Task.2.0.16.1\build\ILRepack.Lib.MSBuild.Task.targets" Condition="Exists('..\packages\ILRepack.Lib.MSBuild.Task.2.0.16.1\build\ILRepack.Lib.MSBuild.Task.targets')" />
+  <Import Project="$(SolutionDir)\packages\ILRepack.Lib.MSBuild.Task.2.0.16.1\build\ILRepack.Lib.MSBuild.Task.targets" Condition="Exists('$(SolutionDir)\packages\ILRepack.Lib.MSBuild.Task.2.0.16.1\build\ILRepack.Lib.MSBuild.Task.targets')" />
 </Project>
