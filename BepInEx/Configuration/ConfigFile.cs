@@ -187,37 +187,43 @@ namespace BepInEx.Configuration
 			}
 		}
 
-		#endregion
+        #endregion
 
-		#region Wraps
+        #region Wraps
 
-		/// <summary>
-		/// Access one of the existing settings. If the setting has not been added yet, null is returned.
-		/// If the setting exists but has a different type than T, an exception is thrown.
-		/// New settings should be added with <see cref="AddSetting{T}(ConfigDefinition,T,ConfigDescription)"/>.
-		/// </summary>
-		/// <typeparam name="T">Type of the value contained in this setting.</typeparam>
-		/// <param name="configDefinition">Section and Key of the setting.</param>
-		public ConfigEntry<T> GetSetting<T>(ConfigDefinition configDefinition)
+        /// <summary>
+        /// Try to access one of the existing settings.
+        /// New settings should be added with <see cref="AddSetting{T}(ConfigDefinition,T,ConfigDescription)"/>.
+        /// </summary>
+        /// <typeparam name="T">Type of the value contained in this setting.</typeparam>
+        /// <param name="configDefinition">Section and Key of the setting.</param>
+        /// <param name="configEntry"></param>
+        public bool TryGetSetting<T>(ConfigDefinition configDefinition, out ConfigEntry<T> configEntry)
 		{
 			lock (_ioLock)
 			{
-				Entries.TryGetValue(configDefinition, out var entry);
-				return (ConfigEntry<T>)entry;
+                if(Entries.TryGetValue(configDefinition, out var entry))
+                {
+                    configEntry = (ConfigEntry<T>)entry;
+                    return configEntry != null;
+                }
 			}
+
+            configEntry = null;
+            return false;
 		}
 
-		/// <summary>
-		/// Access one of the existing settings. If the setting has not been added yet, null is returned.
-		/// If the setting exists but has a different type than T, an exception is thrown.
-		/// New settings should be added with <see cref="AddSetting{T}(ConfigDefinition,T,ConfigDescription)"/>.
-		/// </summary>
-		/// <typeparam name="T">Type of the value contained in this setting.</typeparam>
-		/// <param name="section">Section/category/group of the setting. Settings are grouped by this.</param>
-		/// <param name="key">Name of the setting.</param>
-		public ConfigEntry<T> GetSetting<T>(string section, string key)
+        /// <summary>
+        /// Try to access one of the existing settings.
+        /// New settings should be added with <see cref="AddSetting{T}(ConfigDefinition,T,ConfigDescription)"/>.
+        /// </summary>
+        /// <typeparam name="T">Type of the value contained in this setting.</typeparam>
+        /// <param name="section">Section/category/group of the setting. Settings are grouped by this.</param>
+        /// <param name="key">Name of the setting.</param>
+        /// <param name="configEntry"></param>
+        public bool TryGetSetting<T>(string section, string key, out ConfigEntry<T> configEntry)
 		{
-			return GetSetting<T>(new ConfigDefinition(section, key));
+			return TryGetSetting(new ConfigDefinition(section, key), out configEntry);
 		}
 
 		/// <summary>
@@ -296,10 +302,11 @@ namespace BepInEx.Configuration
 		{
 			lock (_ioLock)
 			{
-				var definition = new ConfigDefinition(section, key, description);
-				var setting = GetSetting<T>(definition) ?? AddSetting(definition, defaultValue, string.IsNullOrEmpty(description) ? null : new ConfigDescription(description));
-				return new ConfigWrapper<T>(setting);
-			}
+                var definition = new ConfigDefinition(section, key, description);
+                if(!TryGetSetting<T>(definition, out var setting))
+                    setting = AddSetting(definition, defaultValue, string.IsNullOrEmpty(description) ? null : new ConfigDescription(description));
+                return new ConfigWrapper<T>(setting);
+            }
 		}
 
 		/// <summary>
