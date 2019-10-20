@@ -15,7 +15,7 @@ Unity plugin framework
 
 **[Latest releases](https://github.com/BepInEx/BepInEx/releases)**
 
-**[Bleeding Edge builds](http://builds.bepis.io/bepinex_be)**
+**[Bleeding Edge builds](https://builds.bepis.io/projects/bepinex_be)**
 
 **[How to install](https://github.com/bbepis/BepInEx/wiki/How-to-install)**
 
