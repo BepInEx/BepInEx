@@ -10,6 +10,12 @@ pipeline {
     stages {
         stage('Pull Projects') {
             steps {
+                script {
+                    if(fileExists('./last_build_commit'))
+                        lastBuildCommit = readFile 'last_build_commit'
+                    else 
+                        lastBuildCommit = ""
+                }
                 // Clean up old project before starting
                 cleanWs()
 
@@ -36,6 +42,12 @@ Changes since ${latestTag}:
 * [{{hash}}] ({{authorName}}) {{messageTitle}}
 {{/merge}}
 {{/commits}}""", to: [type: 'COMMIT', value: "${longCommit}"]
+
+                        if(lastBuildCommit != "") {
+                            htmlChangelog = gitChangelog from: [type: 'COMMIT', value: lastBuildCommit], returnType: 'STRING',
+                            template: """<ul>{{#commits}}{{^merge}}<li>[<code>{{hash}}</code>] ({{authorName}}) {{messageTitle}}</li>{{/merge}}{{/commits}}</ul>""", to: [type: 'COMMIT', value: "${longCommit}"] }
+                        else
+                            htmlChangelog = ""
                     }
 
                     sh 'git submodule update --init --recursive'
@@ -139,29 +151,60 @@ Changes since ${latestTag}:
 
                     archiveArtifacts "*.zip"
                 }
+
+                dir('Artifacts') {
+                    sh 'mv ../Build/patcher/*.zip .'
+                    sh 'mv ../Build/dist/*.zip .'
+                }
             }
         }
     }
-       post {
-        success {
-/*
+    post {
+        cleanup {
             script {
+                writeFile file: 'last_build_commit', text: lastBuildCommit
+            }
+        }
+        success {
+            script {
+                lastBuildCommit = longCommit
                 if(params.IS_BE) {
-                    // Write built BepInEx into bepisbuilds
-                    dir('Build/dist') {
-                        sh "cp BepInEx_x86_${shortCommit}_${versionNumber}.zip /var/www/bepisbuilds/builds/bepinex_be"
-                        sh "cp BepInEx_x64_${shortCommit}_${versionNumber}.zip /var/www/bepisbuilds/builds/bepinex_be"
+                    dir('Artifacts') {
+                        def data = [
+                            id: env.BUILD_NUMBER,
+                            date: sh(returnStdout: true, script: 'date -Iseconds -u'),
+                            changelog: htmlChangelog,
+                            artifacts: [
+                                [
+                                    file: "BepInEx_x64${commitPrefix}${versionNumber}.zip",
+                                    description: "BepInEx for x64 machines"
+                                ],
+                                [
+                                    file: "BepInEx_x86${commitPrefix}${versionNumber}.zip",
+                                    description: "BepInEx for x86 machines"
+                                ],
+                                [
+                                    file: "BepInEx_Patcher${commitPrefix}${versionNumber}.zip",
+                                    description: "Hardpatcher for BepInEx. IMPORTANT: USE ONLY IF DOORSTOP DOES NOT WORK FOR SOME REASON!"
+                                ]
+                            ]
+                        ]
+
+                        def json = groovy.json.JsonOutput.toJson(data)
+                        json = groovy.json.JsonOutput.prettyPrint(json)
+                        writeFile file: 'info.json', text: json
+
+                        def filesToSend = findFiles(glob: '*').collect {it.name}
+                        withCredentials([string(credentialsId: 'bepisbuilds_addr', variable: 'BEPISBUILDS_ADDR')]) {
+                            sh """curl --upload-file "{${filesToSend.join(',')}}" --ftp-pasv --ftp-skip-pasv-ip --ftp-create-dirs --ftp-method singlecwd --disable-epsv ftp://${BEPISBUILDS_ADDR}/bepinex_be/artifacts/${env.BUILD_NUMBER}/"""
+                        }
                     }
-                    dir('Build/v2018/patcher') {
-                        sh "cp BepInEx_v2018_Patcher_${shortCommit}_${versionNumber}.zip /var/www/bepisbuilds/builds/bepinex_be"
-                    }
-                    sh "echo \"`date -Iseconds -u`;${env.BUILD_NUMBER};${shortCommit};BepInEx_x86_${shortCommit}_${versionNumber}.zip;BepInEx_x64_${shortCommit}_${versionNumber}.zip\" >> /var/www/bepisbuilds/builds/bepinex_be/artifacts_list"
                 }
             }
-*/
+
             //Notify Bepin Discord of successfull build
             withCredentials([string(credentialsId: 'discord-notify-webhook', variable: 'DISCORD_WEBHOOK')]) {
-                discordSend description: "**Build:** [${currentBuild.id}](${env.BUILD_URL})\n**Status:** [${currentBuild.currentResult}](${env.BUILD_URL})\n\n[**Artifacts on BepisBuilds**](http://builds.bepis.io/bepinex_be)", footer: 'Jenkins via Discord Notifier', link: env.BUILD_URL, successful: currentBuild.resultIsBetterOrEqualTo('SUCCESS'), title: "${env.JOB_NAME} #${currentBuild.id}", webhookURL: DISCORD_WEBHOOK
+                discordSend description: "**Build:** [${currentBuild.id}](${env.BUILD_URL})\n**Status:** [${currentBuild.currentResult}](${env.BUILD_URL})\n\n[**Artifacts on BepisBuilds**](https://builds.bepis.io/projects/bepinex_be)", footer: 'Jenkins via Discord Notifier', link: env.BUILD_URL, successful: currentBuild.resultIsBetterOrEqualTo('SUCCESS'), title: "${env.JOB_NAME} #${currentBuild.id}", webhookURL: DISCORD_WEBHOOK
             }
         }
         failure {
