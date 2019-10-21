@@ -201,26 +201,32 @@ namespace BepInEx.Bootstrap
 				var dependencyDict = new Dictionary<string, IEnumerable<string>>();
 				var pluginsByGUID = new Dictionary<string, PluginInfo>();
 
-				foreach (var pluginInfo in pluginInfos)
+				foreach (var pluginInfoGroup in pluginInfos.GroupBy(info => info.Metadata.GUID))
 				{
-					// Perform checks that will prevent loading plugins in this run
-					var filters = pluginInfo.Processes.ToList();
-					bool invalidProcessName = filters.Count != 0 && filters.All(x => !string.Equals(x.ProcessName.Replace(".exe", ""), Paths.ProcessName, StringComparison.InvariantCultureIgnoreCase));
-
-					if (invalidProcessName)
+					var alreadyLoaded = false;
+					foreach (var pluginInfo in pluginInfoGroup.OrderByDescending(x => x.Metadata.Version))
 					{
-						Logger.LogWarning($"Skipping over plugin [{pluginInfo.Metadata.GUID}] due to process filter");
-						continue;
-					}
+						if (alreadyLoaded)
+						{
+							Logger.LogWarning($"Skipping because a newer version exists [{pluginInfo.Metadata.Name} {pluginInfo.Metadata.Version}]");
+							continue;
+						}
 
-					if (dependencyDict.ContainsKey(pluginInfo.Metadata.GUID))
-					{
-						Logger.LogWarning($"Skipping [{pluginInfo.Metadata.Name}] because its GUID ({pluginInfo.Metadata.GUID}) is already used by another plugin.");
-						continue;
-					}
+						alreadyLoaded = true;
 
-					dependencyDict[pluginInfo.Metadata.GUID] = pluginInfo.Dependencies.Select(d => d.DependencyGUID).Concat(pluginInfo.Incompatibilities.Select(i => i.IncompatibilityGUID));
-					pluginsByGUID[pluginInfo.Metadata.GUID] = pluginInfo;
+						// Perform checks that will prevent loading plugins in this run
+						var filters = pluginInfo.Processes.ToList();
+						bool invalidProcessName = filters.Count != 0 && filters.All(x => !string.Equals(x.ProcessName.Replace(".exe", ""), Paths.ProcessName, StringComparison.InvariantCultureIgnoreCase));
+
+						if (invalidProcessName)
+						{
+							Logger.LogWarning($"Skipping because of process filters [{pluginInfo.Metadata.Name} {pluginInfo.Metadata.Version}]");
+							continue;
+						}
+
+						dependencyDict[pluginInfo.Metadata.GUID] = pluginInfo.Dependencies.Select(d => d.DependencyGUID).Concat(pluginInfo.Incompatibilities.Select(i => i.IncompatibilityGUID));
+						pluginsByGUID[pluginInfo.Metadata.GUID] = pluginInfo;
+					}
 				}
 
 				var emptyDependencies = new string[0];
