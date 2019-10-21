@@ -224,8 +224,22 @@ namespace BepInEx.Bootstrap
 							continue;
 						}
 
-						dependencyDict[pluginInfo.Metadata.GUID] = pluginInfo.Dependencies.Select(d => d.DependencyGUID).Concat(pluginInfo.Incompatibilities.Select(i => i.IncompatibilityGUID));
+						dependencyDict[pluginInfo.Metadata.GUID] = pluginInfo.Dependencies.Select(d => d.DependencyGUID);
 						pluginsByGUID[pluginInfo.Metadata.GUID] = pluginInfo;
+					}
+				}
+
+				foreach (var pluginInfo in pluginsByGUID.Values.ToList())
+				{
+					if (pluginInfo.Incompatibilities.Any(incompatibility => pluginsByGUID.ContainsKey(incompatibility.IncompatibilityGUID)))
+					{
+						pluginsByGUID.Remove(pluginInfo.Metadata.GUID);
+						dependencyDict.Remove(pluginInfo.Metadata.GUID);
+
+						var incompatiblePlugins = pluginInfo.Incompatibilities.Select(x => x.IncompatibilityGUID).Where(x => pluginsByGUID.ContainsKey(x)).ToArray();
+						string message = $@"Could not load [{pluginInfo.Metadata.Name}] because it is incompatible with: {string.Join(", ", incompatiblePlugins)}";
+						DependencyErrors.Add(message);
+						Logger.LogError(message);
 					}
 				}
 
@@ -266,13 +280,6 @@ namespace BepInEx.Bootstrap
 						}
 					}
 
-					var incompatibilities = new List<BepInIncompatibility>();
-					foreach (var incompatibility in pluginInfo.Incompatibilities)
-					{
-						if (processedPlugins.ContainsKey(incompatibility.IncompatibilityGUID))
-							incompatibilities.Add(incompatibility);
-					}
-
 					processedPlugins.Add(pluginGUID, pluginInfo.Metadata.Version);
 
 					if (dependsOnInvalidPlugin)
@@ -289,18 +296,6 @@ namespace BepInEx.Bootstrap
 
 						string message = $@"Could not load [{pluginInfo.Metadata.Name}] because it has missing dependencies: {
 							string.Join(", ", missingDependencies.Select(s => IsEmptyVersion(s.MinimumVersion) ? s.DependencyGUID : $"{s.DependencyGUID} (v{s.MinimumVersion} or newer)").ToArray())
-							}";
-						DependencyErrors.Add(message);
-						Logger.LogError(message);
-
-						invalidPlugins.Add(pluginGUID);
-						continue;
-					}
-
-					if (incompatibilities.Count != 0)
-					{
-						string message = $@"Could not load [{pluginInfo.Metadata.Name}] because it is incompatible with: {
-							string.Join(", ", incompatibilities.Select(i => i.IncompatibilityGUID).ToArray())
 							}";
 						DependencyErrors.Add(message);
 						Logger.LogError(message);
