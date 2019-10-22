@@ -24,7 +24,19 @@ namespace BepInEx.Bootstrap
 		/// </summary>
 		public static Dictionary<string, PluginInfo> PluginInfos { get; } = new Dictionary<string, PluginInfo>();
 
-		public static List<BaseUnityPlugin> Plugins { get; } = new List<BaseUnityPlugin>();
+		private static readonly List<BaseUnityPlugin> _plugins = new List<BaseUnityPlugin>();
+		[Obsolete("Use PluginInfos instead")]
+		public static List<BaseUnityPlugin> Plugins
+		{
+			get
+			{
+				lock (_plugins)
+				{
+					_plugins.RemoveAll(x => x == null);
+					return _plugins;
+				}
+			}
+		}
 
 		public static List<string> DependencyErrors { get; } = new List<string>();
 
@@ -314,7 +326,7 @@ namespace BepInEx.Bootstrap
 						PluginInfos[pluginGUID] = pluginInfo;
 						pluginInfo.Instance = (BaseUnityPlugin)ManagerObject.AddComponent(ass.GetType(pluginInfo.TypeName));
 
-						Plugins.Add(pluginInfo.Instance);
+						_plugins.Add(pluginInfo.Instance);
 					}
 					catch (Exception ex)
 					{
