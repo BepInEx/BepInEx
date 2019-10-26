@@ -1,4 +1,5 @@
-﻿using BepInEx.Bootstrap;
+﻿using System;
+using BepInEx.Bootstrap;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using UnityEngine;
@@ -25,12 +26,15 @@ namespace BepInEx
 		/// </summary>
 		public ConfigFile Config { get; }
 
-		/// <summary>
-		/// Create a new instance of a plugin and all of its tied in objects.
-		/// </summary>
-		protected BaseUnityPlugin()
+        /// <summary>
+        /// Create a new instance of a plugin and all of its tied in objects.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">BepInPlugin attribute is missing.</exception>
+        protected BaseUnityPlugin()
 		{
 			var metadata = MetadataHelper.GetMetadata(this);
+			if(metadata == null)
+				throw new InvalidOperationException("Can't create an instance of " + GetType().FullName + " because it inherits from BaseUnityPlugin and the BepInPlugin attribute is missing.");
 
 			if (Chainloader.PluginInfos.TryGetValue(metadata.GUID, out var info))
 				Info = info;
