@@ -31,6 +31,7 @@ pipeline {
         stage('Build BepInEx') {
             steps {
                 dir('BepInEx') {
+                    sh "chmod u+x build.sh"
                     sh "./build.sh --target=Pack --bleeding_edge=${params.IS_BE} --build_id=${currentBuild.id} --last_build_commit=${lastBuildCommit}"
                 }
             }
