@@ -1,5 +1,4 @@
 #addin nuget:?package=Cake.FileHelpers&version=3.2.1
-#addin nuget:?package=Cake.Git&version=0.20.0
 #addin nuget:?package=SharpZipLib&version=1.2.0
 #addin nuget:?package=Cake.Compression&version=0.2.4
 #addin nuget:?package=Cake.Json&version=4.0.0
@@ -11,6 +10,19 @@ var buildId = Argument("build_id", 0);
 var lastBuildCommit = Argument("last_build_commit", "");
 
 var buildVersion = "";
+var currentCommit = RunGit("rev-parse HEAD");
+var currentCommitShort = RunGit("log -n 1 --pretty=format:'%h'").Trim();
+var currentBranch = RunGit("rev-parse --abbrev-ref HEAD");
+var latestTag = RunGit("describe --tags --abbrev=0");
+
+string RunGit(string command) 
+{
+    using(var process = StartAndReturnProcess("git", new ProcessSettings { Arguments = command, RedirectStandardOutput = true })) 
+    {
+        process.WaitForExit();
+        return string.Join("", process.GetStandardOutput());
+    }
+}
 
 Task("Cleanup")
     .Does(() =>
@@ -49,8 +61,8 @@ Task("Build")
         FileAppendText(bepinExProperties + File("AssemblyInfo.cs"), 
             TransformText("\n[assembly: BuildInfo(\"BLEEDING EDGE Build #<%buildNumber%> from <%shortCommit%> at <%branchName%>\")]\n")
                 .WithToken("buildNumber", buildId)
-                .WithToken("shortCommit", GitLogTip("./").Sha)
-                .WithToken("branchName", GitBranchCurrent("./").FriendlyName)
+                .WithToken("shortCommit", currentCommit)
+                .WithToken("branchName", currentBranch)
                 .ToString());
     }
 
@@ -102,19 +114,10 @@ Task("MakeDist")
     CreateDirectory(distDir);
     CreateDirectory(distPatcherDir);
 
-    var latestTag = GitTags(Directory(".")).Last();
-    var commits = GitLog(Directory("."), latestTag.CanonicalName);
-
     var changelog = TransformText("<%commit_count%> commits since <%last_tag%>\r\n\r\nChangelog (excluding merges):\r\n<%commit_log%>")
-                        .WithToken("commit_count", commits.Count)
-                        .WithToken("last_tag", latestTag.FriendlyName)
-                        .WithToken("commit_log",
-                            string.Join("\r\n", commits.Where(commit => !commit.MessageShort.StartsWith("Merge branch"))
-                                                       .Select(commit => TransformText("* (<%commit_sha%>) [<%commit_author%>] <%commit_message%>")
-                                                                            .WithToken("commit_sha", commit.Sha.Substring(0, 16))
-                                                                            .WithToken("commit_author", commit.Author.Name)
-                                                                            .WithToken("commit_message", commit.MessageShort)
-                                                                            .ToString())))
+                        .WithToken("commit_count", RunGit($"rev-list --count {latestTag}..HEAD"))
+                        .WithToken("last_tag", latestTag)
+                        .WithToken("commit_log", RunGit($"--no-pager log --no-merges --pretty=\"format:* (%h) [%an] %s\" {latestTag}..HEAD"))
                         .ToString();
 
     void PackageBepin(string arch) 
@@ -143,8 +146,7 @@ Task("Pack")
     .Does(() =>
 {
     var distDir = Directory("./bin/dist");
-    var currentCommit = GitLogTip(Directory("."));
-    var commitPrefix = isBleedingEdge ? $"_{currentCommit.Sha.Substring(0, 8)}_" : "_";
+    var commitPrefix = isBleedingEdge ? $"_{currentCommitShort}_" : "_";
 
     Information("Packing BepInEx");
     ZipCompress(distDir + Directory("x86"), distDir + File($"BepInEx_x86{commitPrefix}{buildVersion}.zip"));
@@ -174,7 +176,7 @@ Task("Pack")
                         ["description"] = "Hardpatcher for BepInEx. IMPORTANT: USE ONLY IF DOORSTOP DOES NOT WORK FOR SOME REASON!"
                     }
                 },
-                ["commit"] = currentCommit.Sha
+                ["commit"] = currentCommit
             }));
     }
 });
