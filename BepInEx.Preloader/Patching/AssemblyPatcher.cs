@@ -90,6 +90,9 @@ namespace BepInEx.Preloader.Patching
 				var assemblyPath = keyValuePair.Key;
 				var patcherCollection = keyValuePair.Value;
 
+				if(patcherCollection.Count == 0)
+					continue;
+
 				var ass = Assembly.LoadFile(assemblyPath);
 
 				foreach (var patcherPlugin in patcherCollection)

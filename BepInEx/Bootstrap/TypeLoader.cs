@@ -74,16 +74,16 @@ namespace BepInEx.Bootstrap
 
 		public static event AssemblyResolveEventHandler AssemblyResolve;
 
-		/// <summary>
-		///     Looks up assemblies in the given directory and locates all types that can be loaded and collects their metadata.
-		/// </summary>
-		/// <typeparam name="T">The specific base type to search for.</typeparam>
-		/// <param name="directory">The directory to search for assemblies.</param>
-		/// <param name="typeSelector">A function to check if a type should be selected and to build the type metadata.</param>
-		/// <param name="assemblyFilter">A filter function to quickly determine if the assembly can be loaded.</param>
-		/// <param name="cacheName">The name of the cache to get cached types from.</param>
-		/// <returns>A list of all loadable type metadatas indexed by the full path to the assembly that contains the types.</returns>
-		public static Dictionary<string, List<T>> FindPluginTypes<T>(string directory, Func<TypeDefinition, T> typeSelector, Func<AssemblyDefinition, bool> assemblyFilter = null, string cacheName = null) where T : ICacheable, new()
+        /// <summary>
+        ///     Looks up assemblies in the given directory and locates all types that can be loaded and collects their metadata.
+        /// </summary>
+        /// <typeparam name="T">The specific base type to search for.</typeparam>
+        /// <param name="directory">The directory to search for assemblies.</param>
+        /// <param name="typeSelector">A function to check if a type should be selected and to build the type metadata.</param>
+        /// <param name="assemblyFilter">A filter function to quickly determine if the assembly can be loaded.</param>
+        /// <param name="cacheName">The name of the cache to get cached types from.</param>
+		/// <returns>A dictionary of all assemblies in the directory and the list of type metadatas of types that match the selector.</returns>
+        public static Dictionary<string, List<T>> FindPluginTypes<T>(string directory, Func<TypeDefinition, T> typeSelector, Func<AssemblyDefinition, bool> assemblyFilter = null, string cacheName = null) where T : ICacheable, new()
 		{
 			var result = new Dictionary<string, List<T>>();
 			Dictionary<string, CachedAssembly<T>> cache = null;
@@ -108,18 +108,12 @@ namespace BepInEx.Bootstrap
 
 					if (!assemblyFilter?.Invoke(ass) ?? false)
 					{
+						result[dll] = new List<T>();
 						ass.Dispose();
 						continue;
 					}
 
 					var matches = ass.MainModule.Types.Select(typeSelector).Where(t => t != null).ToList();
-
-					if (matches.Count == 0)
-					{
-						ass.Dispose();
-						continue;
-					}
-
 					result[dll] = matches;
 					ass.Dispose();
 				}
