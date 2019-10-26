@@ -11,16 +11,16 @@ var lastBuildCommit = Argument("last_build_commit", "");
 
 var buildVersion = "";
 var currentCommit = RunGit("rev-parse HEAD");
-var currentCommitShort = RunGit("log -n 1 --pretty=format:'%h'").Trim();
+var currentCommitShort = RunGit("log -n 1 --pretty=\"format:%h\"").Trim();
 var currentBranch = RunGit("rev-parse --abbrev-ref HEAD");
 var latestTag = RunGit("describe --tags --abbrev=0");
 
-string RunGit(string command) 
+string RunGit(string command, string separator = "") 
 {
     using(var process = StartAndReturnProcess("git", new ProcessSettings { Arguments = command, RedirectStandardOutput = true })) 
     {
         process.WaitForExit();
-        return string.Join("", process.GetStandardOutput());
+        return string.Join(separator, process.GetStandardOutput());
     }
 }
 
@@ -117,7 +117,7 @@ Task("MakeDist")
     var changelog = TransformText("<%commit_count%> commits since <%last_tag%>\r\n\r\nChangelog (excluding merges):\r\n<%commit_log%>")
                         .WithToken("commit_count", RunGit($"rev-list --count {latestTag}..HEAD"))
                         .WithToken("last_tag", latestTag)
-                        .WithToken("commit_log", RunGit($"--no-pager log --no-merges --pretty=\"format:* (%h) [%an] %s\" {latestTag}..HEAD"))
+                        .WithToken("commit_log", RunGit($"--no-pager log --no-merges --pretty=\"format:* (%h) [%an] %s\" {latestTag}..HEAD", "\r\n"))
                         .ToString();
 
     void PackageBepin(string arch) 
