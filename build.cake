@@ -68,10 +68,12 @@ Task("Build")
 
     buildVersion = FindRegexMatchInFile(bepinExProperties + File("AssemblyInfo.cs"), "[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+", System.Text.RegularExpressions.RegexOptions.None);
 
-    MSBuild("./BepInEx.sln", new MSBuildSettings {
+    var buildSettings = new MSBuildSettings {
         Configuration = "Release",
         Restore = true
-    });
+    };
+    buildSettings.Properties["TargetFrameworks"] = new []{ "net35" };
+    MSBuild("./BepInEx.sln", buildSettings);
 })
 .Finally(() => 
 {
