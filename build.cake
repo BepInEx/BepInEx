@@ -1,5 +1,5 @@
 #addin nuget:?package=Cake.FileHelpers&version=3.2.1
-#addin nuget:?package=Cake.Git&version=0.21.0
+#addin nuget:?package=Cake.Git&version=0.18.0
 #addin nuget:?package=SharpZipLib&version=1.2.0
 #addin nuget:?package=Cake.Compression&version=0.2.4
 #addin nuget:?package=Cake.Json&version=4.0.0
