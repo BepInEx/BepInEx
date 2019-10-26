@@ -25,8 +25,9 @@ namespace BepInEx.Preloader.RuntimeFixes
 			TraceImplType = AppDomain.CurrentDomain.GetAssemblies()
 									 .First(x => x.GetName().Name == "System")
 									 .GetTypes()
-									 .First(x => x.Name == "TraceImpl");
-
+									 .FirstOrDefault(x => x.Name == "TraceImpl");
+			// assembly that has already fixed this
+			if (TraceImplType == null) return;
 
 			ListenersSyncRoot = AccessTools.Property(TraceImplType, "ListenersSyncRoot").GetValue(null, null);
 
