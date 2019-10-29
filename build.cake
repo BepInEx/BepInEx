@@ -178,8 +178,7 @@ Task("Pack")
                         ["file"] = $"BepInEx_Patcher{commitPrefix}{buildVersion}.zip",
                         ["description"] = "Hardpatcher for BepInEx. IMPORTANT: USE ONLY IF DOORSTOP DOES NOT WORK FOR SOME REASON!"
                     }
-                },
-                ["commit"] = currentCommit
+                }
             }));
     }
 });
