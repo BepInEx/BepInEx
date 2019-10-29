@@ -287,6 +287,5 @@ __pycache__/
 *.odx.cs
 *.xsd.cs
 
-# Unity libraries
-lib/UnityEngine.dll
-lib/UnityEngine.CoreModule.dll
+# Cake binaries
+tools/
