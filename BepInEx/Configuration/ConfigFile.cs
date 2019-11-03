@@ -14,7 +14,7 @@ namespace BepInEx.Configuration
 	/// </summary>
 	public class ConfigFile : IDictionary<ConfigDefinition, ConfigEntryBase>
 	{
-		private readonly BepInPlugin _ownerMetadata;
+		private readonly PluginMetadata _ownerMetadata;
 
 		internal static ConfigFile CoreConfig { get; } = new ConfigFile(Paths.BepInExConfigPath, true);
 
@@ -51,7 +51,7 @@ namespace BepInEx.Configuration
 		/// </summary>
 		public bool SaveOnConfigSet { get; set; } = true;
 
-		/// <inheritdoc cref="ConfigFile(string, bool, BepInPlugin)"/>
+		/// <inheritdoc cref="ConfigFile(string, bool, PluginMetadata)"/>
 		public ConfigFile(string configPath, bool saveOnInit) : this(configPath, saveOnInit, null) { }
 
 		/// <summary>
@@ -60,7 +60,7 @@ namespace BepInEx.Configuration
 		/// <param name="configPath">Full path to a file that contains settings. The file will be created as needed.</param>
 		/// <param name="saveOnInit">If the config file/directory doesn't exist, create it immediately.</param>
 		/// <param name="ownerMetadata">Information about the plugin that owns this setting file.</param>
-		public ConfigFile(string configPath, bool saveOnInit, BepInPlugin ownerMetadata)
+		public ConfigFile(string configPath, bool saveOnInit, PluginMetadata ownerMetadata)
 		{
 			_ownerMetadata = ownerMetadata;
 
