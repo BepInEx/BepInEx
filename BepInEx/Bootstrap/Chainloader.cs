@@ -33,7 +33,7 @@ namespace BepInEx.Bootstrap
 				lock (_plugins)
 				{
 					_plugins.RemoveAll(x => x == null);
-					return _plugins;
+					return _plugins.ToList();
 				}
 			}
 		}
@@ -52,7 +52,7 @@ namespace BepInEx.Bootstrap
 		/// <summary>
 		/// Initializes BepInEx to be able to start the chainloader.
 		/// </summary>
-		public static void Initialize(string gameExePath, bool startConsole = true)
+		public static void Initialize(string gameExePath, bool startConsole = true, ICollection<LogEventArgs> preloaderLogEvents = null)
 		{
 			if (_initialized)
 				return;
@@ -94,6 +94,27 @@ namespace BepInEx.Bootstrap
 
 			if (ConfigUnityLogging.Value)
 				Logger.Sources.Add(new UnityLogSource());
+
+
+			// Temporarily disable the console log listener as we replay the preloader logs
+
+			var logListener = Logger.Listeners.FirstOrDefault(logger => logger is ConsoleLogListener);
+			
+			if (logListener != null)
+				Logger.Listeners.Remove(logListener);
+
+			var preloaderLogSource = Logger.CreateLogSource("Preloader");
+
+			foreach (var preloaderLogEvent in preloaderLogEvents)
+			{
+				preloaderLogSource.Log(preloaderLogEvent.Level, preloaderLogEvent.Data);
+			}
+
+			Logger.Sources.Remove(preloaderLogSource);
+
+			if (logListener != null)
+				Logger.Listeners.Add(logListener);
+
 
 
 			Logger.LogMessage("Chainloader ready");
