@@ -134,6 +134,7 @@ Task("MakeDist")
         CreateDirectory(bepinDir + Directory("plugins"));
         CreateDirectory(bepinDir + Directory("patchers"));
 
+        CopyFiles("./doorstop/*.*", distArchDir);
         CopyFiles("./bin/*.*", bepinDir + Directory("core"));
         CopyFileToDirectory(doorstopArchPath, distArchDir);
         FileWriteText(distArchDir + File("changelog.txt"), changelog);
