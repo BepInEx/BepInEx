@@ -9,7 +9,7 @@ namespace BepInEx.Preloader
 {
 	public class PreloaderConsoleListener : ILogListener
 	{
-		public List<LogEventArgs> LogEvents { get; } = new List<LogEventArgs>();
+		public static List<LogEventArgs> LogEvents { get; } = new List<LogEventArgs>();
 		protected StringBuilder LogBuilder = new StringBuilder();
 
 		public static TextWriter StandardOut { get; set; }
