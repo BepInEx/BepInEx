@@ -251,7 +251,7 @@ namespace BepInEx.Bootstrap
 
 		#region Config
 
-		private static readonly ConfigEntry<bool> EnableAssemblyCache = ConfigFile.CoreConfig.AddSetting(
+		private static readonly ConfigEntry<bool> EnableAssemblyCache = ConfigFile.CoreConfig.Bind(
 			"Caching", "EnableAssemblyCache", 
 			true, 
 			"Enable/disable assembly metadata cache\nEnabling this will speed up discovery of plugins and patchers by caching the metadata of all types BepInEx discovers.");

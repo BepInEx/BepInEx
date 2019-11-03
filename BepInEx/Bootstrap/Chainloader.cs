@@ -357,27 +357,27 @@ namespace BepInEx.Bootstrap
 		#region Config
 
 
-		private static readonly ConfigEntry<bool> ConfigUnityLogging = ConfigFile.CoreConfig.AddSetting(
+		private static readonly ConfigEntry<bool> ConfigUnityLogging = ConfigFile.CoreConfig.Bind(
 			"Logging", "UnityLogListening",
 			true,
 			"Enables showing unity log messages in the BepInEx logging system.");
 
-		private static readonly ConfigEntry<bool> ConfigDiskWriteUnityLog = ConfigFile.CoreConfig.AddSetting(
+		private static readonly ConfigEntry<bool> ConfigDiskWriteUnityLog = ConfigFile.CoreConfig.Bind(
 			"Logging.Disk", "WriteUnityLog",
 			false,
 			"Include unity log messages in log file output.");
 
-		private static readonly ConfigEntry<bool> ConfigDiskAppend = ConfigFile.CoreConfig.AddSetting(
+		private static readonly ConfigEntry<bool> ConfigDiskAppend = ConfigFile.CoreConfig.Bind(
 			"Logging.Disk", "AppendLog",
 			false,
 			"Appends to the log file instead of overwriting, on game startup.");
 
-		private static readonly ConfigEntry<bool> ConfigDiskLogging = ConfigFile.CoreConfig.AddSetting(
+		private static readonly ConfigEntry<bool> ConfigDiskLogging = ConfigFile.CoreConfig.Bind(
 			"Logging.Disk", "Enabled",
 			true,
 			"Enables writing log messages to disk.");
 
-		private static readonly ConfigEntry<LogLevel> ConfigDiskConsoleDisplayedLevel = ConfigFile.CoreConfig.AddSetting(
+		private static readonly ConfigEntry<LogLevel> ConfigDiskConsoleDisplayedLevel = ConfigFile.CoreConfig.Bind(
 			"Logging.Disk", "DisplayedLogLevel",
 			LogLevel.Info,
 			"Only displays the specified log level and above in the console output.");

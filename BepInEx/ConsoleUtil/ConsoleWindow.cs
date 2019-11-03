@@ -13,12 +13,12 @@ namespace UnityInjector.ConsoleUtil
 {
 	internal class ConsoleWindow
 	{
-		public static readonly ConfigEntry<bool> ConfigConsoleEnabled = ConfigFile.CoreConfig.AddSetting(
+		public static readonly ConfigEntry<bool> ConfigConsoleEnabled = ConfigFile.CoreConfig.Bind(
 			"Logging.Console", "Enabled",
 			false,
 			"Enables showing a console for log output.");
 
-		public static readonly ConfigEntry<bool> ConfigConsoleShiftJis = ConfigFile.CoreConfig.AddSetting(
+		public static readonly ConfigEntry<bool> ConfigConsoleShiftJis = ConfigFile.CoreConfig.Bind(
 			"Logging.Console", "ShiftJisEncoding",
 			false,
 			"If true, console is set to the Shift-JIS encoding, otherwise UTF-8 encoding.");

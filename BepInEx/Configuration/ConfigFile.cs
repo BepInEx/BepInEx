@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -11,7 +12,7 @@ namespace BepInEx.Configuration
 	/// <summary>
 	/// A helper class to handle persistent data. All public methods are thread-safe.
 	/// </summary>
-	public class ConfigFile
+	public class ConfigFile : IDictionary<ConfigDefinition, ConfigEntryBase>
 	{
 		private readonly BepInPlugin _ownerMetadata;
 
@@ -22,28 +23,21 @@ namespace BepInEx.Configuration
 		/// </summary>
 		protected Dictionary<ConfigDefinition, ConfigEntryBase> Entries { get; } = new Dictionary<ConfigDefinition, ConfigEntryBase>();
 
-		private Dictionary<ConfigDefinition, string> HomelessEntries { get; } = new Dictionary<ConfigDefinition, string>();
+		private Dictionary<ConfigDefinition, string> OrphanedEntries { get; } = new Dictionary<ConfigDefinition, string>();
 
 		/// <summary>
 		/// Create a list with all config entries inside of this config file.
 		/// </summary>
-		[Obsolete("Use GetConfigEntries instead")]
+		[Obsolete("Use Keys instead")]
 		public ReadOnlyCollection<ConfigDefinition> ConfigDefinitions
 		{
 			get
 			{
-				lock (_ioLock) return Entries.Keys.ToList().AsReadOnly();
+				lock (_ioLock)
+				{
+					return Entries.Keys.ToList().AsReadOnly();
+				}
 			}
-		}
-
-		/// <summary>
-		/// Create an array with all config entries inside of this config file. Should be only used for metadata purposes.
-		/// If you want to access and modify an existing setting then use <see cref="AddSetting{T}(ConfigDefinition,T,ConfigDescription)"/> 
-		/// instead with no description.
-		/// </summary>
-		public ConfigEntryBase[] GetConfigEntries()
-		{
-			lock (_ioLock) return Entries.Values.ToArray();
 		}
 
 		/// <summary>
@@ -87,7 +81,6 @@ namespace BepInEx.Configuration
 		#region Save/Load
 
 		private readonly object _ioLock = new object();
-		private bool _disableSaving;
 
 		/// <summary>
 		/// Reloads the config from disk. Unsaved changes are lost.
@@ -96,47 +89,38 @@ namespace BepInEx.Configuration
 		{
 			lock (_ioLock)
 			{
-				HomelessEntries.Clear();
+				OrphanedEntries.Clear();
 
-				try
+				string currentSection = string.Empty;
+
+				foreach (string rawLine in File.ReadAllLines(ConfigFilePath))
 				{
-					_disableSaving = true;
+					string line = rawLine.Trim();
 
-					string currentSection = string.Empty;
+					if (line.StartsWith("#")) //comment
+						continue;
 
-					foreach (string rawLine in File.ReadAllLines(ConfigFilePath))
+					if (line.StartsWith("[") && line.EndsWith("]")) //section
 					{
-						string line = rawLine.Trim();
-
-						if (line.StartsWith("#")) //comment
-							continue;
-
-						if (line.StartsWith("[") && line.EndsWith("]")) //section
-						{
-							currentSection = line.Substring(1, line.Length - 2);
-							continue;
-						}
-
-						string[] split = line.Split('='); //actual config line
-						if (split.Length != 2)
-							continue; //empty/invalid line
-
-						string currentKey = split[0].Trim();
-						string currentValue = split[1].Trim();
-
-						var definition = new ConfigDefinition(currentSection, currentKey);
-
-						Entries.TryGetValue(definition, out ConfigEntryBase entry);
-
-						if (entry != null)
-							entry.SetSerializedValue(currentValue);
-						else
-							HomelessEntries[definition] = currentValue;
+						currentSection = line.Substring(1, line.Length - 2);
+						continue;
 					}
-				}
-				finally
-				{
-					_disableSaving = false;
+
+					string[] split = line.Split('='); //actual config line
+					if (split.Length != 2)
+						continue; //empty/invalid line
+
+					string currentKey = split[0].Trim();
+					string currentValue = split[1].Trim();
+
+					var definition = new ConfigDefinition(currentSection, currentKey);
+
+					Entries.TryGetValue(definition, out ConfigEntryBase entry);
+
+					if (entry != null)
+						entry.SetSerializedValue(currentValue);
+					else
+						OrphanedEntries[definition] = currentValue;
 				}
 			}
 
@@ -150,8 +134,6 @@ namespace BepInEx.Configuration
 		{
 			lock (_ioLock)
 			{
-				if (_disableSaving) return;
-
 				string directoryName = Path.GetDirectoryName(ConfigFilePath);
 				if (directoryName != null) Directory.CreateDirectory(directoryName);
 
@@ -165,7 +147,7 @@ namespace BepInEx.Configuration
 					}
 
 					var allConfigEntries = Entries.Select(x => new { x.Key, entry = x.Value, value = x.Value.GetSerializedValue() })
-						.Concat(HomelessEntries.Select(x => new { x.Key, entry = (ConfigEntryBase)null, value = x.Value }));
+						.Concat(OrphanedEntries.Select(x => new { x.Key, entry = (ConfigEntryBase)null, value = x.Value }));
 
 					foreach (var sectionKv in allConfigEntries.GroupBy(x => x.Key.Section).OrderBy(x => x.Key))
 					{
@@ -192,32 +174,40 @@ namespace BepInEx.Configuration
 		#region Wraps
 
 		/// <summary>
-		/// Access one of the existing settings. If the setting has not been added yet, null is returned.
+		/// Access one of the existing settings. If the setting has not been added yet, false is returned. Otherwise, true.
 		/// If the setting exists but has a different type than T, an exception is thrown.
-		/// New settings should be added with <see cref="AddSetting{T}(ConfigDefinition,T,ConfigDescription)"/>.
+		/// New settings should be added with <see cref="Bind{T}"/>.
 		/// </summary>
 		/// <typeparam name="T">Type of the value contained in this setting.</typeparam>
 		/// <param name="configDefinition">Section and Key of the setting.</param>
-		public ConfigEntry<T> GetSetting<T>(ConfigDefinition configDefinition)
+		/// <param name="entry">The ConfigEntry value to return.</param>
+		public bool TryGetEntry<T>(ConfigDefinition configDefinition, out ConfigEntry<T> entry)
 		{
 			lock (_ioLock)
 			{
-				Entries.TryGetValue(configDefinition, out var entry);
-				return (ConfigEntry<T>)entry;
+				if (Entries.TryGetValue(configDefinition, out var rawEntry))
+				{
+					entry = (ConfigEntry<T>)rawEntry;
+					return true;
+				}
+
+				entry = null;
+				return false;
 			}
 		}
 
 		/// <summary>
 		/// Access one of the existing settings. If the setting has not been added yet, null is returned.
 		/// If the setting exists but has a different type than T, an exception is thrown.
-		/// New settings should be added with <see cref="AddSetting{T}(ConfigDefinition,T,ConfigDescription)"/>.
+		/// New settings should be added with <see cref="Bind{T}"/>.
 		/// </summary>
 		/// <typeparam name="T">Type of the value contained in this setting.</typeparam>
 		/// <param name="section">Section/category/group of the setting. Settings are grouped by this.</param>
 		/// <param name="key">Name of the setting.</param>
-		public ConfigEntry<T> GetSetting<T>(string section, string key)
+		/// <param name="entry">The ConfigEntry value to return.</param>
+		public bool TryGetEntry<T>(string section, string key, out ConfigEntry<T> entry)
 		{
-			return GetSetting<T>(new ConfigDefinition(section, key));
+			return TryGetEntry<T>(new ConfigDefinition(section, key), out entry);
 		}
 
 		/// <summary>
@@ -228,39 +218,30 @@ namespace BepInEx.Configuration
 		/// <param name="configDefinition">Section and Key of the setting.</param>
 		/// <param name="defaultValue">Value of the setting if the setting was not created yet.</param>
 		/// <param name="configDescription">Description of the setting shown to the user and other metadata.</param>
-		public ConfigEntry<T> AddSetting<T>(ConfigDefinition configDefinition, T defaultValue, ConfigDescription configDescription = null)
+		public ConfigEntry<T> Bind<T>(ConfigDefinition configDefinition, T defaultValue, ConfigDescription configDescription = null)
 		{
 			if (!TomlTypeConverter.CanConvert(typeof(T)))
 				throw new ArgumentException($"Type {typeof(T)} is not supported by the config system. Supported types: {string.Join(", ", TomlTypeConverter.GetSupportedTypes().Select(x => x.Name).ToArray())}");
 
 			lock (_ioLock)
 			{
-				if (Entries.ContainsKey(configDefinition))
-					throw new ArgumentException("The setting " + configDefinition + " has already been created. Use GetSetting to get it.");
+				if (Entries.TryGetValue(configDefinition, out var rawEntry))
+					return (ConfigEntry<T>)rawEntry;
 
-				try
+				var entry = new ConfigEntry<T>(this, configDefinition, defaultValue, configDescription);
+
+				Entries[configDefinition] = entry;
+
+				if (OrphanedEntries.TryGetValue(configDefinition, out string homelessValue))
 				{
-					_disableSaving = true;
-
-					var entry = new ConfigEntry<T>(this, configDefinition, defaultValue, configDescription);
-					Entries[configDefinition] = entry;
-
-					if (HomelessEntries.TryGetValue(configDefinition, out string homelessValue))
-					{
-						entry.SetSerializedValue(homelessValue);
-						HomelessEntries.Remove(configDefinition);
-					}
-
-					_disableSaving = false;
-					if (SaveOnConfigSet)
-						Save();
-
-					return entry;
+					entry.SetSerializedValue(homelessValue);
+					OrphanedEntries.Remove(configDefinition);
 				}
-				finally
-				{
-					_disableSaving = false;
-				}
+
+				if (SaveOnConfigSet)
+					Save();
+
+				return entry;
 			}
 		}
 
@@ -273,8 +254,8 @@ namespace BepInEx.Configuration
 		/// <param name="key">Name of the setting.</param>
 		/// <param name="defaultValue">Value of the setting if the setting was not created yet.</param>
 		/// <param name="configDescription">Description of the setting shown to the user and other metadata.</param>
-		public ConfigEntry<T> AddSetting<T>(string section, string key, T defaultValue, ConfigDescription configDescription = null)
-			=> AddSetting(new ConfigDefinition(section, key), defaultValue, configDescription);
+		public ConfigEntry<T> Bind<T>(string section, string key, T defaultValue, ConfigDescription configDescription = null)
+			=> Bind(new ConfigDefinition(section, key), defaultValue, configDescription);
 
 		/// <summary>
 		/// Create a new setting. The setting is saved to drive and loaded automatically.
@@ -285,27 +266,27 @@ namespace BepInEx.Configuration
 		/// <param name="key">Name of the setting.</param>
 		/// <param name="defaultValue">Value of the setting if the setting was not created yet.</param>
 		/// <param name="description">Simple description of the setting shown to the user.</param>
-		public ConfigEntry<T> AddSetting<T>(string section, string key, T defaultValue, string description)
-			=> AddSetting(new ConfigDefinition(section, key), defaultValue, new ConfigDescription(description));
+		public ConfigEntry<T> Bind<T>(string section, string key, T defaultValue, string description)
+			=> Bind(new ConfigDefinition(section, key), defaultValue, new ConfigDescription(description));
 
         /// <summary>
-        /// Access a setting. Use AddSetting and GetSetting instead.
+        /// Access a setting. Use Bind and GetSetting instead.
         /// </summary>
-        [Obsolete("Use AddSetting and GetSetting instead")]
+        [Obsolete("Use Bind instead")]
 		public ConfigWrapper<T> Wrap<T>(string section, string key, string description = null, T defaultValue = default(T))
 		{
 			lock (_ioLock)
 			{
 				var definition = new ConfigDefinition(section, key, description);
-				var setting = GetSetting<T>(definition) ?? AddSetting(definition, defaultValue, string.IsNullOrEmpty(description) ? null : new ConfigDescription(description));
+				var setting = Bind(definition, defaultValue, string.IsNullOrEmpty(description) ? null : new ConfigDescription(description));
 				return new ConfigWrapper<T>(setting);
 			}
 		}
 
 		/// <summary>
-		/// Access a setting. Use AddSetting and GetSetting instead.
+		/// Access a setting. Use Bind and GetSetting instead.
 		/// </summary>
-		[Obsolete("Use AddSetting and GetSetting instead")]
+		[Obsolete("Use Bind instead")]
 		public ConfigWrapper<T> Wrap<T>(ConfigDefinition configDefinition, T defaultValue = default(T))
 			=> Wrap(configDefinition.Section, configDefinition.Key, null, defaultValue);
 
@@ -354,5 +335,143 @@ namespace BepInEx.Configuration
 		}
 
 		#endregion
+
+		/// <inheritdoc />
+		public IEnumerator<KeyValuePair<ConfigDefinition, ConfigEntryBase>> GetEnumerator()
+		{
+			// We can't really do a read lock for this
+			return Entries.GetEnumerator();
+		}
+
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return GetEnumerator();
+		}
+
+		void ICollection<KeyValuePair<ConfigDefinition, ConfigEntryBase>>.Add(KeyValuePair<ConfigDefinition, ConfigEntryBase> item)
+		{
+			lock (_ioLock)
+				Entries.Add(item.Key, item.Value);
+		}
+
+		/// <inheritdoc />
+		public bool Contains(KeyValuePair<ConfigDefinition, ConfigEntryBase> item)
+		{
+			lock (_ioLock)
+				return ((ICollection<KeyValuePair<ConfigDefinition, ConfigEntryBase>>)Entries).Contains(item);
+		}
+
+		void ICollection<KeyValuePair<ConfigDefinition, ConfigEntryBase>>.CopyTo(KeyValuePair<ConfigDefinition, ConfigEntryBase>[] array, int arrayIndex)
+		{
+			lock (_ioLock)
+				((ICollection<KeyValuePair<ConfigDefinition, ConfigEntryBase>>)Entries).CopyTo(array, arrayIndex);
+		}
+
+		bool ICollection<KeyValuePair<ConfigDefinition, ConfigEntryBase>>.Remove(KeyValuePair<ConfigDefinition, ConfigEntryBase> item)
+		{
+			lock (_ioLock)
+				return Entries.Remove(item.Key);
+		}
+
+		/// <inheritdoc />
+		public int Count
+		{
+			get
+			{
+				lock (_ioLock)
+					return Entries.Count;
+			}
+		}
+
+		/// <inheritdoc />
+		public bool IsReadOnly => false;
+
+		/// <inheritdoc />
+		public bool ContainsKey(ConfigDefinition key)
+		{
+			lock (_ioLock)
+				return Entries.ContainsKey(key);
+		}
+
+		/// <inheritdoc />
+		public void Add(ConfigDefinition key, ConfigEntryBase value)
+		{
+			throw new InvalidOperationException("Directly adding a config entry is not supported");
+		}
+
+		/// <inheritdoc />
+		public bool Remove(ConfigDefinition key)
+		{
+			lock (_ioLock)
+				return Entries.Remove(key);
+		}
+
+		/// <inheritdoc />
+		public void Clear()
+		{
+			lock (_ioLock)
+				Entries.Clear();
+		}
+
+		bool IDictionary<ConfigDefinition, ConfigEntryBase>.TryGetValue(ConfigDefinition key, out ConfigEntryBase value)
+		{
+			lock (_ioLock)
+				return Entries.TryGetValue(key, out value);
+		}
+
+		/// <inheritdoc />
+		ConfigEntryBase IDictionary<ConfigDefinition, ConfigEntryBase>.this[ConfigDefinition key]
+		{
+			get
+			{
+				lock (_ioLock)
+					return Entries[key];
+			}
+			set => throw new InvalidOperationException("Directly setting a config entry is not supported");
+		}
+
+		/// <inheritdoc />
+		public ConfigEntryBase this[ConfigDefinition key]
+		{
+			get
+			{
+				lock (_ioLock)
+					return Entries[key];
+			}
+		}
+
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="section"></param>
+		/// <param name="key"></param>
+		public ConfigEntryBase this[string section, string key]
+			=> this[new ConfigDefinition(section, key)];
+
+		/// <summary>
+		/// Returns the ConfigDefinitions that the ConfigFile contains.
+		/// <para>Creates a new array when the property is accessed. Thread-safe.</para>
+		/// </summary>
+		public ICollection<ConfigDefinition> Keys
+		{
+			get
+			{
+				lock (_ioLock)
+					return Entries.Keys.ToArray();
+			}
+		}
+
+		/// <summary>
+		/// Returns the ConfigEntryBase values that the ConfigFile contains.
+		/// <para>Creates a new array when the property is accessed. Thread-safe.</para>
+		/// </summary>
+		ICollection<ConfigEntryBase> IDictionary<ConfigDefinition, ConfigEntryBase>.Values
+		{
+			get
+			{
+				lock (_ioLock)
+					return Entries.Values.ToArray();
+			}
+		}
 	}
 }
