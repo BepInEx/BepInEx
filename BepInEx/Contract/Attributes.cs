@@ -13,7 +13,7 @@ namespace BepInEx
 	/// This attribute denotes that a class is a plugin, and specifies the required metadata.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
-	public class BepInPlugin : Attribute
+	public class PluginMetadata : Attribute
 	{
 		/// <summary>
 		/// The unique identifier of the plugin. Should not change between plugin versions.
@@ -35,7 +35,7 @@ namespace BepInEx
 		/// <param name="GUID">The unique identifier of the plugin. Should not change between plugin versions.</param>
 		/// <param name="Name">The user friendly name of the plugin. Is able to be changed between versions.</param>
 		/// <param name="Version">The specfic version of the plugin.</param>
-		public BepInPlugin(string GUID, string Name, string Version)
+		public PluginMetadata(string GUID, string Name, string Version)
 		{
 			this.GUID = GUID;
 			this.Name = Name;
@@ -50,14 +50,15 @@ namespace BepInEx
 			}
 		}
 
-		internal static BepInPlugin FromCecilType(TypeDefinition td)
+		internal static PluginMetadata FromCecilType(TypeDefinition td)
 		{
-			var attr = MetadataHelper.GetCustomAttributes<BepInPlugin>(td, false).FirstOrDefault();
+			var attr = MetadataHelper.GetCustomAttributes<PluginMetadata>(td, false).FirstOrDefault()
+				 ?? MetadataHelper.GetCustomAttributes<BepInPlugin>(td, false).FirstOrDefault();
 
 			if (attr == null)
 				return null;
 
-			return new BepInPlugin((string)attr.ConstructorArguments[0].Value, (string)attr.ConstructorArguments[1].Value, (string)attr.ConstructorArguments[2].Value);
+			return new PluginMetadata((string)attr.ConstructorArguments[0].Value, (string)attr.ConstructorArguments[1].Value, (string)attr.ConstructorArguments[2].Value);
 		}
 	}
 
@@ -65,7 +66,7 @@ namespace BepInEx
 	/// This attribute specifies any dependencies that this plugin has on other plugins.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
-	public class BepInDependency : Attribute, ICacheable
+	public class PluginDependency : Attribute, ICacheable
 	{
 		public enum DependencyFlags
 		{
@@ -101,7 +102,7 @@ namespace BepInEx
 		/// </summary>
 		/// <param name="DependencyGUID">The GUID of the referenced plugin.</param>
 		/// <param name="Flags">The flags associated with this dependency definition.</param>
-		public BepInDependency(string DependencyGUID, DependencyFlags Flags = DependencyFlags.HardDependency)
+		public PluginDependency(string DependencyGUID, DependencyFlags Flags = DependencyFlags.HardDependency)
 		{
 			this.DependencyGUID = DependencyGUID;
 			this.Flags = Flags;
@@ -115,20 +116,20 @@ namespace BepInEx
 		/// <param name="DependencyGUID">The GUID of the referenced plugin.</param>
 		/// <param name="MinimumDependencyVersion">The minimum version of the referenced plugin.</param>
 		/// <remarks>When version is supplied the dependency is always treated as HardDependency</remarks>
-		public BepInDependency(string DependencyGUID, string MinimumDependencyVersion) : this(DependencyGUID)
+		public PluginDependency(string DependencyGUID, string MinimumDependencyVersion) : this(DependencyGUID)
 		{
 			MinimumVersion = new Version(MinimumDependencyVersion);
 		}
 
-		internal static IEnumerable<BepInDependency> FromCecilType(TypeDefinition td)
+		internal static IEnumerable<PluginDependency> FromCecilType(TypeDefinition td)
 		{
-			var attrs = MetadataHelper.GetCustomAttributes<BepInDependency>(td, true);
+			var attrs = MetadataHelper.GetCustomAttributes<PluginDependency>(td, true);
 			return attrs.Select(customAttribute =>
 			{
 				var dependencyGuid = (string)customAttribute.ConstructorArguments[0].Value;
 				var secondArg = customAttribute.ConstructorArguments[1].Value;
-				if (secondArg is string minVersion) return new BepInDependency(dependencyGuid, minVersion);
-				return new BepInDependency(dependencyGuid, (DependencyFlags)secondArg);
+				if (secondArg is string minVersion) return new PluginDependency(dependencyGuid, minVersion);
+				return new PluginDependency(dependencyGuid, (DependencyFlags)secondArg);
 			}).ToList();
 		}
 
@@ -151,7 +152,7 @@ namespace BepInEx
 	/// This attribute specifies other plugins that are incompatible with this plugin.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
-	public class BepInIncompatibility : Attribute, ICacheable
+	public class PluginIncompatibility : Attribute, ICacheable
 	{
 		/// <summary>
 		/// The GUID of the referenced plugin.
@@ -163,18 +164,18 @@ namespace BepInEx
 		/// If the other plugin exists, this plugin will not be loaded and a warning will be shown.
 		/// </summary>
 		/// <param name="IncompatibilityGUID">The GUID of the referenced plugin.</param>
-		public BepInIncompatibility(string IncompatibilityGUID)
+		public PluginIncompatibility(string IncompatibilityGUID)
 		{
 			this.IncompatibilityGUID = IncompatibilityGUID;
 		}
 
-		internal static IEnumerable<BepInIncompatibility> FromCecilType(TypeDefinition td)
+		internal static IEnumerable<PluginIncompatibility> FromCecilType(TypeDefinition td)
 		{
-			var attrs = MetadataHelper.GetCustomAttributes<BepInIncompatibility>(td, true);
+			var attrs = MetadataHelper.GetCustomAttributes<PluginIncompatibility>(td, true);
 			return attrs.Select(customAttribute =>
 			{
 				var dependencyGuid = (string)customAttribute.ConstructorArguments[0].Value;
-				return new BepInIncompatibility(dependencyGuid);
+				return new PluginIncompatibility(dependencyGuid);
 			}).ToList();
 		}
 
@@ -193,7 +194,7 @@ namespace BepInEx
 	/// This attribute specifies which processes this plugin should be run for. Not specifying this attribute will load the plugin under every process.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
-	public class BepInProcess : Attribute
+	public class ProcessFilter : Attribute
 	{
 		/// <summary>
 		/// The name of the process that this plugin will run under.
@@ -201,16 +202,58 @@ namespace BepInEx
 		public string ProcessName { get; protected set; }
 
 		/// <param name="ProcessName">The name of the process that this plugin will run under.</param>
-		public BepInProcess(string ProcessName)
+		public ProcessFilter(string ProcessName)
 		{
 			this.ProcessName = ProcessName;
 		}
 
-		internal static List<BepInProcess> FromCecilType(TypeDefinition td)
+		internal static List<ProcessFilter> FromCecilType(TypeDefinition td)
 		{
-			var attrs = MetadataHelper.GetCustomAttributes<BepInProcess>(td, true);
-			return attrs.Select(customAttribute => new BepInProcess((string)customAttribute.ConstructorArguments[0].Value)).ToList();
+			var attrs = MetadataHelper.GetCustomAttributes<ProcessFilter>(td, true);
+			return attrs.Select(customAttribute => new ProcessFilter((string)customAttribute.ConstructorArguments[0].Value)).ToList();
 		}
+	}
+
+	#endregion
+
+	#region Shims
+
+	[Obsolete("Use PluginMetadata instead")]
+	public class BepInPlugin : PluginMetadata
+	{
+		public BepInPlugin(string GUID, string Name, string Version) : base(GUID, Name, Version) { }
+	}
+
+	[Obsolete("Use PluginDependency instead")]
+	public class BepInDependency : PluginDependency
+	{
+		public enum DependencyFlags
+		{
+			/// <summary>
+			/// The plugin has a hard dependency on the referenced plugin, and will not run without it.
+			/// </summary>
+			HardDependency = 1,
+
+			/// <summary>
+			/// This plugin has a soft dependency on the referenced plugin, and is able to run without it.
+			/// </summary>
+			SoftDependency = 2,
+		}
+
+		public BepInDependency(string DependencyGUID, DependencyFlags Flags = DependencyFlags.HardDependency) : base(DependencyGUID, (PluginDependency.DependencyFlags)(int)Flags) { }
+		public BepInDependency(string DependencyGUID, string MinimumDependencyVersion) : base(DependencyGUID, MinimumDependencyVersion) { }
+	}
+
+	[Obsolete("Use PluginIncompatibility instead")]
+	public class BepInIncompatibility : PluginIncompatibility
+	{
+		public BepInIncompatibility(string IncompatibilityGUID) : base(IncompatibilityGUID) { }
+	}
+
+	[Obsolete("Use ProcessFilter instead")]
+	public class BepInProcess : ProcessFilter
+	{
+		public BepInProcess(string ProcessName) : base(ProcessName) { }
 	}
 
 	#endregion
@@ -239,26 +282,28 @@ namespace BepInEx
 		}
 
 		/// <summary>
-		/// Retrieves the BepInPlugin metadata from a plugin type.
+		/// Retrieves the PluginMetadata metadata from a plugin type.
 		/// </summary>
 		/// <param name="pluginType">The plugin type.</param>
-		/// <returns>The BepInPlugin metadata of the plugin type.</returns>
-		public static BepInPlugin GetMetadata(Type pluginType)
+		/// <returns>The PluginMetadata metadata of the plugin type.</returns>
+		public static PluginMetadata GetMetadata(Type pluginType)
 		{
-			object[] attributes = pluginType.GetCustomAttributes(typeof(BepInPlugin), false);
+			object[] attributes = pluginType.GetCustomAttributes(typeof(PluginMetadata), false)
+											.Concat(pluginType.GetCustomAttributes(typeof(BepInPlugin), false))
+											.ToArray();
 
 			if (attributes.Length == 0)
 				return null;
 
-			return (BepInPlugin)attributes[0];
+			return (PluginMetadata)attributes[0];
 		}
 
 		/// <summary>
-		/// Retrieves the BepInPlugin metadata from a plugin instance.
+		/// Retrieves the PluginMetadata metadata from a plugin instance.
 		/// </summary>
 		/// <param name="plugin">The plugin instance.</param>
-		/// <returns>The BepInPlugin metadata of the plugin instance.</returns>
-		public static BepInPlugin GetMetadata(object plugin)
+		/// <returns>The PluginMetadata metadata of the plugin instance.</returns>
+		public static PluginMetadata GetMetadata(object plugin)
 			=> GetMetadata(plugin.GetType());
 
 		/// <summary>
@@ -286,9 +331,9 @@ namespace BepInEx
 		/// </summary>
 		/// <param name="Plugin">The plugin type.</param>
 		/// <returns>A list of all plugin types that the specified plugin type depends upon.</returns>
-		public static IEnumerable<BepInDependency> GetDependencies(Type plugin)
+		public static IEnumerable<PluginDependency> GetDependencies(Type plugin)
 		{
-			return plugin.GetCustomAttributes(typeof(BepInDependency), true).Cast<BepInDependency>();
+			return plugin.GetCustomAttributes(typeof(PluginDependency), true).Cast<PluginDependency>();
 		}
 	}
 

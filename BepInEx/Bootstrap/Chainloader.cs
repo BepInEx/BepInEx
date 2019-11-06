@@ -124,7 +124,7 @@ namespace BepInEx.Bootstrap
 
 		private static Regex allowedGuidRegex { get; } = new Regex(@"^[a-zA-Z0-9\._\-]+$");
 
-		public static PluginInfo ToPluginInfo(TypeDefinition type)
+		internal static PluginInfo ToPluginInfo(TypeDefinition type)
 		{
 			if (type.IsInterface || type.IsAbstract)
 				return null;
@@ -134,13 +134,13 @@ namespace BepInEx.Bootstrap
 				if (!type.IsSubtypeOf(typeof(BaseUnityPlugin)))
 					return null;
 			}
-			catch (AssemblyResolutionException)
+			catch (AssemblyResolutionException ex)
 			{
 				// Can happen if this type inherits a type from an assembly that can't be found. Safe to assume it's not a plugin.
 				return null;
 			}
 
-			var metadata = BepInPlugin.FromCecilType(type);
+			var metadata = PluginMetadata.FromCecilType(type);
 
 			// Perform checks that will prevent the plugin from being loaded in ALL cases
 			if (metadata == null)
@@ -167,9 +167,9 @@ namespace BepInEx.Bootstrap
 				return null;
 			}
 
-			var filters = BepInProcess.FromCecilType(type);
-			var dependencies = BepInDependency.FromCecilType(type);
-			var incompatibilities = BepInIncompatibility.FromCecilType(type);
+			var filters = ProcessFilter.FromCecilType(type);
+			var dependencies = PluginDependency.FromCecilType(type);
+			var incompatibilities = PluginIncompatibility.FromCecilType(type);
 
 			return new PluginInfo
 			{
@@ -292,7 +292,7 @@ namespace BepInEx.Bootstrap
 						continue;
 
 					var dependsOnInvalidPlugin = false;
-					var missingDependencies = new List<BepInDependency>();
+					var missingDependencies = new List<PluginDependency>();
 					foreach (var dependency in pluginInfo.Dependencies)
 					{
 						// If the depenency wasn't already processed, it's missing altogether
@@ -300,7 +300,7 @@ namespace BepInEx.Bootstrap
 						if (!depenencyExists || pluginVersion < dependency.MinimumVersion)
 						{
 							// If the dependency is hard, collect it into a list to show
-							if ((dependency.Flags & BepInDependency.DependencyFlags.HardDependency) != 0)
+							if ((dependency.Flags & PluginDependency.DependencyFlags.HardDependency) != 0)
 								missingDependencies.Add(dependency);
 							continue;
 						}

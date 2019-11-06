@@ -7,13 +7,13 @@ namespace BepInEx
 {
 	public class PluginInfo : ICacheable
 	{
-		public BepInPlugin Metadata { get; internal set; }
+		public PluginMetadata Metadata { get; internal set; }
 
-		public IEnumerable<BepInProcess> Processes { get; internal set; }
+		public IEnumerable<ProcessFilter> Processes { get; internal set; }
 
-		public IEnumerable<BepInDependency> Dependencies { get; internal set; }
+		public IEnumerable<PluginDependency> Dependencies { get; internal set; }
 
-		public IEnumerable<BepInIncompatibility> Incompatibilities { get; internal set; }
+		public IEnumerable<PluginIncompatibility> Incompatibilities { get; internal set; }
 
 		public string Location { get; internal set; }
 
@@ -49,19 +49,19 @@ namespace BepInEx
 		{
 			TypeName = br.ReadString();
 
-			Metadata = new BepInPlugin(br.ReadString(), br.ReadString(), br.ReadString());
+			Metadata = new PluginMetadata(br.ReadString(), br.ReadString(), br.ReadString());
 
 			var processListCount = br.ReadInt32();
-			var processList = new List<BepInProcess>(processListCount);
+			var processList = new List<ProcessFilter>(processListCount);
 			for (int i = 0; i < processListCount; i++)
-				processList.Add(new BepInProcess(br.ReadString()));
+				processList.Add(new ProcessFilter(br.ReadString()));
 			Processes = processList;
 
 			var depCount = br.ReadInt32();
-			var depList = new List<BepInDependency>(depCount);
+			var depList = new List<PluginDependency>(depCount);
 			for (int i = 0; i < depCount; i++)
 			{
-				var dep = new BepInDependency("");
+				var dep = new PluginDependency("");
 				((ICacheable)dep).Load(br);
 				depList.Add(dep);
 			}
@@ -69,10 +69,10 @@ namespace BepInEx
 			Dependencies = depList;
 
 			var incCount = br.ReadInt32();
-			var incList = new List<BepInIncompatibility>(incCount);
+			var incList = new List<PluginIncompatibility>(incCount);
 			for (int i = 0; i < incCount; i++)
 			{
-				var inc = new BepInIncompatibility("");
+				var inc = new PluginIncompatibility("");
 				((ICacheable)inc).Load(br);
 				incList.Add(inc);
 			}

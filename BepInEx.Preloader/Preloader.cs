@@ -205,10 +205,6 @@ namespace BepInEx.Preloader
 
 					il.InsertBefore(ins,
 						il.Create(OpCodes.Call, assembly.MainModule.ImportReference(
-							AccessTools.PropertyGetter(typeof(Preloader), nameof(PreloaderLog)))));
-
-					il.InsertBefore(ins,
-						il.Create(OpCodes.Call, assembly.MainModule.ImportReference(
 							AccessTools.PropertyGetter(typeof(PreloaderConsoleListener), nameof(PreloaderConsoleListener.LogEvents))))); // preloaderLogEvents (load from Preloader.PreloaderLog.LogEvents)
 
                     il.InsertBefore(ins,
