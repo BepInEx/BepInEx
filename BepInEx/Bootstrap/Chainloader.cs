@@ -231,7 +231,8 @@ namespace BepInEx.Bootstrap
 
 				Logger.LogInfo($"{pluginInfos.Count} plugins to load");
 
-				var dependencyDict = new Dictionary<string, IEnumerable<string>>();
+				// We use a sorted dictionary to ensure consistent load order
+				var dependencyDict = new SortedDictionary<string, IEnumerable<string>>(StringComparer.InvariantCultureIgnoreCase);
 				var pluginsByGUID = new Dictionary<string, PluginInfo>();
 
 				foreach (var pluginInfoGroup in pluginInfos.GroupBy(info => info.Metadata.GUID))
