@@ -85,7 +85,7 @@ Task("Build")
     }
 });
 
-const string DOORSTOP_VER = "2.11.1.0";
+const string DOORSTOP_VER = "2.12.0.0";
 const string DOORSTOP_DLL = "winhttp.dll";
 Task("DownloadDoorstop")
     .Does(() =>
