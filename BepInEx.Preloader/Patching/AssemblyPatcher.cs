@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using BepInEx.Bootstrap;
 using BepInEx.Configuration;
 using BepInEx.Logging;
@@ -26,22 +27,14 @@ namespace BepInEx.Preloader.Patching
 	{
 		private const BindingFlags ALL = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.IgnoreCase;
 
-		public static List<PatcherPlugin> PatcherPlugins { get; } = new List<PatcherPlugin>();
+		public static List<LegacyPatcherPlugin> LegacyPatcherPlugins { get; } = new List<LegacyPatcherPlugin>();
+		public static List<PatcherDefinition> PatcherPlugins { get; } = new List<PatcherDefinition>();
 
 		private static readonly string DumpedAssembliesPath = Path.Combine(Paths.BepInExRootPath, "DumpedAssemblies");
 
-		/// <summary>
-		///     Adds a single assembly patcher to the pool of applicable patches.
-		/// </summary>
-		/// <param name="patcher">Patcher to apply.</param>
-		public static void AddPatcher(PatcherPlugin patcher)
-		{
-			PatcherPlugins.Add(patcher);
-		}
-
 		private static T CreateDelegate<T>(MethodInfo method) where T : class => method != null ? Delegate.CreateDelegate(typeof(T), method) as T : null;
 
-		private static PatcherPlugin ToPatcherPlugin(TypeDefinition type)
+		private static LegacyPatcherPlugin ToLegacyPatcherPlugin(TypeDefinition type)
 		{
 			if (type.IsInterface || type.IsAbstract && !type.IsSealed)
 				return null;
@@ -65,7 +58,30 @@ namespace BepInEx.Preloader.Patching
 			if (patch == null)
 				return null;
 
-			return new PatcherPlugin
+			return new LegacyPatcherPlugin
+			{
+				TypeName = type.FullName
+			};
+		}
+
+		private static Regex allowedGuidRegex { get; } = new Regex(@"^[a-zA-Z0-9\._\-]+$");
+		private static PatcherDefinition ToPatcherPlugin(TypeDefinition type)
+		{
+			if (type.IsInterface || type.IsAbstract)
+				return null;
+
+			try
+			{
+				if (!type.IsSubtypeOf(typeof(BasePatcher)))
+					return null;
+			}
+			catch (AssemblyResolutionException)
+			{
+				// Can happen if this type inherits a type from an assembly that can't be found. Safe to assume it's not a plugin.
+				return null;
+			}
+
+			return new PatcherDefinition
 			{
 				TypeName = type.FullName
 			};
@@ -81,25 +97,24 @@ namespace BepInEx.Preloader.Patching
 			if (!Directory.Exists(directory))
 				return;
 
-			var sortedPatchers = new SortedDictionary<string, PatcherPlugin>();
+			var legacyPatchers = TypeLoader.FindPluginTypes(directory, ToLegacyPatcherPlugin);
+			var patchers = TypeLoader.FindPluginTypesCacheless(directory, ToPatcherPlugin);
 
-			var patchers = TypeLoader.FindPluginTypes(directory, ToPatcherPlugin);
-
-			foreach (var keyValuePair in patchers)
+			foreach (var keyValuePair in legacyPatchers)
 			{
 				var assemblyPath = keyValuePair.Key;
 				var patcherCollection = keyValuePair.Value;
 
-				if(patcherCollection.Count == 0)
+				if (patcherCollection.Count == 0)
 					continue;
 
-				var ass = Assembly.LoadFile(assemblyPath);
+				var assembly = Assembly.LoadFile(assemblyPath);
 
 				foreach (var patcherPlugin in patcherCollection)
 				{
 					try
 					{
-						var type = ass.GetType(patcherPlugin.TypeName);
+						var type = assembly.GetType(patcherPlugin.TypeName);
 
 						var methods = type.GetMethods(ALL);
 
@@ -129,7 +144,7 @@ namespace BepInEx.Preloader.Patching
 							pAss = (AssemblyDefinition)args[0];
 						};
 
-						sortedPatchers.Add($"{ass.GetName().Name}/{type.FullName}", patcherPlugin);
+						LegacyPatcherPlugins.Add(patcherPlugin);
 					}
 					catch (Exception e)
 					{
@@ -142,23 +157,111 @@ namespace BepInEx.Preloader.Patching
 				}
 
 				Logger.Log(patcherCollection.Any() ? LogLevel.Info : LogLevel.Debug,
-					$"Loaded {patcherCollection.Count} patcher methods from {ass.GetName().FullName}");
+					$"Loaded {patcherCollection.Count} legacy patcher methods from {assembly.GetName().FullName}");
 			}
 
-			foreach (KeyValuePair<string, PatcherPlugin> patcher in sortedPatchers)
-				AddPatcher(patcher.Value);
+			foreach (var keyValuePair in patchers)
+			{
+				var assemblyPath = keyValuePair.Key;
+				var patcherCollection = keyValuePair.Value;
+
+				if (patcherCollection.Count == 0)
+					continue;
+
+				var assembly = Assembly.LoadFile(assemblyPath);
+
+				foreach (var patcherPlugin in patcherCollection)
+				{
+					try
+					{
+						var type = assembly.GetType(patcherPlugin.TypeName);
+
+						patcherPlugin.PatcherInfo = (PatcherInfo)type.GetCustomAttributes(typeof(PatcherInfo), false).FirstOrDefault();
+
+						if (patcherPlugin.PatcherInfo == null)
+						{
+							Logger.LogWarning($"Skipping over type [{type.FullName}] as no metadata attribute is specified");
+							continue;
+						}
+
+						if (string.IsNullOrEmpty(patcherPlugin.PatcherInfo.GUID) || !allowedGuidRegex.IsMatch(patcherPlugin.PatcherInfo.GUID))
+						{
+							Logger.LogWarning($"Skipping type [{type.FullName}] because its GUID [{patcherPlugin.PatcherInfo.GUID}] is of an illegal format.");
+							continue;
+						}
+
+						if (patcherPlugin.PatcherInfo.Version == null)
+						{
+							Logger.LogWarning($"Skipping type [{type.FullName}] because its version is invalid.");
+							continue;
+						}
+
+						if (patcherPlugin.PatcherInfo.Name == null)
+						{
+							Logger.LogWarning($"Skipping type [{type.FullName}] because its name is null.");
+							continue;
+						}
+
+						var methods = type.GetMethods(ALL);
+
+						foreach (var method in methods)
+						{
+							var parameters = method.GetParameters();
+
+							if (parameters.Length == 1 && parameters[0].ParameterType == typeof(AssemblyDefinition))
+							{
+								var targetAssemblyAttributes = method.GetCustomAttributes(typeof(TargetAssemblyAttribute), false);
+
+								foreach (var attribute in targetAssemblyAttributes)
+								{
+									patcherPlugin.AssemblyDefinitionPatchers[(TargetAssemblyAttribute)attribute] = method;
+								}
+							}
+							else if (parameters.Length == 1 && parameters[0].ParameterType == typeof(TypeDefinition))
+							{
+								var targetClassAttributes = method.GetCustomAttributes(typeof(TargetClassAttribute), false);
+
+								foreach (var attribute in targetClassAttributes)
+								{
+									patcherPlugin.TypeDefinitionPatchers[(TargetClassAttribute)attribute] = method;
+								}
+							}
+						}
+
+						patcherPlugin.Instance = (BasePatcher)Activator.CreateInstance(type);
+
+						Logger.LogInfo($"Loaded patcher [{patcherPlugin.PatcherInfo.Name} {patcherPlugin.PatcherInfo.Version}]");
+
+						PatcherPlugins.Add(patcherPlugin);
+					}
+					catch (Exception e)
+					{
+						Logger.LogError($"Failed to load patcher [{patcherPlugin.TypeName}]: {e.Message}");
+						if (e is ReflectionTypeLoadException re)
+							Logger.LogDebug(TypeLoader.TypeLoadExceptionToString(re));
+						else
+							Logger.LogDebug(e.ToString());
+					}
+				}
+			}
 		}
 
-		private static void InitializePatchers()
+		private static void InitializePatchers(PatchContext context)
 		{
-			foreach (var assemblyPatcher in PatcherPlugins)
+			foreach (var assemblyPatcher in LegacyPatcherPlugins)
 				assemblyPatcher.Initializer?.Invoke();
+
+			foreach (var patcher in PatcherPlugins)
+				patcher.Instance.Setup(context);
 		}
 
 		private static void FinalizePatching()
 		{
-			foreach (var assemblyPatcher in PatcherPlugins)
+			foreach (var assemblyPatcher in LegacyPatcherPlugins)
 				assemblyPatcher.Finalizer?.Invoke();
+
+			foreach (var patcher in PatcherPlugins)
+				patcher.Instance.Finalize();
 		}
 
 		/// <summary>
@@ -166,7 +269,7 @@ namespace BepInEx.Preloader.Patching
 		/// </summary>
 		public static void DisposePatchers()
 		{
-			PatcherPlugins.Clear();
+			LegacyPatcherPlugins.Clear();
 		}
 
 		/// <summary>
@@ -176,7 +279,8 @@ namespace BepInEx.Preloader.Patching
 		public static void PatchAndLoad(string directory)
 		{
 			// First, load patchable assemblies into Cecil
-			var assemblies = new Dictionary<string, AssemblyDefinition>();
+			var assemblies = new List<AssemblyDefinition>();
+			var filenameDictionary = new Dictionary<string, AssemblyDefinition>();
 
 			foreach (string assemblyPath in Directory.GetFiles(directory, "*.dll"))
 			{
@@ -197,30 +301,82 @@ namespace BepInEx.Preloader.Patching
 					Logger.LogWarning($"Tried to load duplicate assembly {Path.GetFileName(assemblyPath)} from Managed folder! Skipping...");
 					continue;
 				}
-
-				assemblies.Add(Path.GetFileName(assemblyPath), assembly);
+				
+				assemblies.Add(assembly);
+				filenameDictionary[Path.GetFileName(assemblyPath)] = assembly;
 				UnityPatches.AssemblyLocations.Add(assembly.FullName, Path.GetFullPath(assemblyPath));
 			}
 
+			// Create the patch context
+			PatchContext context = new PatchContext
+			{
+				LoadedPatchers = PatcherPlugins.AsReadOnly(),
+				AvailableAssemblies = assemblies,
+				AssemblyLocations = filenameDictionary
+			};
+
 			// Next, initialize all the patchers
-			InitializePatchers();
+			InitializePatchers(context);
 
 			// Then, perform the actual patching
+
+			// Legacy patchers
 			var patchedAssemblies = new HashSet<string>();
-			foreach (var assemblyPatcher in PatcherPlugins)
+			foreach (var assemblyPatcher in LegacyPatcherPlugins)
 				foreach (string targetDll in assemblyPatcher.TargetDLLs())
-					if (assemblies.TryGetValue(targetDll, out var assembly))
+					if (filenameDictionary.TryGetValue(targetDll, out var assembly))
 					{
 						if (AppDomain.CurrentDomain.GetAssemblies().Any(x => x.GetName().Name == assembly.Name.Name))
 							Logger.LogWarning($"Trying to patch an already loaded assembly [{assembly.Name.Name}] with [{assemblyPatcher.TypeName}]");
 
 						Logger.LogInfo($"Patching [{assembly.Name.Name}] with [{assemblyPatcher.TypeName}]");
 
+						var oldAssembly = assembly;
+
 						assemblyPatcher.Patcher?.Invoke(ref assembly);
-						assemblies[targetDll] = assembly;
+
+						if (!ReferenceEquals(oldAssembly, assembly))
+						{
+							assemblies.Remove(oldAssembly);
+							assemblies.Add(assembly);
+						}
+
+						filenameDictionary[targetDll] = assembly;
 						patchedAssemblies.Add(targetDll);
 					}
 
+			// V2 patchers
+
+			foreach (var patcherDefinition in PatcherPlugins)
+			{
+				patcherDefinition.Instance.PatchAll(assemblies);
+			}
+
+			foreach (var patcherDefinition in PatcherPlugins)
+			{
+				if (patcherDefinition.AssemblyDefinitionPatchers != null)
+					foreach (var assemblyPatchDefinition in patcherDefinition.AssemblyDefinitionPatchers)
+					{
+						var assemblyDefinition = assemblies.FirstOrDefault(x => x.Name.Name == assemblyPatchDefinition.Key.AssemblyName);
+						patchedAssemblies.Add(filenameDictionary.First(x => x.Value == assemblyDefinition).Key);
+
+						assemblyPatchDefinition.Value.Invoke(patcherDefinition.Instance, new object[] { assemblyDefinition });
+					}
+			}
+
+			foreach (var patcherDefinition in PatcherPlugins)
+			{
+				if (patcherDefinition.TypeDefinitionPatchers != null)
+					foreach (var typePatchDefinition in patcherDefinition.TypeDefinitionPatchers)
+					{
+						var assemblyDefinition = assemblies.FirstOrDefault(x => x.Name.Name == typePatchDefinition.Key.AssemblyName);
+						patchedAssemblies.Add(filenameDictionary.First(x => x.Value == assemblyDefinition).Key);
+
+						var typeDefinition = assemblyDefinition?.MainModule.Types.FirstOrDefault(x => x.FullName == typePatchDefinition.Key.ClassName);
+
+						typePatchDefinition.Value.Invoke(patcherDefinition.Instance, new object[] { typeDefinition });
+					}
+			}
 
 			// Finally, load patched assemblies into memory
 			if (ConfigDumpAssemblies.Value || ConfigLoadDumpedAssemblies.Value)
@@ -228,7 +384,7 @@ namespace BepInEx.Preloader.Patching
 				if (!Directory.Exists(DumpedAssembliesPath))
 					Directory.CreateDirectory(DumpedAssembliesPath);
 
-				foreach (KeyValuePair<string, AssemblyDefinition> kv in assemblies)
+				foreach (KeyValuePair<string, AssemblyDefinition> kv in filenameDictionary)
 				{
 					string filename = kv.Key;
 					var assembly = kv.Value;
@@ -246,7 +402,7 @@ namespace BepInEx.Preloader.Patching
 				Debugger.Break();
 			}
 
-			foreach (var kv in assemblies)
+			foreach (var kv in filenameDictionary)
 			{
 				string filename = kv.Key;
 				var assembly = kv.Value;

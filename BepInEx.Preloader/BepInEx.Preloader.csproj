@@ -48,8 +48,9 @@
     <Compile Include="EnvVars.cs" />
     <Compile Include="Patching\AssemblyPatcher.cs" />
     <Compile Include="Entrypoint.cs" />
+    <Compile Include="Patching\Attributes.cs" />
     <Compile Include="Patching\BasePatcher.cs" />
-    <Compile Include="Patching\PatcherPlugin.cs" />
+    <Compile Include="Patching\PatchContext.cs" />
     <Compile Include="RuntimeFixes\TraceFix.cs" />
     <Compile Include="Preloader.cs" />
     <Compile Include="Logger\PreloaderLogWriter.cs" />
@@ -73,5 +74,6 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -79,7 +79,7 @@ namespace BepInEx.Preloader
 
 				Logger.LogMessage("Preloader started");
 
-				AssemblyPatcher.AddPatcher(new PatcherPlugin
+				AssemblyPatcher.LegacyPatcherPlugins.Add(new LegacyPatcherPlugin
 				{
 					TargetDLLs = () => new[] { ConfigEntrypointAssembly.Value },
 					Patcher = PatchEntrypoint,
@@ -88,7 +88,7 @@ namespace BepInEx.Preloader
 
 				AssemblyPatcher.AddPatchersFromDirectory(Paths.PatcherPluginPath);
 
-				Logger.LogInfo($"{AssemblyPatcher.PatcherPlugins.Count} patcher plugin(s) loaded");
+				Logger.LogInfo($"{AssemblyPatcher.LegacyPatcherPlugins.Count + AssemblyPatcher.PatcherPlugins.Count} patcher plugin(s) loaded");
 
 				AssemblyPatcher.PatchAndLoad(Paths.ManagedPath);
 				AssemblyPatcher.DisposePatchers();

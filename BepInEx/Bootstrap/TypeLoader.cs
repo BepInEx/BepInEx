@@ -104,18 +104,18 @@ namespace BepInEx.Bootstrap
 						}
 					}
 
-					var ass = AssemblyDefinition.ReadAssembly(dll, readerParameters);
+					var assembly = AssemblyDefinition.ReadAssembly(dll, readerParameters);
 
-					if (!assemblyFilter?.Invoke(ass) ?? false)
+					if (!assemblyFilter?.Invoke(assembly) ?? false)
 					{
 						result[dll] = new List<T>();
-						ass.Dispose();
+						assembly.Dispose();
 						continue;
 					}
 
-					var matches = ass.MainModule.Types.Select(typeSelector).Where(t => t != null).ToList();
+					var matches = assembly.MainModule.Types.Select(typeSelector).Where(t => t != null).ToList();
 					result[dll] = matches;
-					ass.Dispose();
+					assembly.Dispose();
 				}
 				catch (Exception e)
 				{
@@ -124,6 +124,43 @@ namespace BepInEx.Bootstrap
 
 			if (cacheName != null)
 				SaveAssemblyCache(cacheName, result);
+
+			return result;
+		}
+
+        /// <summary>
+        ///     Looks up assemblies in the given directory and locates all types that can be loaded and collects their metadata.
+        /// </summary>
+        /// <typeparam name="T">The specific base type to search for.</typeparam>
+        /// <param name="directory">The directory to search for assemblies.</param>
+        /// <param name="typeSelector">A function to check if a type should be selected and to build the type metadata.</param>
+        /// <param name="assemblyFilter">A filter function to quickly determine if the assembly can be loaded.</param>
+        /// <param name="cacheName">The name of the cache to get cached types from.</param>
+		/// <returns>A dictionary of all assemblies in the directory and the list of type metadatas of types that match the selector.</returns>
+        public static Dictionary<string, List<T>> FindPluginTypesCacheless<T>(string directory, Func<TypeDefinition, T> typeSelector, Func<AssemblyDefinition, bool> assemblyFilter = null)
+		{
+			var result = new Dictionary<string, List<T>>();
+
+			foreach (string dll in Directory.GetFiles(Path.GetFullPath(directory), "*.dll", SearchOption.AllDirectories))
+				try
+				{
+					var assembly = AssemblyDefinition.ReadAssembly(dll, readerParameters);
+
+					if (!assemblyFilter?.Invoke(assembly) ?? false)
+					{
+						result[dll] = new List<T>();
+						assembly.Dispose();
+						continue;
+					}
+
+					var matches = assembly.MainModule.Types.Select(typeSelector).Where(t => t != null).ToList();
+					result[dll] = matches;
+					assembly.Dispose();
+				}
+				catch (Exception e)
+				{
+					Logger.LogError(e.ToString());
+				}
 
 			return result;
 		}
