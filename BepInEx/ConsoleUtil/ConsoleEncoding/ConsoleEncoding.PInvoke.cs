@@ -29,7 +29,7 @@ namespace UnityInjector.ConsoleUtil
 			uint dwFlags,
 			[In, MarshalAs(UnmanagedType.LPArray)] byte[] lpMultiByteStr,
 			int cbMultiByte,
-			[Out, MarshalAs(UnmanagedType.LPArray)]
+			[Out, MarshalAs(UnmanagedType.LPWStr)]
 			char[] lpWideCharStr,
 			int cchWideChar);
 
@@ -40,7 +40,7 @@ namespace UnityInjector.ConsoleUtil
 		private static extern int WideCharToMultiByte(
 			uint codePage,
 			uint dwFlags,
-			[In, MarshalAs(UnmanagedType.LPArray)] char[] lpWideCharStr,
+			[In, MarshalAs(UnmanagedType.LPWStr)] char[] lpWideCharStr,
 			int cchWideChar,
 			[Out, MarshalAs(UnmanagedType.LPArray)]
 			byte[] lpMultiByteStr,
