@@ -1,6 +1,8 @@
 /*
 *  BepInEx Bleeding Edge build CI jenkinsfile
 */
+lastBuildCommit = ""
+
 pipeline {
     agent any
     parameters {
@@ -13,8 +15,6 @@ pipeline {
                 script {
                     if(fileExists('last_build_commit'))
                         lastBuildCommit = readFile 'last_build_commit'
-                    else 
-                        lastBuildCommit = ""
                 }
                 // Clean up old project before starting
                 cleanWs()
