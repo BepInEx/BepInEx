@@ -13,8 +13,8 @@ pipeline {
         stage('Pull Projects') {
             steps {
                 script {
-                    if(fileExists('last_build_commit'))
-                        lastBuildCommit = readFile 'last_build_commit'
+                    if(currentBuild.previousBuild != null && currentBuild.previousBuild.buildVariables.containsKey("LAST_BUILD"))
+                        lastBuildCommit = currentBuild.previousBuild.buildVariables["LAST_BUILD"]
                 }
                 // Clean up old project before starting
                 cleanWs()
@@ -47,7 +47,7 @@ pipeline {
     post {
         cleanup {
             script {
-                writeFile file: 'last_build_commit', text: lastBuildCommit
+                env.LAST_BUILD = lastBuildCommit
             }
         }
         success {
