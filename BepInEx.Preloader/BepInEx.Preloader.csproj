@@ -23,8 +23,23 @@
     <DocumentationFile>..\bin\BepInEx.Preloader.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Mono.Cecil, Version=0.10.3.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e, processorArchitecture=MSIL">
-      <HintPath>$(SolutionDir)\packages\Mono.Cecil.0.10.3\lib\net35\Mono.Cecil.dll</HintPath>
+    <Reference Include="Mono.Cecil, Version=0.10.4.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e, processorArchitecture=MSIL">
+      <HintPath>..\packages\Mono.Cecil.0.10.4\lib\net35\Mono.Cecil.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Cecil.Mdb, Version=0.10.4.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e, processorArchitecture=MSIL">
+      <HintPath>..\packages\Mono.Cecil.0.10.4\lib\net35\Mono.Cecil.Mdb.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Cecil.Pdb, Version=0.10.4.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e, processorArchitecture=MSIL">
+      <HintPath>..\packages\Mono.Cecil.0.10.4\lib\net35\Mono.Cecil.Pdb.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Cecil.Rocks, Version=0.10.4.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e, processorArchitecture=MSIL">
+      <HintPath>..\packages\Mono.Cecil.0.10.4\lib\net35\Mono.Cecil.Rocks.dll</HintPath>
+    </Reference>
+    <Reference Include="MonoMod.RuntimeDetour, Version=19.11.5.1, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MonoMod.RuntimeDetour.19.11.5.1\lib\net35\MonoMod.RuntimeDetour.dll</HintPath>
+    </Reference>
+    <Reference Include="MonoMod.Utils, Version=19.11.5.1, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MonoMod.Utils.19.11.5.1\lib\net35\MonoMod.Utils.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -52,14 +67,6 @@
     <ProjectReference Include="..\submodules\BepInEx.Harmony\submodules\Harmony\Harmony\Harmony.csproj">
       <Project>{a15d6ee6-f954-415b-8605-8a8470cc87dc}</Project>
       <Name>Harmony</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\submodules\MonoMod\MonoMod.RuntimeDetour\MonoMod.RuntimeDetour.csproj">
-      <Project>{d0c584c0-81d7-486e-b70e-d7f9256e0909}</Project>
-      <Name>MonoMod.RuntimeDetour</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\submodules\MonoMod\MonoMod.Utils\MonoMod.Utils.csproj">
-      <Project>{1839cfe2-3db0-45a8-b03d-9aa797479a3a}</Project>
-      <Name>MonoMod.Utils</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

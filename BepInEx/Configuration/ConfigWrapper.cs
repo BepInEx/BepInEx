@@ -6,7 +6,7 @@ namespace BepInEx.Configuration
 	/// Provides access to a single setting inside of a <see cref="Configuration.ConfigFile"/>.
 	/// </summary>
 	/// <typeparam name="T">Type of the setting.</typeparam>
-	[Obsolete("Use ConfigFile from new AddSetting overloads instead")]
+	[Obsolete("Use ConfigFile from new Bind overloads instead")]
 	public sealed class ConfigWrapper<T>
 	{
 		/// <summary>

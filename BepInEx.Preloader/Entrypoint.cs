@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -48,20 +49,32 @@ namespace BepInEx.Preloader
 		/// </param>
 		public static void Main(string[] args)
 		{
-			EnvVars.LoadVars();
+			// We set it to the current directory first as a fallback, but try to use the same location as the .exe file.
+			string silentExceptionLog = $"preloader_{DateTime.Now:yyyyMMdd_HHmmss_fff}.log";
 
-			// Get the path of this DLL via Doorstop env var because Assembly.Location mangles non-ASCII characters on some versions of Mono for unknown reasons
-			preloaderPath = Path.GetDirectoryName(Path.GetFullPath(EnvVars.DOORSTOP_INVOKE_DLL_PATH));
+			try
+			{
+				EnvVars.LoadVars();
 
-			AppDomain.CurrentDomain.AssemblyResolve += ResolveCurrentDirectory;
+				silentExceptionLog = Path.Combine(GetCurrentProcessDirectory(), silentExceptionLog);
 
-			// In some versions of Unity 4, Mono tries to resolve BepInEx.dll prematurely because of the call to Paths.SetExecutablePath
-			// To prevent that, we have to use reflection and a separate startup class so that we can install required assembly resolvers before the main code
-			typeof(Entrypoint).Assembly.GetType($"BepInEx.Preloader.{nameof(PreloaderRunner)}")
-							  ?.GetMethod(nameof(PreloaderRunner.PreloaderMain))
-							  ?.Invoke(null, new object[] { args });
+				// Get the path of this DLL via Doorstop env var because Assembly.Location mangles non-ASCII characters on some versions of Mono for unknown reasons
+				preloaderPath = Path.GetDirectoryName(Path.GetFullPath(EnvVars.DOORSTOP_INVOKE_DLL_PATH));
 
-			AppDomain.CurrentDomain.AssemblyResolve -= ResolveCurrentDirectory;
+				AppDomain.CurrentDomain.AssemblyResolve += ResolveCurrentDirectory;
+
+				// In some versions of Unity 4, Mono tries to resolve BepInEx.dll prematurely because of the call to Paths.SetExecutablePath
+				// To prevent that, we have to use reflection and a separate startup class so that we can install required assembly resolvers before the main code
+				typeof(Entrypoint).Assembly.GetType($"BepInEx.Preloader.{nameof(PreloaderRunner)}")
+								  ?.GetMethod(nameof(PreloaderRunner.PreloaderMain))
+								  ?.Invoke(null, new object[] { args });
+
+				AppDomain.CurrentDomain.AssemblyResolve -= ResolveCurrentDirectory;
+			}
+			catch (Exception ex)
+			{
+				File.WriteAllText(silentExceptionLog, ex.ToString());
+			}
 		}
 
 		private static Assembly ResolveCurrentDirectory(object sender, ResolveEventArgs args)
@@ -76,6 +89,11 @@ namespace BepInEx.Preloader
 			{
 				return null;
 			}
+		}
+
+		private static string GetCurrentProcessDirectory()
+		{
+			return Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
 		}
 	}
 }

@@ -33,7 +33,7 @@ namespace BepInEx.Bootstrap
 				lock (_plugins)
 				{
 					_plugins.RemoveAll(x => x == null);
-					return _plugins;
+					return _plugins.ToList();
 				}
 			}
 		}
@@ -52,7 +52,7 @@ namespace BepInEx.Bootstrap
 		/// <summary>
 		/// Initializes BepInEx to be able to start the chainloader.
 		/// </summary>
-		public static void Initialize(string gameExePath, bool startConsole = true)
+		public static void Initialize(string gameExePath, bool startConsole = true, ICollection<LogEventArgs> preloaderLogEvents = null)
 		{
 			if (_initialized)
 				return;
@@ -94,6 +94,27 @@ namespace BepInEx.Bootstrap
 
 			if (ConfigUnityLogging.Value)
 				Logger.Sources.Add(new UnityLogSource());
+
+
+			// Temporarily disable the console log listener as we replay the preloader logs
+
+			var logListener = Logger.Listeners.FirstOrDefault(logger => logger is ConsoleLogListener);
+			
+			if (logListener != null)
+				Logger.Listeners.Remove(logListener);
+
+			var preloaderLogSource = Logger.CreateLogSource("Preloader");
+
+			foreach (var preloaderLogEvent in preloaderLogEvents)
+			{
+				preloaderLogSource.Log(preloaderLogEvent.Level, preloaderLogEvent.Data);
+			}
+
+			Logger.Sources.Remove(preloaderLogSource);
+
+			if (logListener != null)
+				Logger.Listeners.Add(logListener);
+
 
 
 			Logger.LogMessage("Chainloader ready");
@@ -210,7 +231,8 @@ namespace BepInEx.Bootstrap
 
 				Logger.LogInfo($"{pluginInfos.Count} plugins to load");
 
-				var dependencyDict = new Dictionary<string, IEnumerable<string>>();
+				// We use a sorted dictionary to ensure consistent load order
+				var dependencyDict = new SortedDictionary<string, IEnumerable<string>>(StringComparer.InvariantCultureIgnoreCase);
 				var pluginsByGUID = new Dictionary<string, PluginInfo>();
 
 				foreach (var pluginInfoGroup in pluginInfos.GroupBy(info => info.Metadata.GUID))
@@ -357,27 +379,27 @@ namespace BepInEx.Bootstrap
 		#region Config
 
 
-		private static readonly ConfigEntry<bool> ConfigUnityLogging = ConfigFile.CoreConfig.AddSetting(
+		private static readonly ConfigEntry<bool> ConfigUnityLogging = ConfigFile.CoreConfig.Bind(
 			"Logging", "UnityLogListening",
 			true,
 			"Enables showing unity log messages in the BepInEx logging system.");
 
-		private static readonly ConfigEntry<bool> ConfigDiskWriteUnityLog = ConfigFile.CoreConfig.AddSetting(
+		private static readonly ConfigEntry<bool> ConfigDiskWriteUnityLog = ConfigFile.CoreConfig.Bind(
 			"Logging.Disk", "WriteUnityLog",
 			false,
 			"Include unity log messages in log file output.");
 
-		private static readonly ConfigEntry<bool> ConfigDiskAppend = ConfigFile.CoreConfig.AddSetting(
+		private static readonly ConfigEntry<bool> ConfigDiskAppend = ConfigFile.CoreConfig.Bind(
 			"Logging.Disk", "AppendLog",
 			false,
 			"Appends to the log file instead of overwriting, on game startup.");
 
-		private static readonly ConfigEntry<bool> ConfigDiskLogging = ConfigFile.CoreConfig.AddSetting(
+		private static readonly ConfigEntry<bool> ConfigDiskLogging = ConfigFile.CoreConfig.Bind(
 			"Logging.Disk", "Enabled",
 			true,
 			"Enables writing log messages to disk.");
 
-		private static readonly ConfigEntry<LogLevel> ConfigDiskConsoleDisplayedLevel = ConfigFile.CoreConfig.AddSetting(
+		private static readonly ConfigEntry<LogLevel> ConfigDiskConsoleDisplayedLevel = ConfigFile.CoreConfig.Bind(
 			"Logging.Disk", "DisplayedLogLevel",
 			LogLevel.Info,
 			"Only displays the specified log level and above in the console output.");
