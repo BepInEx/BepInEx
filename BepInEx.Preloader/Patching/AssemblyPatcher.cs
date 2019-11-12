@@ -180,7 +180,17 @@ namespace BepInEx.Preloader.Patching
 
 			foreach (string assemblyPath in Directory.GetFiles(directory, "*.dll"))
 			{
-				var assembly = AssemblyDefinition.ReadAssembly(assemblyPath);
+				AssemblyDefinition assembly;
+
+				try
+				{
+					assembly = AssemblyDefinition.ReadAssembly(assemblyPath);
+				}
+				catch (BadImageFormatException)
+				{
+					// Not a managed assembly, skip
+					continue;
+				}
 
 				//NOTE: this is special cased here because the dependency handling for System.dll is a bit wonky
 				//System has an assembly reference to itself, and it also has a reference to Mono.Security causing a circular dependency
