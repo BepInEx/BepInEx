@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using BepInEx.Bootstrap;
 using BepInEx.Configuration;
 using BepInEx.Logging;
@@ -217,20 +218,39 @@ namespace BepInEx.Preloader.Patching
 
 			// Then, perform the actual patching
 			var patchedAssemblies = new HashSet<string>();
+			var resolvedAssemblies = new Dictionary<string, string>();
 			foreach (var assemblyPatcher in PatcherPlugins)
 				foreach (string targetDll in assemblyPatcher.TargetDLLs())
 					if (assemblies.TryGetValue(targetDll, out var assembly))
 					{
-						if (AppDomain.CurrentDomain.GetAssemblies().Any(x => x.GetName().Name == assembly.Name.Name))
-							Logger.LogWarning($"Trying to patch an already loaded assembly [{assembly.Name.Name}] with [{assemblyPatcher.TypeName}]");
-
 						Logger.LogInfo($"Patching [{assembly.Name.Name}] with [{assemblyPatcher.TypeName}]");
 
 						assemblyPatcher.Patcher?.Invoke(ref assembly);
 						assemblies[targetDll] = assembly;
 						patchedAssemblies.Add(targetDll);
+
+						foreach (var resolvedAss in AppDomain.CurrentDomain.GetAssemblies())
+						{
+							var name = resolvedAss.GetName().Name;
+							// Report only the first type that caused the assembly to load, because any subsequent ones can be false positives
+							if (!resolvedAssemblies.ContainsKey(name))
+								resolvedAssemblies[name] = assemblyPatcher.TypeName;
+						}
 					}
 
+			// Check if any patched assemblies have been already resolved by the CLR
+			// If there are any, they cannot be loaded by the preloader
+			var patchedAssemblyNames = new HashSet<string>(assemblies.Where(kv => patchedAssemblies.Contains(kv.Key)).Select(kv => kv.Value.Name.Name));
+			var earlyLoadAssemblies = resolvedAssemblies.Where(kv => patchedAssemblyNames.Contains(kv.Key)).ToList();
+
+			if (earlyLoadAssemblies.Count != 0)
+			{
+				Logger.LogWarning(new StringBuilder()
+								 .AppendLine("The following assemblies have been loaded too early and will not be patched by preloader:")
+								 .AppendLine(string.Join(Environment.NewLine, earlyLoadAssemblies.Select(kv => $"* [{kv.Key}] (first loaded by [{kv.Value}])").ToArray()))
+								 .AppendLine("Expect unexpected behavior and issues with plugins and patchers not being loaded.")
+								 .ToString());
+			}
 
 			// Finally, load patched assemblies into memory
 			if (ConfigDumpAssemblies.Value || ConfigLoadDumpedAssemblies.Value)
