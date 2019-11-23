@@ -56,7 +56,7 @@ namespace BepInEx.Preloader
 			{
 				EnvVars.LoadVars();
 
-				silentExceptionLog = Path.Combine(GetCurrentProcessDirectory(), silentExceptionLog);
+				silentExceptionLog = Path.Combine(Path.GetDirectoryName(args[0]), silentExceptionLog);
 
 				// Get the path of this DLL via Doorstop env var because Assembly.Location mangles non-ASCII characters on some versions of Mono for unknown reasons
 				preloaderPath = Path.GetDirectoryName(Path.GetFullPath(EnvVars.DOORSTOP_INVOKE_DLL_PATH));
@@ -91,9 +91,5 @@ namespace BepInEx.Preloader
 			}
 		}
 
-		private static string GetCurrentProcessDirectory()
-		{
-			return Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
-		}
 	}
 }
