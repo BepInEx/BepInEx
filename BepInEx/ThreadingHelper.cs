@@ -148,7 +148,7 @@ namespace BepInEx
 
 		/// <summary>
 		/// False if current code is executing on the main unity thread, otherwise True.
-		/// Warning: Will return false before the first frame finishes (i.e. inside plugin Awake and Start methods).
+		/// Warning: Will return true before the first frame finishes (i.e. inside plugin Awake and Start methods).
 		/// </summary>
 		/// <inheritdoc />
 		public bool InvokeRequired => _mainThread == null || _mainThread != Thread.CurrentThread;
