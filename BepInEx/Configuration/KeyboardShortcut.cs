@@ -40,8 +40,10 @@ namespace BepInEx.Configuration
 		/// </summary>
 		public static readonly IEnumerable<KeyCode> AllKeyCodes = (KeyCode[])Enum.GetValues(typeof(KeyCode));
 
+		// Don't block hotkeys if mouse is being pressed, e.g. when shooting and trying to strafe
+		private static readonly KeyCode[] _modifierBlockKeyCodes = AllKeyCodes.Except(new[] { KeyCode.Mouse0, KeyCode.Mouse1, KeyCode.Mouse2, KeyCode.Mouse3, KeyCode.Mouse4, KeyCode.Mouse5, KeyCode.Mouse6, KeyCode.None }).ToArray();
+
 		private readonly KeyCode[] _allKeys;
-		private readonly HashSet<KeyCode> _allKeysLookup;
 
 		/// <summary>
 		/// Create a new keyboard shortcut.
@@ -57,7 +59,6 @@ namespace BepInEx.Configuration
 		private KeyboardShortcut(KeyCode[] keys)
 		{
 			_allKeys = SanitizeKeys(keys);
-			_allKeysLookup = new HashSet<KeyCode>(_allKeys);
 		}
 
 		private static KeyCode[] SanitizeKeys(params KeyCode[] keys)
@@ -141,18 +142,14 @@ namespace BepInEx.Configuration
 
 		private bool ModifierKeyTest()
 		{
-			var lookup = _allKeysLookup;
+			var allKeys = _allKeys;
 			var mainKey = MainKey;
-			return AllKeyCodes.All(c =>
-			{
-				if (lookup.Contains(c))
-				{
-					if (mainKey == c)
-						return true;
-					return Input.GetKey(c);
-				}
-				return !Input.GetKey(c);
-			});
+
+			bool allModifiersPressed = allKeys.All(c => c == mainKey || Input.GetKey(c));
+			if (!allModifiersPressed) return false;
+
+			bool noOtherModifiersPressed = _modifierBlockKeyCodes.All(c => !Input.GetKey(c) || allKeys.Contains(c));
+			return noOtherModifiersPressed;
 		}
 
 		/// <inheritdoc />
