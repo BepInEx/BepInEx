@@ -1,7 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using BepInEx.Logging;
 using UnityEngine;
@@ -116,13 +115,20 @@ namespace BepInEx
 
 		IAsyncResult ISynchronizeInvoke.BeginInvoke(Delegate method, object[] args)
 		{
+			var result = new InvokeResult();
+
 			object Invoke()
 			{
-				try { return method.DynamicInvoke(args); }
-				catch (Exception ex) { return new TargetInvocationException(ex); }
+				try
+				{
+					return method.DynamicInvoke(args);
+				}
+				catch (Exception ex)
+				{
+					result.ExceptionThrown = true;
+					return ex;
+				}
 			}
-
-			var result = new InvokeResult();
 
 			if (!InvokeRequired)
 				result.Finish(Invoke(), true);
@@ -134,11 +140,12 @@ namespace BepInEx
 
 		object ISynchronizeInvoke.EndInvoke(IAsyncResult result)
 		{
-			result.AsyncWaitHandle.WaitOne();
-
-			if (result.AsyncState is TargetInvocationException ex)
-				throw ex;
-			return result.AsyncState;
+			var invokeResult = (InvokeResult)result;
+			invokeResult.AsyncWaitHandle.WaitOne();
+			
+			if (invokeResult.ExceptionThrown)
+				throw (Exception)invokeResult.AsyncState;
+			return invokeResult.AsyncState;
 		}
 
 		object ISynchronizeInvoke.Invoke(Delegate method, object[] args)
@@ -163,7 +170,7 @@ namespace BepInEx
 
 			public void Finish(object result, bool completedSynchronously)
 			{
-				AsyncState = result;
+                AsyncState = result;
 				CompletedSynchronously = completedSynchronously;
 				IsCompleted = true;
 				((EventWaitHandle)AsyncWaitHandle).Set();
@@ -173,6 +180,7 @@ namespace BepInEx
 			public WaitHandle AsyncWaitHandle { get; }
 			public object AsyncState { get; private set; }
 			public bool CompletedSynchronously { get; private set; }
+			internal bool ExceptionThrown;
 		}
 
 		#endregion
