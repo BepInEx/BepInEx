@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using BepInEx.Logging;
 using UnityEngine;
@@ -118,7 +119,7 @@ namespace BepInEx
 			object Invoke()
 			{
 				try { return method.DynamicInvoke(args); }
-				catch (Exception ex) { return ex; }
+				catch (Exception ex) { return new TargetInvocationException(ex); }
 			}
 
 			var result = new InvokeResult();
@@ -135,7 +136,7 @@ namespace BepInEx
 		{
 			result.AsyncWaitHandle.WaitOne();
 
-			if (result.AsyncState is Exception ex)
+			if (result.AsyncState is TargetInvocationException ex)
 				throw ex;
 			return result.AsyncState;
 		}
