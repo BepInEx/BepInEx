@@ -49,6 +49,7 @@
     <Compile Include="Patching\AssemblyPatcher.cs" />
     <Compile Include="Entrypoint.cs" />
     <Compile Include="Patching\PatcherPlugin.cs" />
+    <Compile Include="RuntimeFixes\HarmonyFixes.cs" />
     <Compile Include="RuntimeFixes\TraceFix.cs" />
     <Compile Include="Preloader.cs" />
     <Compile Include="Logger\PreloaderLogWriter.cs" />

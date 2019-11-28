@@ -51,6 +51,8 @@ namespace BepInEx.Preloader
 
 				Logger.Sources.Add(TraceLogSource.CreateSource());
 
+				HarmonyFixes.Apply();
+
 				PreloaderLog = new PreloaderConsoleListener(ConfigPreloaderCOutLogging.Value);
 				Logger.Listeners.Add(PreloaderLog);
 
