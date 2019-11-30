@@ -2,6 +2,7 @@
 using BepInEx.Logging;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -99,7 +100,7 @@ namespace BepInEx.Bootstrap
 			// Temporarily disable the console log listener as we replay the preloader logs
 
 			var logListener = Logger.Listeners.FirstOrDefault(logger => logger is ConsoleLogListener);
-			
+
 			if (logListener != null)
 				Logger.Listeners.Remove(logListener);
 
@@ -182,6 +183,7 @@ namespace BepInEx.Bootstrap
 		}
 
 		private static readonly string CurrentAssemblyName = Assembly.GetExecutingAssembly().GetName().Name;
+		private static readonly Version CurrentAssemblyVersion = Assembly.GetExecutingAssembly().GetName().Version;
 
 		private static bool HasBepinPlugins(AssemblyDefinition ass)
 		{
@@ -213,8 +215,7 @@ namespace BepInEx.Bootstrap
 			try
 			{
 				var productNameProp = typeof(Application).GetProperty("productName", BindingFlags.Public | BindingFlags.Static);
-				if (productNameProp != null)
-					ConsoleWindow.Title = $"BepInEx {Assembly.GetExecutingAssembly().GetName().Version} - {productNameProp.GetValue(null, null)}";
+				ConsoleWindow.Title = $"{CurrentAssemblyName} {CurrentAssemblyVersion} - {productNameProp?.GetValue(null, null) ?? Process.GetCurrentProcess().ProcessName}";
 
 				Logger.LogMessage("Chainloader started");
 
