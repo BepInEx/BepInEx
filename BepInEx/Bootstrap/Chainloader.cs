@@ -202,9 +202,11 @@ namespace BepInEx.Bootstrap
 		{
 			var pluginTarget = pluginInfo.TargettedBepInExVersion;
 			// X.X.X.x - compare normally. x.x.x.X - nightly build number, ignore
-			return pluginTarget.Major > CurrentAssemblyVersion.Major
-			       || pluginTarget.Minor > CurrentAssemblyVersion.Minor
-			       || pluginTarget.Build > CurrentAssemblyVersion.Build;
+			if (pluginTarget.Major < CurrentAssemblyVersion.Major) return false;
+			if (pluginTarget.Major > CurrentAssemblyVersion.Major) return true;
+			if (pluginTarget.Minor < CurrentAssemblyVersion.Minor) return false;
+			if (pluginTarget.Minor > CurrentAssemblyVersion.Minor) return true;
+			return pluginTarget.Build > CurrentAssemblyVersion.Build;
 		}
 
 		/// <summary>
