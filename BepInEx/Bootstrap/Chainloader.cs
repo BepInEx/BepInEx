@@ -172,13 +172,16 @@ namespace BepInEx.Bootstrap
 			var dependencies = BepInDependency.FromCecilType(type);
 			var incompatibilities = BepInIncompatibility.FromCecilType(type);
 
+			var bepinVersion = type.Module.AssemblyReferences.FirstOrDefault(reference => reference.Name == "BepInEx")?.Version ?? new Version();
+
 			return new PluginInfo
 			{
 				Metadata = metadata,
 				Processes = filters,
 				Dependencies = dependencies,
 				Incompatibilities = incompatibilities,
-				TypeName = type.FullName
+				TypeName = type.FullName,
+				TargettedBepInExVersion = bepinVersion
 			};
 		}
 
@@ -193,6 +196,15 @@ namespace BepInEx.Bootstrap
 				return false;
 
 			return true;
+		}
+
+		private static bool PluginTargetsNewerBepin(PluginInfo pluginInfo)
+		{
+			var pluginTarget = pluginInfo.TargettedBepInExVersion;
+			// X.X.X.x - compare normally. x.x.x.X - nightly build number, ignore
+			return pluginTarget.Major > CurrentAssemblyVersion.Major
+			       || pluginTarget.Minor > CurrentAssemblyVersion.Minor
+			       || pluginTarget.Build > CurrentAssemblyVersion.Build;
 		}
 
 		/// <summary>
@@ -275,6 +287,12 @@ namespace BepInEx.Bootstrap
 						string message = $@"Could not load [{pluginInfo.Metadata.Name}] because it is incompatible with: {string.Join(", ", incompatiblePlugins)}";
 						DependencyErrors.Add(message);
 						Logger.LogError(message);
+					}
+					else if (PluginTargetsNewerBepin(pluginInfo))
+					{
+						string message = $@"Plugin [{pluginInfo.Metadata.Name}] targets a newer version of BepInEx ({pluginInfo.TargettedBepInExVersion}) and might not work until you update";
+						DependencyErrors.Add(message);
+						Logger.LogWarning(message);
 					}
 				}
 
