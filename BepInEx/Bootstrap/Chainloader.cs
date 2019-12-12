@@ -198,14 +198,13 @@ namespace BepInEx.Bootstrap
 			return true;
 		}
 
-		private static bool PluginTargetsNewerBepin(PluginInfo pluginInfo)
+		private static bool PluginTargetsWrongBepin(PluginInfo pluginInfo)
 		{
 			var pluginTarget = pluginInfo.TargettedBepInExVersion;
 			// X.X.X.x - compare normally. x.x.x.X - nightly build number, ignore
-			if (pluginTarget.Major < CurrentAssemblyVersion.Major) return false;
-			if (pluginTarget.Major > CurrentAssemblyVersion.Major) return true;
-			if (pluginTarget.Minor < CurrentAssemblyVersion.Minor) return false;
+			if (pluginTarget.Major != CurrentAssemblyVersion.Major) return true;
 			if (pluginTarget.Minor > CurrentAssemblyVersion.Minor) return true;
+			if (pluginTarget.Minor < CurrentAssemblyVersion.Minor) return false;
 			return pluginTarget.Build > CurrentAssemblyVersion.Build;
 		}
 
@@ -290,9 +289,9 @@ namespace BepInEx.Bootstrap
 						DependencyErrors.Add(message);
 						Logger.LogError(message);
 					}
-					else if (PluginTargetsNewerBepin(pluginInfo))
+					else if (PluginTargetsWrongBepin(pluginInfo))
 					{
-						string message = $@"Plugin [{pluginInfo.Metadata.Name}] targets a newer version of BepInEx ({pluginInfo.TargettedBepInExVersion}) and might not work until you update";
+						string message = $@"Plugin [{pluginInfo.Metadata.Name}] targets a wrong version of BepInEx ({pluginInfo.TargettedBepInExVersion}) and might not work until you update";
 						DependencyErrors.Add(message);
 						Logger.LogWarning(message);
 					}
