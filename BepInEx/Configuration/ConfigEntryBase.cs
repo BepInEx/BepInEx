@@ -158,7 +158,7 @@ namespace BepInEx.Configuration
 
 			writer.WriteLine("# Setting type: " + SettingType.Name);
 
-			writer.WriteLine("# Default value: " + DefaultValue);
+			writer.WriteLine("# Default value: " + TomlTypeConverter.ConvertToString(DefaultValue, SettingType));
 
 			if (Description.AcceptableValues != null)
 			{

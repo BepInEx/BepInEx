@@ -203,6 +203,8 @@ namespace BepInEx.Configuration
 
 		private static string Escape(this string txt)
 		{
+			if (string.IsNullOrEmpty(txt)) return string.Empty;
+
 			var stringBuilder = new StringBuilder(txt.Length + 2);
 			foreach (char c in txt)
 				switch (c)
