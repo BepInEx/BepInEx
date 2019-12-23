@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using BepInEx.Bootstrap;
@@ -20,6 +21,8 @@ namespace BepInEx
 		public BaseUnityPlugin Instance { get; internal set; }
 
 		internal string TypeName { get; set; }
+
+		internal Version TargettedBepInExVersion { get; set; }
 
 		void ICacheable.Save(BinaryWriter bw)
 		{
@@ -43,6 +46,8 @@ namespace BepInEx
 			bw.Write(incList.Count);
 			foreach (var bepInIncompatibility in incList)
 				((ICacheable)bepInIncompatibility).Save(bw);
+
+			bw.Write(TargettedBepInExVersion.ToString(4));
 		}
 
 		void ICacheable.Load(BinaryReader br)
@@ -78,6 +83,8 @@ namespace BepInEx
 			}
 
 			Incompatibilities = incList;
+
+			TargettedBepInExVersion = new Version(br.ReadString());
 		}
 	}
 }

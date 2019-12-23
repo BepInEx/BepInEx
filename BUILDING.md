@@ -10,8 +10,8 @@ You can use the included [cakebuild](https://cakebuild.net/) script that allows 
 
 ### Windows (Command Line)
 
-Clone or [download](https://github.com/BepInEx/BepInEx/archive/master.zip) this repository.  
-After that, run
+Clone this repository via `git clone https://github.com/BepInEx/BepInEx.git`.  
+After that, run in the repository directory
 
 ```bat
 build.bat -target=Build
@@ -19,8 +19,8 @@ build.bat -target=Build
 
 ### Windows (PowerShell)
 
-Clone or [download](https://github.com/BepInEx/BepInEx/archive/master.zip) this repository.  
-After that, run
+Clone this repository via `git clone https://github.com/BepInEx/BepInEx.git`.  
+After that, run in the repository directory
 
 ```ps
 ./build.ps1 -target=Build
@@ -30,8 +30,8 @@ Make sure you have the execution policy set to enable running scripts.
 
 ### Linux (Bash)
 
-Clone or [download](https://github.com/BepInEx/BepInEx/archive/master.zip) this repository.  
-After that, run
+Clone this repository via `git clone https://github.com/BepInEx/BepInEx.git`.  
+After that, run in the repository directory
 
 ```sh
 ./build.sh --target=Build
