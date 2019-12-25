@@ -231,7 +231,7 @@ namespace BepInEx.Preloader.Patching
 
 						foreach (var resolvedAss in AppDomain.CurrentDomain.GetAssemblies())
 						{
-							var name = resolvedAss.GetName().Name;
+							var name = new AssemblyName(resolvedAss.FullName).Name;
 							// Report only the first type that caused the assembly to load, because any subsequent ones can be false positives
 							if (!resolvedAssemblies.ContainsKey(name))
 								resolvedAssemblies[name] = assemblyPatcher.TypeName;
