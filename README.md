@@ -24,7 +24,7 @@ Unity plugin framework
 ## Used libraries
 - [NeighTools/UnityDoorstop](https://github.com/NeighTools/UnityDoorstop) - 2.12.1.0 ([f96e256](https://github.com/NeighTools/UnityDoorstop/commit/f96e25679bea87d80821b7e9d3b9e9824f85454c))
 - [pardeike/Harmony](https://github.com/pardeike/Harmony) - pre-2.0 ([443f551](https://github.com/pardeike/Harmony/commit/443f551ec45ecf409755b5979a4466343197de03))
-- [0x0ade/MonoMod](https://github.com/0x0ade/MonoMod) - v20.1.1.4 ([3bf5e6f](https://github.com/MonoMod/MonoMod/commit/3bf5e6f9f8c7176745a60205ca6f9cb5260bca37))
+- [0x0ade/MonoMod](https://github.com/0x0ade/MonoMod) - v20.3.5.1 ([016635a](https://github.com/MonoMod/MonoMod/commit/016635a2101b3ee85da1ca04572037aa028e731b))
 - [jbevain/cecil](https://github.com/jbevain/cecil) - 0.10.4 ([98ec890](https://github.com/jbevain/cecil/commit/98ec890d44643ad88d573e97be0e120435eda732))
 
 ## Credits
