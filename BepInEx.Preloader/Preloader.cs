@@ -105,7 +105,6 @@ namespace BepInEx.Preloader
 			}
 			catch (Exception ex)
 			{
-				File.WriteAllText("err.log", ex.ToString());
 				try
 				{
 					Logger.LogFatal("Could not run preloader!");
