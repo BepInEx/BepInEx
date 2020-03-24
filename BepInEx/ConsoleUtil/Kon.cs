@@ -77,10 +77,9 @@ namespace BepInEx.ConsoleUtil
 						if (!consoleScreenBufferInfo)
 							if (Marshal.GetLastWin32Error() == 6 && !throwOnNoConsole)
 								return default(CONSOLE_SCREEN_BUFFER_INFO);
-							
-							succeeded = true;
-						return console_SCREEN_BUFFER_INFO;
 					}
+					succeeded = true;
+					return console_SCREEN_BUFFER_INFO;
 				}
 				catch (EntryPointNotFoundException)
 				{
