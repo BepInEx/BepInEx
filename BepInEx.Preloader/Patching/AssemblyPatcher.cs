@@ -170,6 +170,19 @@ namespace BepInEx.Preloader.Patching
 			PatcherPlugins.Clear();
 		}
 
+		private static string GetAssemblyName(string fullName)
+		{
+			// We need to manually parse full name to avoid issues with encoding on mono
+			try
+			{
+				return new AssemblyName(fullName).Name;
+			}
+			catch (Exception e)
+			{
+				return fullName;
+			}
+		}
+
 		/// <summary>
 		///     Applies patchers to all assemblies in the given directory and loads patched assemblies into memory.
 		/// </summary>
@@ -231,7 +244,7 @@ namespace BepInEx.Preloader.Patching
 
 						foreach (var resolvedAss in AppDomain.CurrentDomain.GetAssemblies())
 						{
-							var name = new AssemblyName(resolvedAss.FullName).Name;
+							var name = GetAssemblyName(resolvedAss.FullName);
 							// Report only the first type that caused the assembly to load, because any subsequent ones can be false positives
 							if (!resolvedAssemblies.ContainsKey(name))
 								resolvedAssemblies[name] = assemblyPatcher.TypeName;
