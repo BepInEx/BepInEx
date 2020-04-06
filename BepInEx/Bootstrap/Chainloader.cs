@@ -98,25 +98,24 @@ namespace BepInEx.Bootstrap
 
 
 			// Temporarily disable the console log listener as we replay the preloader logs
-
 			var logListener = Logger.Listeners.FirstOrDefault(logger => logger is ConsoleLogListener);
 
 			if (logListener != null)
 				Logger.Listeners.Remove(logListener);
 
-			var preloaderLogSource = Logger.CreateLogSource("Preloader");
-
-			foreach (var preloaderLogEvent in preloaderLogEvents)
+			// Write preloader log events if there are any, including the original log source name
+			if (preloaderLogEvents != null)
 			{
-				preloaderLogSource.Log(preloaderLogEvent.Level, preloaderLogEvent.Data);
-			}
+				var preloaderLogSource = Logger.CreateLogSource("Preloader");
 
-			Logger.Sources.Remove(preloaderLogSource);
+				foreach (var preloaderLogEvent in preloaderLogEvents)
+					preloaderLogSource.Log(preloaderLogEvent.Level, $"[{preloaderLogEvent.Source.SourceName,10}] {preloaderLogEvent.Data}");
+
+				Logger.Sources.Remove(preloaderLogSource);	
+			}
 
 			if (logListener != null)
 				Logger.Listeners.Add(logListener);
-
-
 
 			Logger.LogMessage("Chainloader ready");
 
