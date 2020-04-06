@@ -35,12 +35,12 @@
     <Reference Include="Mono.Cecil.Rocks, Version=0.10.4.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e, processorArchitecture=MSIL">
       <HintPath>..\packages\Mono.Cecil.0.10.4\lib\net35\Mono.Cecil.Rocks.dll</HintPath>
     </Reference>
-    <Reference Include="MonoMod.RuntimeDetour, Version=20.3.5.1, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\MonoMod.RuntimeDetour.20.3.5.1\lib\net35\MonoMod.RuntimeDetour.dll</HintPath>
+    <Reference Include="MonoMod.RuntimeDetour, Version=20.4.3.1, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\MonoMod.RuntimeDetour.20.4.3.1\lib\net35\MonoMod.RuntimeDetour.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="MonoMod.Utils, Version=20.3.5.1, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\MonoMod.Utils.20.3.5.1\lib\net35\MonoMod.Utils.dll</HintPath>
+    <Reference Include="MonoMod.Utils, Version=20.4.3.1, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\MonoMod.Utils.20.4.3.1\lib\net35\MonoMod.Utils.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
