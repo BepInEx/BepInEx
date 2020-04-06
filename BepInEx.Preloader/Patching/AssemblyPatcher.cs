@@ -190,7 +190,8 @@ namespace BepInEx.Preloader.Patching
 		public static void PatchAndLoad(string directory)
 		{
 			// First, load patchable assemblies into Cecil
-			var assemblies = new Dictionary<string, AssemblyDefinition>();
+			// Ignore case for keys (dll filenames) to account for running on *nix
+			var assemblies = new Dictionary<string, AssemblyDefinition>(StringComparer.InvariantCultureIgnoreCase);
 
 			foreach (string assemblyPath in Directory.GetFiles(directory, "*.dll"))
 			{
@@ -206,7 +207,7 @@ namespace BepInEx.Preloader.Patching
 					continue;
 				}
 
-				//NOTE: this is special cased here because the dependency handling for System.dll is a bit wonky
+				//NOTE: this is special case here because the dependency handling for System.dll is a bit wonky
 				//System has an assembly reference to itself, and it also has a reference to Mono.Security causing a circular dependency
 				//It's also generally dangerous to change system.dll since so many things rely on it, 
 				// and it's already loaded into the appdomain since this loader references it, so we might as well skip it
@@ -230,7 +231,7 @@ namespace BepInEx.Preloader.Patching
 			InitializePatchers();
 
 			// Then, perform the actual patching
-			var patchedAssemblies = new HashSet<string>();
+			var patchedAssemblies = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 			var resolvedAssemblies = new Dictionary<string, string>();
 			foreach (var assemblyPatcher in PatcherPlugins)
 				foreach (string targetDll in assemblyPatcher.TargetDLLs())
@@ -253,7 +254,7 @@ namespace BepInEx.Preloader.Patching
 
 			// Check if any patched assemblies have been already resolved by the CLR
 			// If there are any, they cannot be loaded by the preloader
-			var patchedAssemblyNames = new HashSet<string>(assemblies.Where(kv => patchedAssemblies.Contains(kv.Key)).Select(kv => kv.Value.Name.Name));
+			var patchedAssemblyNames = new HashSet<string>(assemblies.Where(kv => patchedAssemblies.Contains(kv.Key)).Select(kv => kv.Value.Name.Name), StringComparer.InvariantCultureIgnoreCase);
 			var earlyLoadAssemblies = resolvedAssemblies.Where(kv => patchedAssemblyNames.Contains(kv.Key)).ToList();
 
 			if (earlyLoadAssemblies.Count != 0)
