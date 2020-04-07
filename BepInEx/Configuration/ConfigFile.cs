@@ -149,7 +149,7 @@ namespace BepInEx.Configuration
 				string directoryName = Path.GetDirectoryName(ConfigFilePath);
 				if (directoryName != null) Directory.CreateDirectory(directoryName);
 
-				using (var writer = new StreamWriter(File.Create(ConfigFilePath), Encoding.UTF8))
+				using (var writer = new StreamWriter(ConfigFilePath, false, Encoding.UTF8))
 				{
 					if (_ownerMetadata != null)
 					{
