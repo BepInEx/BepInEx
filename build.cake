@@ -51,7 +51,7 @@ Task("Build")
     .IsDependentOn("PullDependencies")
     .Does(() =>
 {
-    var bepinExProperties = Directory("./BepInEx/Properties");
+    var bepinExProperties = Directory("./BepInEx.Core/Properties");
 
     if(isBleedingEdge)
     {
@@ -77,7 +77,7 @@ Task("Build")
 })
 .Finally(() => 
 {
-    var bepinExProperties = Directory("./BepInEx/Properties");
+    var bepinExProperties = Directory("./BepInEx.Core/Properties");
     if(isBleedingEdge)
     {
         DeleteFile(bepinExProperties + File("AssemblyInfo.cs"));

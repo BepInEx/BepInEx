@@ -30,10 +30,14 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\BepInEx\BepInEx.csproj">
+    <ProjectReference Include="..\BepInEx.Core\BepInEx.Core.csproj">
       <Project>{4ffba620-f5ed-47f9-b90c-dad1316fd9b9}</Project>
       <Name>BepInEx</Name>
       <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\BepInEx.Unity\BepInEx.Unity.csproj">
+      <Project>{EAE9FAE6-8011-45A3-8B6E-0C7F14210533}</Project>
+      <Name>BepInEx.Unity</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

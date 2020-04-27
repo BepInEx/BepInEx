@@ -73,9 +73,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\BepInEx\BepInEx.csproj">
-      <Project>{4ffba620-f5ed-47f9-b90c-dad1316fd9b9}</Project>
-      <Name>BepInEx</Name>
+    <ProjectReference Include="..\BepInEx.Unity\BepInEx.Unity.csproj">
+      <Project>{EAE9FAE6-8011-45A3-8B6E-0C7F14210533}</Project>
+      <Name>BepInEx.Unity</Name>
     </ProjectReference>
   </ItemGroup>
   <Choose>

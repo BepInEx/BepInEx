@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using BepInEx.Unity.Bootstrap;
 
 namespace BepInEx.Bootstrap
 {
@@ -6,8 +7,10 @@ namespace BepInEx.Bootstrap
 	{
 		public static void StartBepInEx()
 		{
-			Chainloader.Initialize(Process.GetCurrentProcess().MainModule.FileName);
-			Chainloader.Start();
+			var chainloader = new UnityChainloader();
+
+			chainloader.Initialize(Process.GetCurrentProcess().MainModule.FileName);
+			chainloader.Execute();
 		}
 	}
 }

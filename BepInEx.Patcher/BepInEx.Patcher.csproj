@@ -45,7 +45,12 @@
     <None Include="ILRepack.targets" />
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\BepInEx.Unity\BepInEx.Unity.csproj">
+      <Project>{eae9fae6-8011-45a3-8b6e-0c7f14210533}</Project>
+      <Name>BepInEx.Unity</Name>
+    </ProjectReference>
+  </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="..\bin\patcher\BepInEx.Bootstrap.dll" />
   </ItemGroup>
