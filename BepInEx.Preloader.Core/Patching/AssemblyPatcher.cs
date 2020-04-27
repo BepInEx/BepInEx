@@ -43,7 +43,7 @@ namespace BepInEx.Preloader.Core
 		/// </summary>
 		public string DumpedAssembliesPath { get; set; } = Path.Combine(Paths.BepInExRootPath, "DumpedAssemblies");
 
-		public ManualLogSource Logger { get; } = new ManualLogSource("AssemblyPatcher");
+		public ManualLogSource Logger { get; } = BepInEx.Logging.Logger.CreateLogSource("AssemblyPatcher");
 
 		private static T CreateDelegate<T>(MethodInfo method) where T : class => method != null ? Delegate.CreateDelegate(typeof(T), method) as T : null;
 
@@ -173,7 +173,7 @@ namespace BepInEx.Preloader.Core
 		public void LoadAssemblyDirectory(string directory, params string[] assemblyExtensions)
 		{
 			var filesToSearch = assemblyExtensions
-				.SelectMany(ext => Directory.GetFiles(directory, "*." + ext));
+				.SelectMany(ext => Directory.GetFiles(directory, "*." + ext, SearchOption.TopDirectoryOnly));
 
 			foreach (string assemblyPath in filesToSearch)
 			{
@@ -191,6 +191,8 @@ namespace BepInEx.Preloader.Core
 				}
 
 				AssembliesToPatch.Add(Path.GetFileName(assemblyPath), assembly);
+
+				Logger.LogDebug($"Assembly loaded: {Path.GetFileName(assemblyPath)}");
 
 				//if (UnityPatches.AssemblyLocations.ContainsKey(assembly.FullName))
 				//{
@@ -343,6 +345,8 @@ namespace BepInEx.Preloader.Core
 							Assembly.Load(assemblyStream.ToArray());
 						}
 					}
+
+					Logger.LogDebug($"Loaded '{assembly.FullName}' into memory");
 				}
 
 				// Though we have to dispose of all assemblies regardless of them being patched or not

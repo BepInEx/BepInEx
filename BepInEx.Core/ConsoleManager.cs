@@ -85,6 +85,11 @@ namespace BepInEx
 			}
 		}
 
+		public static void ForceSetActive(bool value)
+		{
+			ConsoleActive = value;
+		}
+
 		public static readonly ConfigEntry<bool> ConfigConsoleEnabled = ConfigFile.CoreConfig.Bind(
 			"Logging.Console", "Enabled",
 			false,
