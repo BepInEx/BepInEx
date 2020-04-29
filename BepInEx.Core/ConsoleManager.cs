@@ -2,6 +2,7 @@
 using System.IO;
 using System.Text;
 using BepInEx.Configuration;
+using BepInEx.ConsoleUtil;
 using UnityInjector.ConsoleUtil;
 
 namespace BepInEx
@@ -83,6 +84,27 @@ namespace BepInEx
 				default:
 					throw new PlatformNotSupportedException("Spawning a console is not currently supported on this platform");
 			}
+		}
+
+		public static void SetConsoleColor(ConsoleColor color)
+		{
+			if (!ConsoleActive)
+				throw new InvalidOperationException("Console is not currently active");
+
+			switch (Environment.OSVersion.Platform)
+			{
+				case PlatformID.Win32NT:
+				{
+					Kon.ForegroundColor = color;
+					break;
+				}
+				default:
+				{
+					break;
+				}
+			}
+
+			Console.ForegroundColor = color;
 		}
 
 		public static void ForceSetActive(bool value)
