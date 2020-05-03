@@ -39,6 +39,12 @@ namespace BepInEx.Preloader.Core
 		public Dictionary<string, AssemblyDefinition> AssembliesToPatch { get; } = new Dictionary<string, AssemblyDefinition>();
 
 		/// <summary>
+		/// <para>Contains a dictionary of assemblies that have been loaded as part of executing this assembly patcher..</para>
+		/// <para>The key is the same key as used in <see cref="LoadedAssemblies"/>, while the value is the actual assembly itself.</para>
+		/// </summary>
+		public Dictionary<string, Assembly> LoadedAssemblies { get; } = new Dictionary<string, Assembly>();
+
+		/// <summary>
 		/// The directory location as to where patched assemblies will be saved to and loaded from disk, for debugging purposes. Defaults to BepInEx/DumpedAssemblies
 		/// </summary>
 		public string DumpedAssembliesPath { get; set; } = Path.Combine(Paths.BepInExRootPath, "DumpedAssemblies");
@@ -335,16 +341,20 @@ namespace BepInEx.Preloader.Core
 				// but because some games *rely* on that because of messed up internal dependencies.
 				if (patchedAssemblies.Contains(filename))
 				{
+					Assembly loadedAssembly;
+
 					if (ConfigLoadDumpedAssemblies.Value)
-						Assembly.LoadFile(Path.Combine(DumpedAssembliesPath, filename));
+						loadedAssembly = Assembly.LoadFile(Path.Combine(DumpedAssembliesPath, filename));
 					else
 					{
 						using (var assemblyStream = new MemoryStream())
 						{
 							assembly.Write(assemblyStream);
-							Assembly.Load(assemblyStream.ToArray());
+							loadedAssembly =Assembly.Load(assemblyStream.ToArray());
 						}
 					}
+
+					LoadedAssemblies.Add(filename, loadedAssembly);
 
 					Logger.LogDebug($"Loaded '{assembly.FullName}' into memory");
 				}

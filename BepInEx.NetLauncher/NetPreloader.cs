@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using BepInEx.Bootstrap;
 using BepInEx.Configuration;
@@ -71,6 +72,7 @@ namespace BepInEx.NetLauncher
 
 			Log.LogMessage("Preloader started");
 
+			Assembly entrypointAssembly;
 
 			using (var assemblyPatcher = new AssemblyPatcher())
 			{
@@ -83,6 +85,21 @@ namespace BepInEx.NetLauncher
 				Log.LogInfo($"{assemblyPatcher.AssembliesToPatch.Count} assemblies discovered");
 
 				assemblyPatcher.PatchAndLoad();
+
+
+				var assemblyName = AssemblyName.GetAssemblyName(executablePath);
+
+				entrypointAssembly = assemblyPatcher.LoadedAssemblies.Values.FirstOrDefault(x => x.FullName == assemblyName.FullName);
+
+				if (entrypointAssembly != null)
+				{
+					Log.LogDebug("Found patched entrypoint assembly! Using it");
+				}
+				else
+				{
+					Log.LogDebug("Using entrypoint assembly from disk");
+					entrypointAssembly = Assembly.LoadFrom(executablePath);
+				}
 			}
 
 			Log.LogMessage("Preloader finished");
@@ -91,8 +108,6 @@ namespace BepInEx.NetLauncher
 			chainloader.Initialize();
 			chainloader.Execute();
 
-			var assemblyName = AssemblyName.GetAssemblyName(executablePath);
-			var entrypointAssembly = Assembly.Load(assemblyName);
 
 			AssemblyFix.Execute(entrypointAssembly);
 
