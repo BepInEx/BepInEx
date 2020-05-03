@@ -5,6 +5,7 @@ using System.Reflection;
 using BepInEx.Bootstrap;
 using BepInEx.Configuration;
 using BepInEx.Logging;
+using BepInEx.NetLauncher.RuntimeFixes;
 using BepInEx.Preloader.Core;
 using BepInEx.Preloader.Core.RuntimeFixes;
 using MonoMod.RuntimeDetour;
@@ -92,6 +93,8 @@ namespace BepInEx.NetLauncher
 
 			var assemblyName = AssemblyName.GetAssemblyName(executablePath);
 			var entrypointAssembly = Assembly.Load(assemblyName);
+
+			AssemblyFix.Execute(entrypointAssembly);
 
 			entrypointAssembly.EntryPoint.Invoke(null, new [] { args });
 		}
