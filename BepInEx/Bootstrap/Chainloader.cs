@@ -104,7 +104,7 @@ namespace BepInEx.Bootstrap
 				var preloaderLogSource = Logger.CreateLogSource("Preloader");
 
 				foreach (var preloaderLogEvent in preloaderLogEvents)
-					preloaderLogSource.Log(preloaderLogEvent.Level, $"[{preloaderLogEvent.Source.SourceName,10}] {preloaderLogEvent.Data}");
+					Logger.InternalLogEvent(preloaderLogSource, preloaderLogEvent);
 
 				Logger.Sources.Remove(preloaderLogSource);	
 			}

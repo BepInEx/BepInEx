@@ -9,7 +9,6 @@ namespace BepInEx.Preloader
 	public class PreloaderConsoleListener : ILogListener
 	{
 		public static List<LogEventArgs> LogEvents { get; } = new List<LogEventArgs>();
-		protected StringBuilder LogBuilder = new StringBuilder();
 
 		public static TextWriter StandardOut { get; set; }
 		protected PreloaderConsoleSource LoggerSource { get; set; }
@@ -32,12 +31,8 @@ namespace BepInEx.Preloader
 		{
 			LogEvents.Add(eventArgs);
 
-			string log = $"[{eventArgs.Level,-7}:{((ILogSource)sender).SourceName,10}] {eventArgs.Data}\r\n";
-
-			LogBuilder.Append(log);
-
 			ConsoleManager.SetConsoleColor(eventArgs.Level.GetConsoleColor());
-			ConsoleDirectWrite(log);
+			ConsoleDirectWrite(eventArgs.ToStringLine());
 			ConsoleManager.SetConsoleColor(ConsoleColor.Gray);
 		}
 
@@ -50,8 +45,6 @@ namespace BepInEx.Preloader
 		{
 			StandardOut.WriteLine(value);
 		}
-
-		public override string ToString() => LogBuilder.ToString();
 
 		public void Dispose()
 		{

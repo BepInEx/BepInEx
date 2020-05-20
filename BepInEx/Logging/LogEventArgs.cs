@@ -16,5 +16,15 @@ namespace BepInEx.Logging
 			Level = level;
 			Source = source;
 		}
+
+		public override string ToString()
+		{
+			return $"[{Level,-7}:{Source.SourceName,10}] {Data}";
+		}
+
+		public string ToStringLine()
+		{
+			return $"[{Level,-7}:{Source.SourceName,10}] {Data}{Environment.NewLine}";
+		}
 	}
 }

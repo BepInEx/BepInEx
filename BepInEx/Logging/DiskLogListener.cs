@@ -51,10 +51,10 @@ namespace BepInEx.Logging
 			if (!WriteFromUnityLog && eventArgs.Source is UnityLogSource)
 				return;
 
-			if ((eventArgs.Level & DisplayedLogLevel) > 0)
+			if ((eventArgs.Level & DisplayedLogLevel) == 0)
 				return;
 
-			LogWriter.WriteLine($"[{eventArgs.Level,-7}:{((ILogSource)sender).SourceName,10}] {eventArgs.Data}");
+			LogWriter.WriteLine(eventArgs.ToString());
 		}
 
 		public void Dispose()
