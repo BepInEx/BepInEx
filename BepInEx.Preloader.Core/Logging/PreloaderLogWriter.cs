@@ -37,9 +37,9 @@ namespace BepInEx.Preloader.Core.Logging
 
 			LogBuilder.Append(log);
 
-			Kon.ForegroundColor = eventArgs.Level.GetConsoleColor();
+			ConsoleManager.SetConsoleColor(eventArgs.Level.GetConsoleColor());
 			ConsoleDirectWrite(log);
-			Kon.ForegroundColor = ConsoleColor.Gray;
+			ConsoleManager.SetConsoleColor(ConsoleColor.Gray);
 		}
 
 		public void ConsoleDirectWrite(string value)

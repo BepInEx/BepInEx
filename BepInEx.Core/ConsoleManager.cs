@@ -71,35 +71,29 @@ namespace BepInEx
 
 		public static void SetConsoleTitle(string title)
 		{
-			if (!ConsoleActive)
-				throw new InvalidOperationException("Console is not currently active");
-
 			switch (Environment.OSVersion.Platform)
 			{
 				case PlatformID.Win32NT:
 				{
+					if (!ConsoleActive)
+						return;
+
 					ConsoleWindow.Title = title;
 					break;
 				}
-				default:
-					throw new PlatformNotSupportedException("Spawning a console is not currently supported on this platform");
 			}
 		}
 
 		public static void SetConsoleColor(ConsoleColor color)
 		{
-			if (!ConsoleActive)
-				throw new InvalidOperationException("Console is not currently active");
-
 			switch (Environment.OSVersion.Platform)
 			{
 				case PlatformID.Win32NT:
 				{
+					if (!ConsoleActive)
+						return;
+
 					Kon.ForegroundColor = color;
-					break;
-				}
-				default:
-				{
 					break;
 				}
 			}
