@@ -7,6 +7,7 @@ using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
+using Microsoft.Win32.SafeHandles;
 
 namespace UnityInjector.ConsoleUtil
 {
@@ -15,6 +16,8 @@ namespace UnityInjector.ConsoleUtil
 		public static bool IsAttached { get; private set; }
 		private static IntPtr _cOut;
 		private static IntPtr _oOut;
+
+		public static TextWriter OriginalOut { get; set; }
 
 		public static TextWriter StandardOut { get; private set; }
 
@@ -42,6 +45,11 @@ namespace UnityInjector.ConsoleUtil
 
 			if (!SetStdHandle(-11, _cOut))
 				throw new Exception("SetStdHandle() failed");
+
+
+			var originalOutStream = new FileStream(new SafeFileHandle(_oOut, false), FileAccess.Write);
+			OriginalOut = new StreamWriter(originalOutStream, new UTF8Encoding(false));
+
 			Init();
 
 			IsAttached = true;

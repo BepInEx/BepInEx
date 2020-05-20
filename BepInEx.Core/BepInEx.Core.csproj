@@ -82,6 +82,7 @@
     <Compile Include="Logging\ILogListener.cs" />
     <Compile Include="Logging\ILogSource.cs" />
     <Compile Include="Logging\ManualLogSource.cs" />
+    <Compile Include="Logging\StdOutLogListener.cs" />
     <Compile Include="Logging\TraceLogSource.cs" />
     <Compile Include="Logging\ConsoleLogListener.cs" />
     <Compile Include="Paths.cs" />

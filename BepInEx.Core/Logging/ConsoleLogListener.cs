@@ -1,11 +1,10 @@
 ﻿using System;
 using BepInEx.Configuration;
-using BepInEx.ConsoleUtil;
 
 namespace BepInEx.Logging
 {
 	/// <summary>
-	/// Logs entries using Unity specific outputs.
+	/// Logs entries using a console spawned by BepInEx.
 	/// </summary>
 	public class ConsoleLogListener : ILogListener
 	{

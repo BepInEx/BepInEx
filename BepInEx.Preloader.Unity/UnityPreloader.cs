@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using BepInEx.Bootstrap;
 using BepInEx.Configuration;
+using BepInEx.Core.Logging;
 using BepInEx.Logging;
 using BepInEx.Preloader.Core;
 using BepInEx.Preloader.Core.Logging;
@@ -14,7 +14,6 @@ using BepInEx.Preloader.Core.RuntimeFixes;
 using BepInEx.Preloader.RuntimeFixes;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
-using Mono.Cecil.Rocks;
 using MonoMod.RuntimeDetour;
 using MethodAttributes = Mono.Cecil.MethodAttributes;
 
@@ -122,6 +121,8 @@ namespace BepInEx.Preloader.Unity
 				Logger.Listeners.Add(new ConsoleLogListener());
 
 				PreloaderLog.Dispose();
+
+				Logger.Listeners.Add(new StdOutLogListener());
 			}
 			catch (Exception ex)
 			{
