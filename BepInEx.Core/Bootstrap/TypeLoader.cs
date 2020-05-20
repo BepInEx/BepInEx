@@ -115,6 +115,8 @@ namespace BepInEx.Bootstrap
 
 					var ass = AssemblyDefinition.ReadAssembly(dll, readerParameters);
 
+					Logger.LogDebug($"Examining '{dll}'");
+
 					if (!assemblyFilter?.Invoke(ass) ?? false)
 					{
 						result[dll] = new List<T>();

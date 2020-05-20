@@ -84,6 +84,10 @@ namespace BepInEx.Preloader.Unity
 				Log.LogInfo($"CLR runtime version: {Environment.Version}");
 				Log.LogInfo($"Supports SRE: {Utility.CLRSupportsDynamicAssemblies}");
 
+				Log.LogDebug($"Game executable path: {Paths.ExecutablePath}");
+				Log.LogDebug($"Unity Managed directory: {ManagedPath}");
+				Log.LogDebug($"BepInEx root path: {Paths.BepInExRootPath}");
+
 				if (harmonyBridgeException != null)
 					Log.LogWarning($"Failed to enable fix for Harmony for .NET Standard API. Error message: {harmonyBridgeException.Message}");
 
