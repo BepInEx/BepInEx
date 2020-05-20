@@ -6,11 +6,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Text.RegularExpressions;
 using Mono.Cecil;
 using UnityEngine;
-using UnityInjector.ConsoleUtil;
 using Logger = BepInEx.Logging.Logger;
 
 namespace BepInEx.Bootstrap
@@ -69,20 +67,17 @@ namespace BepInEx.Bootstrap
 			}
 
 			// Start logging
-			if (ConsoleWindow.ConfigConsoleEnabled.Value && startConsole)
+			if (ConsoleManager.ConfigConsoleEnabled.Value && startConsole)
 			{
-				ConsoleWindow.Attach();
+				ConsoleManager.CreateConsole();
 				Logger.Listeners.Add(new ConsoleLogListener());
 			}
 
 			// Fix for standard output getting overwritten by UnityLogger
-			if (ConsoleWindow.StandardOut != null)
+			if (ConsoleManager.ConsoleActive)
 			{
-				Console.SetOut(ConsoleWindow.StandardOut);
-
-				var encoding = ConsoleWindow.ConfigConsoleShiftJis.Value ? 932 : (uint)Encoding.UTF8.CodePage;
-				ConsoleEncoding.ConsoleCodePage = encoding;
-				Console.OutputEncoding = ConsoleEncoding.GetEncoding(encoding);
+				ConsoleManager.SetConsoleStreams();
+				ConsoleManager.SetConsoleEncoding();
 			}
 
 			Logger.Listeners.Add(new UnityLogListener());
@@ -227,7 +222,9 @@ namespace BepInEx.Bootstrap
 			try
 			{
 				var productNameProp = typeof(Application).GetProperty("productName", BindingFlags.Public | BindingFlags.Static);
-				ConsoleWindow.Title = $"{CurrentAssemblyName} {CurrentAssemblyVersion} - {productNameProp?.GetValue(null, null) ?? Process.GetCurrentProcess().ProcessName}";
+
+				if (ConsoleManager.ConsoleActive)
+					ConsoleManager.SetConsoleTitle($"{CurrentAssemblyName} {CurrentAssemblyVersion} - {productNameProp?.GetValue(null, null) ?? Process.GetCurrentProcess().ProcessName}");
 
 				Logger.LogMessage("Chainloader started");
 
@@ -384,10 +381,14 @@ namespace BepInEx.Bootstrap
 			}
 			catch (Exception ex)
 			{
-				ConsoleWindow.Attach();
+				try
+				{
+					ConsoleManager.CreateConsole();
+				}
+				catch { }
 
-				Console.WriteLine("Error occurred starting the game");
-				Console.WriteLine(ex.ToString());
+				Logger.LogFatal("Error occurred starting the game");
+				Logger.LogFatal(ex.ToString());
 			}
 
 			Logger.LogMessage("Chainloader startup complete");

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using BepInEx.Preloader.Patching;
@@ -12,7 +11,6 @@ using HarmonyLib;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using MonoMod.RuntimeDetour;
-using UnityInjector.ConsoleUtil;
 using MethodAttributes = Mono.Cecil.MethodAttributes;
 
 namespace BepInEx.Preloader
@@ -33,6 +31,7 @@ namespace BepInEx.Preloader
 		{
 			try
 			{
+				ConsoleManager.Initialize(false);
 				AllocateConsole();
 
 				bool bridgeInitialized = Utility.TryDo(() =>
@@ -57,7 +56,10 @@ namespace BepInEx.Preloader
 				Logger.Listeners.Add(PreloaderLog);
 
 				string consoleTile = $"BepInEx {typeof(Paths).Assembly.GetName().Version} - {Process.GetCurrentProcess().ProcessName}";
-				ConsoleWindow.Title = consoleTile;
+
+				if (ConsoleManager.ConsoleActive)
+					ConsoleManager.SetConsoleTitle(consoleTile);
+
 				Logger.LogMessage(consoleTile);
 
 				//See BuildInfoAttribute for more information about this section.
@@ -112,7 +114,7 @@ namespace BepInEx.Preloader
 
 					PreloaderLog?.Dispose();
 
-					if (!ConsoleWindow.IsAttached)
+					if (!ConsoleManager.ConsoleActive)
 					{
 						//if we've already attached the console, then the log will already be written to the console
 						AllocateConsole();
@@ -222,20 +224,13 @@ namespace BepInEx.Preloader
 		/// </summary>
 		public static void AllocateConsole()
 		{
-			if (!ConsoleWindow.ConfigConsoleEnabled.Value)
+			if (!ConsoleManager.ConfigConsoleEnabled.Value)
 				return;
 
 			try
 			{
-				ConsoleWindow.Attach();
-
-				var encoding = (uint)Encoding.UTF8.CodePage;
-
-				if (ConsoleWindow.ConfigConsoleShiftJis.Value)
-					encoding = 932;
-
-				ConsoleEncoding.ConsoleCodePage = encoding;
-				Console.OutputEncoding = ConsoleEncoding.GetEncoding(encoding);
+				ConsoleManager.CreateConsole();
+				ConsoleManager.SetConsoleEncoding();
 			}
 			catch (Exception ex)
 			{

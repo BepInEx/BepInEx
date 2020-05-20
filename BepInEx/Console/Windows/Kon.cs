@@ -64,27 +64,19 @@ namespace BepInEx.ConsoleUtil
 			succeeded = false;
 			if (!(conOut == INVALID_HANDLE_VALUE))
 			{
-				try
+				CONSOLE_SCREEN_BUFFER_INFO console_SCREEN_BUFFER_INFO;
+				if (!GetConsoleScreenBufferInfo(conOut, out console_SCREEN_BUFFER_INFO))
 				{
-					// FIXME: Windows console shouldn't be used in other OSs in the first place
-					CONSOLE_SCREEN_BUFFER_INFO console_SCREEN_BUFFER_INFO;
-					if (!GetConsoleScreenBufferInfo(conOut, out console_SCREEN_BUFFER_INFO))
-					{
-						bool consoleScreenBufferInfo = GetConsoleScreenBufferInfo(GetStdHandle(-12), out console_SCREEN_BUFFER_INFO);
-						if (!consoleScreenBufferInfo)
-							consoleScreenBufferInfo = GetConsoleScreenBufferInfo(GetStdHandle(-10), out console_SCREEN_BUFFER_INFO);
-						
-						if (!consoleScreenBufferInfo)
-							if (Marshal.GetLastWin32Error() == 6 && !throwOnNoConsole)
-								return default(CONSOLE_SCREEN_BUFFER_INFO);
-					}
-					succeeded = true;
-					return console_SCREEN_BUFFER_INFO;
+					bool consoleScreenBufferInfo = GetConsoleScreenBufferInfo(GetStdHandle(-12), out console_SCREEN_BUFFER_INFO);
+					if (!consoleScreenBufferInfo)
+						consoleScreenBufferInfo = GetConsoleScreenBufferInfo(GetStdHandle(-10), out console_SCREEN_BUFFER_INFO);
+					
+					if (!consoleScreenBufferInfo)
+						if (Marshal.GetLastWin32Error() == 6 && !throwOnNoConsole)
+							return default(CONSOLE_SCREEN_BUFFER_INFO);
 				}
-				catch (EntryPointNotFoundException)
-				{
-					// Fails under unsupported OSes
-				}
+				succeeded = true;
+				return console_SCREEN_BUFFER_INFO;
 			}
 
 			if (!throwOnNoConsole)

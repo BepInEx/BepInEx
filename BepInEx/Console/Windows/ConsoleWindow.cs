@@ -7,27 +7,16 @@ using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
-using BepInEx.Configuration;
+using BepInEx;
+using Microsoft.Win32.SafeHandles;
 
 namespace UnityInjector.ConsoleUtil
 {
 	internal class ConsoleWindow
 	{
-		public static readonly ConfigEntry<bool> ConfigConsoleEnabled = ConfigFile.CoreConfig.Bind(
-			"Logging.Console", "Enabled",
-			false,
-			"Enables showing a console for log output.");
-
-		public static readonly ConfigEntry<bool> ConfigConsoleShiftJis = ConfigFile.CoreConfig.Bind(
-			"Logging.Console", "ShiftJisEncoding",
-			false,
-			"If true, console is set to the Shift-JIS encoding, otherwise UTF-8 encoding.");
-
 		public static bool IsAttached { get; private set; }
 		private static IntPtr _cOut;
 		private static IntPtr _oOut;
-
-		public static TextWriter StandardOut { get; private set; }
 
 		public static void Attach()
 		{
@@ -53,6 +42,10 @@ namespace UnityInjector.ConsoleUtil
 
 			if (!SetStdHandle(-11, _cOut))
 				throw new Exception("SetStdHandle() failed");
+
+			var originalOutStream = new FileStream(new SafeFileHandle(_oOut, false), FileAccess.Write);
+			ConsoleManager.StandardOutStream = new StreamWriter(originalOutStream, new UTF8Encoding(false));
+
 			Init();
 
 			IsAttached = true;
@@ -134,13 +127,13 @@ namespace UnityInjector.ConsoleUtil
 		private static void Init()
 		{
 			var stdOut = Console.OpenStandardOutput();
-			StandardOut = new StreamWriter(stdOut, Encoding.Default)
+			ConsoleManager.ConsoleStream = new StreamWriter(stdOut, Encoding.Default)
 			{
 				AutoFlush = true
 			};
 
-			Console.SetOut(StandardOut);
-			Console.SetError(StandardOut);
+			Console.SetOut(ConsoleManager.ConsoleStream);
+			Console.SetError(ConsoleManager.ConsoleStream);
 		}
 
 		[DllImport("kernel32.dll", SetLastError = true)]
