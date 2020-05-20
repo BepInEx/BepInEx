@@ -143,7 +143,7 @@ namespace BepInEx
 				}
 			}
 
-			Console.ForegroundColor = color;
+			SafeConsole.ForegroundColor = color;
 		}
 
 		internal static void SetConsoleStreams()

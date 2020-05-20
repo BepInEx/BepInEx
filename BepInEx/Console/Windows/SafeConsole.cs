@@ -8,6 +8,9 @@ using System.Reflection;
 
 namespace UnityInjector.ConsoleUtil
 {
+	/// <summary>
+	/// Console class required for Unity 4.x, which do not have ForegroundColor and BackgroundColor properties
+	/// </summary>
 	internal static class SafeConsole
 	{
 		private static GetColorDelegate _getBackgroundColor;
