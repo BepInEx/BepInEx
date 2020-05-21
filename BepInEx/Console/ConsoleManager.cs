@@ -38,8 +38,11 @@ namespace BepInEx
 				case PlatformID.Unix:
 				{
 					ConsoleActive = true;
-					var writer = new StreamWriter(UnixStreamHelper.CreateDuplicateStream(1), Console.Out.Encoding);
-					writer.AutoFlush = true;
+					
+					var duplicateStream = UnixStreamHelper.CreateDuplicateStream(1);
+					
+					var writer = ConsoleWriter.CreateConsoleStreamWriter(duplicateStream, Console.Out.Encoding, true);
+					
 					StandardOutStream = writer;
 					Console.SetOut(StandardOutStream);
 					break;

@@ -68,6 +68,7 @@
     <Compile Include="Configuration\AcceptableValueRange.cs" />
     <Compile Include="Configuration\ConfigEntryBase.cs" />
     <Compile Include="Console\ConsoleManager.cs" />
+    <Compile Include="Console\Unix\ConsoleWriter.cs" />
     <Compile Include="Console\Unix\DynDllImport.cs" />
     <Compile Include="Console\Unix\UnixStream.cs" />
     <Compile Include="Console\Unix\UnixStreamHelper.cs" />

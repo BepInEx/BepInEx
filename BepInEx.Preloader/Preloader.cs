@@ -41,7 +41,7 @@ namespace BepInEx.Preloader
 				}, out var harmonyBridgeException);
 
 				Exception runtimePatchException = null;
-				if(bridgeInitialized)
+				if (bridgeInitialized)
 					Utility.TryDo(() =>
 					{
 						if (ConfigApplyRuntimePatches.Value)
@@ -256,7 +256,7 @@ namespace BepInEx.Preloader
 			".cctor",
 			"The name of the method in the specified entrypoint assembly and type to hook and load Chainloader from.");
 
-		private static readonly ConfigEntry<bool> ConfigApplyRuntimePatches = ConfigFile.CoreConfig.Bind(
+		internal static readonly ConfigEntry<bool> ConfigApplyRuntimePatches = ConfigFile.CoreConfig.Bind(
 			"Preloader", "ApplyRuntimePatches",
 			true,
 			"Enables or disables runtime patches.\nThis should always be true, unless you cannot start the game due to a Harmony related issue (such as running .NET Standard runtime) or you know what you're doing.");

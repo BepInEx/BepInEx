@@ -57,6 +57,7 @@
     <Compile Include="Logger\PreloaderLogWriter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RuntimeFixes\UnityPatches.cs" />
+    <Compile Include="RuntimeFixes\XTermFix.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\BepInEx\BepInEx.csproj">
