@@ -22,6 +22,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>..\bin\BepInEx.xml</DocumentationFile>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject />
@@ -37,6 +38,7 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <DebugType>full</DebugType>
     <DebugSymbols>true</DebugSymbols>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Mono.Cecil, Version=0.10.4.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e, processorArchitecture=MSIL">
@@ -51,6 +53,9 @@
     <Reference Include="Mono.Cecil.Rocks, Version=0.10.4.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e, processorArchitecture=MSIL">
       <HintPath>$(SolutionDir)\packages\Mono.Cecil.0.10.4\lib\net35\Mono.Cecil.Rocks.dll</HintPath>
     </Reference>
+    <Reference Include="MonoMod.Utils, Version=20.4.3.1, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MonoMod.Utils.20.4.3.1\lib\net35\MonoMod.Utils.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="UnityEngine">
       <HintPath>..\lib\UnityEngine.dll</HintPath>
@@ -63,6 +68,9 @@
     <Compile Include="Configuration\AcceptableValueRange.cs" />
     <Compile Include="Configuration\ConfigEntryBase.cs" />
     <Compile Include="Console\ConsoleManager.cs" />
+    <Compile Include="Console\Unix\DynDllImport.cs" />
+    <Compile Include="Console\Unix\UnixStream.cs" />
+    <Compile Include="Console\Unix\UnixStreamHelper.cs" />
     <Compile Include="Contract\PluginInfo.cs" />
     <Compile Include="Configuration\ConfigDefinition.cs" />
     <Compile Include="Configuration\ConfigDescription.cs" />

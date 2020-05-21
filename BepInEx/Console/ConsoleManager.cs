@@ -2,6 +2,7 @@
 using System.IO;
 using System.Text;
 using BepInEx.Configuration;
+using BepInEx.Unix;
 using BepInEx.ConsoleUtil;
 using UnityInjector.ConsoleUtil;
 
@@ -37,6 +38,10 @@ namespace BepInEx
 				case PlatformID.Unix:
 				{
 					ConsoleActive = true;
+					var writer = new StreamWriter(UnixStreamHelper.CreateDuplicateStream(1), Console.Out.Encoding);
+					writer.AutoFlush = true;
+					StandardOutStream = writer;
+					Console.SetOut(StandardOutStream);
 					break;
 				}
 			}
