@@ -18,19 +18,40 @@ namespace BepInEx.Unix
 		public bool UseMonoTtyDriver { get; private set; }
 		public bool StdoutRedirected { get; private set; }
 
+		public TtyInfo TtyInfo { get; private set; }
+
 		public void Initialize(bool alreadyActive)
 		{
 			// Console is always considered active on Unix
 			ConsoleActive = true;
+			
+			UseMonoTtyDriver = typeof(Console).Assembly.GetType("System.ConsoleDriver") != null;
 
 			var duplicateStream = UnixStreamHelper.CreateDuplicateStream(1);
 
-			var writer = ConsoleWriter.CreateConsoleStreamWriter(duplicateStream, Console.Out.Encoding, true);
+			if (UseMonoTtyDriver)
+			{
+				// Mono implementation handles xterm for us
 
-			StandardOut = TextWriter.Synchronized(writer);
+				var writer = ConsoleWriter.CreateConsoleStreamWriter(duplicateStream, Console.Out.Encoding, true);
 
-			var driver = AccessTools.Field(AccessTools.TypeByName("System.ConsoleDriver"), "driver").GetValue(null);
-			AccessTools.Field(AccessTools.TypeByName("System.TermInfoDriver"), "stdout").SetValue(driver, writer);
+				StandardOut = TextWriter.Synchronized(writer);
+
+				var driver = AccessTools.Field(AccessTools.TypeByName("System.ConsoleDriver"), "driver").GetValue(null);
+				AccessTools.Field(AccessTools.TypeByName("System.TermInfoDriver"), "stdout").SetValue(driver, writer);
+			}
+			else
+			{
+				// Handle TTY ourselves
+
+				var writer = new StreamWriter(duplicateStream, Console.Out.Encoding);
+
+				writer.AutoFlush = true;
+
+				StandardOut = TextWriter.Synchronized(writer);
+
+				TtyInfo = TtyHandler.GetTtyInfo();
+			}
 
 			ConsoleOut = StandardOut;
 		}
@@ -47,14 +68,14 @@ namespace BepInEx.Unix
 
 		public void SetConsoleColor(ConsoleColor color)
 		{
-			if (SafeConsole.ForegroundColorExists)
+			if (UseMonoTtyDriver)
 			{
 				// Use mono's inbuilt terminfo driver to set the foreground color for us
 				SafeConsole.ForegroundColor = color;
 			}
 			else
 			{
-				throw new PlatformNotSupportedException("Cannot set Unix TTY color as mono implementation is missing");
+				ConsoleOut.Write(TtyInfo.GetAnsiCode(color));
 			}
 		}
 
@@ -65,7 +86,14 @@ namespace BepInEx.Unix
 
 		public void SetConsoleTitle(string title)
 		{
-			Console.Title = title;
+			if (UseMonoTtyDriver)
+			{
+				SafeConsole.Title = title;
+			}
+			else
+			{
+				ConsoleOut.Write($"\u001B]2;{title.Replace("\\", "\\\\")}\u0007");
+			}
 		}
 	}
 }

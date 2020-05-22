@@ -72,6 +72,7 @@
     <Compile Include="Console\Unix\ConsoleWriter.cs" />
     <Compile Include="Console\Unix\DynDllImport.cs" />
     <Compile Include="Console\Unix\LinuxConsoleDriver.cs" />
+    <Compile Include="Console\Unix\TtyHandler.cs" />
     <Compile Include="Console\Unix\UnixStream.cs" />
     <Compile Include="Console\Unix\UnixStreamHelper.cs" />
     <Compile Include="Console\Windows\WindowsConsoleDriver.cs" />

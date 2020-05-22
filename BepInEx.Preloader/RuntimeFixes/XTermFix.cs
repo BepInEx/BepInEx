@@ -13,6 +13,12 @@ namespace BepInEx.Preloader.RuntimeFixes
 			if (Environment.OSVersion.Platform != PlatformID.Unix)
 				return;
 
+			if (typeof(Console).Assembly.GetType("System.ConsoleDriver") == null)
+			{
+				// Mono version is too old, use our own TTY implementation instead
+				return;
+			}
+
 			if (AccessTools.Method("System.TermInfoReader:DetermineVersion") != null)
 			{
 				// Fix has been applied officially
@@ -43,9 +49,6 @@ namespace BepInEx.Preloader.RuntimeFixes
 			int b3 = buffer[offset + 2];
 			int b4 = buffer[offset + 3];
 
-			if (b1 == 255 && b2 == 255 && b3 == 255 && b4 == 255)
-				return -1;
-
 			return b1 | (b2 << 8) | (b3 << 16) | (b4 << 24);
 		}
 
@@ -53,9 +56,6 @@ namespace BepInEx.Preloader.RuntimeFixes
 		{
 			int b1 = buffer[offset];
 			int b2 = buffer[offset + 1];
-
-			if (b1 == 255 && b2 == 255)
-				return -1;
 
 			return (short)(b1 | (b2 << 8));
 		}
@@ -77,7 +77,7 @@ namespace BepInEx.Preloader.RuntimeFixes
 				throw new Exception($"Unknown xterm header format: {magic}");
 		}
 
-		public static bool ReadHeaderPrefix(object __instance, byte[] buffer, ref int position, ref short ___boolSize, ref short ___numSize, ref short ___strOffsets)
+		public static bool ReadHeaderPrefix(byte[] buffer, ref int position, ref short ___boolSize, ref short ___numSize, ref short ___strOffsets)
 		{
 			short magic = GetInt16(buffer, position);
 			position += 2;
