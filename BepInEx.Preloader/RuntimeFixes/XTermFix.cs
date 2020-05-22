@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Emit;
 using HarmonyLib;
-using MonoMod.Utils;
 
 namespace BepInEx.Preloader.RuntimeFixes
 {
@@ -11,7 +10,7 @@ namespace BepInEx.Preloader.RuntimeFixes
 	{
 		public static void Apply()
 		{
-			if (!PlatformHelper.Is(Platform.Linux))
+			if (Environment.OSVersion.Platform != PlatformID.Unix)
 				return;
 
 			if (AccessTools.Method("System.TermInfoReader:DetermineVersion") != null)
