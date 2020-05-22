@@ -3,56 +3,54 @@ using System.IO;
 using System.Text;
 using BepInEx.Configuration;
 using BepInEx.Unix;
-using BepInEx.ConsoleUtil;
-using HarmonyLib;
-using UnityInjector.ConsoleUtil;
 
 namespace BepInEx
 {
 	public static class ConsoleManager
 	{
+		internal static IConsoleDriver Driver { get; set; }
+
 		/// <summary>
 		/// True if an external console has been started, false otherwise.
 		/// </summary>
-		public static bool ConsoleActive { get; private set; }
+		public static bool ConsoleActive => Driver?.ConsoleActive ?? false;
 
 		/// <summary>
 		/// The stream that writes to the standard out stream of the process. Should never be null.
 		/// </summary>
-		public static TextWriter StandardOutStream { get; internal set; }
+		public static TextWriter StandardOutStream => Driver?.StandardOut;
 
 		/// <summary>
 		/// The stream that writes to an external console. Null if no such console exists
 		/// </summary>
-		public static TextWriter ConsoleStream { get; internal set; }
+		public static TextWriter ConsoleStream => Driver?.ConsoleOut;
 
 
-		public static void Initialize(bool active)
+		public static void Initialize(bool alreadyActive)
 		{
-			StandardOutStream = Console.Out;
-			Console.SetOut(StandardOutStream);
-			ConsoleActive = active;
-
 			switch (Environment.OSVersion.Platform)
 			{
 				case PlatformID.MacOSX:
 				case PlatformID.Unix:
 				{
-					ConsoleActive = true;
+					Driver = new LinuxConsoleDriver();
+					break;
+				}
 
-					var duplicateStream = UnixStreamHelper.CreateDuplicateStream(1);
-
-					var writer = ConsoleWriter.CreateConsoleStreamWriter(duplicateStream, Console.Out.Encoding, true);
-					
-					StandardOutStream = TextWriter.Synchronized(writer);
-					
-					var driver = AccessTools.Field(AccessTools.TypeByName("System.ConsoleDriver"), "driver").GetValue(null);
-					AccessTools.Field(AccessTools.TypeByName("System.TermInfoDriver"), "stdout").SetValue(driver, writer);
-
-					Console.SetOut(StandardOutStream);
+				case PlatformID.Win32NT:
+				{
+					Driver = new WindowsConsoleDriver();
 					break;
 				}
 			}
+
+			Driver.Initialize(alreadyActive);
+		}
+
+		private static void DriverCheck()
+		{
+			if (Driver == null)
+				throw new InvalidOperationException("Driver has not been initialized");
 		}
 
 
@@ -60,22 +58,11 @@ namespace BepInEx
 		{
 			if (ConsoleActive)
 				return;
-			
-			switch (Environment.OSVersion.Platform)
-			{
-				case PlatformID.Win32NT:
-				{
-					ConsoleWindow.Attach();
-					break;
-				}
 
-				default:
-					throw new PlatformNotSupportedException("Spawning a console is not currently supported on this platform");
-			}
+			DriverCheck();
 
+			Driver.CreateConsole();
 			SetConsoleStreams();
-
-			ConsoleActive = true;
 		}
 
 		public static void DetachConsole()
@@ -83,103 +70,57 @@ namespace BepInEx
 			if (!ConsoleActive)
 				return;
 
-			switch (Environment.OSVersion.Platform)
-			{
-				case PlatformID.Win32NT:
-				{
-					ConsoleWindow.Detach();
-					break;
-				}
+			DriverCheck();
 
-				default:
-					throw new PlatformNotSupportedException("Spawning a console is not currently supported on this platform");
-			}
-
-			ConsoleActive = false;
+			Driver.DetachConsole();
+			SetConsoleStreams();
 		}
 
 		public static void SetConsoleEncoding()
 		{
-			uint encoding = ConfigConsoleShiftJis.Value ? 932 : (uint)Encoding.UTF8.CodePage;
+			// Apparently Windows code-pages work in Mono.
+			// https://stackoverflow.com/a/33456543
+			// Alternatively we can pass in "shift-jis"
+			var encoding = ConfigConsoleShiftJis.Value ? Encoding.GetEncoding(932): Encoding.UTF8;
 
 			SetConsoleEncoding(encoding);
 		}
 
-		public static void SetConsoleEncoding(uint encodingCodePage)
+		public static void SetConsoleEncoding(Encoding encoding)
 		{
 			if (!ConsoleActive)
 				throw new InvalidOperationException("Console is not currently active");
 
-			switch (Environment.OSVersion.Platform)
-			{
-				case PlatformID.Win32NT:
-				{
-					ConsoleEncoding.ConsoleCodePage = encodingCodePage;
-					Console.OutputEncoding = Encoding.GetEncoding((int)encodingCodePage);
-					break;
-				}
+			DriverCheck();
 
-				case PlatformID.MacOSX:
-				case PlatformID.Unix:
-				{
-					break;
-				}
-			}
+			Driver.SetConsoleEncoding(encoding);
 		}
 
 		public static void SetConsoleTitle(string title)
 		{
-			switch (Environment.OSVersion.Platform)
-			{
-				case PlatformID.Win32NT:
-				{
-					if (!ConsoleActive)
-						return;
+			DriverCheck();
 
-					ConsoleWindow.Title = title;
-					break;
-				}
-			}
+			Driver.SetConsoleTitle(title);
 		}
 
 		public static void SetConsoleColor(ConsoleColor color)
 		{
-			switch (Environment.OSVersion.Platform)
-			{
-				case PlatformID.Win32NT:
-				{
-					if (!ConsoleActive)
-						return;
+			DriverCheck();
 
-					Kon.ForegroundColor = color;
-					break;
-				}
-			}
-
-			SafeConsole.ForegroundColor = color;
+			Driver.SetConsoleColor(color);
 		}
 
 		internal static void SetConsoleStreams()
 		{
-			switch (Environment.OSVersion.Platform)
+			if (ConsoleActive)
 			{
-				case PlatformID.Win32NT:
-				{
-					Console.SetOut(ConsoleStream);
-					Console.SetError(ConsoleStream);
-					break;
-				}
-
-				case PlatformID.MacOSX:
-				case PlatformID.Unix:
-				{
-					// We do not have external consoles on Unix platforms.
-					// Set the console output to standard output
-
-					Console.SetOut(StandardOutStream);
-					Console.SetError(StandardOutStream);
-					break;
-				}
+				Console.SetOut(ConsoleStream);
+				Console.SetError(ConsoleStream);
+			}
+			else
+			{
+				Console.SetOut(TextWriter.Null);
+				Console.SetError(TextWriter.Null);
 			}
 		}
 

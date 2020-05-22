@@ -18,16 +18,20 @@ namespace UnityInjector.ConsoleUtil
 		private static SetColorDelegate _setBackgroundColor;
 		private static SetColorDelegate _setForegroundColor;
 
+		public static bool BackgroundColorExists { get; private set; }
+
 		public static ConsoleColor BackgroundColor
 		{
-			get { return _getBackgroundColor(); }
-			set { _setBackgroundColor(value); }
+			get => _getBackgroundColor();
+			set => _setBackgroundColor(value);
 		}
+
+		public static bool ForegroundColorExists { get; private set; }
 
 		public static ConsoleColor ForegroundColor
 		{
-			get { return _getForegroundColor(); }
-			set { _setForegroundColor(value); }
+			get => _getForegroundColor();
+			set => _setForegroundColor(value);
 		}
 
 		static SafeConsole()
@@ -60,6 +64,9 @@ namespace UnityInjector.ConsoleUtil
 			_getBackgroundColor = gbc != null
 				? (GetColorDelegate)Delegate.CreateDelegate(typeof(GetColorDelegate), gbc)
 				: (() => ConsoleColor.Black);
+
+			BackgroundColorExists = _setBackgroundColor != null && _getBackgroundColor != null;
+			ForegroundColorExists = _setForegroundColor != null && _getForegroundColor != null;
 		}
 
 		private delegate ConsoleColor GetColorDelegate();

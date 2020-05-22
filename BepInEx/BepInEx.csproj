@@ -68,10 +68,13 @@
     <Compile Include="Configuration\AcceptableValueRange.cs" />
     <Compile Include="Configuration\ConfigEntryBase.cs" />
     <Compile Include="Console\ConsoleManager.cs" />
+    <Compile Include="Console\IConsoleDriver.cs" />
     <Compile Include="Console\Unix\ConsoleWriter.cs" />
     <Compile Include="Console\Unix\DynDllImport.cs" />
+    <Compile Include="Console\Unix\LinuxConsoleDriver.cs" />
     <Compile Include="Console\Unix\UnixStream.cs" />
     <Compile Include="Console\Unix\UnixStreamHelper.cs" />
+    <Compile Include="Console\Windows\WindowsConsoleDriver.cs" />
     <Compile Include="Contract\PluginInfo.cs" />
     <Compile Include="Configuration\ConfigDefinition.cs" />
     <Compile Include="Configuration\ConfigDescription.cs" />
@@ -87,7 +90,7 @@
     <Compile Include="Console\Windows\ConsoleEncoding\ConsoleEncoding.PInvoke.cs" />
     <Compile Include="Console\Windows\ConsoleWindow.cs" />
     <Compile Include="Console\Windows\Kon.cs" />
-    <Compile Include="Console\Windows\SafeConsole.cs" />
+    <Compile Include="Console\SafeConsole.cs" />
     <Compile Include="Bootstrap\Chainloader.cs" />
     <Compile Include="Contract\BaseUnityPlugin.cs" />
     <Compile Include="Logging\DiskLogListener.cs" />
