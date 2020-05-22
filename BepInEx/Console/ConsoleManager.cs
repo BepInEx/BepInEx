@@ -4,6 +4,7 @@ using System.Text;
 using BepInEx.Configuration;
 using BepInEx.Unix;
 using BepInEx.ConsoleUtil;
+using HarmonyLib;
 using UnityInjector.ConsoleUtil;
 
 namespace BepInEx
@@ -38,12 +39,16 @@ namespace BepInEx
 				case PlatformID.Unix:
 				{
 					ConsoleActive = true;
-					
+
 					var duplicateStream = UnixStreamHelper.CreateDuplicateStream(1);
-					
+
 					var writer = ConsoleWriter.CreateConsoleStreamWriter(duplicateStream, Console.Out.Encoding, true);
 					
-					StandardOutStream = writer;
+					StandardOutStream = TextWriter.Synchronized(writer);
+					
+					var driver = AccessTools.Field(AccessTools.TypeByName("System.ConsoleDriver"), "driver").GetValue(null);
+					AccessTools.Field(AccessTools.TypeByName("System.TermInfoDriver"), "stdout").SetValue(driver, writer);
+
 					Console.SetOut(StandardOutStream);
 					break;
 				}

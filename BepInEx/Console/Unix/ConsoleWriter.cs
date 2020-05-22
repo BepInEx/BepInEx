@@ -7,13 +7,14 @@ namespace BepInEx.Unix
 {
 	public static class ConsoleWriter
 	{
-		private static ConstructorInfo cStreamWriterConstructor = AccessTools.Constructor(AccessTools.TypeByName("System.IO.CStreamWriter"));
+		private static ConstructorInfo cStreamWriterConstructor = AccessTools.Constructor(AccessTools.TypeByName("System.IO.CStreamWriter"), new []{ typeof(Stream), typeof(Encoding), typeof(bool) });
 		public static TextWriter CreateConsoleStreamWriter(Stream stream, Encoding encoding, bool leaveOpen)
 		{
-			var writer = (StreamWriter)cStreamWriterConstructor.Invoke(null, new object[] { stream, encoding, leaveOpen, });
+			var writer = (StreamWriter)cStreamWriterConstructor.Invoke(new object[] { stream, encoding, leaveOpen, });
+			
 			writer.AutoFlush = true;
 
-			return TextWriter.Synchronized(writer);
+			return writer;
 		}
 	}
 }
