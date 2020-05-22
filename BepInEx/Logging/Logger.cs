@@ -14,7 +14,7 @@ namespace BepInEx.Logging
 
 		private static readonly ManualLogSource InternalLogSource = CreateLogSource("BepInEx");
 
-		private static void InternalLogEvent(object sender, LogEventArgs eventArgs)
+		internal static void InternalLogEvent(object sender, LogEventArgs eventArgs)
 		{
 			foreach (var listener in Listeners)
 			{
