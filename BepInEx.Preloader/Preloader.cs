@@ -113,26 +113,32 @@ namespace BepInEx.Preloader
 					Logger.LogFatal("Could not run preloader!");
 					Logger.LogFatal(ex);
 
-					PreloaderLog?.Dispose();
-
 					if (!ConsoleManager.ConsoleActive)
 					{
 						//if we've already attached the console, then the log will already be written to the console
 						AllocateConsole();
 						Console.Write(PreloaderLog);
 					}
-
-					PreloaderLog = null;
 				}
-				finally
+				catch { }
+
+				string log = string.Empty;
+
+				try
 				{
-					File.WriteAllText(
-						Path.Combine(Paths.GameRootPath, $"preloader_{DateTime.Now:yyyyMMdd_HHmmss_fff}.log"),
-						PreloaderLog + "\r\n" + ex);
+					// We could use platform-dependent newlines, however the developers use Windows so this will be easier to read :)
+
+					log = string.Join("\r\n", PreloaderConsoleListener.LogEvents.Select(x => x.ToString()).ToArray());
+					log += "\r\n";
 
 					PreloaderLog?.Dispose();
 					PreloaderLog = null;
 				}
+				catch { }
+
+				File.WriteAllText(
+					Path.Combine(Paths.GameRootPath, $"preloader_{DateTime.Now:yyyyMMdd_HHmmss_fff}.log"),
+					log + ex);
 			}
 		}
 
@@ -154,7 +160,7 @@ namespace BepInEx.Preloader
 			var entryType = assembly.MainModule.Types.FirstOrDefault(x => x.Name == entrypointType);
 
 			if (entryType == null)
-				throw new Exception("The entrypoint type is invalid! Please check your config.ini");
+				throw new Exception("The entrypoint type is invalid! Please check your config/BepInEx.cfg file");
 
 			using (var injected = AssemblyDefinition.ReadAssembly(Paths.BepInExAssemblyPath))
 			{
