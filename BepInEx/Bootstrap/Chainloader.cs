@@ -230,7 +230,7 @@ namespace BepInEx.Bootstrap
 				var productNameProp = typeof(Application).GetProperty("productName", BindingFlags.Public | BindingFlags.Static);
 
 				if (ConsoleManager.ConsoleActive)
-					ConsoleManager.SetConsoleTitle($"{CurrentAssemblyName} {CurrentAssemblyVersion} - {productNameProp?.GetValue(null, null) ?? Process.GetCurrentProcess().ProcessName}");
+					ConsoleManager.SetConsoleTitle($"{CurrentAssemblyName} {CurrentAssemblyVersion} - {productNameProp?.GetValue(null, null) ?? Path.GetFileNameWithoutExtension(Process.GetCurrentProcess().ProcessName)}");
 
 				Logger.LogMessage("Chainloader started");
 

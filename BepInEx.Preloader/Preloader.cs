@@ -56,7 +56,7 @@ namespace BepInEx.Preloader
 				PreloaderLog = new PreloaderConsoleListener(ConfigPreloaderCOutLogging.Value);
 				Logger.Listeners.Add(PreloaderLog);
 
-				string consoleTile = $"BepInEx {typeof(Paths).Assembly.GetName().Version} - {Process.GetCurrentProcess().ProcessName}";
+				string consoleTile = $"BepInEx {typeof(Paths).Assembly.GetName().Version} - {Path.GetFileNameWithoutExtension(Process.GetCurrentProcess().ProcessName)}";
 
 				if (ConsoleManager.ConsoleActive)
 					ConsoleManager.SetConsoleTitle(consoleTile);
