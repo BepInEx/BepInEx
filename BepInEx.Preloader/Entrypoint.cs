@@ -1,18 +1,18 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using BepInEx.Preloader.RuntimeFixes;
 
 namespace BepInEx.Preloader
 {
 	internal static class PreloaderRunner
 	{
-		public static void PreloaderPreMain(string[] args)
+		public static void PreloaderMain()
 		{
 			string bepinPath = Utility.ParentDirectory(Path.GetFullPath(EnvVars.DOORSTOP_INVOKE_DLL_PATH), 2);
 
-			Paths.SetExecutablePath(args[0], bepinPath, EnvVars.DOORSTOP_MANAGED_FOLDER_DIR);
+			Paths.SetExecutablePath(EnvVars.DOORSTOP_PROCESS_PATH, bepinPath, EnvVars.DOORSTOP_MANAGED_FOLDER_DIR);
 			AppDomain.CurrentDomain.AssemblyResolve += LocalResolve;
 
 			PreloaderMain();
@@ -30,8 +30,10 @@ namespace BepInEx.Preloader
 		{
 			var assemblyName = new AssemblyName(args.Name);
 
+			// Use parse assembly name on managed side because native GetName() can fail on some locales
+			// if the game path has "exotic" characters
 			var foundAssembly = AppDomain.CurrentDomain.GetAssemblies()
-										 .FirstOrDefault(x => x.GetName().Name == assemblyName.Name);
+										 .FirstOrDefault(x => new AssemblyName(x.FullName).Name == assemblyName.Name);
 
 			if (foundAssembly != null)
 				return foundAssembly;
@@ -65,7 +67,7 @@ namespace BepInEx.Preloader
 			{
 				EnvVars.LoadVars();
 
-				silentExceptionLog = Path.Combine(Path.GetDirectoryName(args[0]), silentExceptionLog);
+				silentExceptionLog = Path.Combine(EnvVars.DOORSTOP_PROCESS_PATH, silentExceptionLog);
 
 				// Get the path of this DLL via Doorstop env var because Assembly.Location mangles non-ASCII characters on some versions of Mono for unknown reasons
 				preloaderPath = Path.GetDirectoryName(Path.GetFullPath(EnvVars.DOORSTOP_INVOKE_DLL_PATH));
@@ -75,8 +77,8 @@ namespace BepInEx.Preloader
 				// In some versions of Unity 4, Mono tries to resolve BepInEx.dll prematurely because of the call to Paths.SetExecutablePath
 				// To prevent that, we have to use reflection and a separate startup class so that we can install required assembly resolvers before the main code
 				typeof(Entrypoint).Assembly.GetType($"BepInEx.Preloader.{nameof(PreloaderRunner)}")
-								  ?.GetMethod(nameof(PreloaderRunner.PreloaderPreMain))
-								  ?.Invoke(null, new object[] { args });
+								  ?.GetMethod(nameof(PreloaderRunner.PreloaderMain))
+								  ?.Invoke(null, null);
 
 				AppDomain.CurrentDomain.AssemblyResolve -= ResolveCurrentDirectory;
 			}
