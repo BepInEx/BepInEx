@@ -39,9 +39,8 @@
       <HintPath>$(SolutionDir)\packages\MonoMod.RuntimeDetour.20.4.3.1\lib\net35\MonoMod.RuntimeDetour.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="MonoMod.Utils, Version=20.4.3.1, Culture=neutral, PublicKeyToken=null">
-      <HintPath>$(SolutionDir)\packages\MonoMod.Utils.20.4.3.1\lib\net35\MonoMod.Utils.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="MonoMod.Utils, Version=20.5.21.5, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MonoMod.Utils.20.5.21.5\lib\net35\MonoMod.Utils.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

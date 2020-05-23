@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using MonoMod.Utils.Dummy;
+using MonoMod.Utils;
 
 namespace BepInEx.Unix
 {
