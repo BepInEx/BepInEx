@@ -11,6 +11,7 @@ using HarmonyLib;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using MonoMod.RuntimeDetour;
+using MonoMod.Utils;
 using MethodAttributes = Mono.Cecil.MethodAttributes;
 
 namespace BepInEx.Preloader
@@ -71,7 +72,7 @@ namespace BepInEx.Preloader
 					Logger.LogMessage(attribute.Info);
 				}
 
-				Logger.LogInfo($"Running under Unity v{FileVersionInfo.GetVersionInfo(Paths.ExecutablePath).FileVersion}");
+				Logger.LogInfo($"Running under Unity v{GetUnityVersion()}");
 				Logger.LogInfo($"CLR runtime version: {Environment.Version}");
 				Logger.LogInfo($"Supports SRE: {Utility.CLRSupportsDynamicAssemblies}");
 
@@ -237,6 +238,14 @@ namespace BepInEx.Preloader
 				Logger.LogError("Failed to allocate console!");
 				Logger.LogError(ex);
 			}
+		}
+
+		public static string GetUnityVersion()
+		{
+			if (Utility.CurrentOs == Platform.Windows)
+				return FileVersionInfo.GetVersionInfo(Paths.ExecutablePath).FileVersion;
+
+			return $"Unknown ({(IsPostUnity2017 ? "post" : "pre")}-2017)";
 		}
 
 		#region Config

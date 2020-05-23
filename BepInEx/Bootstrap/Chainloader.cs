@@ -8,6 +8,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using Mono.Cecil;
+using MonoMod.Utils;
 using UnityEngine;
 using Logger = BepInEx.Logging.Logger;
 
@@ -111,6 +112,11 @@ namespace BepInEx.Bootstrap
 
 			if (logListener != null)
 				Logger.Listeners.Add(logListener);
+
+			if (Utility.CurrentOs == Platform.Linux)
+			{
+				Logger.LogInfo($"Detected Unity version: v{Application.unityVersion}");
+			}
 
 			Logger.LogMessage("Chainloader ready");
 

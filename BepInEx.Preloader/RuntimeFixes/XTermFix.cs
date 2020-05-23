@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Emit;
 using HarmonyLib;
+using MonoMod.Utils;
 
 namespace BepInEx.Preloader.RuntimeFixes
 {
@@ -10,7 +11,7 @@ namespace BepInEx.Preloader.RuntimeFixes
 	{
 		public static void Apply()
 		{
-			if (Environment.OSVersion.Platform != PlatformID.Unix)
+			if (Utility.CurrentOs == Platform.Windows)
 				return;
 
 			if (typeof(Console).Assembly.GetType("System.ConsoleDriver") == null)

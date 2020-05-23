@@ -3,6 +3,7 @@ using System.IO;
 using System.Text;
 using BepInEx.Configuration;
 using BepInEx.Unix;
+using MonoMod.Utils;
 
 namespace BepInEx
 {
@@ -28,16 +29,16 @@ namespace BepInEx
 
 		public static void Initialize(bool alreadyActive)
 		{
-			switch (Environment.OSVersion.Platform)
+			switch (Utility.CurrentOs)
 			{
-				case PlatformID.MacOSX:
-				case PlatformID.Unix:
+				case Platform.MacOS:
+				case Platform.Linux:
 				{
 					Driver = new LinuxConsoleDriver();
 					break;
 				}
 
-				case PlatformID.Win32NT:
+				case Platform.Windows:
 				{
 					Driver = new WindowsConsoleDriver();
 					break;

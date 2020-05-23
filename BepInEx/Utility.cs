@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using Mono.Cecil;
+using MonoMod.Utils;
 
 namespace BepInEx
 {
@@ -34,6 +35,8 @@ namespace BepInEx
 			{
 				// Suppress ArgumentNullException
 			}
+
+			CheckPlatform();
 		}
 
 		/// <summary>
@@ -237,5 +240,30 @@ namespace BepInEx
 				return false;
 			}
 		}
+
+
+
+		// Adapted from https://github.com/MonoMod/MonoMod.Common/blob/master/Utils/PlatformHelper.cs#L13
+		private static void CheckPlatform()
+		{
+			var pPlatform = typeof(Environment).GetProperty("Platform", BindingFlags.NonPublic | BindingFlags.Static);
+			string platId = pPlatform != null ? pPlatform.GetValue(null, new object[0]).ToString() : Environment.OSVersion.Platform.ToString();
+			platId = platId.ToLowerInvariant();
+
+			var cur = Platform.Unknown;
+			if (platId.Contains("win"))
+				cur = Platform.Windows;
+			else if (platId.Contains("mac") || platId.Contains("osx"))
+				cur = Platform.MacOS;
+			else if (platId.Contains("lin") || platId.Contains("unix"))
+				cur = Platform.Linux;
+
+			CurrentOs = cur;
+		}
+
+		/// <summary>
+		/// Current OS BepInEx is running on.
+		/// </summary>
+		public static Platform CurrentOs { get; private set; }
 	}
 }
