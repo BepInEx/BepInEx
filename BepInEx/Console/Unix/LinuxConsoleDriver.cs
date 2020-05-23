@@ -27,9 +27,11 @@ namespace BepInEx.Unix
 			
 			UseMonoTtyDriver = typeof(Console).Assembly.GetType("System.ConsoleDriver") != null;
 
+			StdoutRedirected = UnixStreamHelper.isatty(1) != 1;
+
 			var duplicateStream = UnixStreamHelper.CreateDuplicateStream(1);
 
-			if (UseMonoTtyDriver)
+			if (UseMonoTtyDriver && !StdoutRedirected)
 			{
 				// Mono implementation handles xterm for us
 
@@ -68,6 +70,9 @@ namespace BepInEx.Unix
 
 		public void SetConsoleColor(ConsoleColor color)
 		{
+			if (StdoutRedirected)
+				return;
+
 			if (UseMonoTtyDriver)
 			{
 				// Use mono's inbuilt terminfo driver to set the foreground color for us
@@ -86,6 +91,9 @@ namespace BepInEx.Unix
 
 		public void SetConsoleTitle(string title)
 		{
+			if (StdoutRedirected)
+				return;
+
 			if (UseMonoTtyDriver)
 			{
 				SafeConsole.Title = title;

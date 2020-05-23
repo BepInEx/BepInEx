@@ -31,6 +31,10 @@ namespace BepInEx.Unix
 		[DynDllImport("libc")]
 		public static fflushDelegate fflush;
 
+		public delegate int isattyDelegate(int fd);
+		[DynDllImport("libc")]
+		public static isattyDelegate isatty;
+
 		static UnixStreamHelper()
 		{
 			var libcMapping = new Dictionary<string, List<DynDllMapping>>
