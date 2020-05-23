@@ -82,11 +82,11 @@ namespace UnityInjector.ConsoleUtil
 				: (() => ConsoleColor.Black);
 
 			_getTitle = gtt != null
-				? (GetStringDelegate)Delegate.CreateDelegate(typeof(GetColorDelegate), gtt)
+				? (GetStringDelegate)Delegate.CreateDelegate(typeof(GetStringDelegate), gtt)
 				: (() => string.Empty);
 
 			_setTitle = stt != null
-				? (SetStringDelegate)Delegate.CreateDelegate(typeof(GetColorDelegate), stt)
+				? (SetStringDelegate)Delegate.CreateDelegate(typeof(SetStringDelegate), stt)
 				: (value => { });
 
 			BackgroundColorExists = _setBackgroundColor != null && _getBackgroundColor != null;
