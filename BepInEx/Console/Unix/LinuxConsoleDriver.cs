@@ -94,7 +94,7 @@ namespace BepInEx.Unix
 			if (StdoutRedirected)
 				return;
 
-			if (UseMonoTtyDriver)
+			if (UseMonoTtyDriver && SafeConsole.TitleExists)
 			{
 				SafeConsole.Title = title;
 			}
