@@ -4,7 +4,8 @@
 #addin nuget:?package=Cake.Json&version=4.0.0
 #addin nuget:?package=Newtonsoft.Json&version=11.0.2
 
-const string DOORSTOP_VER = "3.0.0.0";
+const string DOORSTOP_VER_WIN = "3.0.0.0";
+const string DOORSTOP_VER_NIX = "1.0.0.0";
 const string DOORSTOP_DLL = "version.dll";
 
 var target = Argument("target", "Build");
@@ -96,14 +97,22 @@ Task("DownloadDoorstop")
     var doorstopPath = Directory("./bin/doorstop");
     var doorstopX64Path = doorstopPath + File("doorstop_x64.zip");
     var doorstopX86Path = doorstopPath + File("doorstop_x86.zip");
+    var doorstopLinuxPath = doorstopPath + File("doorstop_linux.zip");
+    var doorstopMacPath = doorstopPath + File("doorstop_macos.zip");
     CreateDirectory(doorstopPath);
 
-    DownloadFile($"https://github.com/NeighTools/UnityDoorstop/releases/download/v{DOORSTOP_VER}/Doorstop_x64_{DOORSTOP_VER}.zip", doorstopX64Path);
-    DownloadFile($"https://github.com/NeighTools/UnityDoorstop/releases/download/v{DOORSTOP_VER}/Doorstop_x86_{DOORSTOP_VER}.zip", doorstopX86Path);
+    DownloadFile($"https://github.com/NeighTools/UnityDoorstop/releases/download/v{DOORSTOP_VER_WIN}/Doorstop_x64_{DOORSTOP_VER_WIN}.zip", doorstopX64Path);
+    DownloadFile($"https://github.com/NeighTools/UnityDoorstop/releases/download/v{DOORSTOP_VER_WIN}/Doorstop_x86_{DOORSTOP_VER_WIN}.zip", doorstopX86Path);
+
+    DownloadFile($"https://github.com/NeighTools/UnityDoorstop.Unix/releases/download/v{DOORSTOP_VER_NIX}/doorstop_v{DOORSTOP_VER_NIX}_linux.zip", doorstopLinuxPath);
+    DownloadFile($"https://github.com/NeighTools/UnityDoorstop.Unix/releases/download/v{DOORSTOP_VER_NIX}/doorstop_v{DOORSTOP_VER_NIX}_macos.zip", doorstopMacPath);
 
     Information("Extracting Doorstop");
     ZipUncompress(doorstopX86Path, doorstopPath + Directory("x86"));
     ZipUncompress(doorstopX64Path, doorstopPath + Directory("x64"));
+
+    ZipUncompress(doorstopLinuxPath, doorstopPath + Directory("nix"));
+    ZipUncompress(doorstopMacPath, doorstopPath + Directory("nix"));
 });
 
 Task("MakeDist")
@@ -124,25 +133,30 @@ Task("MakeDist")
                         .WithToken("commit_log", RunGit($"--no-pager log --no-merges --pretty=\"format:* (%h) [%an] %s\" {latestTag}..HEAD", "\r\n"))
                         .ToString();
 
-    void PackageBepin(string arch) 
+    void PackageBepin(string arch, string copyPattern, string doorstopConfigPattern, string libDir = null) 
     {
         var distArchDir = distDir + Directory(arch);
-        var doorstopArchPath = doorstopPath + Directory(arch) + File(DOORSTOP_DLL);
         var bepinDir = distArchDir + Directory("BepInEx");
-        
+        var doorstopTargetDir = distArchDir;
+        if(libDir != null) doorstopTargetDir += Directory(libDir);
+
+        var doorstopFiles = doorstopPath + Directory(arch) + File(copyPattern);
+
         CreateDirectory(distArchDir);
+        CreateDirectory(doorstopTargetDir);
         CreateDirectory(bepinDir + Directory("core"));
         CreateDirectory(bepinDir + Directory("plugins"));
         CreateDirectory(bepinDir + Directory("patchers"));
 
-        CopyFiles("./doorstop/*.*", distArchDir);
+        CopyFiles($"./doorstop/{doorstopConfigPattern}", distArchDir);
         CopyFiles("./bin/*.*", bepinDir + Directory("core"));
-        CopyFileToDirectory(doorstopArchPath, distArchDir);
+        CopyFiles(doorstopFiles, doorstopTargetDir);
         FileWriteText(distArchDir + File("changelog.txt"), changelog);
     }
 
-    PackageBepin("x86");
-    PackageBepin("x64");
+    PackageBepin("x86", DOORSTOP_DLL, "doorstop_config.ini");
+    PackageBepin("x64", DOORSTOP_DLL, "doorstop_config.ini");
+    PackageBepin("nix", "*.*", "run_bepinex.sh", "doorstop_libs");
     CopyFileToDirectory(File("./bin/patcher/BepInEx.Patcher.exe"), distPatcherDir);
 });
 
@@ -156,6 +170,7 @@ Task("Pack")
     Information("Packing BepInEx");
     ZipCompress(distDir + Directory("x86"), distDir + File($"BepInEx_x86{commitPrefix}{buildVersion}.zip"));
     ZipCompress(distDir + Directory("x64"), distDir + File($"BepInEx_x64{commitPrefix}{buildVersion}.zip"));
+    ZipCompress(distDir + Directory("nix"), distDir + File($"BepInEx_unix{commitPrefix}{buildVersion}.zip"));
 
     Information("Packing BepInEx.Patcher");
     ZipCompress(distDir + Directory("patcher"), distDir + File($"BepInEx_Patcher{commitPrefix}{buildVersion}.zip"));
@@ -184,6 +199,10 @@ Task("Pack")
                     new Dictionary<string, object> {
                         ["file"] = $"BepInEx_x86{commitPrefix}{buildVersion}.zip",
                         ["description"] = "BepInEx for x86 machines"
+                    },
+                    new Dictionary<string, object> {
+                        ["file"] = $"BepInEx_unix{commitPrefix}{buildVersion}.zip",
+                        ["description"] = "BepInEx for Unix with GCC (Linux, MacOS)"
                     },
                     new Dictionary<string, object> {
                         ["file"] = $"BepInEx_Patcher{commitPrefix}{buildVersion}.zip",
