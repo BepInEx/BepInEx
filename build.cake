@@ -5,7 +5,7 @@
 #addin nuget:?package=Newtonsoft.Json&version=11.0.2
 
 const string DOORSTOP_VER_WIN = "3.0.0.0";
-const string DOORSTOP_VER_NIX = "1.0.0.0";
+const string DOORSTOP_VER_NIX = "1.1.0.0";
 const string DOORSTOP_DLL = "version.dll";
 
 var target = Argument("target", "Build");
