@@ -5,8 +5,7 @@
 #
 # Usage: Configure the script below and simply run this script when you want to run your game modded.
 
-echo "Please open run.sh in a text editor and configure executable name. Comment or remove this line when you're done." && exit 1;
-
+if [ -z "$1" ]; then echo "Please open run.sh in a text editor and configure executable name. Comment or remove this line when you're done." && exit 1; fi
 
 # -------- SETTINGS --------
 # ---- EDIT AS NEEDED ------
@@ -29,6 +28,12 @@ export DOORSTOP_INVOKE_DLL_PATH=${PWD}/BepInEx/core/BepInEx.Preloader.dll;
 # ----- DO NOT EDIT FROM THIS LINE FORWARD  ------
 # ----- (unless you know what you're doing) ------
 
+# Backup current LD_PRELOAD because it can break `file` when running from Steam
+LD_PRELOAD_BAK=$LD_PRELOAD;
+export LD_PRELOAD="";
+DYLD_INSERT_LIBRARIES_BAK=$DYLD_INSERT_LIBRARIES;
+export DYLD_INSERT_LIBRARIES="";
+
 doorstop_libs=${PWD}/doorstop_libs;
 arch="";
 executable_path="";
@@ -45,21 +50,24 @@ case $os_type in
                 exit 1;;
 esac
 
+# Special case: if there is an arg, use that as executable path
+if [ -n "$1" ]; then
+    executable_path=$1;
+fi
+
 executable_type=`file -b "${executable_path}"`;
 case $executable_type in
-    *64-bit*)   arch="x64";;
-    *32-bit*)   arch="x86";;
+    *64-bit*)           arch="x64";;
+    *32-bit*|*i386*)    arch="x86";;
     *)          echo "Cannot identify executable type (got ${executable_type})!"; 
                 echo "Please create an issue at https://github.com/BepInEx/BepInEx/issues."; 
                 exit 1;;
 esac
 
 doorstop_libname=libdoorstop_${arch}.${lib_postfix};
-case $os_type in
-    Linux*)  export LD_LIBRARY_PATH=${doorstop_libs}:${LD_LIBRARY_PATH};
-             export LD_PRELOAD=$doorstop_libname;;
-    Darwin*) export DYLD_LIBRARY_PATH=${doorstop_libs}:${DYLD_LIBRARY_PATH};
-             export DYLD_INSERT_LIBRARIES=${doorstop_libs}/$doorstop_libname;;
-esac
+export LD_LIBRARY_PATH=${doorstop_libs}:${LD_LIBRARY_PATH};
+export LD_PRELOAD=${doorstop_libs}/$doorstop_libname:$LD_PRELOAD_BAK;
+export DYLD_LIBRARY_PATH=${doorstop_libs}:${DYLD_LIBRARY_PATH};
+export DYLD_INSERT_LIBRARIES=${doorstop_libs}/$doorstop_libname:$DYLD_INSERT_LIBRARIES_BAK;
 
 "${executable_path}"
