@@ -51,8 +51,14 @@ case $os_type in
 esac
 
 # Special case: if there is an arg, use that as executable path
+# Linux: arg is path to the executable
+# MacOS: arg is path to the .app folder which we need to resolve to the exectuable
 if [ -n "$1" ]; then
-    executable_path=$1;
+    case $os_type in
+        Linux*)     executable_path=$1;;
+        Darwin*)    executable_name=`basename "$1" .app`;
+                    executable_path=$1/Contents/MacOS/$executable_name;;
+    esac
 fi
 
 executable_type=`file -b "${executable_path}"`;
