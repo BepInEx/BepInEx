@@ -133,7 +133,7 @@ Task("MakeDist")
                         .WithToken("commit_log", RunGit($"--no-pager log --no-merges --pretty=\"format:* (%h) [%an] %s\" {latestTag}..HEAD", "\r\n"))
                         .ToString();
 
-    void PackageBepin(string arch, string copyPattern, string doorstopConfigPattern, string libDir = null) 
+    void PackageBepin(string arch, string copyPattern, string doorstopConfigPattern, string libDir = null, bool ensureLf = false) 
     {
         var distArchDir = distDir + Directory(arch);
         var bepinDir = distArchDir + Directory("BepInEx");
@@ -149,6 +149,8 @@ Task("MakeDist")
         CreateDirectory(bepinDir + Directory("patchers"));
 
         CopyFiles($"./doorstop/{doorstopConfigPattern}", distArchDir);
+        if(ensureLf)
+            ReplaceTextInFiles($"{distArchDir}/{doorstopConfigPattern}", "\r\n", "\n");
         CopyFiles("./bin/*.*", bepinDir + Directory("core"));
         CopyFiles(doorstopFiles, doorstopTargetDir);
         FileWriteText(distArchDir + File("changelog.txt"), changelog);
@@ -156,7 +158,7 @@ Task("MakeDist")
 
     PackageBepin("x86", DOORSTOP_DLL, "doorstop_config.ini");
     PackageBepin("x64", DOORSTOP_DLL, "doorstop_config.ini");
-    PackageBepin("nix", "*.*", "run_bepinex.sh", "doorstop_libs");
+    PackageBepin("nix", "*.*", "run_bepinex.sh", "doorstop_libs", true);
     CopyFileToDirectory(File("./bin/patcher/BepInEx.Patcher.exe"), distPatcherDir);
 });
 
