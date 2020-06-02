@@ -62,7 +62,7 @@ namespace BepInEx
 
 		public void SetConsoleEncoding(Encoding encoding)
 		{
-			ConsoleEncoding.ConsoleCodePage = (uint)encoding.WindowsCodePage;
+			ConsoleEncoding.ConsoleCodePage = (uint)encoding.CodePage;
 			Console.OutputEncoding = encoding;
 		}
 
