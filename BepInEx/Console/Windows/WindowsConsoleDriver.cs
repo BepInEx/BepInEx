@@ -26,8 +26,10 @@ namespace BepInEx
 		{
 			ConsoleWindow.Attach();
 
+			// If stdout exists, write to it, otherwise make it the same as console out
 			// Not sure if this is needed? Does the original Console.Out still work?
-			var originalOutStream = new FileStream(new SafeFileHandle(ConsoleWindow.OriginalStdoutHandle, false), FileAccess.Write);
+			var stdout = ConsoleWindow.OriginalStdoutHandle != IntPtr.Zero ? ConsoleWindow.OriginalStdoutHandle : ConsoleWindow.ConsoleOutHandle;
+			var originalOutStream = new FileStream(new SafeFileHandle(stdout, false), FileAccess.Write);
 			StandardOut = new StreamWriter(originalOutStream, new UTF8Encoding(false))
 			{
 				AutoFlush = true
