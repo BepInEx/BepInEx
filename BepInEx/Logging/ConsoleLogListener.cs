@@ -1,6 +1,5 @@
 ﻿using System;
 using BepInEx.Configuration;
-using BepInEx.ConsoleUtil;
 
 namespace BepInEx.Logging
 {
@@ -14,9 +13,9 @@ namespace BepInEx.Logging
 			if ((eventArgs.Level & ConfigConsoleDisplayedLevel.Value) == 0)
 				return;
 
-			Kon.ForegroundColor = eventArgs.Level.GetConsoleColor();
+			ConsoleManager.SetConsoleColor(eventArgs.Level.GetConsoleColor());
 			Console.Write(eventArgs.ToStringLine());
-			Kon.ForegroundColor = ConsoleColor.Gray;
+			ConsoleManager.SetConsoleColor(ConsoleColor.Gray);
 		}
 
 		public void Dispose() { }

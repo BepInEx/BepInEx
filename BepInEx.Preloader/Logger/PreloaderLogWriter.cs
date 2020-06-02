@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using BepInEx.ConsoleUtil;
 using BepInEx.Logging;
 
 namespace BepInEx.Preloader
@@ -32,9 +31,9 @@ namespace BepInEx.Preloader
 		{
 			LogEvents.Add(eventArgs);
 
-			Kon.ForegroundColor = eventArgs.Level.GetConsoleColor();
+			ConsoleManager.SetConsoleColor(eventArgs.Level.GetConsoleColor());
 			ConsoleDirectWrite(eventArgs.ToStringLine());
-			Kon.ForegroundColor = ConsoleColor.Gray;
+			ConsoleManager.SetConsoleColor(ConsoleColor.Gray);
 		}
 
 		public void ConsoleDirectWrite(string value)

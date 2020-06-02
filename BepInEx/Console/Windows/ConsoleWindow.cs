@@ -4,38 +4,23 @@
 // --------------------------------------------------
 
 using System;
-using System.IO;
 using System.Runtime.InteropServices;
-using System.Text;
-using BepInEx.Configuration;
 
 namespace UnityInjector.ConsoleUtil
 {
 	internal class ConsoleWindow
 	{
-		public static readonly ConfigEntry<bool> ConfigConsoleEnabled = ConfigFile.CoreConfig.Bind(
-			"Logging.Console", "Enabled",
-			false,
-			"Enables showing a console for log output.");
-
-		public static readonly ConfigEntry<bool> ConfigConsoleShiftJis = ConfigFile.CoreConfig.Bind(
-			"Logging.Console", "ShiftJisEncoding",
-			false,
-			"If true, console is set to the Shift-JIS encoding, otherwise UTF-8 encoding.");
-
 		public static bool IsAttached { get; private set; }
-		private static IntPtr _cOut;
-		private static IntPtr _oOut;
-
-		public static TextWriter StandardOut { get; private set; }
+		public static IntPtr ConsoleOutHandle;
+		public static IntPtr OriginalStdoutHandle;
 
 		public static void Attach()
 		{
 			if (IsAttached)
 				return;
 
-			if (_oOut == IntPtr.Zero)
-				_oOut = GetStdHandle(-11);
+			if (OriginalStdoutHandle == IntPtr.Zero)
+				OriginalStdoutHandle = GetStdHandle(-11);
 
 			// Store Current Window
 			IntPtr currWnd = GetForegroundWindow();
@@ -48,12 +33,11 @@ namespace UnityInjector.ConsoleUtil
 			// Restore Foreground
 			SetForegroundWindow(currWnd);
 
-			_cOut = CreateFile("CONOUT$", 0x80000000 | 0x40000000, 2, IntPtr.Zero, 3, 0, IntPtr.Zero);
-			BepInEx.ConsoleUtil.Kon.conOut = _cOut;
+			ConsoleOutHandle = CreateFile("CONOUT$", 0x80000000 | 0x40000000, 2, IntPtr.Zero, 3, 0, IntPtr.Zero);
+			BepInEx.ConsoleUtil.Kon.conOut = ConsoleOutHandle;
 
-			if (!SetStdHandle(-11, _cOut))
+			if (!SetStdHandle(-11, ConsoleOutHandle))
 				throw new Exception("SetStdHandle() failed");
-			Init();
 
 			IsAttached = true;
 		}
@@ -87,14 +71,16 @@ namespace UnityInjector.ConsoleUtil
 			if (!IsAttached)
 				return;
 
-			if (!CloseHandle(_cOut))
+			if (!CloseHandle(ConsoleOutHandle))
 				throw new Exception("CloseHandle() failed");
-			_cOut = IntPtr.Zero;
+
+			ConsoleOutHandle = IntPtr.Zero;
+
 			if (!FreeConsole())
 				throw new Exception("FreeConsole() failed");
-			if (!SetStdHandle(-11, _oOut))
+
+			if (!SetStdHandle(-11, OriginalStdoutHandle))
 				throw new Exception("SetStdHandle() failed");
-			Init();
 
 			IsAttached = false;
 		}
@@ -130,18 +116,6 @@ namespace UnityInjector.ConsoleUtil
 
 		[DllImport("kernel32.dll", SetLastError = true)]
 		private static extern IntPtr GetStdHandle(int nStdHandle);
-
-		private static void Init()
-		{
-			var stdOut = Console.OpenStandardOutput();
-			StandardOut = new StreamWriter(stdOut, Encoding.Default)
-			{
-				AutoFlush = true
-			};
-
-			Console.SetOut(StandardOut);
-			Console.SetError(StandardOut);
-		}
 
 		[DllImport("kernel32.dll", SetLastError = true)]
 		private static extern bool SetStdHandle(int nStdHandle, IntPtr hConsoleOutput);

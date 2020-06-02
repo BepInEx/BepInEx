@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using BepInEx.Preloader.Patching;
@@ -12,7 +11,7 @@ using HarmonyLib;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using MonoMod.RuntimeDetour;
-using UnityInjector.ConsoleUtil;
+using MonoMod.Utils;
 using MethodAttributes = Mono.Cecil.MethodAttributes;
 
 namespace BepInEx.Preloader
@@ -33,6 +32,7 @@ namespace BepInEx.Preloader
 		{
 			try
 			{
+				ConsoleManager.Initialize(false);
 				AllocateConsole();
 
 				bool bridgeInitialized = Utility.TryDo(() =>
@@ -42,7 +42,7 @@ namespace BepInEx.Preloader
 				}, out var harmonyBridgeException);
 
 				Exception runtimePatchException = null;
-				if(bridgeInitialized)
+				if (bridgeInitialized)
 					Utility.TryDo(() =>
 					{
 						if (ConfigApplyRuntimePatches.Value)
@@ -56,8 +56,11 @@ namespace BepInEx.Preloader
 				PreloaderLog = new PreloaderConsoleListener(ConfigPreloaderCOutLogging.Value);
 				Logger.Listeners.Add(PreloaderLog);
 
-				string consoleTile = $"BepInEx {typeof(Paths).Assembly.GetName().Version} - {Process.GetCurrentProcess().ProcessName}";
-				ConsoleWindow.Title = consoleTile;
+				string consoleTile = $"BepInEx {typeof(Paths).Assembly.GetName().Version} - {Path.GetFileNameWithoutExtension(Process.GetCurrentProcess().ProcessName)}";
+
+				if (ConsoleManager.ConsoleActive)
+					ConsoleManager.SetConsoleTitle(consoleTile);
+
 				Logger.LogMessage(consoleTile);
 
 				//See BuildInfoAttribute for more information about this section.
@@ -69,7 +72,7 @@ namespace BepInEx.Preloader
 					Logger.LogMessage(attribute.Info);
 				}
 
-				Logger.LogInfo($"Running under Unity v{FileVersionInfo.GetVersionInfo(Paths.ExecutablePath).FileVersion}");
+				Logger.LogInfo($"Running under Unity v{GetUnityVersion()}");
 				Logger.LogInfo($"CLR runtime version: {Environment.Version}");
 				Logger.LogInfo($"Supports SRE: {Utility.CLRSupportsDynamicAssemblies}");
 
@@ -110,26 +113,32 @@ namespace BepInEx.Preloader
 					Logger.LogFatal("Could not run preloader!");
 					Logger.LogFatal(ex);
 
-					PreloaderLog?.Dispose();
-
-					if (!ConsoleWindow.IsAttached)
+					if (!ConsoleManager.ConsoleActive)
 					{
 						//if we've already attached the console, then the log will already be written to the console
 						AllocateConsole();
 						Console.Write(PreloaderLog);
 					}
-
-					PreloaderLog = null;
 				}
-				finally
+				catch { }
+
+				string log = string.Empty;
+
+				try
 				{
-					File.WriteAllText(
-						Path.Combine(Paths.GameRootPath, $"preloader_{DateTime.Now:yyyyMMdd_HHmmss_fff}.log"),
-						PreloaderLog + "\r\n" + ex);
+					// We could use platform-dependent newlines, however the developers use Windows so this will be easier to read :)
+
+					log = string.Join("\r\n", PreloaderConsoleListener.LogEvents.Select(x => x.ToString()).ToArray());
+					log += "\r\n";
 
 					PreloaderLog?.Dispose();
 					PreloaderLog = null;
 				}
+				catch { }
+
+				File.WriteAllText(
+					Path.Combine(Paths.GameRootPath, $"preloader_{DateTime.Now:yyyyMMdd_HHmmss_fff}.log"),
+					log + ex);
 			}
 		}
 
@@ -151,7 +160,7 @@ namespace BepInEx.Preloader
 			var entryType = assembly.MainModule.Types.FirstOrDefault(x => x.Name == entrypointType);
 
 			if (entryType == null)
-				throw new Exception("The entrypoint type is invalid! Please check your config.ini");
+				throw new Exception("The entrypoint type is invalid! Please check your config/BepInEx.cfg file");
 
 			using (var injected = AssemblyDefinition.ReadAssembly(Paths.BepInExAssemblyPath))
 			{
@@ -222,26 +231,27 @@ namespace BepInEx.Preloader
 		/// </summary>
 		public static void AllocateConsole()
 		{
-			if (!ConsoleWindow.ConfigConsoleEnabled.Value)
+			if (!ConsoleManager.ConfigConsoleEnabled.Value)
 				return;
 
 			try
 			{
-				ConsoleWindow.Attach();
-
-				var encoding = (uint)Encoding.UTF8.CodePage;
-
-				if (ConsoleWindow.ConfigConsoleShiftJis.Value)
-					encoding = 932;
-
-				ConsoleEncoding.ConsoleCodePage = encoding;
-				Console.OutputEncoding = ConsoleEncoding.GetEncoding(encoding);
+				ConsoleManager.CreateConsole();
+				ConsoleManager.SetConsoleEncoding();
 			}
 			catch (Exception ex)
 			{
 				Logger.LogError("Failed to allocate console!");
 				Logger.LogError(ex);
 			}
+		}
+
+		public static string GetUnityVersion()
+		{
+			if (Utility.CurrentOs == Platform.Windows)
+				return FileVersionInfo.GetVersionInfo(Paths.ExecutablePath).FileVersion;
+
+			return $"Unknown ({(IsPostUnity2017 ? "post" : "pre")}-2017)";
 		}
 
 		#region Config
@@ -261,7 +271,7 @@ namespace BepInEx.Preloader
 			".cctor",
 			"The name of the method in the specified entrypoint assembly and type to hook and load Chainloader from.");
 
-		private static readonly ConfigEntry<bool> ConfigApplyRuntimePatches = ConfigFile.CoreConfig.Bind(
+		internal static readonly ConfigEntry<bool> ConfigApplyRuntimePatches = ConfigFile.CoreConfig.Bind(
 			"Preloader", "ApplyRuntimePatches",
 			true,
 			"Enables or disables runtime patches.\nThis should always be true, unless you cannot start the game due to a Harmony related issue (such as running .NET Standard runtime) or you know what you're doing.");

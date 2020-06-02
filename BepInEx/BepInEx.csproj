@@ -22,6 +22,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>..\bin\BepInEx.xml</DocumentationFile>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject />
@@ -37,6 +38,7 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <DebugType>full</DebugType>
     <DebugSymbols>true</DebugSymbols>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Mono.Cecil, Version=0.10.4.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e, processorArchitecture=MSIL">
@@ -51,6 +53,9 @@
     <Reference Include="Mono.Cecil.Rocks, Version=0.10.4.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e, processorArchitecture=MSIL">
       <HintPath>$(SolutionDir)\packages\Mono.Cecil.0.10.4\lib\net35\Mono.Cecil.Rocks.dll</HintPath>
     </Reference>
+    <Reference Include="MonoMod.Utils, Version=20.5.21.5, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MonoMod.Utils.20.5.21.5\lib\net35\MonoMod.Utils.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="UnityEngine">
       <HintPath>..\lib\UnityEngine.dll</HintPath>
@@ -62,6 +67,14 @@
     <Compile Include="Configuration\AcceptableValueList.cs" />
     <Compile Include="Configuration\AcceptableValueRange.cs" />
     <Compile Include="Configuration\ConfigEntryBase.cs" />
+    <Compile Include="Console\ConsoleManager.cs" />
+    <Compile Include="Console\IConsoleDriver.cs" />
+    <Compile Include="Console\Unix\ConsoleWriter.cs" />
+    <Compile Include="Console\Unix\LinuxConsoleDriver.cs" />
+    <Compile Include="Console\Unix\TtyHandler.cs" />
+    <Compile Include="Console\Unix\UnixStream.cs" />
+    <Compile Include="Console\Unix\UnixStreamHelper.cs" />
+    <Compile Include="Console\Windows\WindowsConsoleDriver.cs" />
     <Compile Include="Contract\PluginInfo.cs" />
     <Compile Include="Configuration\ConfigDefinition.cs" />
     <Compile Include="Configuration\ConfigDescription.cs" />
@@ -72,12 +85,12 @@
     <Compile Include="Configuration\TomlTypeConverter.cs" />
     <Compile Include="Configuration\TypeConverter.cs" />
     <Compile Include="Contract\Attributes.cs" />
-    <Compile Include="ConsoleUtil\ConsoleEncoding\ConsoleEncoding.Buffers.cs" />
-    <Compile Include="ConsoleUtil\ConsoleEncoding\ConsoleEncoding.cs" />
-    <Compile Include="ConsoleUtil\ConsoleEncoding\ConsoleEncoding.PInvoke.cs" />
-    <Compile Include="ConsoleUtil\ConsoleWindow.cs" />
-    <Compile Include="ConsoleUtil\Kon.cs" />
-    <Compile Include="ConsoleUtil\SafeConsole.cs" />
+    <Compile Include="Console\Windows\ConsoleEncoding\ConsoleEncoding.Buffers.cs" />
+    <Compile Include="Console\Windows\ConsoleEncoding\ConsoleEncoding.cs" />
+    <Compile Include="Console\Windows\ConsoleEncoding\ConsoleEncoding.PInvoke.cs" />
+    <Compile Include="Console\Windows\ConsoleWindow.cs" />
+    <Compile Include="Console\Windows\Kon.cs" />
+    <Compile Include="Console\SafeConsole.cs" />
     <Compile Include="Bootstrap\Chainloader.cs" />
     <Compile Include="Contract\BaseUnityPlugin.cs" />
     <Compile Include="Logging\DiskLogListener.cs" />
@@ -110,5 +123,6 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

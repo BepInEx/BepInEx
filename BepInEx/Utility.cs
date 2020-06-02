@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using Mono.Cecil;
+using MonoMod.Utils;
 
 namespace BepInEx
 {
@@ -34,6 +35,8 @@ namespace BepInEx
 			{
 				// Suppress ArgumentNullException
 			}
+
+			CheckPlatform();
 		}
 
 		/// <summary>
@@ -63,6 +66,20 @@ namespace BepInEx
         /// <param name="parts">The multiple paths to combine together.</param>
         /// <returns>A combined path.</returns>
         public static string CombinePaths(params string[] parts) => parts.Aggregate(Path.Combine);
+
+		/// <summary>
+		/// Returns the parent directory of a path, optionally specifying the amount of levels.
+		/// </summary>
+		/// <param name="path">The path to get the parent directory of.</param>
+		/// <param name="levels">The amount of levels to traverse. Defaults to 1</param>
+		/// <returns>The parent directory.</returns>
+		public static string ParentDirectory(string path, int levels = 1)
+		{
+			for (int i = 0; i < levels; i++)
+				path = Path.GetDirectoryName(path);
+
+			return path;
+		}
 
 		/// <summary>
 		/// Tries to parse a bool, with a default value if unable to parse.
@@ -237,5 +254,30 @@ namespace BepInEx
 				return false;
 			}
 		}
+
+
+
+		// Adapted from https://github.com/MonoMod/MonoMod.Common/blob/master/Utils/PlatformHelper.cs#L13
+		private static void CheckPlatform()
+		{
+			var pPlatform = typeof(Environment).GetProperty("Platform", BindingFlags.NonPublic | BindingFlags.Static);
+			string platId = pPlatform != null ? pPlatform.GetValue(null, new object[0]).ToString() : Environment.OSVersion.Platform.ToString();
+			platId = platId.ToLowerInvariant();
+
+			var cur = Platform.Unknown;
+			if (platId.Contains("win"))
+				cur = Platform.Windows;
+			else if (platId.Contains("mac") || platId.Contains("osx"))
+				cur = Platform.MacOS;
+			else if (platId.Contains("lin") || platId.Contains("unix"))
+				cur = Platform.Linux;
+
+			CurrentOs = cur;
+		}
+
+		/// <summary>
+		/// Current OS BepInEx is running on.
+		/// </summary>
+		public static Platform CurrentOs { get; private set; }
 	}
 }

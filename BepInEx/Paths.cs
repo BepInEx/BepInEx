@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Reflection;
+using MonoMod.Utils;
 
 namespace BepInEx
 {
@@ -12,7 +13,11 @@ namespace BepInEx
 		{
 			ExecutablePath = executablePath;
 			ProcessName = Path.GetFileNameWithoutExtension(executablePath);
-			GameRootPath = Path.GetDirectoryName(executablePath);
+
+			GameRootPath = Utility.CurrentOs == Platform.MacOS
+				? Utility.ParentDirectory(executablePath, 4)
+				: Path.GetDirectoryName(executablePath);
+
 			ManagedPath = managedPath ?? Utility.CombinePaths(GameRootPath, $"{ProcessName}_Data", "Managed");
 			BepInExRootPath = bepinRootPath ?? Path.Combine(GameRootPath, "BepInEx");
 			ConfigPath = Path.Combine(BepInExRootPath, "config");
@@ -58,6 +63,7 @@ namespace BepInEx
 
 		/// <summary>
 		///     The directory that the currently executing process resides in.
+		///		<para>On OSX however, this is the parent directory of the game.app folder.</para>
 		/// </summary>
 		public static string GameRootPath { get; private set; }
 
