@@ -35,19 +35,11 @@ namespace BepInEx.Preloader
 				ConsoleManager.Initialize(false);
 				AllocateConsole();
 
-				bool bridgeInitialized = Utility.TryDo(() =>
+				Utility.TryDo(() =>
 				{
-					if (ConfigShimHarmony.Value)
-						HarmonyDetourBridge.Init();
-				}, out var harmonyBridgeException);
-
-				Exception runtimePatchException = null;
-				if (bridgeInitialized)
-					Utility.TryDo(() =>
-					{
-						if (ConfigApplyRuntimePatches.Value)
-							UnityPatches.Apply();
-					}, out runtimePatchException);
+					if (ConfigApplyRuntimePatches.Value)
+						UnityPatches.Apply();
+				}, out var runtimePatchException);
 
 				Logger.Sources.Add(TraceLogSource.CreateSource());
 
@@ -75,9 +67,6 @@ namespace BepInEx.Preloader
 				Logger.LogInfo($"Running under Unity v{GetUnityVersion()}");
 				Logger.LogInfo($"CLR runtime version: {Environment.Version}");
 				Logger.LogInfo($"Supports SRE: {Utility.CLRSupportsDynamicAssemblies}");
-
-				if (harmonyBridgeException != null)
-					Logger.LogWarning($"Failed to enable fix for Harmony for .NET Standard API. Error message: {harmonyBridgeException.Message}");
 
 				if (runtimePatchException != null)
 					Logger.LogWarning($"Failed to apply runtime patches for Mono. See more info in the output log. Error message: {runtimePatchException.Message}");
@@ -275,11 +264,6 @@ namespace BepInEx.Preloader
 			"Preloader", "ApplyRuntimePatches",
 			true,
 			"Enables or disables runtime patches.\nThis should always be true, unless you cannot start the game due to a Harmony related issue (such as running .NET Standard runtime) or you know what you're doing.");
-
-		private static readonly ConfigEntry<bool> ConfigShimHarmony = ConfigFile.CoreConfig.Bind(
-			"Preloader", "ShimHarmonySupport",
-			!Utility.CLRSupportsDynamicAssemblies,
-			"If enabled, basic Harmony functionality is patched to use MonoMod's RuntimeDetour instead.\nTry using this if Harmony does not work in a game.");
 
 		private static readonly ConfigEntry<bool> ConfigPreloaderCOutLogging = ConfigFile.CoreConfig.Bind(
 			"Logging", "PreloaderConsoleOutRedirection",
