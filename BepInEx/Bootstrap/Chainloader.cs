@@ -253,16 +253,16 @@ namespace BepInEx.Bootstrap
 
 				foreach (var pluginInfoGroup in pluginInfos.GroupBy(info => info.Metadata.GUID))
 				{
-					var alreadyLoaded = false;
+					PluginInfo loadedVersion = null;
 					foreach (var pluginInfo in pluginInfoGroup.OrderByDescending(x => x.Metadata.Version))
 					{
-						if (alreadyLoaded)
+						if (loadedVersion != null)
 						{
-							Logger.LogWarning($"Skipping because a newer version exists [{pluginInfo.Metadata.Name} {pluginInfo.Metadata.Version}]");
+							Logger.LogWarning($"Skipping [{pluginInfo}] because a newer version exists [{loadedVersion}]");
 							continue;
 						}
 
-						alreadyLoaded = true;
+						loadedVersion = pluginInfo;
 
 						// Perform checks that will prevent loading plugins in this run
 						var filters = pluginInfo.Processes.ToList();
@@ -270,7 +270,8 @@ namespace BepInEx.Bootstrap
 
 						if (invalidProcessName)
 						{
-							Logger.LogWarning($"Skipping because of process filters [{pluginInfo.Metadata.Name} {pluginInfo.Metadata.Version}]");
+							Logger.LogWarning($"Skipping [{pluginInfo}] because of process filters");
+							Logger.LogDebug($"[{pluginInfo}] has the following process filters: {string.Join(", ", pluginInfo.Processes.Select(p => p.ProcessName).ToArray())}");
 							continue;
 						}
 
@@ -287,13 +288,13 @@ namespace BepInEx.Bootstrap
 						dependencyDict.Remove(pluginInfo.Metadata.GUID);
 
 						var incompatiblePlugins = pluginInfo.Incompatibilities.Select(x => x.IncompatibilityGUID).Where(x => pluginsByGUID.ContainsKey(x)).ToArray();
-						string message = $@"Could not load [{pluginInfo.Metadata.Name}] because it is incompatible with: {string.Join(", ", incompatiblePlugins)}";
+						string message = $@"Could not load [{pluginInfo}] because it is incompatible with: {string.Join(", ", incompatiblePlugins)}";
 						DependencyErrors.Add(message);
 						Logger.LogError(message);
 					}
 					else if (PluginTargetsWrongBepin(pluginInfo))
 					{
-						string message = $@"Plugin [{pluginInfo.Metadata.Name}] targets a wrong version of BepInEx ({pluginInfo.TargettedBepInExVersion}) and might not work until you update";
+						string message = $@"Plugin [{pluginInfo}] targets a wrong version of BepInEx ({pluginInfo.TargettedBepInExVersion}) and might not work until you update";
 						DependencyErrors.Add(message);
 						Logger.LogWarning(message);
 					}
@@ -340,7 +341,7 @@ namespace BepInEx.Bootstrap
 
 					if (dependsOnInvalidPlugin)
 					{
-						string message = $"Skipping [{pluginInfo.Metadata.Name}] because it has a dependency that was not loaded. See previous errors for details.";
+						string message = $"Skipping [{pluginInfo}] because it has a dependency that was not loaded. See previous errors for details.";
 						DependencyErrors.Add(message);
 						Logger.LogWarning(message);
 						continue;
@@ -350,7 +351,7 @@ namespace BepInEx.Bootstrap
 					{
 						bool IsEmptyVersion(Version v) => v.Major == 0 && v.Minor == 0 && v.Build <= 0 && v.Revision <= 0;
 
-						string message = $@"Could not load [{pluginInfo.Metadata.Name}] because it has missing dependencies: {
+						string message = $@"Could not load [{pluginInfo}] because it has missing dependencies: {
 							string.Join(", ", missingDependencies.Select(s => IsEmptyVersion(s.MinimumVersion) ? s.DependencyGUID : $"{s.DependencyGUID} (v{s.MinimumVersion} or newer)").ToArray())
 							}";
 						DependencyErrors.Add(message);
@@ -362,7 +363,7 @@ namespace BepInEx.Bootstrap
 
 					try
 					{
-						Logger.LogInfo($"Loading [{pluginInfo.Metadata.Name} {pluginInfo.Metadata.Version}]");
+						Logger.LogInfo($"Loading [{pluginInfo}]");
 
 						if (!loadedAssemblies.TryGetValue(pluginInfo.Location, out var ass))
 							loadedAssemblies[pluginInfo.Location] = ass = Assembly.LoadFile(pluginInfo.Location);
@@ -377,7 +378,7 @@ namespace BepInEx.Bootstrap
 						invalidPlugins.Add(pluginGUID);
 						PluginInfos.Remove(pluginGUID);
 
-						Logger.LogError($"Error loading [{pluginInfo.Metadata.Name}] : {ex.Message}");
+						Logger.LogError($"Error loading [{pluginInfo}] : {ex.Message}");
 						if (ex is ReflectionTypeLoadException re)
 							Logger.LogDebug(TypeLoader.TypeLoadExceptionToString(re));
 						else

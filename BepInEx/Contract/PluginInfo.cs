@@ -86,5 +86,8 @@ namespace BepInEx
 
 			TargettedBepInExVersion = new Version(br.ReadString());
 		}
+
+		/// <inheritdoc />
+		public override string ToString() => $"{Metadata?.Name} {Metadata?.Version}";
 	}
 }
