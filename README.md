@@ -17,14 +17,15 @@ Unity plugin framework
 
 **[Bleeding Edge builds](https://builds.bepis.io/projects/bepinex_be)**
 
-**[How to install](https://github.com/bbepis/BepInEx/wiki/How-to-install)**
+**[How to install](https://bepinex.github.io/bepinex_docs/master/articles/user_guide/installation/index.html)**
 
-**[User and developer guides](https://github.com/BepInEx/BepInEx/wiki)**
+**[User and developer guides](https://bepinex.github.io/bepinex_docs/master/articles/index.html)**
 
 ## Used libraries
 - [NeighTools/UnityDoorstop](https://github.com/NeighTools/UnityDoorstop) - 3.0.0.0 ([5410184](https://github.com/NeighTools/UnityDoorstop/commit/5410184a82afca55b1ec7db86fd743c444a13e64))
-- [pardeike/Harmony](https://github.com/pardeike/Harmony) - pre-2.0 ([443f551](https://github.com/pardeike/Harmony/commit/443f551ec45ecf409755b5979a4466343197de03))
-- [0x0ade/MonoMod](https://github.com/0x0ade/MonoMod) - v20.4.3.1 ([231fd2a](https://github.com/MonoMod/MonoMod/commit/231fd2aaa851da126c552db1780b8ca670b6db87))
+- [NeighTools/UnityDoorstop.Unix](https://github.com/NeighTools/UnityDoorstop.Unix) - 1.2.0.0 ([94c882f](https://github.com/NeighTools/UnityDoorstop.Unix/commit/94c882f9c42b53685571b2d160ccf6e2e9492434))
+- [BepInEx/HarmonyX](https://github.com/BepInEx/HarmonyX) - 2.0.2 ([a278d77](https://github.com/BepInEx/HarmonyX/commit/a278d77bc7fa706838facb0d170db6989564becd))
+- [0x0ade/MonoMod](https://github.com/0x0ade/MonoMod) - v20.05.21.05 ([5d8210d](https://github.com/MonoMod/MonoMod/commit/5d8210d35efb6e85b7b40f1ce040257012936a90))
 - [jbevain/cecil](https://github.com/jbevain/cecil) - 0.10.4 ([98ec890](https://github.com/jbevain/cecil/commit/98ec890d44643ad88d573e97be0e120435eda732))
 
 ## Credits
