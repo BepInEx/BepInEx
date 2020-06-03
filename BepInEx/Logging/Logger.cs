@@ -14,6 +14,18 @@ namespace BepInEx.Logging
 
 		private static readonly ManualLogSource InternalLogSource = CreateLogSource("BepInEx");
 
+		private static bool internalLogsInitialized;
+
+		internal static void InitializeInternalLoggers()
+		{
+			if (internalLogsInitialized)
+				return;
+			
+			Sources.Add(new HarmonyLogSource());
+
+			internalLogsInitialized = true;
+		}
+		
 		internal static void InternalLogEvent(object sender, LogEventArgs eventArgs)
 		{
 			foreach (var listener in Listeners)

@@ -80,7 +80,8 @@ namespace BepInEx.Bootstrap
 				ConsoleManager.SetConsoleStreams();
 				ConsoleManager.SetConsoleEncoding();
 			}
-
+			
+			Logger.InitializeInternalLoggers();
 			Logger.Listeners.Add(new UnityLogListener());
 
 			if (ConfigDiskLogging.Value)

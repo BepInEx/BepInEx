@@ -10,7 +10,6 @@ using BepInEx.Preloader.RuntimeFixes;
 using HarmonyLib;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
-using MonoMod.RuntimeDetour;
 using MonoMod.Utils;
 using MethodAttributes = Mono.Cecil.MethodAttributes;
 
@@ -41,6 +40,7 @@ namespace BepInEx.Preloader
 						UnityPatches.Apply();
 				}, out var runtimePatchException);
 
+				Logger.InitializeInternalLoggers();
 				Logger.Sources.Add(TraceLogSource.CreateSource());
 
 				PreloaderLog = new PreloaderConsoleListener(ConfigPreloaderCOutLogging.Value);

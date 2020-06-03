@@ -102,6 +102,7 @@
     <Compile Include="Bootstrap\Chainloader.cs" />
     <Compile Include="Contract\BaseUnityPlugin.cs" />
     <Compile Include="Logging\DiskLogListener.cs" />
+    <Compile Include="Logging\HarmonyLogSource.cs" />
     <Compile Include="Logging\LogEventArgs.cs" />
     <Compile Include="Logging\Logger.cs" />
     <Compile Include="Logging\LogLevel.cs" />
