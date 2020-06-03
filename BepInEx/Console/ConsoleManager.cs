@@ -82,7 +82,7 @@ namespace BepInEx
 			// Apparently Windows code-pages work in Mono.
 			// https://stackoverflow.com/a/33456543
 			// Alternatively we can pass in "shift-jis"
-			var encoding = ConfigConsoleShiftJis.Value ? Encoding.GetEncoding(932): Encoding.UTF8;
+			var encoding = ConfigConsoleShiftJis.Value ? Encoding.GetEncoding(932): new UTF8Encoding(false);
 
 			SetConsoleEncoding(encoding);
 		}
