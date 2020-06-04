@@ -2,7 +2,6 @@
 using System.IO;
 using System.Text;
 using BepInEx.ConsoleUtil;
-using Microsoft.Win32.SafeHandles;
 using UnityInjector.ConsoleUtil;
 
 namespace BepInEx
@@ -24,24 +23,27 @@ namespace BepInEx
 
 		public void CreateConsole()
 		{
+			// On some Unity mono builds the SafeFileHandle overload for FileStream is missing
+			// so we use the older but always included one instead
+#pragma warning disable 618
 			ConsoleWindow.Attach();
-
+			
 			// If stdout exists, write to it, otherwise make it the same as console out
 			// Not sure if this is needed? Does the original Console.Out still work?
 			var stdout = ConsoleWindow.OriginalStdoutHandle != IntPtr.Zero ? ConsoleWindow.OriginalStdoutHandle : ConsoleWindow.ConsoleOutHandle;
-			var originalOutStream = new FileStream(new SafeFileHandle(stdout, false), FileAccess.Write);
+			var originalOutStream = new FileStream(stdout, FileAccess.Write);
 			StandardOut = new StreamWriter(originalOutStream, new UTF8Encoding(false))
 			{
 				AutoFlush = true
 			};
 
-			var consoleOutStream = new FileStream(new SafeFileHandle(ConsoleWindow.ConsoleOutHandle, false), FileAccess.Write);
+			var consoleOutStream = new FileStream(ConsoleWindow.ConsoleOutHandle, FileAccess.Write);
 			ConsoleOut = new StreamWriter(consoleOutStream, Console.OutputEncoding)
 			{
 				AutoFlush = true
 			};
-
 			ConsoleActive = true;
+#pragma warning restore 618
 		}
 
 		public void DetachConsole()
