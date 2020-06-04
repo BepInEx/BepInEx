@@ -71,7 +71,6 @@ namespace BepInEx
 		public void SetConsoleTitle(string title)
 		{
 			ConsoleWindow.Title = title;
-			Console.Title = title;
 		}
 	}
 }
