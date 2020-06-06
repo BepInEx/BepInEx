@@ -18,7 +18,10 @@ namespace BepInEx
 		void DetachConsole();
 
 		void SetConsoleColor(ConsoleColor color);
-		void SetConsoleEncoding(Encoding encoding);
+		
+		// Apparently Windows code-pages work in Mono.
+		// https://stackoverflow.com/a/33456543
+		void SetConsoleEncoding(uint codepage);
 		void SetConsoleTitle(string title);
 	}
 }

@@ -9,6 +9,8 @@ namespace BepInEx
 {
 	public static class ConsoleManager
 	{
+		private const uint SHIFT_JIS_CP = 932;
+		
 		internal static IConsoleDriver Driver { get; set; }
 
 		/// <summary>
@@ -79,22 +81,22 @@ namespace BepInEx
 
 		public static void SetConsoleEncoding()
 		{
-			// Apparently Windows code-pages work in Mono.
-			// https://stackoverflow.com/a/33456543
-			// Alternatively we can pass in "shift-jis"
-			var encoding = ConfigConsoleShiftJis.Value ? Encoding.GetEncoding(932): new UTF8Encoding(false);
+			// Apparently some versions of Mono throw a "Encoding name 'xxx' not supported"
+			// if you use Encoding.GetEncoding
+			// That's why we use of codepages directly and handle then in console drivers separately
+			var codepage = ConfigConsoleShiftJis.Value ? SHIFT_JIS_CP: (uint)Encoding.UTF8.CodePage;
 
-			SetConsoleEncoding(encoding);
+			SetConsoleEncoding(codepage);
 		}
 
-		public static void SetConsoleEncoding(Encoding encoding)
+		public static void SetConsoleEncoding(uint codepage)
 		{
 			if (!ConsoleActive)
 				throw new InvalidOperationException("Console is not currently active");
 
 			DriverCheck();
 
-			Driver.SetConsoleEncoding(encoding);
+			Driver.SetConsoleEncoding(codepage);
 		}
 
 		public static void SetConsoleTitle(string title)

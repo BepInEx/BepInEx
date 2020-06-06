@@ -84,7 +84,7 @@ namespace BepInEx.Unix
 			}
 		}
 
-		public void SetConsoleEncoding(Encoding encoding)
+		public void SetConsoleEncoding(uint codepage)
 		{
 			// We shouldn't be changing this on Unix
 		}

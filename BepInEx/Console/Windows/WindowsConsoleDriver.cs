@@ -62,10 +62,12 @@ namespace BepInEx
 			Kon.ForegroundColor = color;
 		}
 
-		public void SetConsoleEncoding(Encoding encoding)
+		public void SetConsoleEncoding(uint codepage)
 		{
-			ConsoleEncoding.ConsoleCodePage = (uint)encoding.CodePage;
-			Console.OutputEncoding = encoding;
+			// Make sure of ConsoleEncoding helper class because on some Monos
+			// Encoding.GetEncoding throws NotImplementedException on most codepages
+			ConsoleEncoding.ConsoleCodePage = codepage;
+			Console.OutputEncoding = ConsoleEncoding.GetEncoding(codepage);
 		}
 
 		public void SetConsoleTitle(string title)
