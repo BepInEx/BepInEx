@@ -31,8 +31,6 @@ export DOORSTOP_INVOKE_DLL_PATH=${PWD}/BepInEx/core/BepInEx.Preloader.dll;
 # Backup current LD_PRELOAD because it can break `file` when running from Steam
 LD_PRELOAD_BAK=$LD_PRELOAD;
 export LD_PRELOAD="";
-DYLD_INSERT_LIBRARIES_BAK=$DYLD_INSERT_LIBRARIES;
-export DYLD_INSERT_LIBRARIES="";
 
 doorstop_libs=${PWD}/doorstop_libs;
 arch="";
@@ -73,7 +71,7 @@ esac
 doorstop_libname=libdoorstop_${arch}.${lib_postfix};
 export LD_LIBRARY_PATH=${doorstop_libs}:${LD_LIBRARY_PATH};
 export LD_PRELOAD=${doorstop_libs}/$doorstop_libname:$LD_PRELOAD_BAK;
-export DYLD_LIBRARY_PATH=${doorstop_libs}:${DYLD_LIBRARY_PATH};
-export DYLD_INSERT_LIBRARIES=${doorstop_libs}/$doorstop_libname:$DYLD_INSERT_LIBRARIES_BAK;
+export DYLD_LIBRARY_PATH=${doorstop_libs};
+export DYLD_INSERT_LIBRARIES=${doorstop_libs}/$doorstop_libname;
 
 "${executable_path}"
