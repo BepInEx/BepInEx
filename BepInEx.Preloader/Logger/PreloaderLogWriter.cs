@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using BepInEx.Configuration;
 using BepInEx.Logging;
 
 namespace BepInEx.Preloader
@@ -29,6 +30,9 @@ namespace BepInEx.Preloader
 
 		public void LogEvent(object sender, LogEventArgs eventArgs)
 		{
+			if ((eventArgs.Level & ConfigConsoleDisplayedLevel.Value) == 0)
+				return;
+			
 			LogEvents.Add(eventArgs);
 
 			ConsoleManager.SetConsoleColor(eventArgs.Level.GetConsoleColor());
@@ -56,6 +60,11 @@ namespace BepInEx.Preloader
 				LoggerSource = null;
 			}
 		}
+		
+		private static readonly ConfigEntry<LogLevel> ConfigConsoleDisplayedLevel = ConfigFile.CoreConfig.Bind(
+			"Logging.Console","LogLevels",
+			LogLevel.Fatal | LogLevel.Error | LogLevel.Message | LogLevel.Info,
+			"Which log levels to show in the console output.");
 	}
 
 	public class PreloaderConsoleSource : TextWriter, ILogSource
