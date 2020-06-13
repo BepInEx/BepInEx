@@ -4,9 +4,9 @@
 #addin nuget:?package=Cake.Json&version=4.0.0
 #addin nuget:?package=Newtonsoft.Json&version=11.0.2
 
-const string DOORSTOP_VER_WIN = "3.0.0.0";
+const string DOORSTOP_VER_WIN = "3.0.1.0";
 const string DOORSTOP_VER_NIX = "1.2.0.0";
-const string DOORSTOP_DLL = "version.dll";
+const string DOORSTOP_DLL = "winhttp.dll";
 
 var target = Argument("target", "Build");
 var isBleedingEdge = Argument("bleeding_edge", false);
