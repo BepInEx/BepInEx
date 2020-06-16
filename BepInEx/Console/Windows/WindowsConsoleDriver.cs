@@ -38,7 +38,8 @@ namespace BepInEx
 			};
 
 			var consoleOutStream = new FileStream(ConsoleWindow.ConsoleOutHandle, FileAccess.Write);
-			ConsoleOut = new StreamWriter(consoleOutStream, Console.OutputEncoding)
+			// Can't use Console.OutputEncoding because it can be null on older Monos
+			ConsoleOut = new StreamWriter(consoleOutStream, ConsoleEncoding.OutputEncoding)
 			{
 				AutoFlush = true
 			};
