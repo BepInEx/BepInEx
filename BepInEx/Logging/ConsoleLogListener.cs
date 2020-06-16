@@ -12,9 +12,8 @@ namespace BepInEx.Logging
 		{
 			if ((eventArgs.Level & ConfigConsoleDisplayedLevel.Value) == 0)
 				return;
-
 			ConsoleManager.SetConsoleColor(eventArgs.Level.GetConsoleColor());
-			Console.Write(eventArgs.ToStringLine());
+			ConsoleManager.ConsoleStream?.Write(eventArgs.ToStringLine());
 			ConsoleManager.SetConsoleColor(ConsoleColor.Gray);
 		}
 
