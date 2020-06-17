@@ -80,8 +80,6 @@ namespace BepInEx.Logging
 			if (type == LogType.Exception)
 				message += $"\nStack trace:\n{stackTrace}";
 			
-			File.WriteAllText("unity.log", $"{message}\n");
-
 			InternalUnityLogMessage?.Invoke(null, new LogEventArgs(message, logLevel, null));
 		}
 
