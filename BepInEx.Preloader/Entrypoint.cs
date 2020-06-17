@@ -21,7 +21,10 @@ namespace BepInEx.Preloader
 		private static void PreloaderMain()
 		{
 			if (Preloader.ConfigApplyRuntimePatches.Value)
+			{
 				XTermFix.Apply();
+				ConsoleSetOutFix.Apply();
+			}
 
 			Preloader.Run();
 		}

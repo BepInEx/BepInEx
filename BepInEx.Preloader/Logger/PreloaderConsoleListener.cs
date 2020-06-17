@@ -1,27 +1,26 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using BepInEx.Configuration;
+using BepInEx.Logging;
 
-namespace BepInEx.Logging
+namespace BepInEx.Preloader
 {
-	/// <summary>
-	/// Logs entries using Unity specific outputs.
-	/// </summary>
-	public class ConsoleLogListener : ILogListener
+	public class PreloaderConsoleListener : ILogListener
 	{
+		public static List<LogEventArgs> LogEvents { get; } = new List<LogEventArgs>();
+
 		public void LogEvent(object sender, LogEventArgs eventArgs)
 		{
 			if ((eventArgs.Level & ConfigConsoleDisplayedLevel.Value) == 0)
 				return;
-			ConsoleManager.SetConsoleColor(eventArgs.Level.GetConsoleColor());
-			Console.Write(eventArgs.ToStringLine());
-			ConsoleManager.SetConsoleColor(ConsoleColor.Gray);
+			
+			LogEvents.Add(eventArgs);
 		}
-
-		public void Dispose() { }
-
+		
 		private static readonly ConfigEntry<LogLevel> ConfigConsoleDisplayedLevel = ConfigFile.CoreConfig.Bind(
 			"Logging.Console","LogLevels",
 			LogLevel.Fatal | LogLevel.Error | LogLevel.Message | LogLevel.Info,
 			"Which log levels to show in the console output.");
+
+		public void Dispose() { }
 	}
 }

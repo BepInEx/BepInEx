@@ -42,8 +42,9 @@ namespace BepInEx.Preloader
 
 				Logger.InitializeInternalLoggers();
 				Logger.Sources.Add(TraceLogSource.CreateSource());
-
-				PreloaderLog = new PreloaderConsoleListener(ConfigPreloaderCOutLogging.Value);
+				
+				Logger.Listeners.Add(new ConsoleLogListener());
+				PreloaderLog = new PreloaderConsoleListener();
 				Logger.Listeners.Add(PreloaderLog);
 
 				string consoleTile = $"BepInEx {typeof(Paths).Assembly.GetName().Version} - {Path.GetFileNameWithoutExtension(Process.GetCurrentProcess().ProcessName)}";
@@ -85,11 +86,9 @@ namespace BepInEx.Preloader
 				AssemblyPatcher.PatchAndLoad(Paths.ManagedPath);
 				AssemblyPatcher.DisposePatchers();
 
-
 				Logger.LogMessage("Preloader finished");
 
 				Logger.Listeners.Remove(PreloaderLog);
-				Logger.Listeners.Add(new ConsoleLogListener());
 
 				PreloaderLog.Dispose();
 			}

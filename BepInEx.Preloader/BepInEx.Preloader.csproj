@@ -54,9 +54,10 @@
     <Compile Include="Patching\AssemblyPatcher.cs" />
     <Compile Include="Entrypoint.cs" />
     <Compile Include="Patching\PatcherPlugin.cs" />
+    <Compile Include="RuntimeFixes\ConsoleSetOutFix.cs" />
     <Compile Include="RuntimeFixes\TraceFix.cs" />
     <Compile Include="Preloader.cs" />
-    <Compile Include="Logger\PreloaderLogWriter.cs" />
+    <Compile Include="Logger\PreloaderConsoleListener.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RuntimeFixes\UnityPatches.cs" />
     <Compile Include="RuntimeFixes\XTermFix.cs" />
