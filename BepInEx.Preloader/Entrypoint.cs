@@ -70,7 +70,8 @@ namespace BepInEx.Preloader
 			{
 				EnvVars.LoadVars();
 
-				silentExceptionLog = Path.Combine(EnvVars.DOORSTOP_PROCESS_PATH, silentExceptionLog);
+				string gamePath = Path.GetDirectoryName(EnvVars.DOORSTOP_PROCESS_PATH) ?? ".";
+				silentExceptionLog = Path.Combine(gamePath, silentExceptionLog);
 
 				// Get the path of this DLL via Doorstop env var because Assembly.Location mangles non-ASCII characters on some versions of Mono for unknown reasons
 				preloaderPath = Path.GetDirectoryName(Path.GetFullPath(EnvVars.DOORSTOP_INVOKE_DLL_PATH));
