@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -31,6 +32,8 @@ namespace BepInEx.Preloader
 		{
 			try
 			{
+				InitializeHarmony();
+
 				ConsoleManager.Initialize(false);
 				AllocateConsole();
 
@@ -42,7 +45,7 @@ namespace BepInEx.Preloader
 
 				Logger.InitializeInternalLoggers();
 				Logger.Sources.Add(TraceLogSource.CreateSource());
-				
+
 				Logger.Listeners.Add(new ConsoleLogListener());
 				PreloaderLog = new PreloaderConsoleListener();
 				Logger.Listeners.Add(PreloaderLog);
@@ -203,7 +206,7 @@ namespace BepInEx.Preloader
 						il.Create(OpCodes.Call, assembly.MainModule.ImportReference(
 							AccessTools.PropertyGetter(typeof(PreloaderConsoleListener), nameof(PreloaderConsoleListener.LogEvents))))); // preloaderLogEvents (load from Preloader.PreloaderLog.LogEvents)
 
-                    il.InsertBefore(ins,
+					il.InsertBefore(ins,
 						il.Create(OpCodes.Call, initMethod)); // Chainloader.Initialize(string gamePath, string managedPath = null, bool startConsole = true)
 
 					il.InsertBefore(ins,
@@ -240,6 +243,31 @@ namespace BepInEx.Preloader
 			return $"Unknown ({(IsPostUnity2017 ? "post" : "pre")}-2017)";
 		}
 
+		private static void InitializeHarmony()
+		{
+			switch (HarmonyBackend.Value)
+			{
+				case MonoModBackend.auto:
+					break;
+				case MonoModBackend.dynamicmethod:
+				case MonoModBackend.methodbuilder:
+				case MonoModBackend.cecil:
+					Environment.SetEnvironmentVariable("MONOMOD_DMD_TYPE", HarmonyBackend.Value.ToString());
+					break;
+				default:
+					throw new ArgumentOutOfRangeException(nameof(HarmonyBackend), HarmonyBackend.Value, "Unknown backend");
+			}
+		}
+
+		private enum MonoModBackend
+		{
+			// Enum names are important!
+			[Description("Auto")] auto = 0,
+			[Description("DynamicMethod")] dynamicmethod,
+			[Description("MethodBuilder")] methodbuilder,
+			[Description("Cecil")] cecil
+		}
+
 		#region Config
 
 		private static readonly ConfigEntry<string> ConfigEntrypointAssembly = ConfigFile.CoreConfig.Bind(
@@ -266,6 +294,12 @@ namespace BepInEx.Preloader
 			"Logging", "PreloaderConsoleOutRedirection",
 			true,
 			"Redirects text from Console.Out during preloader patch loading to the BepInEx logging system.");
+
+		private static readonly ConfigEntry<MonoModBackend> HarmonyBackend = ConfigFile.CoreConfig.Bind(
+			"Preloader",
+			"HarmonyBackend",
+			MonoModBackend.auto,
+			"Specifies which MonoMod backend to use for Harmony patches. Auto uses the best available backend.\nThis setting should only be used for development purposes (e.g. debugging in dnSpy). Other code might override this setting.");
 
 		#endregion
 	}
