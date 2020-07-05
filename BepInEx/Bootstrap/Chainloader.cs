@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
 using Mono.Cecil;
 using MonoMod.Utils;
@@ -86,6 +87,9 @@ namespace BepInEx.Bootstrap
 			// Add Unity log source only after replaying to prevent duplication in console
 			if (ConfigUnityLogging.Value)
 				Logger.Sources.Add(new UnityLogSource());
+			// Write to Unity logs directly only if console is not present (or user explicitly wants to)
+			if (ConfigWriteToUnityLog.Value || !ConsoleManager.ConsoleActive)
+				Logger.Listeners.Add(new UnityLogListener());
 
 			if (Utility.CurrentOs == Platform.Linux)
 			{
@@ -411,6 +415,14 @@ namespace BepInEx.Bootstrap
 			"Logging", "UnityLogListening",
 			true,
 			"Enables showing unity log messages in the BepInEx logging system.");
+		
+		private static readonly ConfigEntry<bool> ConfigWriteToUnityLog = ConfigFile.CoreConfig.Bind(
+			"Logging", "WriteToUnityLog",
+			false,
+			new StringBuilder()
+				.AppendLine("Enables writing log messages to Unity's log system")
+				.AppendLine("NOTE: By default, Unity already writes BepInEx console output to Unity logs")
+				.Append("Use this setting only if no BepInEx log messages are present in Unity's output_log").ToString());
 
 		private static readonly ConfigEntry<bool> ConfigDiskWriteUnityLog = ConfigFile.CoreConfig.Bind(
 			"Logging.Disk", "WriteUnityLog",
