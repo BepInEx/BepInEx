@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text;
+using BepInEx.Configuration;
 
 namespace BepInEx.Logging
 {
@@ -36,11 +38,19 @@ namespace BepInEx.Logging
 		{
 			if (eventArgs.Source is UnityLogSource)
 				return;
-
-			WriteStringToUnityLog?.Invoke(eventArgs.ToStringLine());
+			
+			// Special case: don't write console twice since Unity can already do that
+			if (LogConsoleToUnity.Value || eventArgs.Source.SourceName != "Console")
+				WriteStringToUnityLog?.Invoke(eventArgs.ToStringLine());
 		}
 
 		public void Dispose() { }
+
+		private ConfigEntry<bool> LogConsoleToUnity = ConfigFile.CoreConfig.Bind("Logging",
+			"LogConsoleToUnityLog", false,
+			new StringBuilder()
+				.AppendLine("If enabled, writes Standard Output messages to Unity log")
+				.AppendLine("NOTE: By default, Unity does so automatically. Only use this option if no console messages are visible in Unity log").ToString());
 	}
 }
 

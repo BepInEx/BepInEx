@@ -56,7 +56,6 @@ namespace BepInEx
 				throw new InvalidOperationException("Driver has not been initialized");
 		}
 
-
 		public static void CreateConsole()
 		{
 			if (ConsoleActive)
@@ -70,7 +69,6 @@ namespace BepInEx
 			var codepage = ConfigConsoleShiftJis.Value ? SHIFT_JIS_CP: (uint)Encoding.UTF8.CodePage;
 			
 			Driver.CreateConsole(codepage);
-			SetConsoleStreams();
 		}
 
 		public static void DetachConsole()
@@ -81,7 +79,6 @@ namespace BepInEx
 			DriverCheck();
 
 			Driver.DetachConsole();
-			SetConsoleStreams();
 		}
 
 		public static void SetConsoleTitle(string title)
@@ -96,20 +93,6 @@ namespace BepInEx
 			DriverCheck();
 
 			Driver.SetConsoleColor(color);
-		}
-
-		internal static void SetConsoleStreams()
-		{
-			if (ConsoleActive)
-			{
-				Console.SetOut(ConsoleStream);
-				Console.SetError(ConsoleStream);
-			}
-			else
-			{
-				Console.SetOut(TextWriter.Null);
-				Console.SetError(TextWriter.Null);
-			}
 		}
 
 		public static readonly ConfigEntry<bool> ConfigConsoleEnabled = ConfigFile.CoreConfig.Bind(
