@@ -7,6 +7,15 @@ using HarmonyLib;
 
 namespace BepInEx.Preloader.RuntimeFixes
 {
+	/*
+	 * By default, setting Console.Out removes the previous listener
+	 * This can be a problem in Unity because it installs its own TextWriter while BepInEx needs to install it
+	 * one too for the console. This runtime fix collects all Console.Out setters and aggregates them into a single
+	 * text writer.
+	 *
+	 * This allows to both fix the old problem with log overwriting and problem with writing stdout when console is
+	 * enabled.
+	 */
 	internal static class ConsoleSetOutFix
 	{
 		private static AggregatedTextWriter aggregatedTextWriter;
@@ -22,6 +31,8 @@ namespace BepInEx.Preloader.RuntimeFixes
 		[HarmonyPrefix]
 		private static bool OnSetOut(TextWriter newOut)
 		{
+			if (newOut == TextWriter.Null)
+				return false;
 			aggregatedTextWriter.Add(newOut);
 			return false;
 		}

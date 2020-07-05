@@ -223,7 +223,6 @@ namespace BepInEx.Preloader
 			try
 			{
 				ConsoleManager.CreateConsole();
-				ConsoleManager.SetConsoleEncoding();
 			}
 			catch (Exception ex)
 			{

@@ -21,12 +21,17 @@ namespace BepInEx
 			StandardOut = Console.Out;
 		}
 
-		public void CreateConsole()
+		public void CreateConsole(uint codepage)
 		{
 			// On some Unity mono builds the SafeFileHandle overload for FileStream is missing
 			// so we use the older but always included one instead
 #pragma warning disable 618
 			ConsoleWindow.Attach();
+
+			// Make sure of ConsoleEncoding helper class because on some Monos
+			// Encoding.GetEncoding throws NotImplementedException on most codepages
+			// NOTE: We don't set Console.OutputEncoding because it resets any existing Console.Out writers
+			ConsoleEncoding.ConsoleCodePage = codepage;
 			
 			// If stdout exists, write to it, otherwise make it the same as console out
 			// Not sure if this is needed? Does the original Console.Out still work?
@@ -38,7 +43,7 @@ namespace BepInEx
 			};
 
 			var consoleOutStream = new FileStream(ConsoleWindow.ConsoleOutHandle, FileAccess.Write);
-			// Can't use Console.OutputEncoding because it can be null on older Monos
+			// Can't use Console.OutputEncoding because it can be null (i.e. not preference by user)
 			ConsoleOut = new StreamWriter(consoleOutStream, ConsoleEncoding.OutputEncoding)
 			{
 				AutoFlush = true
@@ -61,14 +66,6 @@ namespace BepInEx
 		{
 			SafeConsole.ForegroundColor = color;
 			Kon.ForegroundColor = color;
-		}
-
-		public void SetConsoleEncoding(uint codepage)
-		{
-			// Make sure of ConsoleEncoding helper class because on some Monos
-			// Encoding.GetEncoding throws NotImplementedException on most codepages
-			ConsoleEncoding.ConsoleCodePage = codepage;
-			Console.OutputEncoding = ConsoleEncoding.GetEncoding(codepage);
 		}
 
 		public void SetConsoleTitle(string title)

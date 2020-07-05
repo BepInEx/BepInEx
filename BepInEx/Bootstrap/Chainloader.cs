@@ -74,13 +74,6 @@ namespace BepInEx.Bootstrap
 				Logger.Listeners.Add(new ConsoleLogListener());
 			}
 
-			// Fix for standard output getting overwritten by UnityLogger
-			if (ConsoleManager.ConsoleActive)
-			{
-				ConsoleManager.SetConsoleStreams();
-				ConsoleManager.SetConsoleEncoding();
-			}
-			
 			Logger.InitializeInternalLoggers();
 			Logger.Listeners.Add(new UnityLogListener());
 

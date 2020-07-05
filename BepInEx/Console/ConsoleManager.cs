@@ -63,8 +63,13 @@ namespace BepInEx
 				return;
 
 			DriverCheck();
-
-			Driver.CreateConsole();
+			
+			// Apparently some versions of Mono throw a "Encoding name 'xxx' not supported"
+			// if you use Encoding.GetEncoding
+			// That's why we use of codepages directly and handle then in console drivers separately
+			var codepage = ConfigConsoleShiftJis.Value ? SHIFT_JIS_CP: (uint)Encoding.UTF8.CodePage;
+			
+			Driver.CreateConsole(codepage);
 			SetConsoleStreams();
 		}
 
@@ -77,26 +82,6 @@ namespace BepInEx
 
 			Driver.DetachConsole();
 			SetConsoleStreams();
-		}
-
-		public static void SetConsoleEncoding()
-		{
-			// Apparently some versions of Mono throw a "Encoding name 'xxx' not supported"
-			// if you use Encoding.GetEncoding
-			// That's why we use of codepages directly and handle then in console drivers separately
-			var codepage = ConfigConsoleShiftJis.Value ? SHIFT_JIS_CP: (uint)Encoding.UTF8.CodePage;
-
-			SetConsoleEncoding(codepage);
-		}
-
-		public static void SetConsoleEncoding(uint codepage)
-		{
-			if (!ConsoleActive)
-				throw new InvalidOperationException("Console is not currently active");
-
-			DriverCheck();
-
-			Driver.SetConsoleEncoding(codepage);
 		}
 
 		public static void SetConsoleTitle(string title)

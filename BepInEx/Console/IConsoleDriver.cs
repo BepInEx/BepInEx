@@ -13,15 +13,14 @@ namespace BepInEx
 		bool ConsoleIsExternal { get; }
 
 		void Initialize(bool alreadyActive);
-
-		void CreateConsole();
+		
+		// Apparently Windows code-pages work in Mono.
+		// https://stackoverflow.com/a/33456543
+		void CreateConsole(uint codepage);
 		void DetachConsole();
 
 		void SetConsoleColor(ConsoleColor color);
 		
-		// Apparently Windows code-pages work in Mono.
-		// https://stackoverflow.com/a/33456543
-		void SetConsoleEncoding(uint codepage);
 		void SetConsoleTitle(string title);
 	}
 }

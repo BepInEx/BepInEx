@@ -58,7 +58,7 @@ namespace BepInEx.Unix
 			ConsoleOut = StandardOut;
 		}
 
-		public void CreateConsole()
+		public void CreateConsole(uint codepage)
 		{
 			Logger.LogWarning("An external console currently cannot be spawned on a Unix platform.");
 		}
@@ -82,11 +82,6 @@ namespace BepInEx.Unix
 			{
 				ConsoleOut.Write(TtyInfo.GetAnsiCode(color));
 			}
-		}
-
-		public void SetConsoleEncoding(uint codepage)
-		{
-			// We shouldn't be changing this on Unix
 		}
 
 		public void SetConsoleTitle(string title)
