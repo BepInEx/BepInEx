@@ -43,7 +43,6 @@ namespace BepInEx.Preloader
 				Logger.InitializeInternalLoggers();
 				Logger.Sources.Add(TraceLogSource.CreateSource());
 				
-				Logger.Listeners.Add(new ConsoleLogListener());
 				PreloaderLog = new PreloaderConsoleListener();
 				Logger.Listeners.Add(PreloaderLog);
 
@@ -223,6 +222,7 @@ namespace BepInEx.Preloader
 			try
 			{
 				ConsoleManager.CreateConsole();
+				Logger.Listeners.Add(new ConsoleLogListener());
 			}
 			catch (Exception ex)
 			{

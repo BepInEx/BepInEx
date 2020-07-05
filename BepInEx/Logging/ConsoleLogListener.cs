@@ -12,9 +12,20 @@ namespace BepInEx.Logging
 		{
 			if ((eventArgs.Level & ConfigConsoleDisplayedLevel.Value) == 0)
 				return;
+			
 			ConsoleManager.SetConsoleColor(eventArgs.Level.GetConsoleColor());
-			Console.Write(eventArgs.ToStringLine());
+			Log(eventArgs);
 			ConsoleManager.SetConsoleColor(ConsoleColor.Gray);
+		}
+
+		private void Log(LogEventArgs eventArgs)
+		{
+			// Special case: if message comes from Unity log, it's already logged by Unity, in which case 
+			// we replay it only in the visible console
+			if (eventArgs.Source is UnityLogSource)
+				ConsoleManager.ConsoleStream?.Write(eventArgs.ToStringLine());
+			else
+				Console.Write(eventArgs.ToStringLine());
 		}
 
 		public void Dispose() { }
