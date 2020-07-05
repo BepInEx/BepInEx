@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -31,6 +32,8 @@ namespace BepInEx.Preloader
 		{
 			try
 			{
+				InitializeHarmony();
+
 				ConsoleManager.Initialize(false);
 				AllocateConsole();
 
@@ -237,6 +240,31 @@ namespace BepInEx.Preloader
 				return FileVersionInfo.GetVersionInfo(Paths.ExecutablePath).FileVersion;
 
 			return $"Unknown ({(IsPostUnity2017 ? "post" : "pre")}-2017)";
+		}
+
+		private static void InitializeHarmony()
+		{
+			switch (HarmonyBackend.Value)
+			{
+				case MonoModBackend.auto:
+					break;
+				case MonoModBackend.dynamicmethod:
+				case MonoModBackend.methodbuilder:
+				case MonoModBackend.cecil:
+					Environment.SetEnvironmentVariable("MONOMOD_DMD_TYPE", HarmonyBackend.Value.ToString());
+					break;
+				default:
+					throw new ArgumentOutOfRangeException(nameof(HarmonyBackend), HarmonyBackend.Value, "Unknown backend");
+			}
+		}
+
+		private enum MonoModBackend
+		{
+			// Enum names are important!
+			[Description("Auto")] auto = 0,
+			[Description("DynamicMethod")] dynamicmethod,
+			[Description("MethodBuilder")] methodbuilder,
+			[Description("Cecil")] cecil
 		}
 
 		#region Config
