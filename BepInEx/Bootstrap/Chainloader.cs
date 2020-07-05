@@ -57,8 +57,9 @@ namespace BepInEx.Bootstrap
 			if (_initialized)
 				return;
 
+			ReplayPreloaderLogs(preloaderLogEvents);
 			ThreadingHelper.Initialize();
-
+			
 			// Set vitals
 			if (gameExePath != null)
 			{
@@ -75,37 +76,16 @@ namespace BepInEx.Bootstrap
 			}
 
 			Logger.InitializeInternalLoggers();
-			Logger.Listeners.Add(new UnityLogListener());
 
 			if (ConfigDiskLogging.Value)
 				Logger.Listeners.Add(new DiskLogListener("LogOutput.log", ConfigDiskConsoleDisplayedLevel.Value, ConfigDiskAppend.Value, ConfigDiskWriteUnityLog.Value));
 
 			if (!TraceLogSource.IsListening)
 				Logger.Sources.Add(TraceLogSource.CreateSource());
-
+			
+			// Add Unity log source only after replaying to prevent duplication in console
 			if (ConfigUnityLogging.Value)
 				Logger.Sources.Add(new UnityLogSource());
-
-
-			// Temporarily disable the console log listener as we replay the preloader logs
-			var logListener = Logger.Listeners.FirstOrDefault(logger => logger is ConsoleLogListener);
-
-			if (logListener != null)
-				Logger.Listeners.Remove(logListener);
-
-			// Write preloader log events if there are any, including the original log source name
-			if (preloaderLogEvents != null)
-			{
-				var preloaderLogSource = Logger.CreateLogSource("Preloader");
-
-				foreach (var preloaderLogEvent in preloaderLogEvents)
-					Logger.InternalLogEvent(preloaderLogSource, preloaderLogEvent);
-
-				Logger.Sources.Remove(preloaderLogSource);	
-			}
-
-			if (logListener != null)
-				Logger.Listeners.Add(logListener);
 
 			if (Utility.CurrentOs == Platform.Linux)
 			{
@@ -115,6 +95,34 @@ namespace BepInEx.Bootstrap
 			Logger.LogMessage("Chainloader ready");
 
 			_initialized = true;
+		}
+		
+		private static void ReplayPreloaderLogs(ICollection<LogEventArgs> preloaderLogEvents)
+		{
+			if (preloaderLogEvents == null)
+				return;
+			
+			var unityLogger = new UnityLogListener();
+			Logger.Listeners.Add(unityLogger);
+			
+			// Temporarily disable the console log listener (if there is one from preloader) as we replay the preloader logs
+			var logListener = Logger.Listeners.FirstOrDefault(logger => logger is ConsoleLogListener);
+			
+			if (logListener != null)
+				Logger.Listeners.Remove(logListener);
+
+			// Write preloader log events if there are any, including the original log source name
+			var preloaderLogSource = Logger.CreateLogSource("Preloader");
+
+			foreach (var preloaderLogEvent in preloaderLogEvents)
+				Logger.InternalLogEvent(preloaderLogSource, preloaderLogEvent);
+
+			Logger.Sources.Remove(preloaderLogSource);	
+
+			Logger.Listeners.Remove(unityLogger);
+			
+			if (logListener != null)
+				Logger.Listeners.Add(logListener);
 		}
 
 		private static Regex allowedGuidRegex { get; } = new Regex(@"^[a-zA-Z0-9\._\-]+$");
