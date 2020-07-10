@@ -10,7 +10,7 @@
 
 # EDIT THIS: The name of the executable to run
 # LINUX: This is the name of the Unity game executable 
-# MACOS: This is the name of the game app WITHOUT the .app
+# MACOS: This is the name of the game app folder, include the .app suffix
 executable_name=""
 
 # The rest is automatically handled by BepInEx
@@ -41,6 +41,7 @@ case $os_type in
         lib_postfix="so"
         ;;
     Darwin*)
+        executable_name=`basename "${executable_name}" .app`
         executable_path="${PWD}/${executable_name}.app/Contents/MacOS/${executable_name}"
         lib_postfix="dylib"
         ;;
@@ -86,6 +87,6 @@ doorstop_libname=libdoorstop_${arch}.${lib_postfix}
 export LD_LIBRARY_PATH="${doorstop_libs}":${LD_LIBRARY_PATH}
 export LD_PRELOAD=$doorstop_libname:$LD_PRELOAD
 export DYLD_LIBRARY_PATH="${doorstop_libs}"
-export DYLD_INSERT_LIBRARIES=$doorstop_libname
+export DYLD_INSERT_LIBRARIES="${doorstop_libs}/$doorstop_libname"
 
 "${executable_path}"
