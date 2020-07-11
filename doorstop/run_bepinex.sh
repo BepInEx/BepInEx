@@ -61,8 +61,14 @@ if [ -n "$1" ]; then
             executable_path="$1"
             ;;
         Darwin*)
-            executable_name=`basename "$1" .app`
-            executable_path="$1/Contents/MacOS/$executable_name"
+            # Special case: allow to specify path to the executable within .app
+            full_path_part=`echo "$1" | grep "\.app/Contents/MacOS"`
+            if [ -z "$full_path_part" ]; then
+                executable_name=`basename "$1" .app`
+                executable_path="$1/Contents/MacOS/$executable_name"
+            else
+                executable_path="$1"
+            fi
             ;;
     esac
 fi
