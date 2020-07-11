@@ -10,7 +10,7 @@
 
 # EDIT THIS: The name of the executable to run
 # LINUX: This is the name of the Unity game executable 
-# MACOS: This is the name of the game app folder, include the .app suffix
+# MACOS: This is the name of the game app folder, including the .app suffix
 executable_name=""
 
 # The rest is automatically handled by BepInEx
@@ -42,7 +42,8 @@ case $os_type in
         ;;
     Darwin*)
         executable_name=`basename "${executable_name}" .app`
-        executable_path="${PWD}/${executable_name}.app/Contents/MacOS/${executable_name}"
+        real_executable_name=`defaults read "${PWD}/${executable_name}.app/Contents/Info" CFBundleExecutable`
+        executable_path="${PWD}/${executable_name}.app/Contents/MacOS/${real_executable_name}"
         lib_postfix="dylib"
         ;;
     *)
@@ -65,7 +66,8 @@ if [ -n "$1" ]; then
             full_path_part=`echo "$1" | grep "\.app/Contents/MacOS"`
             if [ -z "$full_path_part" ]; then
                 executable_name=`basename "$1" .app`
-                executable_path="$1/Contents/MacOS/$executable_name"
+                real_executable_name=`defaults read "$1/Contents/Info" CFBundleExecutable`
+                executable_path="$1/Contents/MacOS/${real_executable_name}"
             else
                 executable_path="$1"
             fi
