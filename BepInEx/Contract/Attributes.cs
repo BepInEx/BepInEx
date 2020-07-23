@@ -67,6 +67,10 @@ namespace BepInEx
 	[AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
 	public class BepInDependency : Attribute, ICacheable
 	{
+		/// <summary>
+		/// Flags that are applied to a dependency
+		/// </summary>
+		[Flags]
 		public enum DependencyFlags
 		{
 			/// <summary>
