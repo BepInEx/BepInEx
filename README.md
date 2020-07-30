@@ -24,7 +24,7 @@ Unity plugin framework
 ## Used libraries
 - [NeighTools/UnityDoorstop](https://github.com/NeighTools/UnityDoorstop) - 3.0.2.2 ([7fe6127](https://github.com/NeighTools/UnityDoorstop/commit/7fe6127849c6cbbb4943f3f14146ae6ade7ec0bf))
 - [NeighTools/UnityDoorstop.Unix](https://github.com/NeighTools/UnityDoorstop.Unix) - 1.3.0.0 ([a16f217](https://github.com/NeighTools/UnityDoorstop.Unix/commit/a16f21743fdadedc8e091226c6731dbf7e9113c8))
-- [BepInEx/HarmonyX](https://github.com/BepInEx/HarmonyX) - 2.0.4 ([b9fdccc](https://github.com/BepInEx/HarmonyX/commit/b9fdcccb44fc94e04cf795c3dc1af9103af9759a))
+- [BepInEx/HarmonyX](https://github.com/BepInEx/HarmonyX) - 2.0.6 ([b9fdccc](https://github.com/BepInEx/HarmonyX/commit/79056ea0da5834f78c2b6ad5bf87e95ee43a7fd1))
 - [MonoMod/MonoMod](https://github.com/MonoMod/MonoMod) - v20.05.21.05 ([5d8210d](https://github.com/MonoMod/MonoMod/commit/5d8210d35efb6e85b7b40f1ce040257012936a90))
 - [jbevain/cecil](https://github.com/jbevain/cecil) - 0.10.4 ([98ec890](https://github.com/jbevain/cecil/commit/98ec890d44643ad88d573e97be0e120435eda732))
 
