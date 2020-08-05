@@ -265,8 +265,6 @@ namespace BepInEx.Bootstrap
 							continue;
 						}
 
-						loadedVersion = pluginInfo;
-
 						// Perform checks that will prevent loading plugins in this run
 						var filters = pluginInfo.Processes.ToList();
 						bool invalidProcessName = filters.Count != 0 && filters.All(x => !string.Equals(x.ProcessName.Replace(".exe", ""), Paths.ProcessName, StringComparison.InvariantCultureIgnoreCase));
@@ -277,6 +275,7 @@ namespace BepInEx.Bootstrap
 							continue;
 						}
 
+						loadedVersion = pluginInfo;
 						dependencyDict[pluginInfo.Metadata.GUID] = pluginInfo.Dependencies.Select(d => d.DependencyGUID);
 						pluginsByGUID[pluginInfo.Metadata.GUID] = pluginInfo;
 					}
