@@ -17,13 +17,13 @@ namespace BepInEx.Preloader.Patching
 	///     Delegate used in patching assemblies.
 	/// </summary>
 	/// <param name="assembly">The assembly that is being patched.</param>
-	internal delegate void AssemblyPatcherDelegate(ref AssemblyDefinition assembly);
+	public delegate void AssemblyPatcherDelegate(ref AssemblyDefinition assembly);
 
 	/// <summary>
 	///     Worker class which is used for loading and patching entire folders of assemblies, or alternatively patching and
 	///     loading assemblies one at a time.
 	/// </summary>
-	internal static class AssemblyPatcher
+	public static class AssemblyPatcher
 	{
 		private const BindingFlags ALL = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.IgnoreCase;
 
@@ -153,13 +153,31 @@ namespace BepInEx.Preloader.Patching
 		private static void InitializePatchers()
 		{
 			foreach (var assemblyPatcher in PatcherPlugins)
-				assemblyPatcher.Initializer?.Invoke();
+			{
+				try
+				{
+					assemblyPatcher.Initializer?.Invoke();
+				}
+				catch (Exception e)
+				{
+					Logger.LogError($"Failed to run Initializer of {assemblyPatcher.TypeName}: {e}");
+				}
+			}
 		}
 
 		private static void FinalizePatching()
 		{
 			foreach (var assemblyPatcher in PatcherPlugins)
-				assemblyPatcher.Finalizer?.Invoke();
+			{
+				try
+				{
+					assemblyPatcher.Finalizer?.Invoke();
+				}
+				catch (Exception e)
+				{
+					Logger.LogError($"Failed to run Finalizer of {assemblyPatcher.TypeName}: {e}");
+				}
+			}
 		}
 
 		/// <summary>
@@ -233,13 +251,26 @@ namespace BepInEx.Preloader.Patching
 			// Then, perform the actual patching
 			var patchedAssemblies = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 			var resolvedAssemblies = new Dictionary<string, string>();
+			// TODO: Maybe instead reload the assembly and repatch with other valid patchers?
+			var invalidAssemblies = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 			foreach (var assemblyPatcher in PatcherPlugins)
 				foreach (string targetDll in assemblyPatcher.TargetDLLs())
-					if (assemblies.TryGetValue(targetDll, out var assembly))
+					if (assemblies.TryGetValue(targetDll, out var assembly) && !invalidAssemblies.Contains(targetDll))
 					{
 						Logger.LogInfo($"Patching [{assembly.Name.Name}] with [{assemblyPatcher.TypeName}]");
 
-						assemblyPatcher.Patcher?.Invoke(ref assembly);
+						try
+						{
+							assemblyPatcher.Patcher?.Invoke(ref assembly);
+						}
+						catch (Exception e)
+						{
+							Logger.LogError($"Failed to run [{assemblyPatcher.TypeName}] when patching [{assembly.Name.Name}]. This assembly will not be patched. Error: {e}");
+							patchedAssemblies.Remove(targetDll);
+							invalidAssemblies.Add(targetDll);
+							continue;
+						}
+						
 						assemblies[targetDll] = assembly;
 						patchedAssemblies.Add(targetDll);
 
