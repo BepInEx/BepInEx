@@ -27,6 +27,9 @@ namespace BepInEx.Preloader.Patching
 	{
 		private const BindingFlags ALL = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.IgnoreCase;
 
+		/// <summary>
+		/// List of all patcher plugins to be applied
+		/// </summary>
 		public static List<PatcherPlugin> PatcherPlugins { get; } = new List<PatcherPlugin>();
 
 		private static readonly string DumpedAssembliesPath = Path.Combine(Paths.BepInExRootPath, "DumpedAssemblies");
@@ -76,7 +79,6 @@ namespace BepInEx.Preloader.Patching
 		///     Adds all patchers from all managed assemblies specified in a directory.
 		/// </summary>
 		/// <param name="directory">Directory to search patcher DLLs from.</param>
-		/// <param name="patcherLocator">A function that locates assembly patchers in a given managed assembly.</param>
 		public static void AddPatchersFromDirectory(string directory)
 		{
 			if (!Directory.Exists(directory))
@@ -195,7 +197,7 @@ namespace BepInEx.Preloader.Patching
 			{
 				return new AssemblyName(fullName).Name;
 			}
-			catch (Exception e)
+			catch (Exception)
 			{
 				return fullName;
 			}
@@ -344,6 +346,7 @@ namespace BepInEx.Preloader.Patching
 		///     Loads an individual assembly definition into the CLR.
 		/// </summary>
 		/// <param name="assembly">The assembly to load.</param>
+		/// <param name="filename">File name of the assembly being loaded.</param>
 		public static void Load(AssemblyDefinition assembly, string filename)
 		{
 			if (ConfigLoadDumpedAssemblies.Value)

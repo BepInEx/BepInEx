@@ -14,7 +14,7 @@ namespace BepInEx.Preloader.RuntimeFixes
 
 		public static void Apply()
 		{
-			HarmonyInstance = HarmonyWrapper.PatchAll(typeof(UnityPatches), HarmonyInstance);
+			HarmonyInstance = HarmonyLib.Harmony.CreateAndPatchAll(typeof(UnityPatches));
 
 			try
 			{

@@ -57,10 +57,6 @@ namespace BepInEx.Preloader
 		/// <summary>
 		///     The main entrypoint of BepInEx, called from Doorstop.
 		/// </summary>
-		/// <param name="args">
-		///     The arguments passed in from Doorstop. First argument is the path of the currently executing
-		///     process.
-		/// </param>
 		public static void Main()
 		{
 			// We set it to the current directory first as a fallback, but try to use the same location as the .exe file.

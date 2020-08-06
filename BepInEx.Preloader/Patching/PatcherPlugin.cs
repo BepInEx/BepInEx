@@ -35,11 +35,13 @@ namespace BepInEx.Preloader.Patching
 		/// </summary>
 		public string TypeName { get; set; } = string.Empty;
 
+		/// <inheritdoc />
 		public void Save(BinaryWriter bw)
 		{
 			bw.Write(TypeName);
 		}
 
+		/// <inheritdoc />
 		public void Load(BinaryReader br)
 		{
 			TypeName = br.ReadString();
