@@ -32,6 +32,10 @@ namespace BepInEx.Preloader.Patching
 		/// </summary>
 		public static List<PatcherPlugin> PatcherPlugins { get; } = new List<PatcherPlugin>();
 
+		// We make use the safe version for possible cases where a mod loader wants to modify the original patcher
+		// plugins list
+		private static IEnumerable<PatcherPlugin> PatcherPluginsSafe => PatcherPlugins.ToList();
+
 		private static readonly string DumpedAssembliesPath = Path.Combine(Paths.BepInExRootPath, "DumpedAssemblies");
 
 		/// <summary>
@@ -154,7 +158,7 @@ namespace BepInEx.Preloader.Patching
 
 		private static void InitializePatchers()
 		{
-			foreach (var assemblyPatcher in PatcherPlugins)
+			foreach (var assemblyPatcher in PatcherPluginsSafe)
 			{
 				try
 				{
@@ -169,7 +173,7 @@ namespace BepInEx.Preloader.Patching
 
 		private static void FinalizePatching()
 		{
-			foreach (var assemblyPatcher in PatcherPlugins)
+			foreach (var assemblyPatcher in PatcherPluginsSafe)
 			{
 				try
 				{
@@ -255,7 +259,7 @@ namespace BepInEx.Preloader.Patching
 			var resolvedAssemblies = new Dictionary<string, string>();
 			// TODO: Maybe instead reload the assembly and repatch with other valid patchers?
 			var invalidAssemblies = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
-			foreach (var assemblyPatcher in PatcherPlugins)
+			foreach (var assemblyPatcher in PatcherPluginsSafe)
 				foreach (string targetDll in assemblyPatcher.TargetDLLs())
 					if (assemblies.TryGetValue(targetDll, out var assembly) && !invalidAssemblies.Contains(targetDll))
 					{
