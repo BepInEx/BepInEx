@@ -51,21 +51,28 @@ namespace BepInEx.Bootstrap
 	/// </summary>
 	public static class TypeLoader
 	{
-		private static readonly DefaultAssemblyResolver resolver;
-		private static readonly ReaderParameters readerParameters;
+		/// <summary>
+		/// Default assembly resolved used by the <see cref="TypeLoader"/>
+		/// </summary>
+		public static readonly DefaultAssemblyResolver Resolver;
+		
+		/// <summary>
+		/// Default reader parameters used by <see cref="TypeLoader"/>
+		/// </summary>
+		public static readonly ReaderParameters ReaderParameters;
 
 		static TypeLoader()
 		{
-			resolver = new DefaultAssemblyResolver();
-			readerParameters = new ReaderParameters { AssemblyResolver = resolver };
+			Resolver = new DefaultAssemblyResolver();
+			ReaderParameters = new ReaderParameters { AssemblyResolver = Resolver };
 
-			resolver.ResolveFailure += (sender, reference) =>
+			Resolver.ResolveFailure += (sender, reference) =>
 			{
 				var name = new AssemblyName(reference.FullName);
 
-				if (Utility.TryResolveDllAssembly(name, Paths.BepInExAssemblyDirectory, readerParameters, out var assembly) ||
-					Utility.TryResolveDllAssembly(name, Paths.PluginPath, readerParameters, out assembly) ||
-					Utility.TryResolveDllAssembly(name, Paths.ManagedPath, readerParameters, out assembly))
+				if (Utility.TryResolveDllAssembly(name, Paths.BepInExAssemblyDirectory, ReaderParameters, out var assembly) ||
+					Utility.TryResolveDllAssembly(name, Paths.PluginPath, ReaderParameters, out assembly) ||
+					Utility.TryResolveDllAssembly(name, Paths.ManagedPath, ReaderParameters, out assembly))
 					return assembly;
 
 				return AssemblyResolve?.Invoke(sender, reference);
@@ -104,7 +111,7 @@ namespace BepInEx.Bootstrap
 						}
 					}
 
-					var ass = AssemblyDefinition.ReadAssembly(dll, readerParameters);
+					var ass = AssemblyDefinition.ReadAssembly(dll, ReaderParameters);
 
 					if (!assemblyFilter?.Invoke(ass) ?? false)
 					{
