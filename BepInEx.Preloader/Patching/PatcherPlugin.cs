@@ -8,7 +8,7 @@ namespace BepInEx.Preloader.Patching
 	/// <summary>
 	///     A single assembly patcher.
 	/// </summary>
-	internal class PatcherPlugin : ICacheable
+	public class PatcherPlugin : ICacheable
 	{
 		/// <summary>
 		///     Target assemblies to patch.
