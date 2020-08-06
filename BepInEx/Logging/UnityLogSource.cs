@@ -10,15 +10,21 @@ namespace BepInEx.Logging
 	/// </summary>
 	public class UnityLogSource : ILogSource
 	{
+		/// <inheritdoc />
 		public string SourceName { get; } = "Unity Log";
+
+		/// <inheritdoc />
 		public event EventHandler<LogEventArgs> LogEvent;
 
+		/// <summary>
+		/// Creates a new Unity log source.
+		/// </summary>
 		public UnityLogSource()
 		{
-			InternalUnityLogMessage += unityLogMessageHandler;
+			InternalUnityLogMessage += UnityLogMessageHandler;
 		}
 
-		private void unityLogMessageHandler(object sender, LogEventArgs eventArgs)
+		private void UnityLogMessageHandler(object sender, LogEventArgs eventArgs)
 		{
 			var newEventArgs = new LogEventArgs(eventArgs.Data, eventArgs.Level, this);
 			LogEvent?.Invoke(this, newEventArgs);
@@ -26,11 +32,12 @@ namespace BepInEx.Logging
 
 		private bool disposed = false;
 
+		/// <inheritdoc />
 		public void Dispose()
 		{
 			if (!disposed)
 			{
-				InternalUnityLogMessage -= unityLogMessageHandler;
+				InternalUnityLogMessage -= UnityLogMessageHandler;
 				disposed = true;
 			}
 		}

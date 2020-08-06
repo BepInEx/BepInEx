@@ -49,6 +49,9 @@ namespace BepInEx.Logging
 		All = Fatal | Error | Warning | Message | Info | Debug
 	}
 
+	/// <summary>
+	/// Helper methods for log level handling.
+	/// </summary>
 	public static class LogLevelExtensions
 	{
 		/// <summary>

@@ -7,7 +7,7 @@ using MonoMod.Utils;
 
 namespace BepInEx
 {
-	public static class ConsoleManager
+	internal static class ConsoleManager
 	{
 		private const uint SHIFT_JIS_CP = 932;
 		

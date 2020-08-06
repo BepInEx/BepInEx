@@ -5,7 +5,7 @@ using HarmonyLib;
 
 namespace BepInEx.Unix
 {
-	public static class ConsoleWriter
+	internal static class ConsoleWriter
 	{
 		private static ConstructorInfo cStreamWriterConstructor = AccessTools.Constructor(AccessTools.TypeByName("System.IO.CStreamWriter"), new []{ typeof(Stream), typeof(Encoding), typeof(bool) });
 		public static TextWriter CreateConsoleStreamWriter(Stream stream, Encoding encoding, bool leaveOpen)

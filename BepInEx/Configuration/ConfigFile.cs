@@ -219,7 +219,7 @@ namespace BepInEx.Configuration
 		/// <summary>
 		/// Access one of the existing settings. If the setting has not been added yet, false is returned. Otherwise, true.
 		/// If the setting exists but has a different type than T, an exception is thrown.
-		/// New settings should be added with <see cref="Bind{T}"/>.
+		/// New settings should be added with <see cref="Bind{T}(BepInEx.Configuration.ConfigDefinition,T,BepInEx.Configuration.ConfigDescription)"/>.
 		/// </summary>
 		/// <typeparam name="T">Type of the value contained in this setting.</typeparam>
 		/// <param name="configDefinition">Section and Key of the setting.</param>
@@ -242,7 +242,7 @@ namespace BepInEx.Configuration
 		/// <summary>
 		/// Access one of the existing settings. If the setting has not been added yet, null is returned.
 		/// If the setting exists but has a different type than T, an exception is thrown.
-		/// New settings should be added with <see cref="Bind{T}"/>.
+		/// New settings should be added with <see cref="Bind{T}(BepInEx.Configuration.ConfigDefinition,T,BepInEx.Configuration.ConfigDescription)"/>.
 		/// </summary>
 		/// <typeparam name="T">Type of the value contained in this setting.</typeparam>
 		/// <param name="section">Section/category/group of the setting. Settings are grouped by this.</param>

@@ -9,14 +9,33 @@ namespace BepInEx.Logging
 	/// </summary>
 	public class DiskLogListener : ILogListener
 	{
+		/// <summary>
+		/// Log levels to display.
+		/// </summary>
 		public LogLevel DisplayedLogLevel { get; set; }
 
+		/// <summary>
+		/// Writer for the disk log.
+		/// </summary>
 		public TextWriter LogWriter { get; protected set; }
 
+		/// <summary>
+		/// Timer for flushing the logs to a file.
+		/// </summary>
 		public Timer FlushTimer { get; protected set; }
 
+		/// <summary>
+		/// Whether to write Unity log messages to disk log.
+		/// </summary>
 		public bool WriteFromUnityLog { get; set; }
 
+		/// <summary>
+		/// Creates a new disk log listener.
+		/// </summary>
+		/// <param name="localPath">Path to the log.</param>
+		/// <param name="displayedLogLevel">Log levels to display.</param>
+		/// <param name="appendLog">Whether to append logs to an already existing log file.</param>
+		/// <param name="includeUnityLog">Whether to include Unity log into the disk log.</param>
 		public DiskLogListener(string localPath, LogLevel displayedLogLevel = LogLevel.Info, bool appendLog = false, bool includeUnityLog = false)
 		{
 			WriteFromUnityLog = includeUnityLog;
@@ -46,6 +65,7 @@ namespace BepInEx.Logging
 			FlushTimer = new Timer(o => { LogWriter?.Flush(); }, null, 2000, 2000);
 		}
 
+		/// <inheritdoc />
 		public void LogEvent(object sender, LogEventArgs eventArgs)
 		{
 			if (!WriteFromUnityLog && eventArgs.Source is UnityLogSource)
@@ -57,6 +77,7 @@ namespace BepInEx.Logging
 			LogWriter.WriteLine(eventArgs.ToString());
 		}
 
+		/// <inheritdoc />
 		public void Dispose()
 		{
 			FlushTimer?.Dispose();
@@ -64,6 +85,9 @@ namespace BepInEx.Logging
 			LogWriter?.Dispose();
 		}
 
+		/// <summary>
+		/// Disposes of Disk logger
+		/// </summary>
 		~DiskLogListener()
 		{
 			Dispose();

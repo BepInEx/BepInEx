@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace BepInEx.Unix
 {
-	public class UnixStream : Stream
+	internal class UnixStream : Stream
 	{
 		public override bool CanRead => Access == FileAccess.Read || Access == FileAccess.ReadWrite;
 		public override bool CanSeek => false;

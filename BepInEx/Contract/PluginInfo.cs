@@ -6,18 +6,41 @@ using BepInEx.Bootstrap;
 
 namespace BepInEx
 {
+	/// <summary>
+	/// Data class that represents information about a loadable BepInEx plugin.
+	/// Contains all metadata and additional info required for plugin loading by <see cref="Chainloader"/>.
+	/// </summary>
 	public class PluginInfo : ICacheable
 	{
+		/// <summary>
+		/// General metadata about a plugin.
+		/// </summary>
 		public BepInPlugin Metadata { get; internal set; }
 
+		/// <summary>
+		/// Collection of <see cref="BepInProcess"/> attributes that describe what processes the plugin can run on.
+		/// </summary>
 		public IEnumerable<BepInProcess> Processes { get; internal set; }
 
+		/// <summary>
+		/// Collection of <see cref="BepInDependency"/> attributes that describe what plugins this plugin depends on.
+		/// </summary>
 		public IEnumerable<BepInDependency> Dependencies { get; internal set; }
 
+		/// <summary>
+		/// Collection of <see cref="BepInIncompatibility"/> attributes that describe what plugins this plugin
+		/// is incompatible with.
+		/// </summary>
 		public IEnumerable<BepInIncompatibility> Incompatibilities { get; internal set; }
 
+		/// <summary>
+		/// File path to the plugin DLL
+		/// </summary>
 		public string Location { get; internal set; }
 
+		/// <summary>
+		/// Instance of the plugin that represents this info. NULL if no plugin is instantiated from info (yet)
+		/// </summary>
 		public BaseUnityPlugin Instance { get; internal set; }
 
 		internal string TypeName { get; set; }

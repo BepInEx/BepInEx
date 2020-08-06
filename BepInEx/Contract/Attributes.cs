@@ -114,7 +114,7 @@ namespace BepInEx
 
 		/// <summary>
 		/// Marks this <see cref="BaseUnityPlugin"/> as depenant on another plugin. The other plugin will be loaded before this one.
-		/// If the other plugin doesn't exist or is of a version below <see cref="MinimumDependencyVersion"/>, this plugin will not load and an error will be logged instead.
+		/// If the other plugin doesn't exist or is of a version below <see cref="MinimumVersion"/>, this plugin will not load and an error will be logged instead.
 		/// </summary>
 		/// <param name="DependencyGUID">The GUID of the referenced plugin.</param>
 		/// <param name="MinimumDependencyVersion">The minimum version of the referenced plugin.</param>
@@ -288,7 +288,7 @@ namespace BepInEx
 		/// <summary>
 		/// Retrieves the dependencies of the specified plugin type.
 		/// </summary>
-		/// <param name="Plugin">The plugin type.</param>
+		/// <param name="plugin">The plugin type.</param>
 		/// <returns>A list of all plugin types that the specified plugin type depends upon.</returns>
 		public static IEnumerable<BepInDependency> GetDependencies(Type plugin)
 		{

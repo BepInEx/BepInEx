@@ -25,6 +25,10 @@ namespace BepInEx.Bootstrap
 		public static Dictionary<string, PluginInfo> PluginInfos { get; } = new Dictionary<string, PluginInfo>();
 
 		private static readonly List<BaseUnityPlugin> _plugins = new List<BaseUnityPlugin>();
+		
+		/// <summary>
+		/// List of all <see cref="BepInPlugin"/> loaded via the chainloader.
+		/// </summary>
 		[Obsolete("Use PluginInfos instead")]
 		public static List<BaseUnityPlugin> Plugins
 		{
@@ -38,6 +42,10 @@ namespace BepInEx.Bootstrap
 			}
 		}
 
+		/// <summary>
+		/// Collection of error chainloader messages that occured during plugin loading.
+		/// Contains information about what certain plugins were not loaded.
+		/// </summary>
 		public static List<string> DependencyErrors { get; } = new List<string>();
 
 		/// <summary>
@@ -128,6 +136,11 @@ namespace BepInEx.Bootstrap
 
 		private static Regex allowedGuidRegex { get; } = new Regex(@"^[a-zA-Z0-9\._\-]+$");
 
+		/// <summary>
+		/// Analyzes the given type definition and attempts to convert it to a valid <see cref="PluginInfo"/>
+		/// </summary>
+		/// <param name="type">Type definition to analyze.</param>
+		/// <returns>If the type represent a valid plugin, returns a <see cref="PluginInfo"/> instance. Otherwise, return null.</returns>
 		public static PluginInfo ToPluginInfo(TypeDefinition type)
 		{
 			if (type.IsInterface || type.IsAbstract)

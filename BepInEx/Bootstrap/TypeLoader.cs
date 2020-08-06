@@ -79,6 +79,9 @@ namespace BepInEx.Bootstrap
 			};
 		}
 
+		/// <summary>
+		/// Event fired when <see cref="TypeLoader"/> fails to resolve a type during type loading.
+		/// </summary>
 		public static event AssemblyResolveEventHandler AssemblyResolve;
 
         /// <summary>
