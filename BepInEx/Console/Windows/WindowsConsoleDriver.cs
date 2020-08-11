@@ -35,7 +35,14 @@ namespace BepInEx
 			
 			// If stdout exists, write to it, otherwise make it the same as console out
 			// Not sure if this is needed? Does the original Console.Out still work?
-			var stdout = ConsoleWindow.OriginalStdoutHandle != IntPtr.Zero ? ConsoleWindow.OriginalStdoutHandle : ConsoleWindow.ConsoleOutHandle;
+			var stdout = GetOutHandle();
+			if (stdout == IntPtr.Zero)
+			{
+				StandardOut = TextWriter.Null;
+				ConsoleOut = TextWriter.Null;
+				return;
+			}
+			
 			var originalOutStream = new FileStream(stdout, FileAccess.Write);
 			StandardOut = new StreamWriter(originalOutStream, new UTF8Encoding(false))
 			{
@@ -50,6 +57,20 @@ namespace BepInEx
 			};
 			ConsoleActive = true;
 #pragma warning restore 618
+		}
+
+		private IntPtr GetOutHandle()
+		{
+			switch (ConsoleManager.ConfigConsoleOutRedirectType.Value)
+			{
+				case ConsoleManager.ConsoleOutRedirectType.ConsoleOut:
+					return ConsoleWindow.ConsoleOutHandle;
+				case ConsoleManager.ConsoleOutRedirectType.StandardOut:
+					return ConsoleWindow.OriginalStdoutHandle;
+				case ConsoleManager.ConsoleOutRedirectType.Auto:
+				default:
+					return ConsoleWindow.OriginalStdoutHandle != IntPtr.Zero ? ConsoleWindow.OriginalStdoutHandle : ConsoleWindow.ConsoleOutHandle;
+			}
 		}
 
 		public void DetachConsole()

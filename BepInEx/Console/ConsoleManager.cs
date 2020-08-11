@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.IO;
 using System.Text;
 using BepInEx.Configuration;
@@ -104,5 +105,23 @@ namespace BepInEx
 			"Logging.Console", "ShiftJisEncoding",
 			false,
 			"If true, console is set to the Shift-JIS encoding, otherwise UTF-8 encoding.");
+
+		public static readonly ConfigEntry<ConsoleOutRedirectType> ConfigConsoleOutRedirectType = ConfigFile.CoreConfig.Bind(
+				"Logging.Console", "OutputRedirectType",
+				ConsoleOutRedirectType.Auto,
+				new StringBuilder()
+					.AppendLine("Hints console manager how to redirect console log. Possible values:")
+					.AppendLine("Auto - lets BepInEx decide how to redirect console output")
+					.AppendLine("ConsoleOut - prefer redirecting to console output; if possible, closes standard output")
+					.AppendLine("StandardOut - prefer redirecting to standard output; if possible, closes console out")
+					.ToString()
+			);
+		
+		public enum ConsoleOutRedirectType
+		{
+			[Description("Auto")] Auto = 0,
+			[Description("Console Out")] ConsoleOut,
+			[Description("Standard Out")] StandardOut,
+		}
 	}
 }

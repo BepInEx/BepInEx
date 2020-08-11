@@ -5,6 +5,7 @@
 
 using System;
 using System.Runtime.InteropServices;
+using BepInEx;
 
 namespace UnityInjector.ConsoleUtil
 {
@@ -38,6 +39,9 @@ namespace UnityInjector.ConsoleUtil
 
 			if (!SetStdHandle(-11, ConsoleOutHandle))
 				throw new Exception("SetStdHandle() failed");
+
+			if (OriginalStdoutHandle != IntPtr.Zero && ConsoleManager.ConfigConsoleOutRedirectType.Value == ConsoleManager.ConsoleOutRedirectType.ConsoleOut)
+				CloseHandle(OriginalStdoutHandle);
 
 			IsAttached = true;
 		}
