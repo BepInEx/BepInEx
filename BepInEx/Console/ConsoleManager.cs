@@ -107,12 +107,12 @@ namespace BepInEx
 			"If true, console is set to the Shift-JIS encoding, otherwise UTF-8 encoding.");
 
 		public static readonly ConfigEntry<ConsoleOutRedirectType> ConfigConsoleOutRedirectType = ConfigFile.CoreConfig.Bind(
-				"Logging.Console", "OutputRedirectType",
+				"Logging.Console", "StandardOutType",
 				ConsoleOutRedirectType.Auto,
 				new StringBuilder()
-					.AppendLine("Hints console manager how to redirect console log. Possible values:")
+					.AppendLine("Hints console manager on what handle to assign as StandardOut. Possible values:")
 					.AppendLine("Auto - lets BepInEx decide how to redirect console output")
-					.AppendLine("ConsoleOut - prefer redirecting to console output; if possible, closes standard output")
+					.AppendLine("ConsoleOut - prefer redirecting to console output; if possible, closes original standard output")
 					.AppendLine("StandardOut - prefer redirecting to standard output; if possible, closes console out")
 					.ToString()
 			);
