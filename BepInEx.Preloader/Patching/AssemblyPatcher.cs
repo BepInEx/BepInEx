@@ -196,15 +196,7 @@ namespace BepInEx.Preloader.Patching
 
 		private static string GetAssemblyName(string fullName)
 		{
-			// We need to manually parse full name to avoid issues with encoding on mono
-			try
-			{
-				return new AssemblyName(fullName).Name;
-			}
-			catch (Exception)
-			{
-				return fullName;
-			}
+			return Utility.TryParseAssemblyName(fullName, out var assName) ? assName.Name : fullName;
 		}
 
 		/// <summary>

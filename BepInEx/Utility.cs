@@ -280,6 +280,11 @@ namespace BepInEx
 		/// <param name="fullName">Fully qualified assembly name</param>
 		/// <param name="assemblyName">Resulting <see cref="AssemblyName"/> instance</param>
 		/// <returns><c>true</c>, if parsing was successful, otherwise <c>false</c></returns>
+		/// <remarks>
+		/// On some versions of mono, using <see cref="Assembly.GetName()"/> fails because it runs on unmanaged side
+		/// which has problems with encoding.
+		/// Using <see cref="AssemblyName"/> solves this by doing parsing on managed side instead.
+		/// </remarks>
 		public static bool TryParseAssemblyName(string fullName, out AssemblyName assemblyName)
 		{
 			try
@@ -289,6 +294,7 @@ namespace BepInEx
 			}
 			catch (Exception e)
 			{
+				File.AppendAllText("tryparseerr.log", $"Failed to parse {fullName}: {e}");
 				assemblyName = null;
 				return false;
 			}
