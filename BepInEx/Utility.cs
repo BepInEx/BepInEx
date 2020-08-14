@@ -274,6 +274,26 @@ namespace BepInEx
 			}
 		}
 
+		/// <summary>
+		/// Try to parse given string as an assembly name
+		/// </summary>
+		/// <param name="fullName">Fully qualified assembly name</param>
+		/// <param name="assemblyName">Resulting <see cref="AssemblyName"/> instance</param>
+		/// <returns><c>true</c>, if parsing was successful, otherwise <c>false</c></returns>
+		public static bool TryParseAssemblyName(string fullName, out AssemblyName assemblyName)
+		{
+			try
+			{
+				assemblyName = new AssemblyName(fullName);
+				return true;
+			}
+			catch (Exception e)
+			{
+				assemblyName = null;
+				return false;
+			}
+		}
+
 		// Adapted from https://github.com/MonoMod/MonoMod.Common/blob/master/Utils/PlatformHelper.cs#L13
 		private static void CheckPlatform()
 		{
