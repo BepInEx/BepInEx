@@ -65,7 +65,6 @@ namespace BepInEx.Bootstrap
 			if (_initialized)
 				return;
 
-			ReplayPreloaderLogs(preloaderLogEvents);
 			ThreadingHelper.Initialize();
 			
 			// Set vitals
@@ -90,6 +89,8 @@ namespace BepInEx.Bootstrap
 
 			if (!TraceLogSource.IsListening)
 				Logger.Sources.Add(TraceLogSource.CreateSource());
+			
+			ReplayPreloaderLogs(preloaderLogEvents);
 			
 			// Add Unity log source only after replaying to prevent duplication in console
 			if (ConfigUnityLogging.Value)
