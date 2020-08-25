@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Emit;
 using HarmonyLib;
+using MonoMod.RuntimeDetour;
+using MonoMod.RuntimeDetour.Platforms;
 using MonoMod.Utils;
 
 namespace BepInEx.Preloader.RuntimeFixes
@@ -25,6 +27,13 @@ namespace BepInEx.Preloader.RuntimeFixes
 				// Fix has been applied officially
 				return;
 			}
+			
+			// Apparently on older Unity versions (4.x), using Process.Start can run Console..cctor
+			// And since MonoMod's PlatformHelper (used by DetourHelper.Native) runs Process.Start to determine ARM/x86 platform,
+			// this causes a crash owing to TermInfoReader running before it can be patched and fixed
+			// Because Doorstop does not support ARM at the moment, we can get away with just forcing x86 detour platform.
+			// TODO: Figure out a way to detect ARM on Unix without running Process.Start
+			DetourHelper.Native = new DetourNativeX86Platform();
 
 			var harmony = new HarmonyLib.Harmony("com.bepinex.xtermfix");
 
@@ -39,6 +48,8 @@ namespace BepInEx.Preloader.RuntimeFixes
 
 			harmony.Patch(AccessTools.Method("System.TermInfoReader:GetStringBytes", new []{ AccessTools.TypeByName("System.TermInfoStrings") }),
 				transpiler: new HarmonyMethod(typeof(XTermFix), nameof(GetTermInfoStringsTranspiler)));
+
+			DetourHelper.Native = null;
 		}
 
 		public static int intOffset;
