@@ -41,8 +41,8 @@ namespace BepInEx.Unix
 			{
 				["libc"] = new List<DynDllMapping>
 				{
-					"libc", // Linux glibc
 					"libc.so.6", // Ubuntu glibc
+					"libc", // Linux glibc
 					"/usr/lib/libSystem.dylib", // OSX POSIX
 				}
 			};
