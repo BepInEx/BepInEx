@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Emit;
+using BepInEx.Unix;
 using HarmonyLib;
 using MonoMod.RuntimeDetour;
 using MonoMod.RuntimeDetour.Platforms;
@@ -16,7 +17,7 @@ namespace BepInEx.Preloader.RuntimeFixes
 			if (Utility.CurrentOs == Platform.Windows)
 				return;
 
-			if (typeof(Console).Assembly.GetType("System.ConsoleDriver") == null)
+			if (!LinuxConsoleDriver.UseMonoTtyDriver)
 			{
 				// Mono version is too old, use our own TTY implementation instead
 				return;

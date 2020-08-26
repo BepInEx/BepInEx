@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Text;
 using BepInEx.Logging;
 using HarmonyLib;
 using UnityInjector.ConsoleUtil;
@@ -9,13 +8,26 @@ namespace BepInEx.Unix
 {
 	internal class LinuxConsoleDriver : IConsoleDriver
 	{
+		public static bool UseMonoTtyDriver { get; }
+
+		static LinuxConsoleDriver()
+		{
+			UseMonoTtyDriver = false;
+
+			var consoleDriverType = typeof(Console).Assembly.GetType("System.ConsoleDriver");
+
+			if (consoleDriverType != null)
+			{
+				UseMonoTtyDriver = AccessTools.Method(consoleDriverType, "MangleParameters") == null;
+			}
+		}
+
 		public TextWriter StandardOut { get; private set; }
 		public TextWriter ConsoleOut { get; private set;  }
 
 		public bool ConsoleActive { get; private set; }
 		public bool ConsoleIsExternal => false;
 
-		public bool UseMonoTtyDriver { get; private set; }
 		public bool StdoutRedirected { get; private set; }
 
 		public TtyInfo TtyInfo { get; private set; }
@@ -24,8 +36,6 @@ namespace BepInEx.Unix
 		{
 			// Console is always considered active on Unix
 			ConsoleActive = true;
-			
-			UseMonoTtyDriver = typeof(Console).Assembly.GetType("System.ConsoleDriver") != null;
 
 			StdoutRedirected = UnixStreamHelper.isatty(1) != 1;
 
