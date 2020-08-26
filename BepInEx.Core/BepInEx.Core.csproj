@@ -91,10 +91,6 @@
     <Compile Include="Utility.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\submodules\BepInEx.Harmony\submodules\Harmony\Harmony\Harmony.csproj">
-      <Project>{a15d6ee6-f954-415b-8605-8a8470cc87dc}</Project>
-      <Name>Harmony</Name>
-    </ProjectReference>
     <ProjectReference Include="..\submodules\BepInEx.Harmony\BepInEx.Harmony\BepInEx.Harmony.csproj">
       <Project>{54161cfe-ff42-4dde-b161-3a49545db5cd}</Project>
       <Name>BepInEx.Harmony</Name>
