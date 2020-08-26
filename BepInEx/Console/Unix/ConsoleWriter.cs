@@ -9,7 +9,7 @@ namespace BepInEx.Unix
 {
 	internal static class ConsoleWriter
 	{
-		private static Func<Stream, Encoding, bool, StreamWriter> cStreamWriterConstructor = null;//AccessTools.Constructor(AccessTools.TypeByName("System.IO.CStreamWriter"), new []{ typeof(Stream), typeof(Encoding), typeof(bool) });
+		private static Func<Stream, Encoding, bool, StreamWriter> cStreamWriterConstructor;
 		
 		private static Func<Stream, Encoding, bool, StreamWriter> CStreamWriterConstructor
 		{
