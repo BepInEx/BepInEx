@@ -18,7 +18,7 @@ namespace BepInEx.Unix
 
 			if (consoleDriverType != null)
 			{
-				UseMonoTtyDriver = AccessTools.Method("System.TermInfoDriver:MangleParameters") == null;
+				UseMonoTtyDriver = typeof(Console).Assembly.GetType("System.ParameterizedStrings") != null;
 			}
 		}
 
