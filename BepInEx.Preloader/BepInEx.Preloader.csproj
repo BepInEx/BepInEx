@@ -39,13 +39,13 @@
     <Reference Include="Mono.Cecil.Rocks, Version=0.10.4.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e, processorArchitecture=MSIL">
       <HintPath>$(SolutionDir)\packages\Mono.Cecil.0.10.4\lib\net35\Mono.Cecil.Rocks.dll</HintPath>
     </Reference>
-    <Reference Include="MonoMod.RuntimeDetour, Version=20.8.3.5, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\MonoMod.RuntimeDetour.20.8.3.5\lib\net35\MonoMod.RuntimeDetour.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="MonoMod.RuntimeDetour, Version=20.8.3.5, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\MonoMod\MonoMod.RuntimeDetour\bin\Release\net35\MonoMod.RuntimeDetour.dll</HintPath>
     </Reference>
-    <Reference Include="MonoMod.Utils, Version=20.8.3.5, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\MonoMod.Utils.20.8.3.5\lib\net35\MonoMod.Utils.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="MonoMod.Utils, Version=20.8.3.5, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\MonoMod\MonoMod.RuntimeDetour\bin\Release\net35\MonoMod.Utils.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -55,6 +55,7 @@
     <Compile Include="Patching\AssemblyPatcher.cs" />
     <Compile Include="Entrypoint.cs" />
     <Compile Include="Patching\PatcherPlugin.cs" />
+    <Compile Include="Platform.cs" />
     <Compile Include="RuntimeFixes\ConsoleSetOutFix.cs" />
     <Compile Include="RuntimeFixes\TraceFix.cs" />
     <Compile Include="Preloader.cs" />

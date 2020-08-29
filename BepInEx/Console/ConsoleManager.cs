@@ -32,20 +32,13 @@ namespace BepInEx
 
 		public static void Initialize(bool alreadyActive)
 		{
-			switch (Utility.CurrentOs)
+			if (PlatformHelper.Is(Platform.Unix))
 			{
-				case Platform.MacOS:
-				case Platform.Linux:
-				{
-					Driver = new LinuxConsoleDriver();
-					break;
-				}
-
-				case Platform.Windows:
-				{
-					Driver = new WindowsConsoleDriver();
-					break;
-				}
+				Driver = new LinuxConsoleDriver();
+			}
+			else if (PlatformHelper.Is(Platform.Windows))
+			{
+				Driver = new WindowsConsoleDriver();
 			}
 
 			Driver.Initialize(alreadyActive);

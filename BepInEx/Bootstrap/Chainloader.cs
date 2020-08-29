@@ -97,7 +97,7 @@ namespace BepInEx.Bootstrap
 				Logger.Sources.Add(new UnityLogSource());
 			Logger.Listeners.Add(new UnityLogListener());
 
-			if (Utility.CurrentOs == Platform.Linux)
+			if (PlatformHelper.Is(Platform.Unix))
 			{
 				Logger.LogInfo($"Detected Unity version: v{Application.unityVersion}");
 			}
