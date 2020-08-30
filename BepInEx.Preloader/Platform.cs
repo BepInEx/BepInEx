@@ -53,51 +53,51 @@ namespace BepInEx.Preloader
 			public string domainname;
 		}
 
-        [DllImport("libc.so.6", EntryPoint = "uname", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+		[DllImport("libc.so.6", EntryPoint = "uname", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
 		private static extern IntPtr uname_linux(ref utsname_linux utsname);
 
 		[DllImport("/usr/lib/libSystem.dylib", EntryPoint = "uname", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
 		private static extern IntPtr uname_osx(ref utsname_osx utsname);
 
-        /// <summary>
-        /// Recreation of MonoMod's PlatformHelper.DeterminePlatform method, but with libc calls instead of creating processes.
-        /// </summary>
-        public static void SetPlatform()
+		/// <summary>
+		/// Recreation of MonoMod's PlatformHelper.DeterminePlatform method, but with libc calls instead of creating processes.
+		/// </summary>
+		public static void SetPlatform()
 		{
-            var current = Platform.Unknown;
+			var current = Platform.Unknown;
 
-            // For old Mono, get from a private property to accurately get the platform.
-            // static extern PlatformID Platform
-            PropertyInfo p_Platform = typeof(Environment).GetProperty("Platform", BindingFlags.NonPublic | BindingFlags.Static);
-            string platID;
-            if (p_Platform != null)
-            {
-                platID = p_Platform.GetValue(null, new object[0]).ToString();
-            }
-            else
-            {
-                // For .NET and newer Mono, use the usual value.
-                platID = Environment.OSVersion.Platform.ToString();
-            }
-            platID = platID.ToLowerInvariant();
+			// For old Mono, get from a private property to accurately get the platform.
+			// static extern PlatformID Platform
+			PropertyInfo p_Platform = typeof(Environment).GetProperty("Platform", BindingFlags.NonPublic | BindingFlags.Static);
+			string platID;
+			if (p_Platform != null)
+			{
+				platID = p_Platform.GetValue(null, new object[0]).ToString();
+			}
+			else
+			{
+				// For .NET and newer Mono, use the usual value.
+				platID = Environment.OSVersion.Platform.ToString();
+			}
+			platID = platID.ToLowerInvariant();
 
-            if (platID.Contains("win"))
-            {
-                current = Platform.Windows;
-            }
-            else if (platID.Contains("mac") || platID.Contains("osx"))
-            {
-                current = Platform.MacOS;
-            }
-            else if (platID.Contains("lin") || platID.Contains("unix"))
-            {
-                current = Platform.Linux;
-            }
+			if (platID.Contains("win"))
+			{
+				current = Platform.Windows;
+			}
+			else if (platID.Contains("mac") || platID.Contains("osx"))
+			{
+				current = Platform.MacOS;
+			}
+			else if (platID.Contains("lin") || platID.Contains("unix"))
+			{
+				current = Platform.Linux;
+			}
 
-            if (Is(current, Platform.Linux) && Directory.Exists("/data") && File.Exists("/system/build.prop"))
-            {
-                current = Platform.Android;
-            }
+			if (Is(current, Platform.Linux) && Directory.Exists("/data") && File.Exists("/system/build.prop"))
+			{
+				current = Platform.Android;
+			}
 			else if (Is(current, Platform.Unix) && Directory.Exists("/System/Library/AccessibilityBundles"))
 			{
 				current = Platform.iOS;
@@ -105,15 +105,15 @@ namespace BepInEx.Preloader
 
 			// Is64BitOperatingSystem has been added in .NET Framework 4.0
 			MethodInfo m_get_Is64BitOperatingSystem = typeof(Environment).GetProperty("Is64BitOperatingSystem")?.GetGetMethod();
-            if (m_get_Is64BitOperatingSystem != null)
-                current |= (((bool)m_get_Is64BitOperatingSystem.Invoke(null, new object[0])) ? Platform.Bits64 : 0);
-            else
-                current |= (IntPtr.Size >= 8 ? Platform.Bits64 : 0);
+			if (m_get_Is64BitOperatingSystem != null)
+				current |= (((bool)m_get_Is64BitOperatingSystem.Invoke(null, new object[0])) ? Platform.Bits64 : 0);
+			else
+				current |= (IntPtr.Size >= 8 ? Platform.Bits64 : 0);
 
 			File.AppendAllText("scuffed_debug.log", $"{platID}\n{current}");
 
 			if ((Is(current, Platform.MacOS) || Is(current, Platform.Linux)) && Type.GetType("Mono.Runtime") != null)
-            {
+			{
 				string arch;
 				IntPtr result;
 
@@ -134,13 +134,13 @@ namespace BepInEx.Preloader
 				if (result == IntPtr.Zero && (arch.StartsWith("aarch") || arch.StartsWith("arm")))
 					current |= Platform.ARM;
 			}
-            else
-            {
-                // Detect ARM based on PE info or uname.
-                typeof(object).Module.GetPEKind(out PortableExecutableKinds peKind, out ImageFileMachine machine);
-                if (machine == (ImageFileMachine)0x01C4 /* ARM, .NET Framework 4.5 */)
-                    current |= Platform.ARM;
-            }
+			else
+			{
+				// Detect ARM based on PE info or uname.
+				typeof(object).Module.GetPEKind(out PortableExecutableKinds peKind, out ImageFileMachine machine);
+				if (machine == (ImageFileMachine)0x01C4 /* ARM, .NET Framework 4.5 */)
+					current |= Platform.ARM;
+			}
 
 			PlatformHelper.Current = current;
 		}
@@ -149,5 +149,5 @@ namespace BepInEx.Preloader
 		{
 			return (current & expected) == expected;
 		}
-    }
+	}
 }
