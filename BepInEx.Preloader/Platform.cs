@@ -98,7 +98,7 @@ namespace BepInEx.Preloader
             {
                 current = Platform.Android;
             }
-			else if (Is(current, Platform.Unix) && Directory.Exists("/Applications") && Directory.Exists("/System"))
+			else if (Is(current, Platform.Unix) && Directory.Exists("/System/Library/AccessibilityBundles"))
 			{
 				current = Platform.iOS;
 			}
