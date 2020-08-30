@@ -110,8 +110,6 @@ namespace BepInEx.Preloader
 			else
 				current |= (IntPtr.Size >= 8 ? Platform.Bits64 : 0);
 
-			File.AppendAllText("scuffed_debug.log", $"{platID}\n{current}");
-
 			if ((Is(current, Platform.MacOS) || Is(current, Platform.Linux)) && Type.GetType("Mono.Runtime") != null)
 			{
 				string arch;
