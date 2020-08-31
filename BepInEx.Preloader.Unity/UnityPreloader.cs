@@ -65,20 +65,7 @@ namespace BepInEx.Preloader.Unity
 				PreloaderLog = new PreloaderConsoleListener(ConfigPreloaderCOutLogging.Value);
 				Logger.Listeners.Add(PreloaderLog);
 
-				string consoleTile = $"BepInEx {typeof(Paths).Assembly.GetName().Version} - {Process.GetCurrentProcess().ProcessName}";
-				Log.LogMessage(consoleTile);
-
-				if (ConsoleManager.ConsoleActive)
-					ConsoleManager.SetConsoleTitle(consoleTile);
-				
-				//See BuildInfoAttribute for more information about this section.
-				object[] attributes = typeof(BuildInfoAttribute).Assembly.GetCustomAttributes(typeof(BuildInfoAttribute), false);
-
-				if (attributes.Length > 0)
-				{
-					var attribute = (BuildInfoAttribute)attributes[0];
-					Log.LogMessage(attribute.Info);
-				}
+				BasicLogInfo.PrintLogInfo(Log);
 
 				Log.LogInfo($"Running under Unity v{FileVersionInfo.GetVersionInfo(Paths.ExecutablePath).FileVersion}");
 				Log.LogInfo($"CLR runtime version: {Environment.Version}");

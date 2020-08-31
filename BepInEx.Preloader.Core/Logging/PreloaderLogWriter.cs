@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using BepInEx.ConsoleUtil;
 using BepInEx.Logging;
 
 namespace BepInEx.Preloader.Core.Logging

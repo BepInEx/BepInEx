@@ -23,11 +23,6 @@ namespace BepInEx.Bootstrap
 
 		public List<string> DependencyErrors { get; } = new List<string>();
 
-		//protected BaseChainloader()
-		//{
-		//	Plugins = new ReadOnlyCollection<TPlugin>(_plugins);
-		//}
-
 		public virtual void Initialize(string gameExePath = null)
 		{
 			if (_initialized)

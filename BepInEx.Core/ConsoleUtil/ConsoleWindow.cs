@@ -47,8 +47,11 @@ namespace UnityInjector.ConsoleUtil
 				throw new Exception("SetStdHandle() failed");
 
 
-			var originalOutStream = new FileStream(new SafeFileHandle(_oOut, false), FileAccess.Write);
-			OriginalOut = new StreamWriter(originalOutStream, new UTF8Encoding(false));
+#warning Fix OriginalOut
+
+			//var originalOutStream = new FileStream(new SafeFileHandle(_oOut, false), FileAccess.Write);
+			//OriginalOut = new StreamWriter(originalOutStream, new UTF8Encoding(false));
+			OriginalOut = TextWriter.Null;
 
 			Init();
 
