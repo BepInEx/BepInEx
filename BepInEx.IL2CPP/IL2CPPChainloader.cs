@@ -103,10 +103,10 @@ namespace BepInEx.IL2CPP
 
 			ManualLogSource unhollowerLogSource = Logger.CreateLogSource("Unhollower");
 
-			UnhollowerBaseLib.LogSupport.InfoHandler += s => unhollowerLogSource.LogInfo(s);
-			UnhollowerBaseLib.LogSupport.WarningHandler += s => unhollowerLogSource.LogWarning(s);
-			UnhollowerBaseLib.LogSupport.TraceHandler += s => unhollowerLogSource.LogDebug(s);
-			UnhollowerBaseLib.LogSupport.ErrorHandler += s => unhollowerLogSource.LogError(s);
+			UnhollowerBaseLib.LogSupport.InfoHandler += unhollowerLogSource.LogInfo;
+			UnhollowerBaseLib.LogSupport.WarningHandler += unhollowerLogSource.LogWarning;
+			UnhollowerBaseLib.LogSupport.TraceHandler += unhollowerLogSource.LogDebug;
+			UnhollowerBaseLib.LogSupport.ErrorHandler += unhollowerLogSource.LogError;
 
 			base.InitializeLoggers();
 
