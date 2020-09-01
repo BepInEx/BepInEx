@@ -9,8 +9,10 @@ namespace BepInEx.Tests
 	[TestClass]
 	public class TrampolineTests
 	{
-		[TestMethod]
-		public void TrampolineTest()
+		[DataTestMethod]
+		[DataRow(64)]
+		[DataRow(32)]
+		public void TrampolineTest(int bitness)
 		{
 			byte[] exampleCode = new byte[] {
 				0x48, 0x89, 0x5C, 0x24, 0x10, 0x48, 0x89, 0x74, 0x24, 0x18, 0x55, 0x57, 0x41, 0x56, 0x48, 0x8D,
@@ -29,7 +31,7 @@ namespace BepInEx.Tests
 				var formatter = new NasmFormatter();
 				var output = new StringOutput();
 				var codeReader = new ByteArrayCodeReader(data);
-				var decoder = Decoder.Create(64, codeReader);
+				var decoder = Decoder.Create(bitness, codeReader);
 				decoder.IP = ip;
 				while (codeReader.CanReadByte)
 				{
@@ -48,7 +50,7 @@ namespace BepInEx.Tests
 			Disassemble(exampleCode, (ulong)exampleCodePointer.ToInt64());
 
 
-			int trampolineLength = TrampolineGenerator.Generate(exampleCodePointer, new IntPtr(0xBEEF), trampolineCodePointer, 64);
+			int trampolineLength = TrampolineGenerator.Generate(exampleCodePointer, new IntPtr(0xBEEF), trampolineCodePointer, bitness);
 
 
 

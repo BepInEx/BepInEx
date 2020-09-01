@@ -15,8 +15,10 @@ namespace BepInEx.IL2CPP
 
 			// Decode original function up until we go past the needed bytes to write the jump to patchedFunctionPtr
 
-			// TODO: set this per arch, and implement x86 E9 jmp
-			const uint requiredBytes = 10 + 2;
+			var generatedJmp = GenerateAbsoluteJump(patchedFunctionPtr, originalFunctionPtr, bitness == 64);
+
+
+			uint requiredBytes = (uint)generatedJmp.Length;
 
 			var codeReader = new ByteArrayCodeReader(instructionBuffer);
 			var decoder = Decoder.Create(bitness, codeReader);
@@ -67,7 +69,17 @@ namespace BepInEx.IL2CPP
 
 			ref readonly var lastInstr = ref origInstructions[origInstructions.Count - 1];
 
-			origInstructions.Add(Instruction.CreateBranch(Code.Jmp_rel32_64, lastInstr.NextIP));
+			if (lastInstr.FlowControl != FlowControl.Return)
+			{
+				if (bitness == 64)
+				{
+					origInstructions.Add(Instruction.CreateBranch(Code.Jmp_rel32_64, lastInstr.NextIP));
+				}
+				else
+				{
+					origInstructions.Add(Instruction.CreateBranch(Code.Jmp_rel32_32, lastInstr.NextIP));
+				}
+			}
 
 
 			// Generate trampoline from instruction list
@@ -90,18 +102,37 @@ namespace BepInEx.IL2CPP
 
 			// Overwrite the start of trampolineFunctionPtr with a jump to patchedFunctionPtr
 
-			var jmpCode = new byte[requiredBytes];
-			jmpCode[0] = 0x48;// \ 'MOV RAX,imm64'
-			jmpCode[1] = 0xB8;// /
-			ulong v = (ulong)patchedFunctionPtr.ToInt64();
-			for (int i = 0; i < 8; i++, v >>= 8)
-				jmpCode[2 + i] = (byte)v;
-			jmpCode[10] = 0xFF;// \ JMP RAX
-			jmpCode[11] = 0xE0;// /
-
-			Marshal.Copy(jmpCode, 0, originalFunctionPtr, (int)requiredBytes);
+			Marshal.Copy(generatedJmp, 0, originalFunctionPtr, (int)requiredBytes);
 
 			return newCode.Length;
+		}
+
+		private static byte[] GenerateAbsoluteJump(IntPtr address, IntPtr currentAddress, bool x64)
+		{
+			byte[] jmpBytes;
+
+			if (x64)
+			{
+				jmpBytes = new byte[]
+				{
+					0xFF, 0x25, 0x00, 0x00, 0x00, 0x00,				// FF25 00000000: JMP [RIP+6]
+					0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00	// Absolute destination address
+				};
+
+				Array.Copy(BitConverter.GetBytes(address.ToInt64()), 0, jmpBytes, 6, 8);
+			}
+			else
+			{
+				jmpBytes = new byte[]
+				{
+					0xE9,					// E9: JMP rel destination
+					0x00, 0x00, 0x00, 0x00	// Relative destination address
+				};
+
+				Array.Copy(BitConverter.GetBytes(currentAddress.ToInt32() - address.ToInt32()), 0, jmpBytes, 1, 4);
+			}
+
+			return jmpBytes;
 		}
 
 
