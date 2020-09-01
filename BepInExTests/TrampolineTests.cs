@@ -54,6 +54,14 @@ namespace BepInEx.Tests
 
 
 
+			Console.WriteLine("Modified:");
+			Console.WriteLine();
+
+
+			Marshal.Copy(exampleCodePointer, exampleCode, 0, exampleCode.Length);
+			Disassemble(exampleCode, (ulong)exampleCodePointer.ToInt64());
+
+
 			Console.WriteLine();
 			Console.WriteLine("Trampoline:");
 			Console.WriteLine();

@@ -129,7 +129,7 @@ namespace BepInEx.IL2CPP
 					0x00, 0x00, 0x00, 0x00	// Relative destination address
 				};
 
-				Array.Copy(BitConverter.GetBytes(currentAddress.ToInt32() - address.ToInt32()), 0, jmpBytes, 1, 4);
+				Array.Copy(BitConverter.GetBytes(address.ToInt32() - (currentAddress.ToInt32() + 5)), 0, jmpBytes, 1, 4);
 			}
 
 			return jmpBytes;
