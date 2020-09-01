@@ -8,8 +8,8 @@ using BepInEx.Bootstrap;
 using BepInEx.Logging;
 using BepInEx.Preloader.Core;
 using BepInEx.Preloader.Core.Logging;
+using Iced.Intel;
 using MonoMod.RuntimeDetour;
-using MonoMod.Utils;
 using UnhollowerBaseLib.Runtime;
 using UnhollowerRuntimeLib;
 using UnityEngine;
@@ -21,74 +21,146 @@ namespace BepInEx.IL2CPP
 	{
 		private static ManualLogSource UnityLogSource = new ManualLogSource("Unity");
 
-		[UnmanagedFunctionPointer(CallingConvention.StdCall)]
-		private delegate void UnityLogCallbackDelegate([In] [MarshalAs(UnmanagedType.LPStr)] string log);
-		private static void UnityLogCallback([In] [MarshalAs(UnmanagedType.LPStr)] string log)
+		public static void UnityLogCallback(string logLine, string exception, LogType type)
 		{
-			UnityLogSource.LogInfo(log.Trim());
+			UnityLogSource.LogInfo(logLine.Trim());
 		}
 
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+
+//		public const CallingConvention ArchConvention =
+//#if X64
+//			CallingConvention.Stdcall;
+//#else
+//			CallingConvention.Cdecl;
+//#endif
+
+		[UnmanagedFunctionPointer(CallingConvention.StdCall)]
 		private delegate IntPtr RuntimeInvokeDetour(IntPtr method, IntPtr obj, IntPtr parameters, IntPtr exc);
 
 		[DllImport("kernel32", CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]
 		private static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
 
 		private static RuntimeInvokeDetour originalInvoke;
-		
-		public unsafe IL2CPPChainloader()
+
+		private static ManualLogSource unhollowerLogSource = Logger.CreateLogSource("Unhollower");
+
+		private class DetourHandler : UnhollowerRuntimeLib.ManagedDetour
 		{
-			UnityVersionHandler.Initialize(2019, 3, 15);
-			File.AppendAllText("log.log", "Initialized unhollower\n");
+			public T Detour<T>(IntPtr from, T to) where T : Delegate
+			{
+				var detour = new NativeDetour(from, to, new NativeDetourConfig { ManualApply = true });
+
+				var trampoline = detour.GenerateTrampoline<T>();
+
+				detour.Apply();
+
+				return trampoline;
+			}
+		}
+
+		private static void Disassemble(ManualLogSource logSource, IntPtr memoryPtr, int size)
+		{
+			byte[] data = new byte[size];
+			Marshal.Copy(memoryPtr, data, 0, size);
+
+			var formatter = new NasmFormatter();
+			var output = new StringOutput();
+			var codeReader = new ByteArrayCodeReader(data);
+			var decoder = Decoder.Create(64, codeReader);
+			decoder.IP = (ulong)memoryPtr.ToInt64();
+			while (codeReader.CanReadByte)
+			{
+				decoder.Decode(out var instr);
+				formatter.Format(instr, output);
+				logSource.LogDebug($"{instr.IP:X16} {output.ToStringAndReset()}");
+			}
+		}
+
+		public override unsafe void Initialize(string gameExePath = null)
+		{
+			base.Initialize(gameExePath);
+
+			UnityVersionHandler.Initialize(2019, 2, 17);
+
+			// One or the other here for Unhollower to work correctly
+
+			////////ClassInjector.Detour = new DetourHandler();
+
 			ClassInjector.DoHook = (ptr, intPtr) =>
 			{
-				var detour = new NativeDetour(new IntPtr(*((int**)ptr)), intPtr);
-				detour.Apply();
+				IntPtr originalFunc = new IntPtr(*(void**)ptr);
+
+				unhollowerLogSource.LogDebug($"DoHook 0x{originalFunc.ToString("X")} -> 0x{intPtr.ToString("X")}");
+
+				var trampolineAlloc = DetourHelper.Native.MemAlloc(80);
+				DetourHelper.Native.MakeExecutable(trampolineAlloc, 80);
+				DetourHelper.Native.MakeWritable(originalFunc, 24);
+
+				unhollowerLogSource.LogDebug($"Trampoline allocation: 0x{ptr.ToString("X")}");
+
+
+				unhollowerLogSource.LogDebug("Original (24) asm");
+
+
+				Disassemble(unhollowerLogSource, originalFunc, 24);
+
+
+				var trampolineLength = TrampolineGenerator.Generate(originalFunc, intPtr, trampolineAlloc,
+					IntPtr.Size == 8 ? 64 : 32);
+
+
+				unhollowerLogSource.LogDebug("Modified (24) asm");
+
+				Disassemble(unhollowerLogSource, originalFunc, 24);
+
+				unhollowerLogSource.LogDebug($"Trampoline ({trampolineLength}) asm");
+
+				Disassemble(unhollowerLogSource, trampolineAlloc, trampolineLength);
+
+				*(void**)ptr = (void*)trampolineAlloc;
 			};
 
-			foreach (var processModule in Process.GetCurrentProcess().Modules.Cast<ProcessModule>())
-			{
-				File.AppendAllText("wew.log", $"{processModule.ModuleName}\n");
-			}
-			
 			var gameAssemblyModule = Process.GetCurrentProcess().Modules.Cast<ProcessModule>().First(x => x.ModuleName.Contains("GameAssembly"));
-			File.AppendAllText("wew.log", $"Got module: {gameAssemblyModule.ModuleName}; addr: {gameAssemblyModule.BaseAddress}\n");
+
 			var functionPtr = GetProcAddress(gameAssemblyModule.BaseAddress, "il2cpp_runtime_invoke"); //DynDll.GetFunction(gameAssemblyModule.BaseAddress, "il2cpp_runtime_invoke");
 
-			File.AppendAllText("wew.log", $"Got fptr: {functionPtr}\n");
-			
-			// RuntimeInvokeDetour invokeHook = (method, obj, parameters, exc) =>
-			// {
-			// 	// UnityLogSource.LogInfo(Marshal.PtrToStringAnsi(UnhollowerBaseLib.IL2CPP.il2cpp_method_get_name(method)));
-			// 	return originalInvoke(method, obj, parameters, exc);
-			// };
-			// UnhollowerBaseLib.IL2CPP.il2cpp_method_get_name(method)
 
-			var invokeDetour = new NativeDetour(functionPtr, Marshal.GetFunctionPointerForDelegate(new RuntimeInvokeDetour(OnInvokeMethod)), new NativeDetourConfig {ManualApply = true});
+			PreloaderLogger.Log.LogDebug($"Runtime invoke pointer: 0x{functionPtr.ToInt64():X}");
 
-			File.AppendAllText("log.log", "Got detour\n");
+			var invokeDetour = new NativeDetour(functionPtr, Marshal.GetFunctionPointerForDelegate(new RuntimeInvokeDetour(OnInvokeMethod)), new NativeDetourConfig { ManualApply = true });
+
 			originalInvoke = invokeDetour.GenerateTrampoline<RuntimeInvokeDetour>();
-			File.AppendAllText("log.log", "Got trampoline\n");
-			
+
 			invokeDetour.Apply();
-			File.AppendAllText("log.log", "Applied!\n");
 		}
+
+		private static bool HasSet = false;
 
 		private static IntPtr OnInvokeMethod(IntPtr method, IntPtr obj, IntPtr parameters, IntPtr exc)
 		{
-			lock (originalInvoke)
+			string methodName = Marshal.PtrToStringAnsi(UnhollowerBaseLib.IL2CPP.il2cpp_method_get_name(method));
+
+			if (!HasSet && methodName == "Internal_ActiveSceneChanged")
 			{
 				try
 				{
-					File.AppendAllText("log.log", $"Got call: {Marshal.PtrToStringAnsi(UnhollowerBaseLib.IL2CPP.il2cpp_method_get_name(method))}\n");
+					UnityEngine.Application.s_LogCallbackHandler = new Action<string, string, LogType>(UnityLogCallback);
+
+					UnityLogSource.LogMessage($"callback set - {methodName}");
+
+					UnityEngine.Application.CallLogCallback("test from OnInvokeMethod", "", LogType.Log, true);
 				}
-				catch (Exception e)
+				catch (Exception ex)
 				{
-					File.AppendAllText("err.log", e.ToString() + "\n");
+					UnityLogSource.LogError(ex);
 				}
-			
-				return originalInvoke(method, obj, parameters, exc);
+
+				HasSet = true;
 			}
+
+			//UnityLogSource.LogDebug(methodName);
+
+			return originalInvoke(method, obj, parameters, exc);
 		}
 
 		protected override void InitializeLoggers()
@@ -101,7 +173,6 @@ namespace BepInEx.IL2CPP
 			Logger.Sources.Add(UnityLogSource);
 
 
-			ManualLogSource unhollowerLogSource = Logger.CreateLogSource("Unhollower");
 
 			UnhollowerBaseLib.LogSupport.InfoHandler += unhollowerLogSource.LogInfo;
 			UnhollowerBaseLib.LogSupport.WarningHandler += unhollowerLogSource.LogWarning;
@@ -122,10 +193,12 @@ namespace BepInEx.IL2CPP
 				PreloaderLogger.Log.Log(preloaderLogEvent.Level, preloaderLogEvent.Data);
 			}
 
+
 			//UnityEngine.Application.s_LogCallbackHandler = DelegateSupport.ConvertDelegate<Application.LogCallback>(new Action<string>(UnityLogCallback));
 			//UnityEngine.Application.s_LogCallbackHandler = (Application.LogCallback)new Action<string>(UnityLogCallback);
-			var loggerPointer = Marshal.GetFunctionPointerForDelegate(new UnityLogCallbackDelegate(UnityLogCallback));
-			UnhollowerBaseLib.IL2CPP.il2cpp_register_log_callback(loggerPointer);
+
+			//var loggerPointer = Marshal.GetFunctionPointerForDelegate(new UnityLogCallbackDelegate(UnityLogCallback));
+			//UnhollowerBaseLib.IL2CPP.il2cpp_register_log_callback(loggerPointer);
 		}
 
 		public override BasePlugin LoadPlugin(PluginInfo pluginInfo, Assembly pluginAssembly)

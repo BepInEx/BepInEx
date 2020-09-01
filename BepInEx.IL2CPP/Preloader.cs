@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using BepInEx.Logging;
 using BepInEx.Preloader.Core;
 using BepInEx.Preloader.Core.Logging;
@@ -17,30 +18,40 @@ namespace BepInEx.IL2CPP
 
 		public static void Run()
 		{
-			PreloaderLog = new PreloaderConsoleListener(false);
-			Logger.Listeners.Add(PreloaderLog);
+			try
+			{
+
+				PreloaderLog = new PreloaderConsoleListener(false);
+				Logger.Listeners.Add(PreloaderLog);
 
 
-			BasicLogInfo.PrintLogInfo(Log);
+				BasicLogInfo.PrintLogInfo(Log);
 
 
 
-			Log.LogInfo($"Running under Unity v{FileVersionInfo.GetVersionInfo(Paths.ExecutablePath).FileVersion}");
-			//Log.LogInfo($"CLR runtime version: {Environment.Version}");
-			//Log.LogInfo($"Supports SRE: {Utility.CLRSupportsDynamicAssemblies}");
+				Log.LogInfo($"Running under Unity v{FileVersionInfo.GetVersionInfo(Paths.ExecutablePath).FileVersion}");
+				//Log.LogInfo($"CLR runtime version: {Environment.Version}");
+				//Log.LogInfo($"Supports SRE: {Utility.CLRSupportsDynamicAssemblies}");
 
-			Log.LogDebug($"Game executable path: {Paths.ExecutablePath}");
-			Log.LogDebug($"Unhollowed assembly directory: {IL2CPPUnhollowedPath}");
-			Log.LogDebug($"BepInEx root path: {Paths.BepInExRootPath}");
+				Log.LogDebug($"Game executable path: {Paths.ExecutablePath}");
+				Log.LogDebug($"Unhollowed assembly directory: {IL2CPPUnhollowedPath}");
+				Log.LogDebug($"BepInEx root path: {Paths.BepInExRootPath}");
 
-			Logger.Listeners.Remove(PreloaderLog);
+				Logger.Listeners.Remove(PreloaderLog);
 
 
-			Chainloader = new IL2CPPChainloader();
+				Chainloader = new IL2CPPChainloader();
 
-			Chainloader.Initialize();
+				Chainloader.Initialize();
 
-			Chainloader.Execute();
+				Chainloader.Execute();
+			}
+			catch (Exception ex)
+			{
+				Log.LogFatal(ex);
+
+				throw;
+			}
 		}
 	}
 }

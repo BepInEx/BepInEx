@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>BepInExTests</RootNamespace>
     <AssemblyName>BepInExTests</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
@@ -45,6 +45,9 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Iced, Version=1.6.0.0, Culture=neutral, PublicKeyToken=5baba79f4264913b, processorArchitecture=MSIL">
+      <HintPath>..\packages\Iced.1.6.0\lib\net45\Iced.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.TestPlatform.TestFramework, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\MSTest.TestFramework.1.3.2\lib\net45\Microsoft.VisualStudio.TestPlatform.TestFramework.dll</HintPath>
     </Reference>
@@ -66,6 +69,7 @@
   </Choose>
   <ItemGroup>
     <Compile Include="AssemblyInit.cs" />
+    <Compile Include="TrampolineTests.cs" />
     <Compile Include="Configuration\ConfigFileTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -76,6 +80,10 @@
     <ProjectReference Include="..\BepInEx.Core\BepInEx.Core.csproj">
       <Project>{4FFBA620-F5ED-47F9-B90C-DAD1316FD9B9}</Project>
       <Name>BepInEx.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\BepInEx.IL2CPP\BepInEx.IL2CPP.csproj">
+      <Project>{429d5f83-7fec-4d09-ab82-e868eb61af59}</Project>
+      <Name>BepInEx.IL2CPP</Name>
     </ProjectReference>
     <ProjectReference Include="..\BepInEx.Unity\BepInEx.Unity.csproj">
       <Project>{EAE9FAE6-8011-45A3-8B6E-0C7F14210533}</Project>
