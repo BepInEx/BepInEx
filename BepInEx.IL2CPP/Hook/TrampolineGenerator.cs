@@ -1,12 +1,74 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using BepInEx.Logging;
 using Iced.Intel;
+using MonoMod.RuntimeDetour;
 
 namespace BepInEx.IL2CPP
 {
 	public static class TrampolineGenerator
 	{
+		public static IntPtr Generate(IntPtr originalFunctionPtr, IntPtr patchedFunctionPtr, out int trampolineLength)
+		{
+			var trampolineAlloc = DetourHelper.Native.MemAlloc(80);
+			DetourHelper.Native.MakeExecutable(trampolineAlloc, 80);
+			DetourHelper.Native.MakeWritable(originalFunctionPtr, 24);
+
+			trampolineLength = Generate(originalFunctionPtr, patchedFunctionPtr, trampolineAlloc, IntPtr.Size == 8 ? 64 : 32);
+
+			return trampolineAlloc;
+		}
+
+		private static void Disassemble(ManualLogSource logSource, IntPtr memoryPtr, int size)
+		{
+			byte[] data = new byte[size];
+			Marshal.Copy(memoryPtr, data, 0, size);
+
+			var formatter = new NasmFormatter();
+			var output = new StringOutput();
+			var codeReader = new ByteArrayCodeReader(data);
+			var decoder = Decoder.Create(64, codeReader);
+			decoder.IP = (ulong)memoryPtr.ToInt64();
+			while (codeReader.CanReadByte)
+			{
+				decoder.Decode(out var instr);
+				formatter.Format(instr, output);
+				logSource.LogDebug($"{instr.IP:X16} {output.ToStringAndReset()}");
+			}
+		}
+
+		public static IntPtr Generate(ManualLogSource logSource, IntPtr originalFunctionPtr, IntPtr patchedFunctionPtr)
+		{
+			logSource.LogDebug($"DoHook 0x{originalFunctionPtr.ToString("X")} -> 0x{patchedFunctionPtr.ToString("X")}");
+
+			var trampolineAlloc = DetourHelper.Native.MemAlloc(80);
+			DetourHelper.Native.MakeExecutable(trampolineAlloc, 80);
+			DetourHelper.Native.MakeWritable(originalFunctionPtr, 24);
+
+			logSource.LogDebug($"Trampoline allocation: 0x{trampolineAlloc.ToString("X")}");
+
+
+			logSource.LogDebug("Original (24) asm");
+
+
+			Disassemble(logSource, originalFunctionPtr, 24);
+
+
+			var trampolineLength = Generate(originalFunctionPtr, patchedFunctionPtr, trampolineAlloc, IntPtr.Size == 8 ? 64 : 32);
+
+
+			logSource.LogDebug("Modified (24) asm");
+
+			Disassemble(logSource, originalFunctionPtr, 24);
+
+			logSource.LogDebug($"Trampoline ({trampolineLength}) asm");
+
+			Disassemble(logSource, trampolineAlloc, trampolineLength);
+
+			return trampolineAlloc;
+		}
+
 		public static int Generate(IntPtr originalFunctionPtr, IntPtr patchedFunctionPtr, IntPtr trampolineFunctionPtr, int bitness)
 		{
 			byte[] instructionBuffer = new byte[80];

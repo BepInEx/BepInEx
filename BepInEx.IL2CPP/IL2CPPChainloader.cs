@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -8,7 +7,6 @@ using BepInEx.Bootstrap;
 using BepInEx.Logging;
 using BepInEx.Preloader.Core;
 using BepInEx.Preloader.Core.Logging;
-using Iced.Intel;
 using MonoMod.RuntimeDetour;
 using UnhollowerBaseLib.Runtime;
 using UnhollowerRuntimeLib;
@@ -58,23 +56,6 @@ namespace BepInEx.IL2CPP
 			}
 		}
 
-		private static void Disassemble(ManualLogSource logSource, IntPtr memoryPtr, int size)
-		{
-			byte[] data = new byte[size];
-			Marshal.Copy(memoryPtr, data, 0, size);
-
-			var formatter = new NasmFormatter();
-			var output = new StringOutput();
-			var codeReader = new ByteArrayCodeReader(data);
-			var decoder = Decoder.Create(64, codeReader);
-			decoder.IP = (ulong)memoryPtr.ToInt64();
-			while (codeReader.CanReadByte)
-			{
-				decoder.Decode(out var instr);
-				formatter.Format(instr, output);
-				logSource.LogDebug($"{instr.IP:X16} {output.ToStringAndReset()}");
-			}
-		}
 
 		public override unsafe void Initialize(string gameExePath = null)
 		{
@@ -84,40 +65,15 @@ namespace BepInEx.IL2CPP
 
 			// One or the other here for Unhollower to work correctly
 
-			////////ClassInjector.Detour = new DetourHandler();
+			//ClassInjector.Detour = new DetourHandler();
 
-			ClassInjector.DoHook = (ptr, intPtr) =>
+			ClassInjector.DoHook = (ptr, patchedFunctionPtr) =>
 			{
 				IntPtr originalFunc = new IntPtr(*(void**)ptr);
 
-				unhollowerLogSource.LogDebug($"DoHook 0x{originalFunc.ToString("X")} -> 0x{intPtr.ToString("X")}");
+				var trampolinePtr = TrampolineGenerator.Generate(unhollowerLogSource, originalFunc, patchedFunctionPtr);
 
-				var trampolineAlloc = DetourHelper.Native.MemAlloc(80);
-				DetourHelper.Native.MakeExecutable(trampolineAlloc, 80);
-				DetourHelper.Native.MakeWritable(originalFunc, 24);
-
-				unhollowerLogSource.LogDebug($"Trampoline allocation: 0x{ptr.ToString("X")}");
-
-
-				unhollowerLogSource.LogDebug("Original (24) asm");
-
-
-				Disassemble(unhollowerLogSource, originalFunc, 24);
-
-
-				var trampolineLength = TrampolineGenerator.Generate(originalFunc, intPtr, trampolineAlloc,
-					IntPtr.Size == 8 ? 64 : 32);
-
-
-				unhollowerLogSource.LogDebug("Modified (24) asm");
-
-				Disassemble(unhollowerLogSource, originalFunc, 24);
-
-				unhollowerLogSource.LogDebug($"Trampoline ({trampolineLength}) asm");
-
-				Disassemble(unhollowerLogSource, trampolineAlloc, trampolineLength);
-
-				*(void**)ptr = (void*)trampolineAlloc;
+				*(void**)ptr = (void*)trampolinePtr;
 			};
 
 			var gameAssemblyModule = Process.GetCurrentProcess().Modules.Cast<ProcessModule>().First(x => x.ModuleName.Contains("GameAssembly"));

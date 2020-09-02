@@ -79,10 +79,11 @@
     <Compile Include="BasePlugin.cs" />
     <Compile Include="DoorstopEntrypoint.cs" />
     <Compile Include="EnvVars.cs" />
+    <Compile Include="Hook\FastNativeDetour.cs" />
     <Compile Include="IL2CPPChainloader.cs" />
     <Compile Include="Preloader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TrampolineGenerator.cs" />
+    <Compile Include="Hook\TrampolineGenerator.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\BepInEx.Core\BepInEx.Core.csproj">
@@ -102,5 +103,6 @@
     <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
