@@ -12,10 +12,13 @@ namespace BepInEx.IL2CPP
 		public static IntPtr Generate(IntPtr originalFunctionPtr, IntPtr patchedFunctionPtr, out int trampolineLength)
 		{
 			var trampolineAlloc = DetourHelper.Native.MemAlloc(80);
-			DetourHelper.Native.MakeExecutable(trampolineAlloc, 80);
-			DetourHelper.Native.MakeWritable(originalFunctionPtr, 24);
+			DetourHelper.Native.MakeWritable(originalFunctionPtr, 32);
+			DetourHelper.Native.MakeWritable(trampolineAlloc, 80);
 
 			trampolineLength = Generate(originalFunctionPtr, patchedFunctionPtr, trampolineAlloc, IntPtr.Size == 8 ? 64 : 32);
+
+			DetourHelper.Native.MakeExecutable(trampolineAlloc, (uint)trampolineLength);
+			DetourHelper.Native.MakeExecutable(originalFunctionPtr, 32);
 
 			return trampolineAlloc;
 		}
@@ -35,36 +38,50 @@ namespace BepInEx.IL2CPP
 				decoder.Decode(out var instr);
 				formatter.Format(instr, output);
 				logSource.LogDebug($"{instr.IP:X16} {output.ToStringAndReset()}");
+
+				if (instr.Code == Code.Jmp_rm64 && instr.Immediate32 == 0) // && instr.IsIPRelativeMemoryOperand && instr.IPRelativeMemoryAddress = 6
+				{
+					byte[] address = new byte[8];
+
+					for (int i = 0; i < 8; i++)
+						address[i] = (byte)codeReader.ReadByte();
+
+					logSource.LogDebug($"{(instr.IP + (ulong)instr.Length):X16} db 0x{BitConverter.ToUInt64(address, 0):X16}");
+					decoder.IP += 8;
+				}
 			}
 		}
 
-		public static IntPtr Generate(ManualLogSource logSource, IntPtr originalFunctionPtr, IntPtr patchedFunctionPtr)
+		public static IntPtr Generate(ManualLogSource logSource, IntPtr originalFunctionPtr, IntPtr patchedFunctionPtr, out int trampolineLength)
 		{
 			logSource.LogDebug($"DoHook 0x{originalFunctionPtr.ToString("X")} -> 0x{patchedFunctionPtr.ToString("X")}");
 
 			var trampolineAlloc = DetourHelper.Native.MemAlloc(80);
-			DetourHelper.Native.MakeExecutable(trampolineAlloc, 80);
-			DetourHelper.Native.MakeWritable(originalFunctionPtr, 24);
+			DetourHelper.Native.MakeWritable(originalFunctionPtr, 32);
+			DetourHelper.Native.MakeWritable(trampolineAlloc, 80);
 
 			logSource.LogDebug($"Trampoline allocation: 0x{trampolineAlloc.ToString("X")}");
 
 
-			logSource.LogDebug("Original (24) asm");
+			logSource.LogDebug("Original (32) asm");
 
 
-			Disassemble(logSource, originalFunctionPtr, 24);
+			Disassemble(logSource, originalFunctionPtr, 32);
 
 
-			var trampolineLength = Generate(originalFunctionPtr, patchedFunctionPtr, trampolineAlloc, IntPtr.Size == 8 ? 64 : 32);
+			trampolineLength = Generate(originalFunctionPtr, patchedFunctionPtr, trampolineAlloc, IntPtr.Size == 8 ? 64 : 32);
 
 
-			logSource.LogDebug("Modified (24) asm");
+			logSource.LogDebug("Modified (32) asm");
 
-			Disassemble(logSource, originalFunctionPtr, 24);
+			Disassemble(logSource, originalFunctionPtr, 32);
 
 			logSource.LogDebug($"Trampoline ({trampolineLength}) asm");
 
 			Disassemble(logSource, trampolineAlloc, trampolineLength);
+
+			DetourHelper.Native.MakeExecutable(trampolineAlloc, 80);
+			DetourHelper.Native.MakeExecutable(originalFunctionPtr, 32);
 
 			return trampolineAlloc;
 		}
@@ -165,6 +182,10 @@ namespace BepInEx.IL2CPP
 			// Overwrite the start of trampolineFunctionPtr with a jump to patchedFunctionPtr
 
 			Marshal.Copy(generatedJmp, 0, originalFunctionPtr, (int)requiredBytes);
+
+			// Fill overwritten instructions with NOP
+			for (int i = (int)requiredBytes; i < totalBytes; i++)
+				Marshal.WriteByte(originalFunctionPtr + i, 0x90);
 
 			return newCode.Length;
 		}

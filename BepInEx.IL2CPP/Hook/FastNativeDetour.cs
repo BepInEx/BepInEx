@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using BepInEx.Logging;
 using MonoMod.RuntimeDetour;
 using MonoMod.Utils;
 
@@ -37,7 +38,22 @@ namespace BepInEx.IL2CPP.Hook
 
 		public void Apply()
 		{
-			TrampolinePtr = TrampolineGenerator.Generate(OriginalFuncPtr, DetourFuncPtr, out int trampolineLength);
+			Apply(null);
+		}
+
+
+		public void Apply(ManualLogSource debuggerLogSource)
+		{
+			if (IsApplied)
+				return;
+
+			int trampolineLength;
+
+			if (debuggerLogSource == null)
+				TrampolinePtr = TrampolineGenerator.Generate(OriginalFuncPtr, DetourFuncPtr, out trampolineLength);
+			else
+				TrampolinePtr = TrampolineGenerator.Generate(debuggerLogSource, OriginalFuncPtr, DetourFuncPtr, out trampolineLength);
+
 			TrampolineSize = trampolineLength;
 
 			IsApplied = true;

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
@@ -71,7 +72,7 @@ namespace BepInEx.IL2CPP
 			{
 				IntPtr originalFunc = new IntPtr(*(void**)ptr);
 
-				var trampolinePtr = TrampolineGenerator.Generate(unhollowerLogSource, originalFunc, patchedFunctionPtr);
+				var trampolinePtr = TrampolineGenerator.Generate(unhollowerLogSource, originalFunc, patchedFunctionPtr, out _);
 
 				*(void**)ptr = (void*)trampolinePtr;
 			};
@@ -83,18 +84,25 @@ namespace BepInEx.IL2CPP
 
 			PreloaderLogger.Log.LogDebug($"Runtime invoke pointer: 0x{functionPtr.ToInt64():X}");
 
-			var invokeDetour = new NativeDetour(functionPtr, Marshal.GetFunctionPointerForDelegate(new RuntimeInvokeDetour(OnInvokeMethod)), new NativeDetourConfig { ManualApply = true });
+			var invokeDetour = new NativeDetour(functionPtr, Marshal.GetFunctionPointerForDelegate(new RuntimeInvokeDetour(OnInvokeMethod)));
 
 			originalInvoke = invokeDetour.GenerateTrampoline<RuntimeInvokeDetour>();
 
+			//invokeDetour.Apply(unhollowerLogSource);
 			invokeDetour.Apply();
 		}
 
 		private static bool HasSet = false;
 
+		private static HashSet<string> recordedNames = new HashSet<string>();
 		private static IntPtr OnInvokeMethod(IntPtr method, IntPtr obj, IntPtr parameters, IntPtr exc)
 		{
 			string methodName = Marshal.PtrToStringAnsi(UnhollowerBaseLib.IL2CPP.il2cpp_method_get_name(method));
+			IntPtr methodClass = UnhollowerBaseLib.IL2CPP.il2cpp_method_get_class(method);
+			string methodClassName = Marshal.PtrToStringAnsi(UnhollowerBaseLib.IL2CPP.il2cpp_class_get_name(methodClass));
+			string methodClassNamespace = Marshal.PtrToStringAnsi(UnhollowerBaseLib.IL2CPP.il2cpp_class_get_namespace(methodClass));
+
+			string methodFullName = $"{methodClassNamespace}.{methodClassName}::{methodName}";
 
 			if (!HasSet && methodName == "Internal_ActiveSceneChanged")
 			{
@@ -114,9 +122,19 @@ namespace BepInEx.IL2CPP
 				HasSet = true;
 			}
 
-			//UnityLogSource.LogDebug(methodName);
+			var result = originalInvoke(method, obj, parameters, exc);
 
-			return originalInvoke(method, obj, parameters, exc);
+			//UnityLogSource.LogDebug(methodName + " => " + result.ToString("X"));
+
+			if (!recordedNames.Contains(methodFullName))
+			{
+				UnityLogSource.LogDebug(methodFullName + " => " + result.ToString("X"));
+
+				lock (recordedNames)
+					recordedNames.Add(methodFullName);
+			}
+
+			return result;
 		}
 
 		protected override void InitializeLoggers()
