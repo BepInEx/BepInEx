@@ -15,24 +15,25 @@ namespace BepInEx.IL2CPP.Hook
 		public bool IsApplied { get; protected set; }
 
 
-		public IntPtr OriginalFuncPtr { get; protected set; }
-		public IntPtr DetourFuncPtr { get; protected set; }
+		public IntPtr OriginalFunctionPtr { get; protected set; }
+		public IntPtr DetourFunctionPtr { get; protected set; }
 
 
 		public IntPtr TrampolinePtr { get; protected set; } = IntPtr.Zero;
 		public int TrampolineSize { get; protected set; } = 0;
+		protected int TrampolineJmpSize { get; set; } = 0;
 
 		protected MethodInfo TrampolineMethod { get; set; }
 
 
-		public FastNativeDetour(IntPtr originalFuncPtr, IntPtr detourFuncPtr)
+		public FastNativeDetour(IntPtr originalFunctionPtr, IntPtr detourFunctionPtr)
 		{
-			OriginalFuncPtr = originalFuncPtr;
-			DetourFuncPtr = detourFuncPtr;
+			OriginalFunctionPtr = originalFunctionPtr;
+			DetourFunctionPtr = detourFunctionPtr;
 
 			// TODO: This may not be safe during undo if the method is smaller than 20 bytes
 			BackupBytes = new byte[20];
-			Marshal.Copy(originalFuncPtr, BackupBytes, 0, 20);
+			Marshal.Copy(originalFunctionPtr, BackupBytes, 0, 20);
 		}
 
 
@@ -47,21 +48,83 @@ namespace BepInEx.IL2CPP.Hook
 			if (IsApplied)
 				return;
 
-			int trampolineLength;
 
-			if (debuggerLogSource == null)
-				TrampolinePtr = TrampolineGenerator.Generate(OriginalFuncPtr, DetourFuncPtr, out trampolineLength);
-			else
-				TrampolinePtr = TrampolineGenerator.Generate(debuggerLogSource, OriginalFuncPtr, DetourFuncPtr, out trampolineLength);
+			DetourHelper.Native.MakeWritable(OriginalFunctionPtr, 32);
 
-			TrampolineSize = trampolineLength;
+
+			if (debuggerLogSource != null)
+			{
+				debuggerLogSource.LogDebug($"Detouring 0x{OriginalFunctionPtr.ToString("X")} -> 0x{OriginalFunctionPtr.ToString("X")}");
+
+
+				debuggerLogSource.LogDebug("Original (32) asm");
+
+				DetourGenerator.Disassemble(debuggerLogSource, OriginalFunctionPtr, 32);
+			}
+
+			var arch = IntPtr.Size == 8 ? Architecture.X64 : Architecture.X86;
+
+			GenerateTrampolineInner(out int trampolineLength, out int jmpLength);
+
+			debuggerLogSource?.LogDebug($"Cleared function length: {trampolineLength} - {jmpLength} = {trampolineLength - jmpLength}");
+
+			debuggerLogSource?.LogDebug($"Trampoline allocation: 0x{TrampolinePtr.ToString("X")}");
+
+			DetourGenerator.ApplyDetour(OriginalFunctionPtr, DetourFunctionPtr, arch, trampolineLength - jmpLength);
+
+
+			if (debuggerLogSource != null)
+			{
+				debuggerLogSource.LogDebug("Modified (32) asm");
+
+				DetourGenerator.Disassemble(debuggerLogSource, OriginalFunctionPtr, 32);
+
+				debuggerLogSource.LogDebug($"Trampoline ({trampolineLength}) asm");
+
+				DetourGenerator.Disassemble(debuggerLogSource, TrampolinePtr, trampolineLength);
+			}
+
+			DetourHelper.Native.MakeExecutable(OriginalFunctionPtr, 32);
 
 			IsApplied = true;
 		}
 
+
+		private void GenerateTrampolineInner(out int trampolineLength, out int jmpLength)
+		{
+			if (TrampolinePtr != IntPtr.Zero)
+			{
+				trampolineLength = TrampolineSize;
+				jmpLength = TrampolineJmpSize;
+				return;
+			}
+
+			byte[] instructionBuffer = new byte[32];
+			Marshal.Copy(OriginalFunctionPtr, instructionBuffer, 0, 32);
+
+			var trampolineAlloc = DetourHelper.Native.MemAlloc(80);
+
+			DetourHelper.Native.MakeWritable(trampolineAlloc, 80);
+
+			var arch = IntPtr.Size == 8 ? Architecture.X64 : Architecture.X86;
+
+			DetourGenerator.CreateTrampolineFromFunction(instructionBuffer, OriginalFunctionPtr, trampolineAlloc,
+				DetourGenerator.GetDetourLength(arch), arch, out trampolineLength, out jmpLength);
+
+			DetourHelper.Native.MakeExecutable(trampolineAlloc, 80);
+
+			TrampolinePtr = trampolineAlloc;
+			TrampolineSize = trampolineLength;
+			TrampolineJmpSize = jmpLength;
+		}
+
+
 		public void Undo()
 		{
-			Marshal.Copy(BackupBytes, 0, OriginalFuncPtr, BackupBytes.Length);
+			if (!IsApplied)
+				return;
+
+			Marshal.Copy(BackupBytes, 0, OriginalFunctionPtr, BackupBytes.Length);
 
 			DetourHelper.Native.MemFree(TrampolinePtr);
 
@@ -80,6 +143,12 @@ namespace BepInEx.IL2CPP.Hook
 		{
 			if (TrampolineMethod == null)
 			{
+				// Generate trampoline without applying the detour
+				GenerateTrampolineInner(out _, out _);
+
+				if (TrampolinePtr == IntPtr.Zero)
+					throw new InvalidOperationException("Trampoline pointer is not available");
+
 				TrampolineMethod = DetourHelper.GenerateNativeProxy(TrampolinePtr, signature);
 			}
 

@@ -3,27 +3,12 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using BepInEx.Logging;
 using Iced.Intel;
-using MonoMod.RuntimeDetour;
 
 namespace BepInEx.IL2CPP
 {
-	public static class TrampolineGenerator
+	public static class DetourGenerator
 	{
-		public static IntPtr Generate(IntPtr originalFunctionPtr, IntPtr patchedFunctionPtr, out int trampolineLength)
-		{
-			var trampolineAlloc = DetourHelper.Native.MemAlloc(80);
-			DetourHelper.Native.MakeWritable(originalFunctionPtr, 32);
-			DetourHelper.Native.MakeWritable(trampolineAlloc, 80);
-
-			trampolineLength = Generate(originalFunctionPtr, patchedFunctionPtr, trampolineAlloc, IntPtr.Size == 8 ? 64 : 32);
-
-			DetourHelper.Native.MakeExecutable(trampolineAlloc, (uint)trampolineLength);
-			DetourHelper.Native.MakeExecutable(originalFunctionPtr, 32);
-
-			return trampolineAlloc;
-		}
-
-		private static void Disassemble(ManualLogSource logSource, IntPtr memoryPtr, int size)
+		public static void Disassemble(ManualLogSource logSource, IntPtr memoryPtr, int size)
 		{
 			byte[] data = new byte[size];
 			Marshal.Copy(memoryPtr, data, 0, size);
@@ -52,56 +37,44 @@ namespace BepInEx.IL2CPP
 			}
 		}
 
-		public static IntPtr Generate(ManualLogSource logSource, IntPtr originalFunctionPtr, IntPtr patchedFunctionPtr, out int trampolineLength)
+		public static int GetDetourLength(Architecture arch)
+			=> arch == Architecture.X64 ? 14 : 5;
+
+		/// <summary>
+		/// Writes a detour on <see cref="functionPtr"/> to redirect to <see cref="detourPtr"/>.
+		/// </summary>
+		/// <param name="functionPtr">The pointer to the function to apply the detour to.</param>
+		/// <param name="detourPtr">The pointer to the function to redirect to.</param>
+		/// <param name="architecture">The architecture of the current platform.</param>
+		/// <param name="minimumLength">The minimum amount of length that the detour should consume. If the generated redirect is smaller than this, the remaining space is padded with NOPs.</param>
+		public static void ApplyDetour(IntPtr functionPtr, IntPtr detourPtr, Architecture architecture, int minimumLength = 0)
 		{
-			logSource.LogDebug($"DoHook 0x{originalFunctionPtr.ToString("X")} -> 0x{patchedFunctionPtr.ToString("X")}");
+			byte[] jmp = GenerateAbsoluteJump(detourPtr, functionPtr, architecture);
 
-			var trampolineAlloc = DetourHelper.Native.MemAlloc(80);
-			DetourHelper.Native.MakeWritable(originalFunctionPtr, 32);
-			DetourHelper.Native.MakeWritable(trampolineAlloc, 80);
+			Marshal.Copy(jmp, 0, functionPtr, jmp.Length);
 
-			logSource.LogDebug($"Trampoline allocation: 0x{trampolineAlloc.ToString("X")}");
-
-
-			logSource.LogDebug("Original (32) asm");
-
-
-			Disassemble(logSource, originalFunctionPtr, 32);
-
-
-			trampolineLength = Generate(originalFunctionPtr, patchedFunctionPtr, trampolineAlloc, IntPtr.Size == 8 ? 64 : 32);
-
-
-			logSource.LogDebug("Modified (32) asm");
-
-			Disassemble(logSource, originalFunctionPtr, 32);
-
-			logSource.LogDebug($"Trampoline ({trampolineLength}) asm");
-
-			Disassemble(logSource, trampolineAlloc, trampolineLength);
-
-			DetourHelper.Native.MakeExecutable(trampolineAlloc, 80);
-			DetourHelper.Native.MakeExecutable(originalFunctionPtr, 32);
-
-			return trampolineAlloc;
+			// Fill remaining space with NOP instructions
+			for (int i = jmp.Length; i < minimumLength; i++)
+				Marshal.WriteByte(functionPtr + i, 0x90);
 		}
 
-		public static int Generate(IntPtr originalFunctionPtr, IntPtr patchedFunctionPtr, IntPtr trampolineFunctionPtr, int bitness)
+		/// <summary>
+		/// Reads assembly from <see cref="functionPtr"/> (at least <see cref="minimumTrampolineLength"/> bytes), and writes it to <see cref="trampolinePtr"/> plus a jmp to continue execution.
+		/// </summary>
+		/// <param name="instructionBuffer">The buffer to copy assembly from.</param>
+		/// <param name="functionPtr">The pointer to the function to copy assembly from.</param>
+		/// <param name="trampolinePtr">The pointer to write the trampoline assembly to.</param>
+		/// <param name="arch">The architecture of the current platform.</param>
+		/// <param name="minimumTrampolineLength">Copies at least this many bytes of assembly from <see cref="functionPtr"/>.</param>
+		/// <param name="trampolineLength">Returns the total length of the trampoline, in bytes.</param>
+		/// <param name="jmpLength">Returns the length of the jmp at the end of the trampoline, in bytes.</param>
+		public static void CreateTrampolineFromFunction(byte[] instructionBuffer, IntPtr functionPtr, IntPtr trampolinePtr, int minimumTrampolineLength, Architecture arch, out int trampolineLength, out int jmpLength)
 		{
-			byte[] instructionBuffer = new byte[80];
-
-			Marshal.Copy(originalFunctionPtr, instructionBuffer, 0, 80);
-
 			// Decode original function up until we go past the needed bytes to write the jump to patchedFunctionPtr
 
-			var generatedJmp = GenerateAbsoluteJump(patchedFunctionPtr, originalFunctionPtr, bitness == 64);
-
-
-			uint requiredBytes = (uint)generatedJmp.Length;
-
 			var codeReader = new ByteArrayCodeReader(instructionBuffer);
-			var decoder = Decoder.Create(bitness, codeReader);
-			decoder.IP = (ulong)originalFunctionPtr.ToInt64();
+			var decoder = Decoder.Create(arch == Architecture.X64 ? 64 : 32, codeReader);
+			decoder.IP = (ulong)functionPtr.ToInt64();
 
 			uint totalBytes = 0;
 			var origInstructions = new InstructionList();
@@ -112,7 +85,7 @@ namespace BepInEx.IL2CPP
 				totalBytes += (uint)instr.Length;
 				if (instr.Code == Code.INVALID)
 					throw new Exception("Found garbage");
-				if (totalBytes >= requiredBytes)
+				if (totalBytes >= minimumTrampolineLength)
 					break;
 
 				switch (instr.FlowControl)
@@ -125,21 +98,24 @@ namespace BepInEx.IL2CPP
 						{
 							var target = instr.NearBranchTarget;
 						}
-						goto default;
+
+						break;
+					//goto default;
+					case FlowControl.Interrupt:// eg. int n
+						break;
 
 					case FlowControl.IndirectBranch:// eg. jmp reg/mem
 					case FlowControl.ConditionalBranch:// eg. je, jno, etc
 					case FlowControl.Return:// eg. ret
 					case FlowControl.Call:// eg. call method
 					case FlowControl.IndirectCall:// eg. call reg/mem
-					case FlowControl.Interrupt:// eg. int n
 					case FlowControl.XbeginXabortXend:
 					case FlowControl.Exception:// eg. ud0
 					default:
 						throw new Exception("Not supported by this simple example - " + instr.FlowControl);
 				}
 			}
-			if (totalBytes < requiredBytes)
+			if (totalBytes < minimumTrampolineLength)
 				throw new Exception("Not enough bytes!");
 
 			if (origInstructions.Count == 0)
@@ -150,51 +126,49 @@ namespace BepInEx.IL2CPP
 
 			if (lastInstr.FlowControl != FlowControl.Return)
 			{
-				if (bitness == 64)
+				Instruction detourInstruction;
+
+				if (arch == Architecture.X64)
 				{
-					origInstructions.Add(Instruction.CreateBranch(Code.Jmp_rel32_64, lastInstr.NextIP));
+					detourInstruction = Instruction.CreateBranch(Code.Jmp_rel32_64, lastInstr.NextIP);
 				}
 				else
 				{
-					origInstructions.Add(Instruction.CreateBranch(Code.Jmp_rel32_32, lastInstr.NextIP));
+					detourInstruction = Instruction.CreateBranch(Code.Jmp_rel32_32, lastInstr.NextIP);
 				}
+
+				origInstructions.Add(detourInstruction);
 			}
 
 
 			// Generate trampoline from instruction list
 
 			var codeWriter = new CodeWriterImpl();
-			ulong relocatedBaseAddress = (ulong)trampolineFunctionPtr;
+			ulong relocatedBaseAddress = (ulong)trampolinePtr;
 			var block = new InstructionBlock(codeWriter, origInstructions, relocatedBaseAddress);
 
 			bool success = BlockEncoder.TryEncode(decoder.Bitness, block, out var errorMessage, out var result);
+
 			if (!success)
 			{
 				throw new Exception(errorMessage);
 			}
 
 			// Write generated trampoline
-			
+
 			var newCode = codeWriter.ToArray();
-			Marshal.Copy(newCode, 0, trampolineFunctionPtr, newCode.Length);
+			Marshal.Copy(newCode, 0, trampolinePtr, newCode.Length);
 
 
-			// Overwrite the start of trampolineFunctionPtr with a jump to patchedFunctionPtr
-
-			Marshal.Copy(generatedJmp, 0, originalFunctionPtr, (int)requiredBytes);
-
-			// Fill overwritten instructions with NOP
-			for (int i = (int)requiredBytes; i < totalBytes; i++)
-				Marshal.WriteByte(originalFunctionPtr + i, 0x90);
-
-			return newCode.Length;
+			jmpLength = newCode.Length - (int)totalBytes;
+			trampolineLength = newCode.Length;
 		}
 
-		private static byte[] GenerateAbsoluteJump(IntPtr address, IntPtr currentAddress, bool x64)
+		public static byte[] GenerateAbsoluteJump(IntPtr targetAddress, IntPtr currentAddress, Architecture arch)
 		{
 			byte[] jmpBytes;
 
-			if (x64)
+			if (arch == Architecture.X64)
 			{
 				jmpBytes = new byte[]
 				{
@@ -202,7 +176,7 @@ namespace BepInEx.IL2CPP
 					0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00	// Absolute destination address
 				};
 
-				Array.Copy(BitConverter.GetBytes(address.ToInt64()), 0, jmpBytes, 6, 8);
+				Array.Copy(BitConverter.GetBytes(targetAddress.ToInt64()), 0, jmpBytes, 6, 8);
 			}
 			else
 			{
@@ -212,7 +186,7 @@ namespace BepInEx.IL2CPP
 					0x00, 0x00, 0x00, 0x00	// Relative destination address
 				};
 
-				Array.Copy(BitConverter.GetBytes(address.ToInt32() - (currentAddress.ToInt32() + 5)), 0, jmpBytes, 1, 4);
+				Array.Copy(BitConverter.GetBytes(targetAddress.ToInt32() - (currentAddress.ToInt32() + 5)), 0, jmpBytes, 1, 4);
 			}
 
 			return jmpBytes;

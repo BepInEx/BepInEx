@@ -83,7 +83,7 @@
     <Compile Include="IL2CPPChainloader.cs" />
     <Compile Include="Preloader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Hook\TrampolineGenerator.cs" />
+    <Compile Include="Hook\DetourGenerator.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\BepInEx.Core\BepInEx.Core.csproj">
@@ -103,6 +103,8 @@
     <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="UnityEngine\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

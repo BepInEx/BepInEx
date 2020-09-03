@@ -5,10 +5,10 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using BepInEx.Bootstrap;
+using BepInEx.IL2CPP.Hook;
 using BepInEx.Logging;
 using BepInEx.Preloader.Core;
 using BepInEx.Preloader.Core.Logging;
-using MonoMod.RuntimeDetour;
 using UnhollowerBaseLib.Runtime;
 using UnhollowerRuntimeLib;
 using UnityEngine;
@@ -41,21 +41,7 @@ namespace BepInEx.IL2CPP
 
 		private static RuntimeInvokeDetour originalInvoke;
 
-		private static ManualLogSource unhollowerLogSource = Logger.CreateLogSource("Unhollower");
-
-		private class DetourHandler : UnhollowerRuntimeLib.ManagedDetour
-		{
-			public T Detour<T>(IntPtr from, T to) where T : Delegate
-			{
-				var detour = new NativeDetour(from, to, new NativeDetourConfig { ManualApply = true });
-
-				var trampoline = detour.GenerateTrampoline<T>();
-
-				detour.Apply();
-
-				return trampoline;
-			}
-		}
+		private static readonly ManualLogSource unhollowerLogSource = Logger.CreateLogSource("Unhollower");
 
 
 		public override unsafe void Initialize(string gameExePath = null)
@@ -72,9 +58,11 @@ namespace BepInEx.IL2CPP
 			{
 				IntPtr originalFunc = new IntPtr(*(void**)ptr);
 
-				var trampolinePtr = TrampolineGenerator.Generate(unhollowerLogSource, originalFunc, patchedFunctionPtr, out _);
+				var detour = new FastNativeDetour(originalFunc, patchedFunctionPtr);
+				
+				detour.Apply();
 
-				*(void**)ptr = (void*)trampolinePtr;
+				*(void**)ptr = (void*)detour.TrampolinePtr;
 			};
 
 			var gameAssemblyModule = Process.GetCurrentProcess().Modules.Cast<ProcessModule>().First(x => x.ModuleName.Contains("GameAssembly"));
@@ -84,13 +72,13 @@ namespace BepInEx.IL2CPP
 
 			PreloaderLogger.Log.LogDebug($"Runtime invoke pointer: 0x{functionPtr.ToInt64():X}");
 
-			var invokeDetour = new NativeDetour(functionPtr, Marshal.GetFunctionPointerForDelegate(new RuntimeInvokeDetour(OnInvokeMethod)));
+			var invokeDetour = new FastNativeDetour(functionPtr, Marshal.GetFunctionPointerForDelegate(new RuntimeInvokeDetour(OnInvokeMethod)));
+
+			invokeDetour.Apply(unhollowerLogSource);
 
 			originalInvoke = invokeDetour.GenerateTrampoline<RuntimeInvokeDetour>();
-
-			//invokeDetour.Apply(unhollowerLogSource);
-			invokeDetour.Apply();
 		}
+
 
 		private static bool HasSet = false;
 
@@ -108,11 +96,11 @@ namespace BepInEx.IL2CPP
 			{
 				try
 				{
-					UnityEngine.Application.s_LogCallbackHandler = new Action<string, string, LogType>(UnityLogCallback);
+					Application.s_LogCallbackHandler = new Action<string, string, LogType>(UnityLogCallback);
 
 					UnityLogSource.LogMessage($"callback set - {methodName}");
 
-					UnityEngine.Application.CallLogCallback("test from OnInvokeMethod", "", LogType.Log, true);
+					Application.CallLogCallback("test from OnInvokeMethod", "", LogType.Log, true);
 				}
 				catch (Exception ex)
 				{
