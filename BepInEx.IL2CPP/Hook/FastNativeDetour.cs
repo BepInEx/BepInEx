@@ -66,15 +66,13 @@ namespace BepInEx.IL2CPP.Hook
 
 			GenerateTrampolineInner(out int trampolineLength, out int jmpLength);
 
-			debuggerLogSource?.LogDebug($"Cleared function length: {trampolineLength} - {jmpLength} = {trampolineLength - jmpLength}");
-
-			debuggerLogSource?.LogDebug($"Trampoline allocation: 0x{TrampolinePtr.ToString("X")}");
-
 			DetourGenerator.ApplyDetour(OriginalFunctionPtr, DetourFunctionPtr, arch, trampolineLength - jmpLength);
 
 
 			if (debuggerLogSource != null)
 			{
+				debuggerLogSource.LogDebug($"Trampoline allocation: 0x{TrampolinePtr.ToString("X")}");
+
 				debuggerLogSource.LogDebug("Modified (32) asm");
 
 				DetourGenerator.Disassemble(debuggerLogSource, OriginalFunctionPtr, 32);
