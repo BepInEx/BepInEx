@@ -162,13 +162,20 @@ namespace BepInEx.IL2CPP.Hook
 			// managedParams are the unhollower types used on the managed side
 			// unmanagedParams are IntPtr references that are used by IL2CPP compiled assembly
 
-			var managedParams = targetManagedMethodInfo.GetParameters().Select(x => x.ParameterType).ToArray();
-			var unmanagedParams = managedParams.Select(ConvertManagedTypeToIL2CPPType).ToArray();
+			var managedParams = Original.GetParameters().Select(x => x.ParameterType).ToArray();
+			var unmanagedParams = new Type[managedParams.Length + 2]; // +1 for thisptr at the start, +1 for methodInfo at the end
+			// TODO: Check if this breaks for static IL2CPP methods
 
-			var managedReturnType = AccessTools.GetReturnedType(targetManagedMethodInfo);
+
+			unmanagedParams[0] = typeof(IntPtr);
+			unmanagedParams[unmanagedParams.Length - 1] = typeof(Il2CppMethodInfo*);
+			Array.Copy(managedParams.Select(ConvertManagedTypeToIL2CPPType).ToArray(), 0,
+				unmanagedParams, 1, managedParams.Length);
+
+			var managedReturnType = AccessTools.GetReturnedType(Original);
 			var unmanagedReturnType = ConvertManagedTypeToIL2CPPType(managedReturnType);
 
-			var dmd = new DynamicMethodDefinition("(il2cpp -> managed) " + targetManagedMethodInfo.Name,
+			var dmd = new DynamicMethodDefinition("(il2cpp -> managed) " + Original.Name,
 				unmanagedReturnType,
 				unmanagedParams
 			);
@@ -183,9 +190,17 @@ namespace BepInEx.IL2CPP.Hook
 
 			LocalBuilder[] indirectVariables = new LocalBuilder[managedParams.Length];
 
+			if (!Original.IsStatic)
+			{
+				// Load thisptr as arg0
+
+				il.Emit(OpCodes.Ldarg_0);
+				il.Emit(OpCodes.Newobj, AccessTools.DeclaredConstructor(Original.DeclaringType, new[] { typeof(IntPtr) }));
+			}
+
 			for (int i = 0; i < managedParams.Length; ++i)
 			{
-				il.Emit(OpCodes.Ldarg_S, i);
+				il.Emit(OpCodes.Ldarg_S, i + 1);
 				EmitConvertArgumentToManaged(il, managedParams[i], out indirectVariables[i]);
 			}
 
@@ -212,7 +227,7 @@ namespace BepInEx.IL2CPP.Hook
 				if (indirectVariables[i] == null)
 					continue;
 
-				il.Emit(OpCodes.Ldarg_S, i);
+				il.Emit(OpCodes.Ldarg_S, i + 1);
 				il.Emit(OpCodes.Ldloc, indirectVariables[i]);
 
 				EmitConvertManagedTypeToIL2CPP(il, managedParams[i].GetElementType());
