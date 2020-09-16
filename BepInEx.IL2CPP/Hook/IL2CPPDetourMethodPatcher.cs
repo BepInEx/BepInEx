@@ -25,6 +25,9 @@ namespace BepInEx.IL2CPP.Hook
 		private static readonly MethodInfo ObjectBaseToPtrMethodInfo
 			= AccessTools.Method(typeof(UnhollowerBaseLib.IL2CPP), nameof(UnhollowerBaseLib.IL2CPP.Il2CppObjectBaseToPtr));
 
+		private static readonly MethodInfo ReportExceptionMethodInfo
+			= AccessTools.Method(typeof(IL2CPPDetourMethodPatcher), nameof(ReportException));
+
 
 		private static readonly ManualLogSource DetourLogger = Logger.CreateLogSource("Detour");
 
@@ -117,26 +120,21 @@ namespace BepInEx.IL2CPP.Hook
 
 			// Remove il2cpp_object_get_virtual_method
 
-			bool foundVirtMethodCall = false;
-
 			if (cursor.TryGotoNext(x => x.MatchLdarg(0),
 				x => x.MatchCall(typeof(UnhollowerBaseLib.IL2CPP), nameof(UnhollowerBaseLib.IL2CPP.Il2CppObjectBaseToPtr)),
 				x => x.MatchLdsfld(out _),
 				x => x.MatchCall(typeof(UnhollowerBaseLib.IL2CPP), nameof(UnhollowerBaseLib.IL2CPP.il2cpp_object_get_virtual_method))))
 			{
 				cursor.RemoveRange(4);
-
-				foundVirtMethodCall = true;
 			}
-
-			// Replace original IL2CPPMethodInfo pointer with a modified one that points to the trampoline
-
-			if (!foundVirtMethodCall)
+			else
 			{
 				cursor.Goto(0)
 					.GotoNext(x => x.MatchLdsfld(UnhollowerUtils.GetIl2CppMethodInfoPointerFieldForGeneratedMethod(Original)))
 					.Remove();
 			}
+
+			// Replace original IL2CPPMethodInfo pointer with a modified one that points to the trampoline
 
 			cursor
 				.Emit(Mono.Cecil.Cil.OpCodes.Ldc_I8, ((IntPtr)modifiedNativeMethodInfo).ToInt64())
@@ -226,7 +224,7 @@ namespace BepInEx.IL2CPP.Hook
 
 			il.BeginCatchBlock(typeof(Exception));
 
-			il.Emit(OpCodes.Call, AccessTools.Method(typeof(IL2CPPDetourMethodPatcher), nameof(ReportException)));
+			il.Emit(OpCodes.Call, ReportExceptionMethodInfo);
 
 			il.EndExceptionBlock();
 
