@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
@@ -9,10 +8,12 @@ using BepInEx.IL2CPP.Hook;
 using BepInEx.Logging;
 using BepInEx.Preloader.Core;
 using BepInEx.Preloader.Core.Logging;
+using HarmonyLib.Public.Patching;
 using UnhollowerBaseLib.Runtime;
 using UnhollowerRuntimeLib;
 using UnityEngine;
 using Logger = BepInEx.Logging.Logger;
+using BaseUnityEngine = UnityEngine;
 
 namespace BepInEx.IL2CPP
 {
@@ -25,30 +26,32 @@ namespace BepInEx.IL2CPP
 			UnityLogSource.LogInfo(logLine.Trim());
 		}
 
-
-//		public const CallingConvention ArchConvention =
-//#if X64
-//			CallingConvention.Stdcall;
-//#else
-//			CallingConvention.Cdecl;
-//#endif
-
-		[UnmanagedFunctionPointer(CallingConvention.StdCall)]
-		private delegate IntPtr RuntimeInvokeDetour(IntPtr method, IntPtr obj, IntPtr parameters, IntPtr exc);
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		private delegate IntPtr RuntimeInvokeDetourDelegate(IntPtr method, IntPtr obj, IntPtr parameters, IntPtr exc);
 
 		[DllImport("kernel32", CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]
 		private static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
 
-		private static RuntimeInvokeDetour originalInvoke;
+		private static RuntimeInvokeDetourDelegate originalInvoke;
 
 		private static readonly ManualLogSource unhollowerLogSource = Logger.CreateLogSource("Unhollower");
+
+		private static FastNativeDetour RuntimeInvokeDetour { get; set; }
+
+		private static IL2CPPChainloader Instance { get; set; }
 
 
 		public override unsafe void Initialize(string gameExePath = null)
 		{
-			base.Initialize(gameExePath);
+			PatchManager.ResolvePatcher += IL2CPPDetourMethodPatcher.TryResolve;
 
-			UnityVersionHandler.Initialize(2019, 2, 17);
+			base.Initialize(gameExePath);
+			Instance = this;
+
+			var version = //Version.Parse(Application.unityVersion);
+				Version.Parse(Process.GetCurrentProcess().MainModule.FileVersionInfo.FileVersion);
+
+			UnityVersionHandler.Initialize(version.Major, version.Minor, version.Revision);
 
 			// One or the other here for Unhollower to work correctly
 
@@ -72,54 +75,49 @@ namespace BepInEx.IL2CPP
 
 			PreloaderLogger.Log.LogDebug($"Runtime invoke pointer: 0x{functionPtr.ToInt64():X}");
 
-			var invokeDetour = new FastNativeDetour(functionPtr, Marshal.GetFunctionPointerForDelegate(new RuntimeInvokeDetour(OnInvokeMethod)));
+			RuntimeInvokeDetour = new FastNativeDetour(functionPtr,
+				MonoExtensions.GetFunctionPointerForDelegate(new RuntimeInvokeDetourDelegate(OnInvokeMethod), CallingConvention.Cdecl));
 
-			invokeDetour.Apply(unhollowerLogSource);
+			RuntimeInvokeDetour.Apply();
 
-			originalInvoke = invokeDetour.GenerateTrampoline<RuntimeInvokeDetour>();
+			originalInvoke = RuntimeInvokeDetour.GenerateTrampoline<RuntimeInvokeDetourDelegate>();
+
+			PreloaderLogger.Log.LogDebug("Runtime invoke patched");
 		}
 
 
-		private static bool HasSet = false;
 
-		private static HashSet<string> recordedNames = new HashSet<string>();
 		private static IntPtr OnInvokeMethod(IntPtr method, IntPtr obj, IntPtr parameters, IntPtr exc)
 		{
 			string methodName = Marshal.PtrToStringAnsi(UnhollowerBaseLib.IL2CPP.il2cpp_method_get_name(method));
-			IntPtr methodClass = UnhollowerBaseLib.IL2CPP.il2cpp_method_get_class(method);
-			string methodClassName = Marshal.PtrToStringAnsi(UnhollowerBaseLib.IL2CPP.il2cpp_class_get_name(methodClass));
-			string methodClassNamespace = Marshal.PtrToStringAnsi(UnhollowerBaseLib.IL2CPP.il2cpp_class_get_namespace(methodClass));
 
-			string methodFullName = $"{methodClassNamespace}.{methodClassName}::{methodName}";
+			bool unhook = false;
 
-			if (!HasSet && methodName == "Internal_ActiveSceneChanged")
+			if (methodName == "Internal_ActiveSceneChanged")
 			{
 				try
 				{
-					Application.s_LogCallbackHandler = new Action<string, string, LogType>(UnityLogCallback);
+					//Application.s_LogCallbackHandler = new Action<string, string, LogType>(UnityLogCallback);
 
-					UnityLogSource.LogMessage($"callback set - {methodName}");
+					//Application.CallLogCallback("test from OnInvokeMethod", "", LogType.Log, true);
 
-					Application.CallLogCallback("test from OnInvokeMethod", "", LogType.Log, true);
+					unhook = true;
+
+					Instance.Execute();
 				}
 				catch (Exception ex)
 				{
 					UnityLogSource.LogError(ex);
 				}
-
-				HasSet = true;
 			}
 
 			var result = originalInvoke(method, obj, parameters, exc);
 
-			//UnityLogSource.LogDebug(methodName + " => " + result.ToString("X"));
-
-			if (!recordedNames.Contains(methodFullName))
+			if (unhook)
 			{
-				UnityLogSource.LogDebug(methodFullName + " => " + result.ToString("X"));
+				RuntimeInvokeDetour.Dispose();
 
-				lock (recordedNames)
-					recordedNames.Add(methodFullName);
+				PreloaderLogger.Log.LogDebug("Runtime invoke unpatched");
 			}
 
 			return result;
@@ -133,7 +131,6 @@ namespace BepInEx.IL2CPP
 			//	Logger.Sources.Add(new UnityLogSource());
 
 			Logger.Sources.Add(UnityLogSource);
-
 
 
 			UnhollowerBaseLib.LogSupport.InfoHandler += unhollowerLogSource.LogInfo;

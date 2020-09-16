@@ -1,5 +1,4 @@
 ﻿using System.Reflection;
-using BepInEx.Harmony;
 using HarmonyLib;
 
 namespace BepInEx.NetLauncher.RuntimeFixes
@@ -11,7 +10,7 @@ namespace BepInEx.NetLauncher.RuntimeFixes
 		public static void Execute(Assembly entryAssembly)
 		{
 			EntryAssembly = entryAssembly;
-			HarmonyWrapper.PatchAll(typeof(AssemblyFix), "bepinex.assemblyfix");
+			Harmony.CreateAndPatchAll(typeof(AssemblyFix), "bepinex.assemblyfix");
 		}
 
 		[HarmonyPrefix, HarmonyPatch(typeof(Assembly), nameof(Assembly.GetEntryAssembly))]

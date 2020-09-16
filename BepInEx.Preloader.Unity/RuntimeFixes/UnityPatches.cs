@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
-using BepInEx.Harmony;
 using HarmonyLib;
 
 namespace BepInEx.Preloader.RuntimeFixes
@@ -14,8 +13,8 @@ namespace BepInEx.Preloader.RuntimeFixes
 
 		public static void Apply()
 		{
-			HarmonyInstance = HarmonyWrapper.PatchAll(typeof(UnityPatches));
-
+			HarmonyInstance = Harmony.CreateAndPatchAll(typeof(UnityPatches));
+			
 			try
 			{
 				TraceFix.ApplyFix();

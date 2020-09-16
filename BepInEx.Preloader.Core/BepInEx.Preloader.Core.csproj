@@ -49,14 +49,10 @@
       <Project>{4ffba620-f5ed-47f9-b90c-dad1316fd9b9}</Project>
       <Name>BepInEx.Core</Name>
     </ProjectReference>
-    <ProjectReference Include="..\submodules\BepInEx.Harmony\BepInEx.Harmony\BepInEx.Harmony.csproj">
-      <Project>{54161cfe-ff42-4dde-b161-3a49545db5cd}</Project>
-      <Name>BepInEx.Harmony</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="HarmonyX">
-      <Version>2.0.6</Version>
+      <Version>2.1.0-beta</Version>
     </PackageReference>
     <PackageReference Include="Mono.Cecil">
       <Version>0.10.4</Version>

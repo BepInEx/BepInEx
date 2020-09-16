@@ -30,8 +30,6 @@ namespace BepInEx.IL2CPP
 
 
 				Log.LogInfo($"Running under Unity v{FileVersionInfo.GetVersionInfo(Paths.ExecutablePath).FileVersion}");
-				//Log.LogInfo($"CLR runtime version: {Environment.Version}");
-				//Log.LogInfo($"Supports SRE: {Utility.CLRSupportsDynamicAssemblies}");
 
 				Log.LogDebug($"Game executable path: {Paths.ExecutablePath}");
 				Log.LogDebug($"Unhollowed assembly directory: {IL2CPPUnhollowedPath}");
@@ -43,8 +41,6 @@ namespace BepInEx.IL2CPP
 				Chainloader = new IL2CPPChainloader();
 
 				Chainloader.Initialize();
-
-				Chainloader.Execute();
 			}
 			catch (Exception ex)
 			{

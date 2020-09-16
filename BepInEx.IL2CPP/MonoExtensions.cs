@@ -18,6 +18,7 @@ namespace BepInEx
 			{
 				throw new ArgumentNullException("d");
 			}
+			
 			return GetFunctionPointerForDelegateInternal2(d, conv);
 		}
 	}

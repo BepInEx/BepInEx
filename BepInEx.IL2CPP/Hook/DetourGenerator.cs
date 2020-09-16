@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using BepInEx.Logging;
 using Iced.Intel;
+using MonoMod.RuntimeDetour;
 
 namespace BepInEx.IL2CPP
 {
@@ -56,6 +57,27 @@ namespace BepInEx.IL2CPP
 			// Fill remaining space with NOP instructions
 			for (int i = jmp.Length; i < minimumLength; i++)
 				Marshal.WriteByte(functionPtr + i, 0x90);
+		}
+
+		public static IntPtr CreateTrampolineFromFunction(IntPtr originalFuncPointer, out int trampolineLength, out int jmpLength)
+		{
+			byte[] instructionBuffer = new byte[32];
+			Marshal.Copy(originalFuncPointer, instructionBuffer, 0, 32);
+
+			var trampolinePtr = DetourHelper.Native.MemAlloc(80);
+
+			DetourHelper.Native.MakeWritable(trampolinePtr, 80);
+
+			var arch = IntPtr.Size == 8 ? Architecture.X64 : Architecture.X86;
+
+			int minimumTrampolineLength = GetDetourLength(arch);
+
+			CreateTrampolineFromFunction(instructionBuffer, originalFuncPointer, trampolinePtr, minimumTrampolineLength, arch, out trampolineLength, out jmpLength);
+
+			DetourHelper.Native.MakeExecutable(originalFuncPointer, 32);
+			DetourHelper.Native.MakeExecutable(trampolinePtr, (uint)trampolineLength);
+
+			return trampolinePtr;
 		}
 
 		/// <summary>
