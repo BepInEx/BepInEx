@@ -92,12 +92,10 @@ namespace BepInEx.IL2CPP.Hook
 
 			// Apply a detour from the unmanaged implementation to the patched harmony method
 
-			var unmanagedDelegateType = DelegateTypeFactory.instance.CreateDelegateType(unmanagedTrampolineMethod.ReturnType,
-				unmanagedTrampolineMethod.GetParameters().Select(x => x.ParameterType).ToArray());
-
-
-			var detourPtr = MonoExtensions.GetFunctionPointerForDelegate(unmanagedTrampolineMethod.CreateDelegate(unmanagedDelegateType),
+			var unmanagedDelegateType = DelegateTypeFactory.instance.CreateDelegateType(unmanagedTrampolineMethod,
 				CallingConvention.Cdecl);
+
+			var detourPtr = Marshal.GetFunctionPointerForDelegate(unmanagedTrampolineMethod.CreateDelegate(unmanagedDelegateType));
 
 			nativeDetour = new FastNativeDetour(originalNativeMethodInfo->methodPointer, detourPtr);
 
@@ -195,7 +193,7 @@ namespace BepInEx.IL2CPP.Hook
 				// Load thisptr as arg0
 
 				il.Emit(OpCodes.Ldarg_0);
-				il.Emit(OpCodes.Newobj, AccessTools.DeclaredConstructor(Original.DeclaringType, new[] { typeof(IntPtr) }));
+				EmitConvertArgumentToManaged(il, Original.DeclaringType, out _);
 			}
 
 			for (int i = 0; i < managedParams.Length; ++i)
