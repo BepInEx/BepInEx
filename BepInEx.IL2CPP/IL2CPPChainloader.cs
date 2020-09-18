@@ -34,8 +34,6 @@ namespace BepInEx.IL2CPP
 
 		private static RuntimeInvokeDetourDelegate originalInvoke;
 
-		private static readonly ManualLogSource unhollowerLogSource = Logger.CreateLogSource("Unhollower");
-
 		private static FastNativeDetour RuntimeInvokeDetour { get; set; }
 
 		private static IL2CPPChainloader Instance { get; set; }
@@ -132,12 +130,6 @@ namespace BepInEx.IL2CPP
 
 			Logger.Sources.Add(UnityLogSource);
 
-
-			UnhollowerBaseLib.LogSupport.InfoHandler += unhollowerLogSource.LogInfo;
-			UnhollowerBaseLib.LogSupport.WarningHandler += unhollowerLogSource.LogWarning;
-			UnhollowerBaseLib.LogSupport.TraceHandler += unhollowerLogSource.LogDebug;
-			UnhollowerBaseLib.LogSupport.ErrorHandler += unhollowerLogSource.LogError;
-
 			base.InitializeLoggers();
 
 
@@ -147,10 +139,22 @@ namespace BepInEx.IL2CPP
 			//}
 
 
+
+
+			// Temporarily disable the console log listener as we replay the preloader logs
+
+			var logListener = Logger.Listeners.FirstOrDefault(logger => logger is ConsoleLogListener);
+
+			if (logListener != null)
+				Logger.Listeners.Remove(logListener);
+
 			foreach (var preloaderLogEvent in PreloaderConsoleListener.LogEvents)
 			{
 				PreloaderLogger.Log.Log(preloaderLogEvent.Level, preloaderLogEvent.Data);
 			}
+
+			if (logListener != null)
+				Logger.Listeners.Add(logListener);
 
 
 			//UnityEngine.Application.s_LogCallbackHandler = DelegateSupport.ConvertDelegate<Application.LogCallback>(new Action<string>(UnityLogCallback));

@@ -23,6 +23,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>8</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>portable</DebugType>
@@ -33,8 +34,15 @@
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DebugSymbols>true</DebugSymbols>
+    <LangVersion>8</LangVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="AssemblyUnhollower">
+      <HintPath>..\lib\AssemblyUnhollower.exe</HintPath>
+    </Reference>
+    <Reference Include="Il2CppDumper">
+      <HintPath>..\lib\Il2CppDumper.dll</HintPath>
+    </Reference>
     <Reference Include="Il2Cppmscorlib">
       <HintPath>..\lib\Il2Cppmscorlib.dll</HintPath>
       <Private>False</Private>
@@ -44,7 +52,7 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="UnhollowerBaseLib">
       <HintPath>..\lib\UnhollowerBaseLib.dll</HintPath>
-      <Private>False</Private>
+      <Private>True</Private>
     </Reference>
     <Reference Include="UnityEngine-IL2CPP">
       <HintPath>..\lib\UnityEngine-IL2CPP.dll</HintPath>
@@ -66,6 +74,7 @@
     <Compile Include="Preloader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Hook\DetourGenerator.cs" />
+    <Compile Include="ProxyAssemblyGenerator.cs" />
     <Compile Include="UnityEngine\Input.cs" />
   </ItemGroup>
   <ItemGroup>

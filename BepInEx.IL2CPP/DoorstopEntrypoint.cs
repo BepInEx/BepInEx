@@ -17,10 +17,17 @@ namespace BepInEx.IL2CPP
 			AppDomain.CurrentDomain.AssemblyResolve += LocalResolve;
 			AppDomain.CurrentDomain.AssemblyResolve -= DoorstopEntrypoint.ResolveCurrentDirectory;
 
+			File.WriteAllText("B:\\a.txt", "a");
+
+			//AppDomain.CurrentDomain.TypeResolve += (sender, eventArgs) =>
+			//{
+			//	eventArgs.
+			//}
+
 			Preloader.Run();
 		}
 
-		private static Assembly LocalResolve(object sender, ResolveEventArgs args)
+		internal static Assembly LocalResolve(object sender, ResolveEventArgs args)
 		{
 			var assemblyName = new AssemblyName(args.Name);
 

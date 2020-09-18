@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Text;
 using Mono.Cecil;
 
 namespace BepInEx
@@ -162,21 +163,30 @@ namespace BepInEx
 
 			foreach (string subDirectory in potentialDirectories)
 			{
-				string path = Path.Combine(subDirectory, $"{assemblyName.Name}.dll");
-
-				if (!File.Exists(path))
-					continue;
-
-				try
+				string[] potentialPaths = new[]
 				{
-					assembly = loader(path);
-				}
-				catch (Exception)
-				{
-					continue;
-				}
+					$"{assemblyName.Name}.dll",
+					$"{assemblyName.Name}.exe"
+				};
 
-				return true;
+				foreach (var potentialPath in potentialPaths)
+				{
+					string path = Path.Combine(subDirectory, potentialPath);
+
+					if (!File.Exists(path))
+						continue;
+
+					try
+					{
+						assembly = loader(path);
+					}
+					catch (Exception)
+					{
+						continue;
+					}
+
+					return true;
+				}
 			}
 
 			return false;
@@ -249,6 +259,16 @@ namespace BepInEx
 
 				currentType = currentType.BaseType?.Resolve();
 			}
+		}
+
+		public static string ByteArrayToString(byte[] data)
+		{
+			StringBuilder builder = new StringBuilder(data.Length * 2);
+
+			foreach (byte b in data)
+				builder.AppendFormat("{0:x2}", b);
+
+			return builder.ToString();
 		}
 	}
 }
