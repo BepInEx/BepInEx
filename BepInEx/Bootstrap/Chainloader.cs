@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using Mono.Cecil;
 using MonoMod.Utils;
@@ -25,6 +25,18 @@ namespace BepInEx.Bootstrap
 		public static Dictionary<string, PluginInfo> PluginInfos { get; } = new Dictionary<string, PluginInfo>();
 
 		private static readonly List<BaseUnityPlugin> _plugins = new List<BaseUnityPlugin>();
+
+		// In some rare cases calling Application.unityVersion seems to cause MissingMethodException
+		// if a preloader patch applies Harmony patch to Chainloader.Initialize.
+		// The issue could be related to BepInEx being compiled against Unity 5.6 version of UnityEngine.dll,
+		// but the issue is apparently present with both official Harmony and HarmonyX
+		// We specifically prevent inlining to prevent early resolving
+		// TODO: Figure out better version obtaining mechanism (e.g. from globalmanagers)
+		private static string UnityVersion
+		{
+			[MethodImpl(MethodImplOptions.NoInlining)]
+			get => Application.unityVersion;
+		}
 		
 		/// <summary>
 		/// List of all <see cref="BepInPlugin"/> loaded via the chainloader.
@@ -99,7 +111,7 @@ namespace BepInEx.Bootstrap
 
 			if (Utility.CurrentOs == Platform.Linux)
 			{
-				Logger.LogInfo($"Detected Unity version: v{Application.unityVersion}");
+				Logger.LogInfo($"Detected Unity version: v{UnityVersion}");
 			}
 
 			Logger.LogMessage("Chainloader ready");
