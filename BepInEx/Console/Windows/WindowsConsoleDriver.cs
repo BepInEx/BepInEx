@@ -2,12 +2,18 @@
 using System.IO;
 using System.Text;
 using BepInEx.ConsoleUtil;
+using Microsoft.Win32.SafeHandles;
 using UnityInjector.ConsoleUtil;
 
 namespace BepInEx
 {
 	internal class WindowsConsoleDriver : IConsoleDriver
 	{
+		// We need to save stdout and conout as SafeFileHandles because we can't pass it to FileStream (check comments in CreateConsole)
+		// However, on some versions of Unity (e.g. 2018.4) using old mono causes crashes on game close if
+		// the stdout and conout are not saved into a file handle (check #139)
+		private SafeFileHandle _originalOutHandle, _consoleOutHandle;
+		
 		public TextWriter StandardOut { get; private set; }
 		public TextWriter ConsoleOut { get; private set; }
 
@@ -42,14 +48,16 @@ namespace BepInEx
 				ConsoleOut = TextWriter.Null;
 				return;
 			}
-			
-			var originalOutStream = new FileStream(stdout, FileAccess.Write);
+
+			_originalOutHandle = new SafeFileHandle(stdout, false);
+			var originalOutStream = new FileStream(_originalOutHandle.DangerousGetHandle(), FileAccess.Write);
 			StandardOut = new StreamWriter(originalOutStream, new UTF8Encoding(false))
 			{
 				AutoFlush = true
 			};
 
-			var consoleOutStream = new FileStream(ConsoleWindow.ConsoleOutHandle, FileAccess.Write);
+			_consoleOutHandle = new SafeFileHandle(ConsoleWindow.ConsoleOutHandle, false);
+			var consoleOutStream = new FileStream(_consoleOutHandle.DangerousGetHandle(), FileAccess.Write);
 			// Can't use Console.OutputEncoding because it can be null (i.e. not preference by user)
 			ConsoleOut = new StreamWriter(consoleOutStream, ConsoleEncoding.OutputEncoding)
 			{
