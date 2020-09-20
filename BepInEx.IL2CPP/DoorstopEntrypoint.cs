@@ -17,13 +17,6 @@ namespace BepInEx.IL2CPP
 			AppDomain.CurrentDomain.AssemblyResolve += LocalResolve;
 			AppDomain.CurrentDomain.AssemblyResolve -= DoorstopEntrypoint.ResolveCurrentDirectory;
 
-			File.WriteAllText("B:\\a.txt", "a");
-
-			//AppDomain.CurrentDomain.TypeResolve += (sender, eventArgs) =>
-			//{
-			//	eventArgs.
-			//}
-
 			Preloader.Run();
 		}
 
