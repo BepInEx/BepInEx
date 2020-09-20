@@ -96,8 +96,6 @@ namespace BepInEx.IL2CPP
 			{
 				listener.DoPreloaderLog("Generating Il2CppUnhollower assemblies", LogLevel.Message);
 
-				System.Threading.Thread.Sleep(5000);
-
 				if (Directory.Exists(Preloader.IL2CPPUnhollowedPath))
 					Directory.Delete(Preloader.IL2CPPUnhollowedPath, true);
 
@@ -126,8 +124,6 @@ namespace BepInEx.IL2CPP
 
 
 				listener.DoPreloaderLog("Executing Il2CppUnhollower generator", LogLevel.Info);
-
-				System.Threading.Thread.Sleep(5000);
 
 				UnhollowerBaseLib.LogSupport.InfoHandler += s => listener.DoUnhollowerLog(s, LogLevel.Info);
 				UnhollowerBaseLib.LogSupport.WarningHandler += s => listener.DoUnhollowerLog(s, LogLevel.Warning);
