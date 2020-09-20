@@ -52,7 +52,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="HarmonyX">
-      <Version>2.1.0-beta</Version>
+      <Version>2.1.0-beta.3</Version>
     </PackageReference>
     <PackageReference Include="Mono.Cecil">
       <Version>0.10.4</Version>
