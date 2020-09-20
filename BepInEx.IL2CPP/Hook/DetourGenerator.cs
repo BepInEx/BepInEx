@@ -80,6 +80,7 @@ namespace BepInEx.IL2CPP
 			return trampolinePtr;
 		}
 
+		private static ManualLogSource logger = Logger.CreateLogSource("detourgen");		
 		/// <summary>
 		/// Reads assembly from <see cref="functionPtr"/> (at least <see cref="minimumTrampolineLength"/> bytes), and writes it to <see cref="trampolinePtr"/> plus a jmp to continue execution.
 		/// </summary>
@@ -103,7 +104,30 @@ namespace BepInEx.IL2CPP
 			while (codeReader.CanReadByte)
 			{
 				decoder.Decode(out var instr);
+
+				if (instr.IsIPRelativeMemoryOperand)
+				{
+					// TODO: AssemlberRegisters not needed, figure out what props to actually change
+					// TODO: Check if it's better to use InternalOp0Kind (and other similar props) instead of normal ones
+					// TODO: Probably need to check if the target is within the trampoline boundaries and thus shouldn't be fixed
+					logger.LogInfo($"Got ptr with relative memory operand: {instr}");
+					var addr = instr.IPRelativeMemoryAddress;
+					logger.LogInfo($"Address: {addr:X}");
+					instr.MemoryBase = Register.None;
+					var op = AssemblerRegisters.__byte_ptr[addr].ToMemoryOperand(64);
+					instr.Op0Kind = OpKind.Memory;
+					instr.MemoryBase = op.Base;
+					instr.MemoryIndex = op.Index;
+					instr.MemoryIndexScale = op.Scale;
+					instr.MemoryDisplSize = op.DisplSize;
+					instr.MemoryDisplacement = (uint)op.Displacement;
+					instr.IsBroadcast = op.IsBroadcast;
+					instr.SegmentPrefix = op.SegmentPrefix;
+					logger.LogInfo($"After edit: {instr}");
+				}
+				
 				origInstructions.Add(instr);
+				
 				totalBytes += (uint)instr.Length;
 				if (instr.Code == Code.INVALID)
 					throw new Exception("Found garbage");
