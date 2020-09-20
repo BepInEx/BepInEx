@@ -54,7 +54,7 @@ namespace BepInEx.IL2CPP.Hook
 
 			if (debuggerLogSource != null)
 			{
-				debuggerLogSource.LogDebug($"Detouring 0x{OriginalFunctionPtr.ToString("X")} -> 0x{OriginalFunctionPtr.ToString("X")}");
+				debuggerLogSource.LogDebug($"Detouring 0x{OriginalFunctionPtr.ToString("X")} -> 0x{DetourFunctionPtr.ToString("X")}");
 
 
 				debuggerLogSource.LogDebug("Original (32) asm");
