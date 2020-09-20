@@ -9,6 +9,8 @@ namespace BepInEx.IL2CPP
 {
 	public static class DetourGenerator
 	{
+		private static ManualLogSource logger = Logger.CreateLogSource("DetourGen");
+
 		public static void Disassemble(ManualLogSource logSource, IntPtr memoryPtr, int size)
 		{
 			byte[] data = new byte[size];
@@ -79,8 +81,7 @@ namespace BepInEx.IL2CPP
 
 			return trampolinePtr;
 		}
-
-		private static ManualLogSource logger = Logger.CreateLogSource("detourgen");		
+		
 		/// <summary>
 		/// Reads assembly from <see cref="functionPtr"/> (at least <see cref="minimumTrampolineLength"/> bytes), and writes it to <see cref="trampolinePtr"/> plus a jmp to continue execution.
 		/// </summary>
@@ -110,9 +111,9 @@ namespace BepInEx.IL2CPP
 					// TODO: AssemlberRegisters not needed, figure out what props to actually change
 					// TODO: Check if it's better to use InternalOp0Kind (and other similar props) instead of normal ones
 					// TODO: Probably need to check if the target is within the trampoline boundaries and thus shouldn't be fixed
-					logger.LogInfo($"Got ptr with relative memory operand: {instr}");
+					logger.LogDebug($"Got ptr with relative memory operand: {instr}");
 					var addr = instr.IPRelativeMemoryAddress;
-					logger.LogInfo($"Address: {addr:X}");
+					logger.LogDebug($"Address: {addr:X}");
 					instr.MemoryBase = Register.None;
 					var op = AssemblerRegisters.__byte_ptr[addr].ToMemoryOperand(64);
 					instr.Op0Kind = OpKind.Memory;
@@ -123,7 +124,7 @@ namespace BepInEx.IL2CPP
 					instr.MemoryDisplacement = (uint)op.Displacement;
 					instr.IsBroadcast = op.IsBroadcast;
 					instr.SegmentPrefix = op.SegmentPrefix;
-					logger.LogInfo($"After edit: {instr}");
+					logger.LogDebug($"After edit: {instr}");
 				}
 				
 				origInstructions.Add(instr);
