@@ -126,6 +126,10 @@ namespace BepInEx.Bootstrap
 					result[dll] = matches;
 					ass.Dispose();
 				}
+				catch (BadImageFormatException e)
+				{
+					Logger.LogDebug($"Skipping loading {dll} because it's not a valid .NET assembly. Full error: {e}");
+				}
 				catch (Exception e)
 				{
 					Logger.LogError(e.ToString());
