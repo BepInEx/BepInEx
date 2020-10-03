@@ -23,8 +23,8 @@
     <DocumentationFile>..\bin\BepInEx.Preloader.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="0Harmony, Version=2.0.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\HarmonyX.2.0.6\lib\net35\0Harmony.dll</HintPath>
+    <Reference Include="0Harmony, Version=2.1.0.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\HarmonyX.2.1.0-beta.4\lib\net35\0Harmony.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Mono.Cecil, Version=0.10.4.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e, processorArchitecture=MSIL">
@@ -68,9 +68,9 @@
       <Project>{4ffba620-f5ed-47f9-b90c-dad1316fd9b9}</Project>
       <Name>BepInEx</Name>
     </ProjectReference>
-    <ProjectReference Include="..\submodules\BepInEx.Harmony\BepInEx.Harmony\BepInEx.Harmony.csproj">
-      <Project>{54161cfe-ff42-4dde-b161-3a49545db5cd}</Project>
-      <Name>BepInEx.Harmony</Name>
+    <ProjectReference Include="..\submodules\BepInEx.Harmony\HarmonyXInterop\HarmonyXInterop.csproj">
+      <Project>{160f7fe0-288d-435c-9e7e-497d3e0de3a6}</Project>
+      <Name>HarmonyXInterop</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

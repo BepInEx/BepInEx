@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using BepInEx.Preloader.RuntimeFixes;
+using HarmonyXInterop;
 
 namespace BepInEx.Preloader
 {
@@ -13,6 +14,7 @@ namespace BepInEx.Preloader
 			string bepinPath = Utility.ParentDirectory(Path.GetFullPath(EnvVars.DOORSTOP_INVOKE_DLL_PATH), 2);
 
 			Paths.SetExecutablePath(EnvVars.DOORSTOP_PROCESS_PATH, bepinPath, EnvVars.DOORSTOP_MANAGED_FOLDER_DIR);
+			HarmonyInterop.Initialize();
 			AppDomain.CurrentDomain.AssemblyResolve += LocalResolve;
 
 			PreloaderMain();
