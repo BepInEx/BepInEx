@@ -7,7 +7,7 @@ using HarmonyLib;
 namespace BepInEx.Preloader.RuntimeFixes
 {
 	/// <summary>
-	/// This exists because the Mono implementation of <see cref="Trace"/> is/was broken, and would call Write directly instead of calling TraceEvent. This class fixes that with a <see cref="BepInEx.Harmony"/> hook.
+	/// This exists because the Mono implementation of <see cref="Trace"/> is/was broken, and would call Write directly instead of calling TraceEvent.
 	/// </summary>
 	internal static class TraceFix
 	{
