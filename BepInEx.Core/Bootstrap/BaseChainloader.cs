@@ -288,7 +288,7 @@ namespace BepInEx.Bootstrap
 			var dependencies = BepInDependency.FromCecilType(type);
 			var incompatibilities = BepInIncompatibility.FromCecilType(type);
 
-			var bepinVersion = type.Module.AssemblyReferences.FirstOrDefault(reference => reference.Name == "BepInEx")?.Version ?? new Version();
+			var bepinVersion = type.Module.AssemblyReferences.FirstOrDefault(reference => reference.Name == "BepInEx.Core")?.Version ?? new Version();
 
 			return new PluginInfo
 			{
