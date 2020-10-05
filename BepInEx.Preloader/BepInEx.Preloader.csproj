@@ -24,7 +24,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="0Harmony, Version=2.1.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\HarmonyX.2.1.0-beta.4\lib\net35\0Harmony.dll</HintPath>
+      <HintPath>$(SolutionDir)\packages\HarmonyX.2.1.0-beta.5\lib\net35\0Harmony.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Mono.Cecil, Version=0.10.4.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e, processorArchitecture=MSIL">
@@ -40,11 +40,11 @@
       <HintPath>$(SolutionDir)\packages\Mono.Cecil.0.10.4\lib\net35\Mono.Cecil.Rocks.dll</HintPath>
     </Reference>
     <Reference Include="MonoMod.RuntimeDetour, Version=20.8.3.5, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\MonoMod.RuntimeDetour.20.8.3.5\lib\net35\MonoMod.RuntimeDetour.dll</HintPath>
+      <HintPath>$(SolutionDir)\packages\MonoMod.RuntimeDetour.20.8.3.5\lib\net35\MonoMod.RuntimeDetour.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="MonoMod.Utils, Version=20.8.3.5, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\MonoMod.Utils.20.8.3.5\lib\net35\MonoMod.Utils.dll</HintPath>
+      <HintPath>$(SolutionDir)\packages\MonoMod.Utils.20.8.3.5\lib\net35\MonoMod.Utils.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
