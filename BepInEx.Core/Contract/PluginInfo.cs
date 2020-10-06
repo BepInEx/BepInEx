@@ -27,6 +27,7 @@ namespace BepInEx
 		void ICacheable.Save(BinaryWriter bw)
 		{
 			bw.Write(TypeName);
+			bw.Write(Location);
 
 			bw.Write(Metadata.GUID);
 			bw.Write(Metadata.Name);
@@ -53,6 +54,7 @@ namespace BepInEx
 		void ICacheable.Load(BinaryReader br)
 		{
 			TypeName = br.ReadString();
+			Location = br.ReadString();
 
 			Metadata = new BepInPlugin(br.ReadString(), br.ReadString(), br.ReadString());
 
