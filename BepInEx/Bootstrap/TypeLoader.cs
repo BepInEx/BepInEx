@@ -128,7 +128,7 @@ namespace BepInEx.Bootstrap
 				}
 				catch (BadImageFormatException e)
 				{
-					Logger.LogDebug($"Skipping loading {dll} because it's not a valid .NET assembly. Full error: {e}");
+					Logger.LogDebug($"Skipping loading {dll} because it's not a valid .NET assembly. Full error: {e.Message}");
 				}
 				catch (Exception e)
 				{
