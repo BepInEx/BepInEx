@@ -14,16 +14,15 @@ namespace BepInEx.Preloader
 			string bepinPath = Utility.ParentDirectory(Path.GetFullPath(EnvVars.DOORSTOP_INVOKE_DLL_PATH), 2);
 
 			Paths.SetExecutablePath(EnvVars.DOORSTOP_PROCESS_PATH, bepinPath, EnvVars.DOORSTOP_MANAGED_FOLDER_DIR);
-			HarmonyInterop.Initialize();
 			AppDomain.CurrentDomain.AssemblyResolve += LocalResolve;
 			// Remove temporary resolver early so it won't override local resolver
 			AppDomain.CurrentDomain.AssemblyResolve -= Entrypoint.ResolveCurrentDirectory;
-
 			PreloaderMain();
 		}
 
 		private static void PreloaderMain()
 		{
+			HarmonyInterop.Initialize();
 			if (Preloader.ConfigApplyRuntimePatches.Value)
 			{
 				XTermFix.Apply();
@@ -106,6 +105,7 @@ namespace BepInEx.Preloader
 
 		internal static Assembly ResolveCurrentDirectory(object sender, ResolveEventArgs args)
 		{
+			File.AppendAllText("resolve_early.log", $"Resolving {args.Name}\n");
 			// Can't use Utils here because it's not yet resolved
 			var name = new AssemblyName(args.Name);
 
