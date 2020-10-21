@@ -136,7 +136,7 @@ namespace BepInEx.Bootstrap
 			// Give missing dependencies no dependencies of its own, which will cause missing plugins to be first in the resulting list.
 			var sortedPlugins = Utility.TopologicalSort(dependencyDict.Keys, x => dependencyDict.TryGetValue(x, out var deps) ? deps : emptyDependencies).ToList();
 
-			return sortedPlugins.Select(x => pluginsByGuid[x]).ToList();
+			return sortedPlugins.Where(pluginsByGuid.ContainsKey).Select(x => pluginsByGuid[x]).ToList();
 		}
 
 		public virtual void Execute()
@@ -147,13 +147,13 @@ namespace BepInEx.Bootstrap
 
 				Logger.LogInfo($"{plugins.Count} plugins to load");
 
-				ModifyLoadOrder(plugins);
+				var sortedPlugins = ModifyLoadOrder(plugins);
 
 				var invalidPlugins = new HashSet<string>();
 				var processedPlugins = new Dictionary<string, Version>();
 				var loadedAssemblies = new Dictionary<string, Assembly>();
 
-				foreach (var plugin in plugins)
+				foreach (var plugin in sortedPlugins)
 				{
 					var dependsOnInvalidPlugin = false;
 					var missingDependencies = new List<BepInDependency>();
