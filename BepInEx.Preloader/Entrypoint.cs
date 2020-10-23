@@ -39,23 +39,29 @@ namespace BepInEx.Preloader
 			}
 		}
 
+		// Do this in a separate method to not trigger cctor prematurely
+		private static void InitializeAssemblyResolvers()
+		{
+			// Need to initialize interop first because it installs its own special assembly resolver
+			HarmonyInterop.Initialize();
+			AppDomain.CurrentDomain.AssemblyResolve += LocalResolve;
+			// Remove temporary resolver early so it won't override local resolver
+			AppDomain.CurrentDomain.AssemblyResolve -= Entrypoint.ResolveCurrentDirectory;
+		}
+
 		public static void PreloaderPreMain()
 		{
 			string bepinPath = Utility.ParentDirectory(Path.GetFullPath(EnvVars.DOORSTOP_INVOKE_DLL_PATH), 2);
 
 			Paths.SetExecutablePath(EnvVars.DOORSTOP_PROCESS_PATH, bepinPath, EnvVars.DOORSTOP_MANAGED_FOLDER_DIR);
 
-			AppDomain.CurrentDomain.AssemblyResolve += LocalResolve;
-			// Remove temporary resolver early so it won't override local resolver
-			AppDomain.CurrentDomain.AssemblyResolve -= Entrypoint.ResolveCurrentDirectory;
-
 			LoadCriticalAssemblies();
+			InitializeAssemblyResolvers();
 			PreloaderMain();
 		}
 
 		private static void PreloaderMain()
 		{
-			HarmonyInterop.Initialize();
 			if (Preloader.ConfigApplyRuntimePatches.Value)
 			{
 				XTermFix.Apply();
