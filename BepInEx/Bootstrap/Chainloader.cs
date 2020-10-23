@@ -274,7 +274,7 @@ namespace BepInEx.Bootstrap
 				var pluginInfos = pluginsToLoad.SelectMany(p => p.Value).ToList();
 				var loadedAssemblies = new Dictionary<string, Assembly>();
 
-				Logger.LogInfo($"{pluginInfos.Count} plugins to load");
+				Logger.LogInfo($"{pluginInfos.Count} plugin{(PluginInfos.Count == 1 ? "" : "s")} to load");
 
 				// We use a sorted dictionary to ensure consistent load order
 				var dependencyDict = new SortedDictionary<string, IEnumerable<string>>(StringComparer.InvariantCultureIgnoreCase);
