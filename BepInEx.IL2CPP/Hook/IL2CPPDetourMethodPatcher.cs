@@ -160,15 +160,16 @@ namespace BepInEx.IL2CPP.Hook
 			// managedParams are the unhollower types used on the managed side
 			// unmanagedParams are IntPtr references that are used by IL2CPP compiled assembly
 
+			var paramStartIndex = Original.IsStatic ? 0 : 1;
+			
 			var managedParams = Original.GetParameters().Select(x => x.ParameterType).ToArray();
-			var unmanagedParams = new Type[managedParams.Length + 2]; // +1 for thisptr at the start, +1 for methodInfo at the end
-			// TODO: Check if this breaks for static IL2CPP methods
-
-
-			unmanagedParams[0] = typeof(IntPtr);
+			var unmanagedParams = new Type[managedParams.Length + 1]; // thisptr is assumed to be at the start, +1 for methodInfo at the end
+			
+			if (Original.IsStatic)
+				unmanagedParams[0] = typeof(IntPtr);
 			unmanagedParams[unmanagedParams.Length - 1] = typeof(Il2CppMethodInfo*);
 			Array.Copy(managedParams.Select(ConvertManagedTypeToIL2CPPType).ToArray(), 0,
-				unmanagedParams, 1, managedParams.Length);
+				unmanagedParams, paramStartIndex, managedParams.Length);
 
 			var managedReturnType = AccessTools.GetReturnedType(Original);
 			var unmanagedReturnType = ConvertManagedTypeToIL2CPPType(managedReturnType);
@@ -198,7 +199,7 @@ namespace BepInEx.IL2CPP.Hook
 
 			for (int i = 0; i < managedParams.Length; ++i)
 			{
-				il.Emit(OpCodes.Ldarg_S, i + 1);
+				il.Emit(OpCodes.Ldarg_S, i + paramStartIndex);
 				EmitConvertArgumentToManaged(il, managedParams[i], out indirectVariables[i]);
 			}
 
@@ -225,7 +226,7 @@ namespace BepInEx.IL2CPP.Hook
 				if (indirectVariables[i] == null)
 					continue;
 
-				il.Emit(OpCodes.Ldarg_S, i + 1);
+				il.Emit(OpCodes.Ldarg_S, i + paramStartIndex);
 				il.Emit(OpCodes.Ldloc, indirectVariables[i]);
 
 				EmitConvertManagedTypeToIL2CPP(il, managedParams[i].GetElementType());
