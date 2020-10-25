@@ -11,6 +11,7 @@ using MonoMod.RuntimeDetour;
 using MonoMod.Utils;
 using UnhollowerBaseLib;
 using UnhollowerBaseLib.Runtime;
+using Logger = BepInEx.Logging.Logger;
 
 namespace BepInEx.IL2CPP.Hook
 {
@@ -36,6 +37,8 @@ namespace BepInEx.IL2CPP.Hook
 		private Il2CppMethodInfo* originalNativeMethodInfo;
 		private Il2CppMethodInfo* modifiedNativeMethodInfo;
 
+		private bool isValid;
+
 		/// <summary>
 		/// Constructs a new instance of <see cref="NativeDetour"/> method patcher.
 		/// </summary>
@@ -47,21 +50,27 @@ namespace BepInEx.IL2CPP.Hook
 
 		private void Init()
 		{
-			// Get the native MethodInfo struct for the target method
+			try
+			{
+				// Get the native MethodInfo struct for the target method
+				originalNativeMethodInfo = (Il2CppMethodInfo*)(IntPtr)UnhollowerUtils.GetIl2CppMethodInfoPointerFieldForGeneratedMethod(Original).GetValue(null);
+				
+				// Create a trampoline from the original target method
 
-			originalNativeMethodInfo = (Il2CppMethodInfo*)
-				(IntPtr)UnhollowerUtils.GetIl2CppMethodInfoPointerFieldForGeneratedMethod(Original).GetValue(null);
+				var trampolinePtr = DetourGenerator.CreateTrampolineFromFunction(originalNativeMethodInfo->methodPointer, out _, out _);
 
-			// Create a trampoline from the original target method
+				// Create a modified native MethodInfo struct to point towards the trampoline
 
-			var trampolinePtr = DetourGenerator.CreateTrampolineFromFunction(originalNativeMethodInfo->methodPointer, out _, out _);
+				modifiedNativeMethodInfo = (Il2CppMethodInfo*)Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppMethodInfo>());
+				Marshal.StructureToPtr(*originalNativeMethodInfo, (IntPtr)modifiedNativeMethodInfo, false);
 
-			// Create a modified native MethodInfo struct to point towards the trampoline
-
-			modifiedNativeMethodInfo = (Il2CppMethodInfo*)Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppMethodInfo>());
-			Marshal.StructureToPtr(*originalNativeMethodInfo, (IntPtr)modifiedNativeMethodInfo, false);
-
-			modifiedNativeMethodInfo->methodPointer = trampolinePtr;
+				modifiedNativeMethodInfo->methodPointer = trampolinePtr;
+				isValid = true;
+			}
+			catch (Exception e)
+			{
+				DetourLogger.LogWarning($"Failed to init IL2CPP patch backend for {Original.FullDescription()}, using normal patch handlers: {e.Message}");
+			}
 		}
 
 		/// <inheritdoc />
@@ -152,7 +161,11 @@ namespace BepInEx.IL2CPP.Hook
 		public static void TryResolve(object sender, PatchManager.PatcherResolverEventArgs args)
 		{
 			if (args.Original.DeclaringType?.IsSubclassOf(typeof(Il2CppObjectBase)) == true)
-				args.MethodPatcher = new IL2CPPDetourMethodPatcher(args.Original);
+			{
+				var backend = new IL2CPPDetourMethodPatcher(args.Original);
+				if (backend.isValid)
+					args.MethodPatcher = backend;
+			}
 		}
 
 		private DynamicMethodDefinition GenerateNativeToManagedTrampoline(MethodInfo targetManagedMethodInfo)
@@ -163,9 +176,9 @@ namespace BepInEx.IL2CPP.Hook
 			var paramStartIndex = Original.IsStatic ? 0 : 1;
 			
 			var managedParams = Original.GetParameters().Select(x => x.ParameterType).ToArray();
-			var unmanagedParams = new Type[managedParams.Length + 1]; // thisptr is assumed to be at the start, +1 for methodInfo at the end
+			var unmanagedParams = new Type[managedParams.Length + paramStartIndex + 1]; // +1 for thisptr if needed, +1 for methodInfo at the end
 			
-			if (Original.IsStatic)
+			if (!Original.IsStatic)
 				unmanagedParams[0] = typeof(IntPtr);
 			unmanagedParams[unmanagedParams.Length - 1] = typeof(Il2CppMethodInfo*);
 			Array.Copy(managedParams.Select(ConvertManagedTypeToIL2CPPType).ToArray(), 0,

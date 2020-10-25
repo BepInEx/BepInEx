@@ -67,6 +67,7 @@
     <Compile Include="BasePlugin.cs" />
     <Compile Include="DoorstopEntrypoint.cs" />
     <Compile Include="EnvVars.cs" />
+    <Compile Include="HarmonyLogSource.cs" />
     <Compile Include="Hook\FastNativeDetour.cs" />
     <Compile Include="Hook\IL2CPPDetourMethodPatcher.cs" />
     <Compile Include="IL2CPPChainloader.cs" />
