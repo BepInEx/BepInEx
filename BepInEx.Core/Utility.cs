@@ -15,27 +15,35 @@ namespace BepInEx
 	/// </summary>
 	public static class Utility
 	{
+		private static bool? sreEnabled;
+
 		/// <summary>
 		/// Whether current Common Language Runtime supports dynamic method generation using <see cref="System.Reflection.Emit"/> namespace.
 		/// </summary>
-		public static bool CLRSupportsDynamicAssemblies { get; }
+		public static bool CLRSupportsDynamicAssemblies => CheckSRE();
 
-		static Utility()
+		private static bool CheckSRE()
 		{
 			try
 			{
-				CLRSupportsDynamicAssemblies = true;
+				if (sreEnabled.HasValue)
+					return sreEnabled.Value;
+
 				// ReSharper disable once AssignNullToNotNullAttribute
-				var m = new CustomAttributeBuilder(null, new object[0]);
+				_ = new CustomAttributeBuilder(null, new object[0]);
 			}
 			catch (PlatformNotSupportedException)
 			{
-				CLRSupportsDynamicAssemblies = false;
+				sreEnabled = false;
+				return sreEnabled.Value;
 			}
 			catch (ArgumentNullException)
 			{
 				// Suppress ArgumentNullException
 			}
+
+			sreEnabled = true;
+			return sreEnabled.Value;
 		}
 
 		/// <summary>
