@@ -30,8 +30,10 @@ namespace BepInEx.Preloader.Unity
 		{
 			var assemblyName = new AssemblyName(args.Name);
 
+			// Use parse assembly name on managed side because native GetName() can fail on some locales
+			// if the game path has "exotic" characters
 			var foundAssembly = AppDomain.CurrentDomain.GetAssemblies()
-										 .FirstOrDefault(x => x.GetName().Name == assemblyName.Name);
+										 .FirstOrDefault(x => new AssemblyName(x.FullName).Name == assemblyName.Name);
 
 			if (foundAssembly != null)
 				return foundAssembly;
