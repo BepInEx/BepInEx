@@ -75,6 +75,7 @@
     <Compile Include="Configuration\TypeConverter.cs" />
     <Compile Include="Contract\Attributes.cs" />
     <Compile Include="Logging\DiskLogListener.cs" />
+    <Compile Include="Logging\HarmonyLogSource.cs" />
     <Compile Include="Logging\LogEventArgs.cs" />
     <Compile Include="Logging\Logger.cs" />
     <Compile Include="Logging\LogLevel.cs" />

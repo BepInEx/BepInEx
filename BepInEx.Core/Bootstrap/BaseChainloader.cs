@@ -67,6 +67,9 @@ namespace BepInEx.Bootstrap
 
 			if (!TraceLogSource.IsListening)
 				Logger.Sources.Add(TraceLogSource.CreateSource());
+
+			if (!Logger.Sources.Any(x => x is HarmonyLogSource))
+				Logger.Sources.Add(new HarmonyLogSource());
 		}
 
 		protected virtual IList<PluginInfo> DiscoverPlugins()

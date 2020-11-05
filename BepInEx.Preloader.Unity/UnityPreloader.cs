@@ -51,6 +51,7 @@ namespace BepInEx.Preloader.Unity
 				}, out var runtimePatchException);
 
 				Logger.Sources.Add(TraceLogSource.CreateSource());
+				Logger.Sources.Add(new HarmonyLogSource());
 
 				PreloaderLog = new PreloaderConsoleListener(ConfigPreloaderCOutLogging.Value);
 				Logger.Listeners.Add(PreloaderLog);
