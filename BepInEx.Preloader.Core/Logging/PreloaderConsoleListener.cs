@@ -18,7 +18,7 @@ namespace BepInEx.Preloader.Core.Logging
 
 		private static readonly ConfigEntry<LogLevel> ConfigConsoleDisplayedLevel = ConfigFile.CoreConfig.Bind(
 			"Logging.Console", "LogLevels",
-			LogLevel.Fatal | LogLevel.Error | LogLevel.Message | LogLevel.Info,
+			LogLevel.Fatal | LogLevel.Error | LogLevel.Warning | LogLevel.Message | LogLevel.Info,
 			"Which log levels to show in the console output.");
 
 		public void Dispose() { }

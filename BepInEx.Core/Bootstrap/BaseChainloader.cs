@@ -348,7 +348,7 @@ namespace BepInEx.Bootstrap
 
 		private static readonly ConfigEntry<LogLevel> ConfigDiskConsoleDisplayedLevel = ConfigFile.CoreConfig.Bind(
 			"Logging.Disk", "LogLevels",
-			LogLevel.Fatal | LogLevel.Error | LogLevel.Message | LogLevel.Info,
+			LogLevel.Fatal | LogLevel.Error | LogLevel.Warning | LogLevel.Message | LogLevel.Info,
 			"Only displays the specified log levels in the disk log output.");
 
 		#endregion

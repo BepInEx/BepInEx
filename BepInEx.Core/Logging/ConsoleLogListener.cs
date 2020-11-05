@@ -22,7 +22,7 @@ namespace BepInEx.Logging
 
 		public static readonly ConfigEntry<LogLevel> ConfigConsoleDisplayedLevel = ConfigFile.CoreConfig.Bind(
 			"Logging.Console", "LogLevels",
-			LogLevel.Fatal | LogLevel.Error | LogLevel.Message | LogLevel.Info,
+			LogLevel.Fatal | LogLevel.Error | LogLevel.Warning | LogLevel.Message | LogLevel.Info,
 			"Only displays the specified log levels in the console output.");
 	}
 }
