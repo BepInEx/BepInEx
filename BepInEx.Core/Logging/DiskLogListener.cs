@@ -51,7 +51,7 @@ namespace BepInEx.Logging
 			if (BlacklistedSources.Contains(eventArgs.Source.SourceName))
 				return;
 
-			if (eventArgs.Level.GetHighestLevel() > DisplayedLogLevel)
+			if ((eventArgs.Level & DisplayedLogLevel) > 0)
 				return;
 
 			LogWriter.WriteLine($"[{eventArgs.Level,-7}:{((ILogSource)sender).SourceName,10}] {eventArgs.Data}");
