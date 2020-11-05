@@ -37,11 +37,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Logging\ChainloaderLogHelper.cs" />
-    <Compile Include="Logging\PreloaderLogWriter.cs" />
+    <Compile Include="Logging\PreloaderConsoleListener.cs" />
     <Compile Include="Patching\AssemblyPatcher.cs" />
     <Compile Include="Patching\PatcherPlugin.cs" />
     <Compile Include="InternalPreloaderLogger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RuntimeFixes\ConsoleSetOutFix.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\BepInEx.Core\BepInEx.Core.csproj">

@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using BepInEx.Preloader.Core.RuntimeFixes;
 using BepInEx.Preloader.RuntimeFixes;
 
 namespace BepInEx.Preloader.Unity
@@ -21,7 +22,10 @@ namespace BepInEx.Preloader.Unity
 		private static void PreloaderMain()
 		{
 			if (UnityPreloader.ConfigApplyRuntimePatches.Value)
+			{
 				XTermFix.Apply();
+				ConsoleSetOutFix.Apply();
+			}
 
 			UnityPreloader.Run(EnvVars.DOORSTOP_MANAGED_FOLDER_DIR);
 		}

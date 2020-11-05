@@ -53,7 +53,8 @@ namespace BepInEx.Preloader.Unity
 				Logger.Sources.Add(TraceLogSource.CreateSource());
 				Logger.Sources.Add(new HarmonyLogSource());
 
-				PreloaderLog = new PreloaderConsoleListener(ConfigPreloaderCOutLogging.Value);
+				Logger.Listeners.Add(new ConsoleLogListener());
+				PreloaderLog = new PreloaderConsoleListener();
 				Logger.Listeners.Add(PreloaderLog);
 
 				ChainloaderLogHelper.PrintLogInfo(Log);
@@ -97,7 +98,6 @@ namespace BepInEx.Preloader.Unity
 				Log.LogMessage("Preloader finished");
 
 				Logger.Listeners.Remove(PreloaderLog);
-				Logger.Listeners.Add(new ConsoleLogListener());
 
 				PreloaderLog.Dispose();
 
