@@ -65,7 +65,7 @@ namespace BepInEx.Preloader.Unity
 				PreloaderLog = new PreloaderConsoleListener(ConfigPreloaderCOutLogging.Value);
 				Logger.Listeners.Add(PreloaderLog);
 
-				BasicLogInfo.PrintLogInfo(Log);
+				ChainloaderLogHelper.PrintLogInfo(Log);
 
 				Log.LogInfo($"Running under Unity v{FileVersionInfo.GetVersionInfo(Paths.ExecutablePath).FileVersion}");
 				Log.LogInfo($"CLR runtime version: {Environment.Version}");

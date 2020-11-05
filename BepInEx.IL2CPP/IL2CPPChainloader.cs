@@ -139,22 +139,7 @@ namespace BepInEx.IL2CPP
 			//}
 
 
-
-
-			// Temporarily disable the console log listener as we replay the preloader logs
-
-			var logListener = Logger.Listeners.FirstOrDefault(logger => logger is ConsoleLogListener);
-
-			if (logListener != null)
-				Logger.Listeners.Remove(logListener);
-
-			foreach (var preloaderLogEvent in PreloaderConsoleListener.LogEvents)
-			{
-				PreloaderLogger.Log.Log(preloaderLogEvent.Level, preloaderLogEvent.Data);
-			}
-
-			if (logListener != null)
-				Logger.Listeners.Add(logListener);
+			ChainloaderLogHelper.RewritePreloaderLogs();
 
 
 			//UnityEngine.Application.s_LogCallbackHandler = DelegateSupport.ConvertDelegate<Application.LogCallback>(new Action<string>(UnityLogCallback));

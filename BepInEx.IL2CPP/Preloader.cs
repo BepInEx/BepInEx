@@ -32,7 +32,7 @@ namespace BepInEx.IL2CPP
 					Logger.Listeners.Add(new ConsoleLogListener());
 				}
 
-				BasicLogInfo.PrintLogInfo(Log);
+				ChainloaderLogHelper.PrintLogInfo(Log);
 
 				Log.LogInfo($"Running under Unity v{FileVersionInfo.GetVersionInfo(Paths.ExecutablePath).FileVersion}");
 
