@@ -265,14 +265,14 @@ namespace BepInEx.Preloader.Core
 		public void PatchAndLoad()
 		{
 			// First, create a copy of the assembly dictionary as the initializer can change them
-			var assemblies = new Dictionary<string, AssemblyDefinition>(AssembliesToPatch);
+			var assemblies = new Dictionary<string, AssemblyDefinition>(AssembliesToPatch, StringComparer.InvariantCultureIgnoreCase);
 
 			// Next, initialize all the patchers
 			foreach (var assemblyPatcher1 in PatcherPlugins)
 				assemblyPatcher1.Initializer?.Invoke();
 
 			// Then, perform the actual patching
-			var patchedAssemblies = new HashSet<string>();
+			var patchedAssemblies = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 			var resolvedAssemblies = new Dictionary<string, string>();
 			foreach (var assemblyPatcher in PatcherPlugins)
 				foreach (string targetDll in assemblyPatcher.TargetDLLs())
@@ -295,7 +295,7 @@ namespace BepInEx.Preloader.Core
 
 			// Check if any patched assemblies have been already resolved by the CLR
 			// If there are any, they cannot be loaded by the preloader
-			var patchedAssemblyNames = new HashSet<string>(assemblies.Where(kv => patchedAssemblies.Contains(kv.Key)).Select(kv => kv.Value.Name.Name));
+			var patchedAssemblyNames = new HashSet<string>(assemblies.Where(kv => patchedAssemblies.Contains(kv.Key)).Select(kv => kv.Value.Name.Name), StringComparer.InvariantCultureIgnoreCase);
 			var earlyLoadAssemblies = resolvedAssemblies.Where(kv => patchedAssemblyNames.Contains(kv.Key)).ToList();
 
 			if (earlyLoadAssemblies.Count != 0)
