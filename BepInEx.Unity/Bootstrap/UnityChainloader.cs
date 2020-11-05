@@ -51,10 +51,6 @@ namespace BepInEx.Unity.Bootstrap
 		{
 			Logger.Listeners.Add(new UnityLogListener());
 
-			if (ConfigUnityLogging.Value)
-				Logger.Sources.Add(new UnityLogSource());
-
-
 			base.InitializeLoggers();
 
 
@@ -69,7 +65,12 @@ namespace BepInEx.Unity.Bootstrap
 				DiskLogListener.BlacklistedSources.Add("Unity Log");
 			}
 
+
 			ChainloaderLogHelper.RewritePreloaderLogs();
+
+
+			if (ConfigUnityLogging.Value)
+				Logger.Sources.Add(new UnityLogSource());
 		}
 
 		public override BaseUnityPlugin LoadPlugin(PluginInfo pluginInfo, Assembly pluginAssembly)
