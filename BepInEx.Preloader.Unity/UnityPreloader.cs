@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -37,6 +38,8 @@ namespace BepInEx.Preloader.Unity
 		{
 			try
 			{
+				InitializeHarmony();
+
 				ConsoleManager.Initialize(false);
 				AllocateConsole();
 
@@ -211,7 +214,7 @@ namespace BepInEx.Preloader.Unity
 					il.InsertBefore(ins,
 						il.Create(OpCodes.Ldnull)); // gameExePath (always null, we initialize the Paths class in Entrypoint
 
-                    il.InsertBefore(ins,
+					il.InsertBefore(ins,
 						il.Create(OpCodes.Call, startMethod)); // UnityChainloader.StaticStart(string gameExePath)
 				}
 			}
@@ -244,6 +247,31 @@ namespace BepInEx.Preloader.Unity
 			return $"Unknown ({(IsPostUnity2017 ? "post" : "pre")}-2017)";
 		}
 
+		private static void InitializeHarmony()
+		{
+			switch (ConfigHarmonyBackend.Value)
+			{
+				case MonoModBackend.auto:
+					break;
+				case MonoModBackend.dynamicmethod:
+				case MonoModBackend.methodbuilder:
+				case MonoModBackend.cecil:
+					Environment.SetEnvironmentVariable("MONOMOD_DMD_TYPE", ConfigHarmonyBackend.Value.ToString());
+					break;
+				default:
+					throw new ArgumentOutOfRangeException(nameof(ConfigHarmonyBackend), ConfigHarmonyBackend.Value, "Unknown backend");
+			}
+		}
+
+		private enum MonoModBackend
+		{
+			// Enum names are important!
+			[Description("Auto")] auto = 0,
+			[Description("DynamicMethod")] dynamicmethod,
+			[Description("MethodBuilder")] methodbuilder,
+			[Description("Cecil")] cecil
+		}
+
 		#region Config
 
 		private static readonly ConfigEntry<string> ConfigEntrypointAssembly = ConfigFile.CoreConfig.Bind(
@@ -270,6 +298,12 @@ namespace BepInEx.Preloader.Unity
 			"Logging", "PreloaderConsoleOutRedirection",
 			true,
 			"Redirects text from Console.Out during preloader patch loading to the BepInEx logging system.");
+
+		private static readonly ConfigEntry<MonoModBackend> ConfigHarmonyBackend = ConfigFile.CoreConfig.Bind(
+			"Preloader",
+			"HarmonyBackend",
+			MonoModBackend.auto,
+			"Specifies which MonoMod backend to use for Harmony patches. Auto uses the best available backend.\nThis setting should only be used for development purposes (e.g. debugging in dnSpy). Other code might override this setting.");
 
 		#endregion
 	}
