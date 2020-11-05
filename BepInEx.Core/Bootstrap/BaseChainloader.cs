@@ -15,7 +15,7 @@ namespace BepInEx.Bootstrap
 	{
 		#region Contract
 
-		protected virtual string ConsoleTitle => $"BepInEx {typeof(Paths).Assembly.GetName().Version} - {Path.GetFileNameWithoutExtension(Process.GetCurrentProcess().ProcessName)}";
+		protected virtual string ConsoleTitle => $"BepInEx {typeof(Paths).Assembly.GetName().Version} - {Paths.ProcessName}";
 
 		private bool _initialized = false;
 

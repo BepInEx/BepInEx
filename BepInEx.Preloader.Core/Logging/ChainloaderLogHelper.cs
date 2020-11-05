@@ -9,7 +9,7 @@ namespace BepInEx.Preloader.Core.Logging
 	{
 		public static void PrintLogInfo(ManualLogSource log)
 		{
-			string consoleTitle = $"BepInEx {typeof(Paths).Assembly.GetName().Version} - {Path.GetFileNameWithoutExtension(Process.GetCurrentProcess().ProcessName)}";
+			string consoleTitle = $"BepInEx {typeof(Paths).Assembly.GetName().Version} - {Paths.ProcessName}";
 			log.LogMessage(consoleTitle);
 
 			if (ConsoleManager.ConsoleActive)
