@@ -294,11 +294,6 @@ namespace BepInEx.Preloader.Unity
 			true,
 			"Enables or disables runtime patches.\nThis should always be true, unless you cannot start the game due to a Harmony related issue (such as running .NET Standard runtime) or you know what you're doing.");
 
-		private static readonly ConfigEntry<bool> ConfigPreloaderCOutLogging = ConfigFile.CoreConfig.Bind(
-			"Logging", "PreloaderConsoleOutRedirection",
-			true,
-			"Redirects text from Console.Out during preloader patch loading to the BepInEx logging system.");
-
 		private static readonly ConfigEntry<MonoModBackend> ConfigHarmonyBackend = ConfigFile.CoreConfig.Bind(
 			"Preloader",
 			"HarmonyBackend",
