@@ -52,9 +52,7 @@ namespace BepInEx.Unity.Bootstrap
 		{
 			base.InitializeLoggers();
 
-			// Write to Unity logs directly only if console is not present (or user explicitly wants to)
-			if (ConfigWriteToUnityLog.Value || !ConsoleManager.ConsoleActive)
-				Logger.Listeners.Add(new UnityLogListener());
+			Logger.Listeners.Add(new UnityLogListener());
 
 			if (Utility.CurrentPlatform != Platform.Windows)
 			{
@@ -84,14 +82,6 @@ namespace BepInEx.Unity.Bootstrap
 			"Logging", "UnityLogListening",
 			true,
 			"Enables showing unity log messages in the BepInEx logging system.");
-
-		private static readonly ConfigEntry<bool> ConfigWriteToUnityLog = ConfigFile.CoreConfig.Bind(
-			"Logging", "WriteToUnityLog",
-			false,
-			new StringBuilder()
-				.AppendLine("Enables writing log messages to Unity's log system")
-				.AppendLine("NOTE: By default, Unity already writes BepInEx console output to Unity logs")
-				.Append("Use this setting only if no BepInEx log messages are present in Unity's output_log").ToString());
 
 		private static readonly ConfigEntry<bool> ConfigDiskWriteUnityLog = ConfigFile.CoreConfig.Bind(
 			"Logging.Disk", "WriteUnityLog",
