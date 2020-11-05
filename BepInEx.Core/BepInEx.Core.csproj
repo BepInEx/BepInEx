@@ -39,6 +39,10 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="0Harmony, Version=2.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Users\Richard\.nuget\packages\harmonyx\2.1.0-beta.8\lib\net35\0Harmony.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
@@ -86,6 +90,9 @@
     <Compile Include="Utility.cs" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="HarmonyX">
+      <Version>2.1.0-beta.8</Version>
+    </PackageReference>
     <PackageReference Include="Mono.Cecil">
       <Version>0.10.4</Version>
     </PackageReference>

@@ -10,7 +10,7 @@ namespace BepInEx.Preloader.Unity
 	{
 		public static void PreloaderPreMain(string[] args)
 		{
-			string bepinPath = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetFullPath(EnvVars.DOORSTOP_INVOKE_DLL_PATH)));
+			string bepinPath = Utility.ParentDirectory(Path.GetFullPath(EnvVars.DOORSTOP_INVOKE_DLL_PATH), 2);
 
 			Paths.SetExecutablePath(args[0], bepinPath);
 			AppDomain.CurrentDomain.AssemblyResolve += LocalResolve;

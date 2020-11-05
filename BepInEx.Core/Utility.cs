@@ -67,6 +67,20 @@ namespace BepInEx
         public static string CombinePaths(params string[] parts) => parts.Aggregate(Path.Combine);
 
 		/// <summary>
+		/// Returns the parent directory of a path, optionally specifying the amount of levels.
+		/// </summary>
+		/// <param name="path">The path to get the parent directory of.</param>
+		/// <param name="levels">The amount of levels to traverse. Defaults to 1</param>
+		/// <returns>The parent directory.</returns>
+		public static string ParentDirectory(string path, int levels = 1)
+		{
+			for (int i = 0; i < levels; i++)
+				path = Path.GetDirectoryName(path);
+
+			return path;
+		}
+
+		/// <summary>
 		/// Tries to parse a bool, with a default value if unable to parse.
 		/// </summary>
 		/// <param name="input">The string to parse</param>
