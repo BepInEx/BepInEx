@@ -20,7 +20,7 @@ namespace BepInEx.Logging
 
 		public void Dispose() { }
 
-		private static readonly ConfigEntry<LogLevel> ConfigConsoleDisplayedLevel = ConfigFile.CoreConfig.Bind(
+		public static readonly ConfigEntry<LogLevel> ConfigConsoleDisplayedLevel = ConfigFile.CoreConfig.Bind(
 			"Logging.Console", "LogLevels",
 			LogLevel.Fatal | LogLevel.Error | LogLevel.Message | LogLevel.Info,
 			"Only displays the specified log levels in the console output.");

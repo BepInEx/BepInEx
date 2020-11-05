@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using BepInEx.Configuration;
 using BepInEx.Logging;
 
 namespace BepInEx.Preloader.Core.Logging
@@ -29,6 +30,9 @@ namespace BepInEx.Preloader.Core.Logging
 
 		public void LogEvent(object sender, LogEventArgs eventArgs)
 		{
+			if ((eventArgs.Level & ConsoleLogListener.ConfigConsoleDisplayedLevel.Value) == 0)
+				return;
+
 			LogEvents.Add(eventArgs);
 
 			ConsoleManager.SetConsoleColor(eventArgs.Level.GetConsoleColor());
