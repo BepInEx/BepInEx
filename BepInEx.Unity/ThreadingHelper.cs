@@ -214,7 +214,7 @@ namespace BepInEx
 		public static IEnumerable<TOut> RunParallel<TIn, TOut>(this IList<TIn> data, Func<TIn, TOut> work, int workerCount = -1)
 		{
 			if (workerCount < 0)
-				workerCount = Mathf.Max(2, SystemInfo.processorCount);
+				workerCount = Mathf.Max(2, Environment.ProcessorCount);
 			else if (workerCount == 0)
 				throw new ArgumentException("Need at least 1 worker", nameof(workerCount));
 
