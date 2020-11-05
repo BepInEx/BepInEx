@@ -3,18 +3,15 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using BepInEx.Bootstrap;
 using BepInEx.Configuration;
 using BepInEx.Core.Logging;
 using BepInEx.Logging;
 using BepInEx.Preloader.Core;
 using BepInEx.Preloader.Core.Logging;
-using BepInEx.Preloader.Core.RuntimeFixes;
 using BepInEx.Preloader.RuntimeFixes;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
-using MonoMod.RuntimeDetour;
 using MonoMod.Utils;
 using MethodAttributes = Mono.Cecil.MethodAttributes;
 
@@ -54,8 +51,6 @@ namespace BepInEx.Preloader.Unity
 				}, out var runtimePatchException);
 
 				Logger.Sources.Add(TraceLogSource.CreateSource());
-
-				HarmonyFixes.Apply();
 
 				PreloaderLog = new PreloaderConsoleListener(ConfigPreloaderCOutLogging.Value);
 				Logger.Listeners.Add(PreloaderLog);

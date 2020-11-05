@@ -8,7 +8,6 @@ using BepInEx.Configuration;
 using BepInEx.Logging;
 using BepInEx.NetLauncher.RuntimeFixes;
 using BepInEx.Preloader.Core;
-using BepInEx.Preloader.Core.RuntimeFixes;
 using MonoMod.RuntimeDetour;
 
 namespace BepInEx.NetLauncher
@@ -47,8 +46,6 @@ namespace BepInEx.NetLauncher
 			}, out var harmonyBridgeException);
 
 			Logger.Sources.Add(TraceLogSource.CreateSource());
-
-			HarmonyFixes.Apply();
 
 			string consoleTile = $"BepInEx {typeof(Paths).Assembly.GetName().Version} - {Process.GetCurrentProcess().ProcessName}";
 			Log.LogMessage(consoleTile);
