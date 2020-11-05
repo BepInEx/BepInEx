@@ -162,9 +162,9 @@ namespace BepInEx.Bootstrap
 					var missingDependencies = new List<BepInDependency>();
 					foreach (var dependency in plugin.Dependencies)
 					{
-						// If the depenency wasn't already processed, it's missing altogether
-						bool depenencyExists = processedPlugins.TryGetValue(dependency.DependencyGUID, out var pluginVersion);
-						if (!depenencyExists || pluginVersion < dependency.MinimumVersion)
+						// If the dependency wasn't already processed, it's missing altogether
+						bool dependencyExists = processedPlugins.TryGetValue(dependency.DependencyGUID, out var pluginVersion);
+						if (!dependencyExists || pluginVersion < dependency.MinimumVersion)
 						{
 							// If the dependency is hard, collect it into a list to show
 							if ((dependency.Flags & BepInDependency.DependencyFlags.HardDependency) != 0)
@@ -172,7 +172,7 @@ namespace BepInEx.Bootstrap
 							continue;
 						}
 
-						// If the dependency is invalid (e.g. has missing depedencies), report that to the user
+						// If the dependency is invalid (e.g. has missing dependencies), report that to the user
 						if (invalidPlugins.Contains(dependency.DependencyGUID))
 						{
 							dependsOnInvalidPlugin = true;
