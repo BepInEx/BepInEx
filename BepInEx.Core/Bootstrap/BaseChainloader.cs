@@ -347,7 +347,7 @@ namespace BepInEx.Bootstrap
 			"Enables writing log messages to disk.");
 
 		private static readonly ConfigEntry<LogLevel> ConfigDiskConsoleDisplayedLevel = ConfigFile.CoreConfig.Bind(
-			"Logging.Disk", "DisplayedLogLevel",
+			"Logging.Disk", "LogLevels",
 			LogLevel.Fatal | LogLevel.Error | LogLevel.Message | LogLevel.Info,
 			"Only displays the specified log levels in the disk log output.");
 
