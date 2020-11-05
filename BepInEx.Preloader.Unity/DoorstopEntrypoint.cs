@@ -2,17 +2,26 @@
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using BepInEx.Preloader.RuntimeFixes;
 
 namespace BepInEx.Preloader.Unity
 {
 	internal static class UnityPreloaderRunner
 	{
-		public static void PreloaderMain(string[] args)
+		public static void PreloaderPreMain(string[] args)
 		{
 			string bepinPath = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetFullPath(EnvVars.DOORSTOP_INVOKE_DLL_PATH)));
 
 			Paths.SetExecutablePath(args[0], bepinPath);
 			AppDomain.CurrentDomain.AssemblyResolve += LocalResolve;
+
+			PreloaderMain(args);
+		}
+
+		private static void PreloaderMain(string[] args)
+		{
+			if (UnityPreloader.ConfigApplyRuntimePatches.Value)
+				XTermFix.Apply();
 
 			UnityPreloader.Run(EnvVars.DOORSTOP_MANAGED_FOLDER_DIR);
 		}
@@ -66,7 +75,7 @@ namespace BepInEx.Preloader.Unity
 				// In some versions of Unity 4, Mono tries to resolve BepInEx.dll prematurely because of the call to Paths.SetExecutablePath
 				// To prevent that, we have to use reflection and a separate startup class so that we can install required assembly resolvers before the main code
 				typeof(DoorstopEntrypoint).Assembly.GetType($"BepInEx.Preloader.Unity.{nameof(UnityPreloaderRunner)}")
-								  ?.GetMethod(nameof(UnityPreloaderRunner.PreloaderMain))
+								  ?.GetMethod(nameof(UnityPreloaderRunner.PreloaderPreMain))
 								  ?.Invoke(null, new object[] { args });
 
 				AppDomain.CurrentDomain.AssemblyResolve -= ResolveCurrentDirectory;

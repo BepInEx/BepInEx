@@ -15,7 +15,7 @@ namespace BepInEx.Bootstrap
 	{
 		#region Contract
 
-		protected virtual string ConsoleTitle => $"BepInEx {typeof(Paths).Assembly.GetName().Version} - {Process.GetCurrentProcess().ProcessName}";
+		protected virtual string ConsoleTitle => $"BepInEx {typeof(Paths).Assembly.GetName().Version} - {Path.GetFileNameWithoutExtension(Process.GetCurrentProcess().ProcessName)}";
 
 		private bool _initialized = false;
 
@@ -228,6 +228,12 @@ namespace BepInEx.Bootstrap
 			}
 			catch (Exception ex)
 			{
+				try
+				{
+					ConsoleManager.CreateConsole();
+				}
+				catch { }
+
 				Logger.LogError("Error occurred starting the game");
 				Logger.LogDebug(ex);
 			}

@@ -20,6 +20,8 @@ namespace UnityInjector.ConsoleUtil
 		private readonly uint _codePage;
 		public override int CodePage => (int)_codePage;
 
+		public static Encoding OutputEncoding => new ConsoleEncoding(ConsoleCodePage);
+
 		public static uint ConsoleCodePage
 		{
 			get { return GetConsoleOutputCP(); }

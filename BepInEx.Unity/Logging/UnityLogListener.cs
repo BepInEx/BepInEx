@@ -35,12 +35,10 @@ namespace BepInEx.Unity.Logging
 
 		public void LogEvent(object sender, LogEventArgs eventArgs)
 		{
-			if (sender is UnityLogSource)
+			if (eventArgs.Source is UnityLogSource)
 				return;
 
-			string log = $"[{eventArgs.Level}:{((ILogSource)sender).SourceName}] {eventArgs.Data}\r\n";
-
-			WriteStringToUnityLog?.Invoke(log);
+			WriteStringToUnityLog?.Invoke(eventArgs.ToStringLine());
 		}
 
 		public void Dispose() { }

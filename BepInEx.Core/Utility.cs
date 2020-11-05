@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
 using Mono.Cecil;
+using MonoMod.Utils;
 
 namespace BepInEx
 {
@@ -269,6 +270,29 @@ namespace BepInEx
 				builder.AppendFormat("{0:x2}", b);
 
 			return builder.ToString();
+		}
+
+		public static Platform CurrentPlatform { get; private set; } = CheckPlatform();
+
+		// Adapted from https://github.com/MonoMod/MonoMod.Common/blob/master/Utils/PlatformHelper.cs#L13
+		private static Platform CheckPlatform()
+		{
+			var pPlatform = typeof(Environment).GetProperty("Platform", BindingFlags.NonPublic | BindingFlags.Static);
+			string platId = pPlatform != null ? pPlatform.GetValue(null, new object[0]).ToString() : Environment.OSVersion.Platform.ToString();
+			platId = platId.ToLowerInvariant();
+
+			var cur = Platform.Unknown;
+			if (platId.Contains("win"))
+				cur = Platform.Windows;
+			else if (platId.Contains("mac") || platId.Contains("osx"))
+				cur = Platform.MacOS;
+			else if (platId.Contains("lin") || platId.Contains("unix"))
+				cur = Platform.Linux;
+
+			if (IntPtr.Size == 8)
+				cur |= Platform.Bits64;
+
+			return cur;
 		}
 	}
 }

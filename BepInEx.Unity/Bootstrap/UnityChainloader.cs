@@ -1,15 +1,12 @@
 ﻿using BepInEx.Configuration;
 using BepInEx.Logging;
-using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Text;
 using BepInEx.Bootstrap;
-using BepInEx.Preloader.Core;
 using BepInEx.Preloader.Core.Logging;
 using BepInEx.Unity.Logging;
+using MonoMod.Utils;
 using UnityEngine;
 using Logger = BepInEx.Logging.Logger;
 
@@ -45,30 +42,13 @@ namespace BepInEx.Unity.Bootstrap
 			UnityEngine.Object.DontDestroyOnLoad(ManagerObject);
 
 			var productNameProp = typeof(Application).GetProperty("productName", BindingFlags.Public | BindingFlags.Static);
-			_consoleTitle = $"{CurrentAssemblyName} {CurrentAssemblyVersion} - {productNameProp?.GetValue(null, null) ?? Process.GetCurrentProcess().ProcessName}";
+			_consoleTitle = $"{CurrentAssemblyName} {CurrentAssemblyVersion} - {productNameProp?.GetValue(null, null) ?? Path.GetFileNameWithoutExtension(Process.GetCurrentProcess().ProcessName)}";
 
 			base.Initialize(gameExePath);
 		}
 
 		protected override void InitializeLoggers()
 		{
-			if (ConsoleManager.ConfigConsoleEnabled.Value)
-			{
-				ConsoleManager.CreateConsole();
-
-				if (!Logger.Listeners.Any(x => x is ConsoleLogListener))
-					Logger.Listeners.Add(new ConsoleLogListener());
-			}
-
-			// Fix for standard output getting overwritten by UnityLogger
-			if (ConsoleManager.StandardOut != null)
-			{
-				Console.SetOut(ConsoleManager.StandardOut);
-
-				var encoding = ConsoleManager.ConfigConsoleShiftJis.Value ? 932 : (uint)Encoding.UTF8.CodePage;
-				ConsoleManager.SetConsoleEncoding(encoding);
-			}
-
 			Logger.Listeners.Add(new UnityLogListener());
 
 			if (ConfigUnityLogging.Value)
@@ -78,11 +58,16 @@ namespace BepInEx.Unity.Bootstrap
 			base.InitializeLoggers();
 
 
+			if (Utility.CurrentPlatform != Platform.Windows)
+			{
+				Logger.LogInfo($"Detected Unity version: v{Application.unityVersion}");
+			}
+
+
 			if (!ConfigDiskWriteUnityLog.Value)
 			{
 				DiskLogListener.BlacklistedSources.Add("Unity Log");
 			}
-
 
 			ChainloaderLogHelper.RewritePreloaderLogs();
 		}

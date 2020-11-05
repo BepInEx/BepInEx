@@ -15,6 +15,7 @@ using BepInEx.Preloader.RuntimeFixes;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using MonoMod.RuntimeDetour;
+using MonoMod.Utils;
 using MethodAttributes = Mono.Cecil.MethodAttributes;
 
 namespace BepInEx.Preloader.Unity
@@ -39,6 +40,7 @@ namespace BepInEx.Preloader.Unity
 		{
 			try
 			{
+				ConsoleManager.Initialize(false);
 				AllocateConsole();
 
 				if (managedDirectory != null)
@@ -51,7 +53,7 @@ namespace BepInEx.Preloader.Unity
 				}, out var harmonyBridgeException);
 
 				Exception runtimePatchException = null;
-				if(bridgeInitialized)
+				if (bridgeInitialized)
 					Utility.TryDo(() =>
 					{
 						if (ConfigApplyRuntimePatches.Value)
@@ -67,7 +69,7 @@ namespace BepInEx.Preloader.Unity
 
 				ChainloaderLogHelper.PrintLogInfo(Log);
 
-				Log.LogInfo($"Running under Unity v{FileVersionInfo.GetVersionInfo(Paths.ExecutablePath).FileVersion}");
+				Log.LogInfo($"Running under Unity v{GetUnityVersion()}");
 				Log.LogInfo($"CLR runtime version: {Environment.Version}");
 				Log.LogInfo($"Supports SRE: {Utility.CLRSupportsDynamicAssemblies}");
 
@@ -234,19 +236,20 @@ namespace BepInEx.Preloader.Unity
 			try
 			{
 				ConsoleManager.CreateConsole();
-
-				var encoding = (uint)Encoding.UTF8.CodePage;
-
-				if (ConsoleManager.ConfigConsoleShiftJis.Value)
-					encoding = 932;
-
-				ConsoleManager.SetConsoleEncoding(encoding);
 			}
 			catch (Exception ex)
 			{
 				Log.LogError("Failed to allocate console!");
 				Log.LogError(ex);
 			}
+		}
+
+		public static string GetUnityVersion()
+		{
+			if (Utility.CurrentPlatform == Platform.Windows)
+				return FileVersionInfo.GetVersionInfo(Paths.ExecutablePath).FileVersion;
+
+			return $"Unknown ({(IsPostUnity2017 ? "post" : "pre")}-2017)";
 		}
 
 		#region Config
@@ -266,7 +269,7 @@ namespace BepInEx.Preloader.Unity
 			".cctor",
 			"The name of the method in the specified entrypoint assembly and type to hook and load Chainloader from.");
 
-		private static readonly ConfigEntry<bool> ConfigApplyRuntimePatches = ConfigFile.CoreConfig.Bind(
+		internal static readonly ConfigEntry<bool> ConfigApplyRuntimePatches = ConfigFile.CoreConfig.Bind(
 			"Preloader", "ApplyRuntimePatches",
 			true,
 			"Enables or disables runtime patches.\nThis should always be true, unless you cannot start the game due to a Harmony related issue (such as running .NET Standard runtime) or you know what you're doing.");
