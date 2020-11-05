@@ -89,7 +89,7 @@ namespace BepInEx.Bootstrap
 				{
 					if (loadedVersion != null)
 					{
-						Logger.LogWarning($"Skipping [{pluginInfo}] because a newer version exists [{loadedVersion}]");
+						Logger.LogWarning($"Skipping [{pluginInfo}] because a newer version exists ({loadedVersion})");
 						continue;
 					}
 
@@ -101,8 +101,7 @@ namespace BepInEx.Bootstrap
 
 					if (invalidProcessName)
 					{
-						Logger.LogWarning($"Skipping [{pluginInfo}] because of process filters");
-						Logger.LogDebug($"[{pluginInfo}] has the following process filters: {string.Join(", ", pluginInfo.Processes.Select(p => p.ProcessName).ToArray())}");
+						Logger.LogWarning($"Skipping [{pluginInfo}] because of process filters ({string.Join(", ", pluginInfo.Processes.Select(p => p.ProcessName).ToArray())})");
 						continue;
 					}
 
