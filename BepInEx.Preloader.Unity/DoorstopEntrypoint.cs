@@ -8,17 +8,17 @@ namespace BepInEx.Preloader.Unity
 {
 	internal static class UnityPreloaderRunner
 	{
-		public static void PreloaderPreMain(string[] args)
+		public static void PreloaderPreMain()
 		{
 			string bepinPath = Utility.ParentDirectory(Path.GetFullPath(EnvVars.DOORSTOP_INVOKE_DLL_PATH), 2);
 
-			Paths.SetExecutablePath(args[0], bepinPath);
+			Paths.SetExecutablePath(EnvVars.DOORSTOP_MANAGED_FOLDER_DIR, bepinPath);
 			AppDomain.CurrentDomain.AssemblyResolve += LocalResolve;
 
-			PreloaderMain(args);
+			PreloaderMain();
 		}
 
-		private static void PreloaderMain(string[] args)
+		private static void PreloaderMain()
 		{
 			if (UnityPreloader.ConfigApplyRuntimePatches.Value)
 				XTermFix.Apply();
@@ -65,7 +65,7 @@ namespace BepInEx.Preloader.Unity
 			{
 				EnvVars.LoadVars();
 
-				silentExceptionLog = Path.Combine(Path.GetDirectoryName(args[0]), silentExceptionLog);
+				silentExceptionLog = Path.Combine(EnvVars.DOORSTOP_PROCESS_PATH, silentExceptionLog);
 
 				// Get the path of this DLL via Doorstop env var because Assembly.Location mangles non-ASCII characters on some versions of Mono for unknown reasons
 				preloaderPath = Path.GetDirectoryName(Path.GetFullPath(EnvVars.DOORSTOP_INVOKE_DLL_PATH));
@@ -76,7 +76,7 @@ namespace BepInEx.Preloader.Unity
 				// To prevent that, we have to use reflection and a separate startup class so that we can install required assembly resolvers before the main code
 				typeof(DoorstopEntrypoint).Assembly.GetType($"BepInEx.Preloader.Unity.{nameof(UnityPreloaderRunner)}")
 								  ?.GetMethod(nameof(UnityPreloaderRunner.PreloaderPreMain))
-								  ?.Invoke(null, new object[] { args });
+								  ?.Invoke(null, null);
 
 				AppDomain.CurrentDomain.AssemblyResolve -= ResolveCurrentDirectory;
 			}

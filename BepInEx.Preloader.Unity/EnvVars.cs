@@ -18,10 +18,16 @@ namespace BepInEx.Preloader
 		/// </summary>
 		public static string DOORSTOP_MANAGED_FOLDER_DIR { get; private set; }
 
+		/// <summary>
+		/// Full path to the game executable currently running.
+		/// </summary>
+		public static string DOORSTOP_PROCESS_PATH { get; private set; }
+
 		internal static void LoadVars()
 		{
 			DOORSTOP_INVOKE_DLL_PATH = Environment.GetEnvironmentVariable("DOORSTOP_INVOKE_DLL_PATH");
 			DOORSTOP_MANAGED_FOLDER_DIR = Environment.GetEnvironmentVariable("DOORSTOP_MANAGED_FOLDER_DIR");
+			DOORSTOP_PROCESS_PATH = Environment.GetEnvironmentVariable("DOORSTOP_PROCESS_PATH");
 		}
 	}
 }
