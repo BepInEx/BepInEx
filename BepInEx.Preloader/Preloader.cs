@@ -68,6 +68,7 @@ namespace BepInEx.Preloader
 				Logger.LogInfo($"Running under Unity v{GetUnityVersion()}");
 				Logger.LogInfo($"CLR runtime version: {Environment.Version}");
 				Logger.LogInfo($"Supports SRE: {Utility.CLRSupportsDynamicAssemblies}");
+				Logger.LogInfo($"System platform: {PlatformHelper.Current}");
 
 				if (runtimePatchException != null)
 					Logger.LogWarning($"Failed to apply runtime patches for Mono. See more info in the output log. Error message: {runtimePatchException.Message}");
@@ -236,7 +237,7 @@ namespace BepInEx.Preloader
 
 		public static string GetUnityVersion()
 		{
-			if (Utility.CurrentOs == Platform.Windows)
+			if (PlatformHelper.Is(Platform.Windows))
 				return FileVersionInfo.GetVersionInfo(Paths.ExecutablePath).FileVersion;
 
 			return $"Unknown ({(IsPostUnity2017 ? "post" : "pre")}-2017)";

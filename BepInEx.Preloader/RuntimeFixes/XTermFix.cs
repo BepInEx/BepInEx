@@ -13,7 +13,7 @@ namespace BepInEx.Preloader.RuntimeFixes
 	{
 		public static void Apply()
 		{
-			if (Utility.CurrentOs == Platform.Windows)
+			if (PlatformHelper.Is(Platform.Windows))
 				return;
 
 			if (typeof(Console).Assembly.GetType("System.ConsoleDriver") == null)
@@ -34,7 +34,7 @@ namespace BepInEx.Preloader.RuntimeFixes
 			// Because Doorstop does not support ARM at the moment, we can get away with just forcing x86 detour platform.
 			// TODO: Figure out a way to detect ARM on Unix without running Process.Start
 			DetourHelper.Native = new DetourNativeX86Platform();
-
+			
 			var harmony = new HarmonyLib.Harmony("com.bepinex.xtermfix");
 
 			harmony.Patch(AccessTools.Method("System.TermInfoReader:ReadHeader"),
