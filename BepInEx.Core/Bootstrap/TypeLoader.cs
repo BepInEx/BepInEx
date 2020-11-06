@@ -51,15 +51,22 @@ namespace BepInEx.Bootstrap
 	/// </summary>
 	public static class TypeLoader
 	{
+		/// <summary>
+		/// Default assembly resolved used by the <see cref="TypeLoader"/>
+		/// </summary>
 		public static readonly DefaultAssemblyResolver CecilResolver;
-		private static readonly ReaderParameters readerParameters;
+
+		/// <summary>
+		/// Default reader parameters used by <see cref="TypeLoader"/>
+		/// </summary>
+		public static readonly ReaderParameters ReaderParameters;
 
 		public static HashSet<string> SearchDirectories = new HashSet<string>();
 
 		static TypeLoader()
 		{
 			CecilResolver = new DefaultAssemblyResolver();
-			readerParameters = new ReaderParameters { AssemblyResolver = CecilResolver };
+			ReaderParameters = new ReaderParameters { AssemblyResolver = CecilResolver };
 
 			CecilResolver.ResolveFailure += CecilResolveOnFailure;
 		}
@@ -68,13 +75,13 @@ namespace BepInEx.Bootstrap
 		{
 			var name = new AssemblyName(reference.FullName);
 
-			if (Utility.TryResolveDllAssembly(name, Paths.BepInExAssemblyDirectory, readerParameters, out var assembly) ||
-				Utility.TryResolveDllAssembly(name, Paths.PluginPath, readerParameters, out assembly))
+			if (Utility.TryResolveDllAssembly(name, Paths.BepInExAssemblyDirectory, ReaderParameters, out var assembly) ||
+				Utility.TryResolveDllAssembly(name, Paths.PluginPath, ReaderParameters, out assembly))
 				return assembly;
 
 			foreach (var dir in SearchDirectories)
 			{
-				if (Utility.TryResolveDllAssembly(name, Paths.BepInExAssemblyDirectory, readerParameters, out assembly))
+				if (Utility.TryResolveDllAssembly(name, Paths.BepInExAssemblyDirectory, ReaderParameters, out assembly))
 					return assembly;
 			}
 
@@ -113,7 +120,7 @@ namespace BepInEx.Bootstrap
 						}
 					}
 
-					var ass = AssemblyDefinition.ReadAssembly(dll, readerParameters);
+					var ass = AssemblyDefinition.ReadAssembly(dll, ReaderParameters);
 
 					Logger.LogDebug($"Examining '{dll}'");
 
