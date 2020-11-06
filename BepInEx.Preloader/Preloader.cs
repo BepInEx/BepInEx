@@ -84,7 +84,7 @@ namespace BepInEx.Preloader
 
 				AssemblyPatcher.AddPatchersFromDirectory(Paths.PatcherPluginPath);
 
-				Logger.LogInfo($"{AssemblyPatcher.PatcherPlugins.Count} patcher plugin(s) loaded");
+				Logger.LogInfo($"{AssemblyPatcher.PatcherPlugins.Count} patcher plugin{(AssemblyPatcher.PatcherPlugins.Count == 1 ? "" : "s")} loaded");
 
 				AssemblyPatcher.PatchAndLoad(Paths.ManagedPath);
 				AssemblyPatcher.DisposePatchers();

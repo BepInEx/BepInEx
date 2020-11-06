@@ -3,11 +3,52 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using BepInEx.Preloader.RuntimeFixes;
+using HarmonyXInterop;
 
 namespace BepInEx.Preloader
 {
 	internal static class PreloaderRunner
 	{
+		// This is a list of important assemblies in BepInEx core folder that should be force-loaded
+		// Some games can ship these assemblies in Managed folder, in which case assembly resolving bypasses our LocalResolve
+		// On the other hand, renaming these assemblies is not viable because 3rd party assemblies
+		// that we don't build (e.g. MonoMod, Harmony, many plugins) depend on them
+		// As such, we load them early so that the game uses our version instead
+		// These assemblies should be known to be rarely edited and are known to be shipped as-is with Unity assets
+		private static readonly string[] CriticalAssemblies =
+		{
+			"Mono.Cecil.dll",
+			"Mono.Cecil.Mdb.dll",
+			"Mono.Cecil.Pdb.dll",
+			"Mono.Cecil.Rocks.dll",
+		};
+
+		private static void LoadCriticalAssemblies()
+		{
+			foreach (string criticalAssembly in CriticalAssemblies)
+			{
+				try
+				{
+					Assembly.LoadFile(Path.Combine(Paths.BepInExAssemblyDirectory, criticalAssembly));
+				}
+				catch (Exception)
+				{
+					// Suppress error for now
+					// TODO: Should we crash here if load fails? Can't use logging at this point
+				}
+			}
+		}
+
+		// Do this in a separate method to not trigger cctor prematurely
+		private static void InitializeAssemblyResolvers()
+		{
+			// Need to initialize interop first because it installs its own special assembly resolver
+			HarmonyInterop.Initialize();
+			AppDomain.CurrentDomain.AssemblyResolve += LocalResolve;
+			// Remove temporary resolver early so it won't override local resolver
+			AppDomain.CurrentDomain.AssemblyResolve -= Entrypoint.ResolveCurrentDirectory;
+		}
+
 		public static void PreloaderPreMain()
 		{
 			PlatformUtils.SetPlatform();
@@ -15,8 +56,9 @@ namespace BepInEx.Preloader
 			string bepinPath = Utility.ParentDirectory(Path.GetFullPath(EnvVars.DOORSTOP_INVOKE_DLL_PATH), 2);
 
 			Paths.SetExecutablePath(EnvVars.DOORSTOP_PROCESS_PATH, bepinPath, EnvVars.DOORSTOP_MANAGED_FOLDER_DIR);
-			AppDomain.CurrentDomain.AssemblyResolve += LocalResolve;
 
+			LoadCriticalAssemblies();
+			InitializeAssemblyResolvers();
 			PreloaderMain();
 		}
 
@@ -38,8 +80,17 @@ namespace BepInEx.Preloader
 
 			// Use parse assembly name on managed side because native GetName() can fail on some locales
 			// if the game path has "exotic" characters
-			var foundAssembly = AppDomain.CurrentDomain.GetAssemblies()
-										 .FirstOrDefault(x => Utility.TryParseAssemblyName(x.FullName, out var name) && name.Name == assemblyName.Name);
+			var validAssemblies = AppDomain.CurrentDomain
+										 .GetAssemblies()
+										 .Select(a => new { assembly = a, name = Utility.TryParseAssemblyName(a.FullName, out var name) ? name : null })
+										 .Where(a => a.name != null && a.name.Name == assemblyName.Name)
+										 .OrderByDescending(a => a.name.Version)
+										 .ToList();
+
+			// First try to match by version, then just pick the best match (generally highest)
+			// This should mainly affect cases where the game itself loads some assembly (like Mono.Cecil) 
+			var foundMatch = validAssemblies.FirstOrDefault(a => a.name.Version == assemblyName.Version) ?? validAssemblies.FirstOrDefault();
+			var foundAssembly = foundMatch?.assembly;
 
 			if (foundAssembly != null)
 				return foundAssembly;
@@ -82,16 +133,18 @@ namespace BepInEx.Preloader
 				typeof(Entrypoint).Assembly.GetType($"BepInEx.Preloader.{nameof(PreloaderRunner)}")
 								  ?.GetMethod(nameof(PreloaderRunner.PreloaderPreMain))
 								  ?.Invoke(null, null);
-
-				AppDomain.CurrentDomain.AssemblyResolve -= ResolveCurrentDirectory;
 			}
 			catch (Exception ex)
 			{
 				File.WriteAllText(silentExceptionLog, ex.ToString());
 			}
+			finally
+			{
+				AppDomain.CurrentDomain.AssemblyResolve -= ResolveCurrentDirectory;
+			}
 		}
 
-		private static Assembly ResolveCurrentDirectory(object sender, ResolveEventArgs args)
+		internal static Assembly ResolveCurrentDirectory(object sender, ResolveEventArgs args)
 		{
 			// Can't use Utils here because it's not yet resolved
 			var name = new AssemblyName(args.Name);

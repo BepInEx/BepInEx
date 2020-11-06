@@ -40,7 +40,7 @@ namespace BepInEx.Logging
 			HarmonyLogger.MessageReceived -= HandleHarmonyMessage;
 		}
 
-		public string SourceName { get; } = "Harmony";
+		public string SourceName { get; } = "HarmonyX";
 		public event EventHandler<LogEventArgs> LogEvent;
 	}
 }
