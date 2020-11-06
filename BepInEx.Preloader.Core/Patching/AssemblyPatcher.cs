@@ -31,6 +31,12 @@ namespace BepInEx.Preloader.Core
 		/// </summary>
 		public List<PatcherPlugin> PatcherPlugins { get; } = new List<PatcherPlugin>();
 
+
+		/// <summary>
+		/// A cloned version of <see cref="PatcherPlugins"/> to ensure that any foreach loops do not break when the collection gets modified.
+		/// </summary>
+		private IEnumerable<PatcherPlugin> PatcherPluginsSafe => PatcherPlugins.ToList();
+
 		/// <summary>
 		/// <para>Contains a list of assemblies that will be patched and loaded into the runtime.</para>
 		/// <para>The dictionary has the name of the file, without any directories. These are used by the dumping functionality, and as such, these are also required to be unique. They do not have to be exactly the same as the real filename, however they have to be mapped deterministically.</para>
@@ -267,7 +273,7 @@ namespace BepInEx.Preloader.Core
 			var assemblies = new Dictionary<string, AssemblyDefinition>(AssembliesToPatch, StringComparer.InvariantCultureIgnoreCase);
 
 			// Next, initialize all the patchers
-			foreach (var assemblyPatcher in PatcherPlugins)
+			foreach (var assemblyPatcher in PatcherPluginsSafe)
 			{
 				try
 				{
@@ -287,7 +293,7 @@ namespace BepInEx.Preloader.Core
 			// TODO: Maybe instead reload the assembly and repatch with other valid patchers?
 			var invalidAssemblies = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 
-			foreach (var assemblyPatcher in PatcherPlugins)
+			foreach (var assemblyPatcher in PatcherPluginsSafe)
 				foreach (string targetDll in assemblyPatcher.TargetDLLs())
 					if (AssembliesToPatch.TryGetValue(targetDll, out var assembly) && !invalidAssemblies.Contains(targetDll))
 					{
@@ -388,7 +394,7 @@ namespace BepInEx.Preloader.Core
 			}
 
 			// Finally, run all finalizers
-			foreach (var assemblyPatcher in PatcherPlugins)
+			foreach (var assemblyPatcher in PatcherPluginsSafe)
 			{
 				try
 				{
