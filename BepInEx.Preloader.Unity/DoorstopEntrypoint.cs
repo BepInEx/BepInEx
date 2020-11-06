@@ -8,6 +8,36 @@ namespace BepInEx.Preloader.Unity
 {
 	internal static class UnityPreloaderRunner
 	{
+		// This is a list of important assemblies in BepInEx core folder that should be force-loaded
+		// Some games can ship these assemblies in Managed folder, in which case assembly resolving bypasses our LocalResolve
+		// On the other hand, renaming these assemblies is not viable because 3rd party assemblies
+		// that we don't build (e.g. MonoMod, Harmony, many plugins) depend on them
+		// As such, we load them early so that the game uses our version instead
+		// These assemblies should be known to be rarely edited and are known to be shipped as-is with Unity assets
+		private static readonly string[] CriticalAssemblies =
+		{
+			"Mono.Cecil.dll",
+			"Mono.Cecil.Mdb.dll",
+			"Mono.Cecil.Pdb.dll",
+			"Mono.Cecil.Rocks.dll",
+		};
+
+		private static void LoadCriticalAssemblies()
+		{
+			foreach (string criticalAssembly in CriticalAssemblies)
+			{
+				try
+				{
+					Assembly.LoadFile(Path.Combine(Paths.BepInExAssemblyDirectory, criticalAssembly));
+				}
+				catch (Exception)
+				{
+					// Suppress error for now
+					// TODO: Should we crash here if load fails? Can't use logging at this point
+				}
+			}
+		}
+
 		public static void PreloaderPreMain()
 		{
 			string bepinPath = Utility.ParentDirectory(Path.GetFullPath(EnvVars.DOORSTOP_INVOKE_DLL_PATH), 2);
@@ -17,6 +47,7 @@ namespace BepInEx.Preloader.Unity
 			// Remove temporary resolver early so it won't override local resolver
 			AppDomain.CurrentDomain.AssemblyResolve -= DoorstopEntrypoint.ResolveCurrentDirectory;
 
+			LoadCriticalAssemblies();
 			PreloaderMain();
 		}
 
