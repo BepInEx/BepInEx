@@ -118,7 +118,7 @@ namespace BepInEx.Configuration
 						continue;
 					}
 
-					string[] split = line.Split('='); //actual config line
+					string[] split = line.Split(new[] { '=' }, 2); //actual config line
 					if (split.Length != 2)
 						continue; //empty/invalid line
 
