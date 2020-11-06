@@ -38,8 +38,18 @@ namespace BepInEx.Preloader.Unity
 
 			// Use parse assembly name on managed side because native GetName() can fail on some locales
 			// if the game path has "exotic" characters
-			var foundAssembly = AppDomain.CurrentDomain.GetAssemblies()
-										 .FirstOrDefault(x => Utility.TryParseAssemblyName(x.FullName, out var name) && name.Name == assemblyName.Name);
+
+			var validAssemblies = AppDomain.CurrentDomain
+										   .GetAssemblies()
+										   .Select(a => new { assembly = a, name = Utility.TryParseAssemblyName(a.FullName, out var name) ? name : null })
+										   .Where(a => a.name != null && a.name.Name == assemblyName.Name)
+										   .OrderByDescending(a => a.name.Version)
+										   .ToList();
+
+			// First try to match by version, then just pick the best match (generally highest)
+			// This should mainly affect cases where the game itself loads some assembly (like Mono.Cecil) 
+			var foundMatch = validAssemblies.FirstOrDefault(a => a.name.Version == assemblyName.Version) ?? validAssemblies.FirstOrDefault();
+			var foundAssembly = foundMatch?.assembly;
 
 			if (foundAssembly != null)
 				return foundAssembly;
