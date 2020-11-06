@@ -19,8 +19,15 @@ namespace BepInEx.Bootstrap
 
 		private bool _initialized = false;
 
+		/// <summary>
+		/// List of all <see cref="PluginInfo"/> instances loaded via the chainloader.
+		/// </summary>
 		public Dictionary<string, PluginInfo> Plugins { get; } = new Dictionary<string, PluginInfo>();
 
+		/// <summary>
+		/// Collection of error chainloader messages that occured during plugin loading.
+		/// Contains information about what certain plugins were not loaded.
+		/// </summary>
 		public List<string> DependencyErrors { get; } = new List<string>();
 
 		public virtual void Initialize(string gameExePath = null)
@@ -252,6 +259,12 @@ namespace BepInEx.Bootstrap
 
 		private static Regex allowedGuidRegex { get; } = new Regex(@"^[a-zA-Z0-9\._\-]+$");
 
+		/// <summary>
+		/// Analyzes the given type definition and attempts to convert it to a valid <see cref="PluginInfo"/>
+		/// </summary>
+		/// <param name="type">Type definition to analyze.</param>
+		/// <param name="assemblyLocation">The filepath of the assembly, to keep as metadata.</param>
+		/// <returns>If the type represent a valid plugin, returns a <see cref="PluginInfo"/> instance. Otherwise, return null.</returns>
 		public static PluginInfo ToPluginInfo(TypeDefinition type, string assemblyLocation)
 		{
 			if (type.IsInterface || type.IsAbstract)

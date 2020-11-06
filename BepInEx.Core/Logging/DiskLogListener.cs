@@ -10,12 +10,27 @@ namespace BepInEx.Logging
 	/// </summary>
 	public class DiskLogListener : ILogListener
 	{
+		/// <summary>
+		/// Log levels to display.
+		/// </summary>
 		public LogLevel DisplayedLogLevel { get; set; }
 
+		/// <summary>
+		/// Writer for the disk log.
+		/// </summary>
 		public TextWriter LogWriter { get; protected set; }
 
+		/// <summary>
+		/// Timer for flushing the logs to a file.
+		/// </summary>
 		public Timer FlushTimer { get; protected set; }
 
+		/// <summary>
+		/// Creates a new disk log listener.
+		/// </summary>
+		/// <param name="localPath">Path to the log.</param>
+		/// <param name="displayedLogLevel">Log levels to display.</param>
+		/// <param name="appendLog">Whether to append logs to an already existing log file.</param>
 		public DiskLogListener(string localPath, LogLevel displayedLogLevel = LogLevel.Info, bool appendLog = false)
 		{
 			DisplayedLogLevel = displayedLogLevel;
@@ -46,6 +61,7 @@ namespace BepInEx.Logging
 
 		public static HashSet<string> BlacklistedSources = new HashSet<string>();
 
+		/// <inheritdoc />
 		public void LogEvent(object sender, LogEventArgs eventArgs)
 		{
 			if (BlacklistedSources.Contains(eventArgs.Source.SourceName))
@@ -57,6 +73,7 @@ namespace BepInEx.Logging
 			LogWriter.WriteLine(eventArgs.ToString());
 		}
 
+		/// <inheritdoc />
 		public void Dispose()
 		{
 			FlushTimer?.Dispose();

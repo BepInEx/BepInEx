@@ -8,6 +8,7 @@ namespace BepInEx.Logging
 	/// </summary>
 	public class ConsoleLogListener : ILogListener
 	{
+		/// <inheritdoc />
 		public void LogEvent(object sender, LogEventArgs eventArgs)
 		{
 			if ((eventArgs.Level & ConfigConsoleDisplayedLevel.Value) == 0)
@@ -18,9 +19,10 @@ namespace BepInEx.Logging
 			ConsoleManager.SetConsoleColor(ConsoleColor.Gray);
 		}
 
+		/// <inheritdoc />
 		public void Dispose() { }
 
-		public static readonly ConfigEntry<LogLevel> ConfigConsoleDisplayedLevel = ConfigFile.CoreConfig.Bind(
+		protected static readonly ConfigEntry<LogLevel> ConfigConsoleDisplayedLevel = ConfigFile.CoreConfig.Bind(
 			"Logging.Console", "LogLevels",
 			LogLevel.Fatal | LogLevel.Error | LogLevel.Warning | LogLevel.Message | LogLevel.Info,
 			"Only displays the specified log levels in the console output.");

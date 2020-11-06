@@ -6,7 +6,7 @@ using HarmonyLib;
 
 namespace BepInEx.Preloader.RuntimeFixes
 {
-	internal static class ConsoleSetOutFix
+	public static class ConsoleSetOutFix
 	{
 		private static LoggedTextWriter loggedTextWriter;
 		internal static ManualLogSource ConsoleLogSource = Logger.CreateLogSource("Console");

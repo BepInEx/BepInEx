@@ -35,6 +35,7 @@ namespace BepInEx.Unity.Logging
 				Logger.LogError("Unable to start Unity log writer");
 		}
 
+		/// <inheritdoc />
 		public void LogEvent(object sender, LogEventArgs eventArgs)
 		{
 			if (eventArgs.Source is UnityLogSource)
@@ -45,9 +46,10 @@ namespace BepInEx.Unity.Logging
 				WriteStringToUnityLog?.Invoke(eventArgs.ToStringLine());
 		}
 
+		/// <inheritdoc />
 		public void Dispose() { }
 
-		private ConfigEntry<bool> LogConsoleToUnity = ConfigFile.CoreConfig.Bind("Logging",
+		private readonly ConfigEntry<bool> LogConsoleToUnity = ConfigFile.CoreConfig.Bind("Logging",
 			"LogConsoleToUnityLog", false,
 			new StringBuilder()
 				.AppendLine("If enabled, writes Standard Output messages to Unity log")

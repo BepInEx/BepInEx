@@ -4,12 +4,18 @@ using System.Collections.Generic;
 namespace BepInEx.Logging
 {
 	/// <summary>
-	/// A static <see cref="BaseLogger"/> instance.
+	/// Handles pub-sub event marshalling across all log listeners and sources.
 	/// </summary>
 	public static class Logger
 	{
+		/// <summary>
+		/// Collection of all log listeners that receive log events.
+		/// </summary>
 		public static ICollection<ILogListener> Listeners { get; } = new List<ILogListener>();
 
+		/// <summary>
+		/// Collection of all log source that output log events.
+		/// </summary>
 		public static ICollection<ILogSource> Sources { get; } = new LogSourceCollection();
 
 		private static readonly ManualLogSource InternalLogSource = CreateLogSource("BepInEx");
@@ -23,10 +29,10 @@ namespace BepInEx.Logging
 		}
 
 		/// <summary>
-		/// Logs an entry to the current logger instance.
+		/// Logs an entry to the internal logger instance.
 		/// </summary>
 		/// <param name="level">The level of the entry.</param>
-		/// <param name="entry">The textual value of the entry.</param>
+		/// <param name="data">The data of the entry.</param>
 		internal static void Log(LogLevel level, object data)
 		{
 			InternalLogSource.Log(level, data);
@@ -39,6 +45,11 @@ namespace BepInEx.Logging
 		internal static void LogInfo(object data) => Log(LogLevel.Info, data);
 		internal static void LogDebug(object data) => Log(LogLevel.Debug, data);
 
+		/// <summary>
+		/// Creates a new log source with a name and attaches it to <see cref="Sources"/>.
+		/// </summary>
+		/// <param name="sourceName">Name of the log source to create.</param>
+		/// <returns>An instance of <see cref="ManualLogSource"/> that allows to write logs.</returns>
 		public static ManualLogSource CreateLogSource(string sourceName)
 		{
 			var source = new ManualLogSource(sourceName);

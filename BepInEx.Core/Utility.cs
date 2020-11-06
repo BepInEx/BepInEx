@@ -119,6 +119,14 @@ namespace BepInEx
 			return self == null || self.All(Char.IsWhiteSpace);
 		}
 
+		/// <summary>
+		/// Sorts a given dependency graph using a direct toposort, reporting possible cyclic dependencies.
+		/// </summary>
+		/// <param name="nodes">Nodes to sort</param>
+		/// <param name="dependencySelector">Function that maps a node to a collection of its dependencies.</param>
+		/// <typeparam name="TNode">Type of the node in a dependency graph.</typeparam>
+		/// <returns>Collection of nodes sorted in the order of least dependencies to the most.</returns>
+		/// <exception cref="Exception">Thrown when a cyclic dependency occurs.</exception>
 		public static IEnumerable<TNode> TopologicalSort<TNode>(IEnumerable<TNode> nodes, Func<TNode, IEnumerable<TNode>> dependencySelector)
 		{
 			List<TNode> sorted_list = new List<TNode>();
@@ -215,6 +223,12 @@ namespace BepInEx
 			return false;
 		}
 
+		/// <summary>
+		/// Checks whether a given cecil type definition is a subtype of a provided type.
+		/// </summary>
+		/// <param name="self">Cecil type definition</param>
+		/// <param name="td">Type to check against</param>
+		/// <returns>Whether the given cecil type is a subtype of the type.</returns>
 		public static bool IsSubtypeOf(this TypeDefinition self, Type td)
 		{
 			if (self.FullName == td.FullName)
@@ -239,6 +253,7 @@ namespace BepInEx
 		/// </summary>
 		/// <param name="assemblyName">Name of the assembly, of the type <see cref="AssemblyName" />.</param>
 		/// <param name="directory">Directory to search the assembly from.</param>
+		/// <param name="readerParameters">Reader parameters that contain possible custom assembly resolver.</param>
 		/// <param name="assembly">The loaded assembly.</param>
 		/// <returns>True, if the assembly was found and loaded. Otherwise, false.</returns>
 		public static bool TryResolveDllAssembly(AssemblyName assemblyName, string directory, ReaderParameters readerParameters, out AssemblyDefinition assembly)

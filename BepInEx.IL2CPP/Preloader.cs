@@ -21,7 +21,7 @@ namespace BepInEx.IL2CPP
 		{
 			try
 			{
-				PreloaderLog = new PreloaderConsoleListener(true);
+				PreloaderLog = new PreloaderConsoleListener();
 				Logger.Listeners.Add(PreloaderLog);
 
 
