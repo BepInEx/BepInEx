@@ -268,19 +268,44 @@ namespace BepInEx.Preloader.Core
 			var assemblies = new Dictionary<string, AssemblyDefinition>(AssembliesToPatch, StringComparer.InvariantCultureIgnoreCase);
 
 			// Next, initialize all the patchers
-			foreach (var assemblyPatcher1 in PatcherPlugins)
-				assemblyPatcher1.Initializer?.Invoke();
+			foreach (var assemblyPatcher in PatcherPlugins)
+			{
+				try
+				{
+					assemblyPatcher.Initializer?.Invoke();
+				}
+				catch (Exception ex)
+				{
+					Logger.LogError($"Failed to run initializer of {assemblyPatcher.TypeName}: {ex}");
+				}
+			}
 
 			// Then, perform the actual patching
+
 			var patchedAssemblies = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 			var resolvedAssemblies = new Dictionary<string, string>();
+
+			// TODO: Maybe instead reload the assembly and repatch with other valid patchers?
+			var invalidAssemblies = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+
 			foreach (var assemblyPatcher in PatcherPlugins)
 				foreach (string targetDll in assemblyPatcher.TargetDLLs())
-					if (AssembliesToPatch.TryGetValue(targetDll, out var assembly))
+					if (AssembliesToPatch.TryGetValue(targetDll, out var assembly) && !invalidAssemblies.Contains(targetDll))
 					{
 						Logger.LogInfo($"Patching [{assembly.Name.Name}] with [{assemblyPatcher.TypeName}]");
 
-						assemblyPatcher.Patcher?.Invoke(ref assembly);
+						try
+						{
+							assemblyPatcher.Patcher?.Invoke(ref assembly);
+						}
+						catch (Exception e)
+						{
+							Logger.LogError($"Failed to run [{assemblyPatcher.TypeName}] when patching [{assembly.Name.Name}]. This assembly will not be patched. Error: {e}");
+							patchedAssemblies.Remove(targetDll);
+							invalidAssemblies.Add(targetDll);
+							continue;
+						}
+
 						AssembliesToPatch[targetDll] = assembly;
 						patchedAssemblies.Add(targetDll);
 
@@ -364,8 +389,17 @@ namespace BepInEx.Preloader.Core
 			}
 
 			// Finally, run all finalizers
-			foreach (var assemblyPatcher2 in PatcherPlugins)
-				assemblyPatcher2.Finalizer?.Invoke();
+			foreach (var assemblyPatcher in PatcherPlugins)
+			{
+				try
+				{
+					assemblyPatcher.Finalizer?.Invoke();
+				}
+				catch (Exception ex)
+				{
+					Logger.LogError($"Failed to run finalizer of {assemblyPatcher.TypeName}: {ex}");
+				}
+			}
 		}
 
 		#region Config
