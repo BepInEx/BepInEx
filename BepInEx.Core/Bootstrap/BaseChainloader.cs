@@ -154,7 +154,7 @@ namespace BepInEx.Bootstrap
 			{
 				var plugins = DiscoverPlugins();
 
-				Logger.LogInfo($"{plugins.Count} plugins to load");
+				Logger.LogInfo($"{plugins.Count} plugin{(plugins.Count == 1 ? "" : "s")} to load");
 
 				ModifyLoadOrder(plugins);
 

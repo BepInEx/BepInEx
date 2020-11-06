@@ -160,7 +160,7 @@ namespace BepInEx.Preloader.Core
 
 				var assName = ass.GetName();
 				Logger.Log(patcherCollection.Any() ? LogLevel.Info : LogLevel.Debug,
-					$"Loaded {patcherCollection.Count} patcher method{(patcherCollection.Count > 1 ? "s" : "")} from {assName.Name}, Version={assName.Version}");
+					$"Loaded {patcherCollection.Count} patcher method{(patcherCollection.Count == 1 ? "" : "s")} from [{assName.Name} {assName.Version}]");
 			}
 
 			foreach (KeyValuePair<string, PatcherPlugin> patcher in sortedPatchers)

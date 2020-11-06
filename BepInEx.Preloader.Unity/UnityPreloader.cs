@@ -88,7 +88,7 @@ namespace BepInEx.Preloader.Unity
 
 					assemblyPatcher.AddPatchersFromDirectory(Paths.PatcherPluginPath);
 
-					Log.LogInfo($"{assemblyPatcher.PatcherPlugins.Count} patcher plugin(s) loaded");
+					Log.LogInfo($"{assemblyPatcher.PatcherPlugins.Count} patcher plugin{(assemblyPatcher.PatcherPlugins.Count == 1 ? "" : "s")} loaded");
 
 					assemblyPatcher.LoadAssemblyDirectory(ManagedPath);
 
