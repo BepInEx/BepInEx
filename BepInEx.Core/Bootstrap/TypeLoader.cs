@@ -73,7 +73,8 @@ namespace BepInEx.Bootstrap
 
 		public static AssemblyDefinition CecilResolveOnFailure(object sender, AssemblyNameReference reference)
 		{
-			var name = new AssemblyName(reference.FullName);
+			if (!Utility.TryParseAssemblyName(reference.FullName, out var name))
+				return null;
 
 			if (Utility.TryResolveDllAssembly(name, Paths.BepInExAssemblyDirectory, ReaderParameters, out var assembly) ||
 				Utility.TryResolveDllAssembly(name, Paths.PluginPath, ReaderParameters, out assembly))
@@ -81,7 +82,7 @@ namespace BepInEx.Bootstrap
 
 			foreach (var dir in SearchDirectories)
 			{
-				if (Utility.TryResolveDllAssembly(name, Paths.BepInExAssemblyDirectory, ReaderParameters, out assembly))
+				if (Utility.TryResolveDllAssembly(name, dir, ReaderParameters, out assembly))
 					return assembly;
 			}
 

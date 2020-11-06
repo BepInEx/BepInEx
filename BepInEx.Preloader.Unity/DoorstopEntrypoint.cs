@@ -91,6 +91,7 @@ namespace BepInEx.Preloader.Unity
 
 		private static Assembly ResolveCurrentDirectory(object sender, ResolveEventArgs args)
 		{
+			// Can't use Utils here because it's not yet resolved
 			var name = new AssemblyName(args.Name);
 
 			try
