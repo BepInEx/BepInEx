@@ -3,6 +3,7 @@ using BepInEx.Logging;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using BepInEx.Bootstrap;
 using BepInEx.Preloader.Core.Logging;
@@ -33,6 +34,20 @@ namespace BepInEx.Unity.Bootstrap
 		private string _consoleTitle;
 		protected override string ConsoleTitle => _consoleTitle;
 
+
+		// In some rare cases calling Application.unityVersion seems to cause MissingMethodException
+		// if a preloader patch applies Harmony patch to Chainloader.Initialize.
+		// The issue could be related to BepInEx being compiled against Unity 5.6 version of UnityEngine.dll,
+		// but the issue is apparently present with both official Harmony and HarmonyX
+		// We specifically prevent inlining to prevent early resolving
+		// TODO: Figure out better version obtaining mechanism (e.g. from globalmanagers)
+		private static string UnityVersion
+		{
+			[MethodImpl(MethodImplOptions.NoInlining)]
+			get => Application.unityVersion;
+		}
+
+
 		public override void Initialize(string gameExePath = null)
 		{
 			UnityTomlTypeConverters.AddUnityEngineConverters();
@@ -56,7 +71,7 @@ namespace BepInEx.Unity.Bootstrap
 
 			if (Utility.CurrentPlatform != Platform.Windows)
 			{
-				Logger.LogInfo($"Detected Unity version: v{Application.unityVersion}");
+				Logger.LogInfo($"Detected Unity version: v{UnityVersion}");
 			}
 
 
