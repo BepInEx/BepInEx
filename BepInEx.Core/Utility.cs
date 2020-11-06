@@ -308,6 +308,26 @@ namespace BepInEx
 
 			return builder.ToString();
 		}
+		
+		/// <summary>
+		/// Try to parse given string as an assembly name
+		/// </summary>
+		/// <param name="fullName">Fully qualified assembly name</param>
+		/// <param name="assemblyName">Resulting <see cref="AssemblyName"/> instance</param>
+		/// <returns><c>true</c>, if parsing was successful, otherwise <c>false</c></returns>
+		public static bool TryParseAssemblyName(string fullName, out AssemblyName assemblyName)
+		{
+			try
+			{
+				assemblyName = new AssemblyName(fullName);
+				return true;
+			}
+			catch (Exception)
+			{
+				assemblyName = null;
+				return false;
+			}
+		}
 
 		public static Platform CurrentPlatform { get; private set; } = CheckPlatform();
 

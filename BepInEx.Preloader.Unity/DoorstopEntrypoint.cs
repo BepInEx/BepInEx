@@ -31,12 +31,13 @@ namespace BepInEx.Preloader.Unity
 
 		private static Assembly LocalResolve(object sender, ResolveEventArgs args)
 		{
-			var assemblyName = new AssemblyName(args.Name);
+			if (!Utility.TryParseAssemblyName(args.Name, out var assemblyName))
+				return null;
 
 			// Use parse assembly name on managed side because native GetName() can fail on some locales
 			// if the game path has "exotic" characters
 			var foundAssembly = AppDomain.CurrentDomain.GetAssemblies()
-										 .FirstOrDefault(x => new AssemblyName(x.FullName).Name == assemblyName.Name);
+										 .FirstOrDefault(x => Utility.TryParseAssemblyName(x.FullName, out var name) && name.Name == assemblyName.Name);
 
 			if (foundAssembly != null)
 				return foundAssembly;
