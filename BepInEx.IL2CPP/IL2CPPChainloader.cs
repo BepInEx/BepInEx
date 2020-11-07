@@ -41,7 +41,6 @@ namespace BepInEx.IL2CPP
 
 		public override unsafe void Initialize(string gameExePath = null)
 		{
-			Logger.Sources.Add(new HarmonyLogSource());
 			PatchManager.ResolvePatcher += IL2CPPDetourMethodPatcher.TryResolve;
 
 			base.Initialize(gameExePath);
