@@ -39,6 +39,10 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="0Harmony, Version=2.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Users\Richard\.nuget\packages\harmonyx\2.1.0-beta.8\lib\net35\0Harmony.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
@@ -47,7 +51,20 @@
     <Compile Include="Configuration\AcceptableValueList.cs" />
     <Compile Include="Configuration\AcceptableValueRange.cs" />
     <Compile Include="Configuration\ConfigEntryBase.cs" />
-    <Compile Include="ConsoleManager.cs" />
+    <Compile Include="Console\ConsoleManager.cs" />
+    <Compile Include="Console\IConsoleDriver.cs" />
+    <Compile Include="Console\SafeConsole.cs" />
+    <Compile Include="Console\Unix\ConsoleWriter.cs" />
+    <Compile Include="Console\Unix\LinuxConsoleDriver.cs" />
+    <Compile Include="Console\Unix\TtyHandler.cs" />
+    <Compile Include="Console\Unix\UnixStream.cs" />
+    <Compile Include="Console\Unix\UnixStreamHelper.cs" />
+    <Compile Include="Console\Windows\ConsoleEncoding\ConsoleEncoding.Buffers.cs" />
+    <Compile Include="Console\Windows\ConsoleEncoding\ConsoleEncoding.cs" />
+    <Compile Include="Console\Windows\ConsoleEncoding\ConsoleEncoding.PInvoke.cs" />
+    <Compile Include="Console\Windows\ConsoleWindow.cs" />
+    <Compile Include="Console\Windows\Kon.cs" />
+    <Compile Include="Console\Windows\WindowsConsoleDriver.cs" />
     <Compile Include="Contract\PluginInfo.cs" />
     <Compile Include="Configuration\ConfigDefinition.cs" />
     <Compile Include="Configuration\ConfigDescription.cs" />
@@ -57,13 +74,8 @@
     <Compile Include="Configuration\TomlTypeConverter.cs" />
     <Compile Include="Configuration\TypeConverter.cs" />
     <Compile Include="Contract\Attributes.cs" />
-    <Compile Include="ConsoleUtil\ConsoleEncoding\ConsoleEncoding.Buffers.cs" />
-    <Compile Include="ConsoleUtil\ConsoleEncoding\ConsoleEncoding.cs" />
-    <Compile Include="ConsoleUtil\ConsoleEncoding\ConsoleEncoding.PInvoke.cs" />
-    <Compile Include="ConsoleUtil\ConsoleWindow.cs" />
-    <Compile Include="ConsoleUtil\Kon.cs" />
-    <Compile Include="ConsoleUtil\SafeConsole.cs" />
     <Compile Include="Logging\DiskLogListener.cs" />
+    <Compile Include="Logging\HarmonyLogSource.cs" />
     <Compile Include="Logging\LogEventArgs.cs" />
     <Compile Include="Logging\Logger.cs" />
     <Compile Include="Logging\LogLevel.cs" />
@@ -79,9 +91,16 @@
     <Compile Include="Utility.cs" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="HarmonyX">
+      <Version>2.1.0-beta.8</Version>
+    </PackageReference>
     <PackageReference Include="Mono.Cecil">
       <Version>0.10.4</Version>
     </PackageReference>
+    <PackageReference Include="MonoMod.Utils">
+      <Version>20.11.5.1</Version>
+    </PackageReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

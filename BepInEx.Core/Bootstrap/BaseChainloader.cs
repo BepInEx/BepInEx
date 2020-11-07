@@ -15,12 +15,19 @@ namespace BepInEx.Bootstrap
 	{
 		#region Contract
 
-		protected virtual string ConsoleTitle => $"BepInEx {typeof(Paths).Assembly.GetName().Version} - {Process.GetCurrentProcess().ProcessName}";
+		protected virtual string ConsoleTitle => $"BepInEx {typeof(Paths).Assembly.GetName().Version} - {Paths.ProcessName}";
 
 		private bool _initialized = false;
 
+		/// <summary>
+		/// List of all <see cref="PluginInfo"/> instances loaded via the chainloader.
+		/// </summary>
 		public Dictionary<string, PluginInfo> Plugins { get; } = new Dictionary<string, PluginInfo>();
 
+		/// <summary>
+		/// Collection of error chainloader messages that occured during plugin loading.
+		/// Contains information about what certain plugins were not loaded.
+		/// </summary>
 		public List<string> DependencyErrors { get; } = new List<string>();
 
 		public virtual void Initialize(string gameExePath = null)
@@ -67,6 +74,9 @@ namespace BepInEx.Bootstrap
 
 			if (!TraceLogSource.IsListening)
 				Logger.Sources.Add(TraceLogSource.CreateSource());
+
+			if (!Logger.Sources.Any(x => x is HarmonyLogSource))
+				Logger.Sources.Add(new HarmonyLogSource());
 		}
 
 		protected virtual IList<PluginInfo> DiscoverPlugins()
@@ -84,16 +94,14 @@ namespace BepInEx.Bootstrap
 
 			foreach (var pluginInfoGroup in plugins.GroupBy(info => info.Metadata.GUID))
 			{
-				var alreadyLoaded = false;
+				PluginInfo loadedVersion = null;
 				foreach (var pluginInfo in pluginInfoGroup.OrderByDescending(x => x.Metadata.Version))
 				{
-					if (alreadyLoaded)
+					if (loadedVersion != null)
 					{
-						Logger.LogWarning($"Skipping because a newer version exists [{pluginInfo.Metadata.Name} {pluginInfo.Metadata.Version}]");
+						Logger.LogWarning($"Skipping [{pluginInfo}] because a newer version exists ({loadedVersion})");
 						continue;
 					}
-
-					alreadyLoaded = true;
 
 					// Perform checks that will prevent loading plugins in this run
 					var filters = pluginInfo.Processes.ToList();
@@ -101,10 +109,11 @@ namespace BepInEx.Bootstrap
 
 					if (invalidProcessName)
 					{
-						Logger.LogWarning($"Skipping because of process filters [{pluginInfo.Metadata.Name} {pluginInfo.Metadata.Version}]");
+						Logger.LogWarning($"Skipping [{pluginInfo}] because of process filters ({string.Join(", ", pluginInfo.Processes.Select(p => p.ProcessName).ToArray())})");
 						continue;
 					}
 
+					loadedVersion = pluginInfo;
 					dependencyDict[pluginInfo.Metadata.GUID] = pluginInfo.Dependencies.Select(d => d.DependencyGUID);
 					pluginsByGuid[pluginInfo.Metadata.GUID] = pluginInfo;
 				}
@@ -118,13 +127,13 @@ namespace BepInEx.Bootstrap
 					dependencyDict.Remove(pluginInfo.Metadata.GUID);
 
 					var incompatiblePlugins = pluginInfo.Incompatibilities.Select(x => x.IncompatibilityGUID).Where(x => pluginsByGuid.ContainsKey(x)).ToArray();
-					string message = $@"Could not load [{pluginInfo.Metadata.Name}] because it is incompatible with: {string.Join(", ", incompatiblePlugins)}";
+					string message = $@"Could not load [{pluginInfo}] because it is incompatible with: {string.Join(", ", incompatiblePlugins)}";
 					DependencyErrors.Add(message);
 					Logger.LogError(message);
 				}
 				else if (PluginTargetsWrongBepin(pluginInfo))
 				{
-					string message = $@"Plugin [{pluginInfo.Metadata.Name}] targets a wrong version of BepInEx ({pluginInfo.TargettedBepInExVersion}) and might not work until you update";
+					string message = $@"Plugin [{pluginInfo}] targets a wrong version of BepInEx ({pluginInfo.TargettedBepInExVersion}) and might not work until you update";
 					DependencyErrors.Add(message);
 					Logger.LogWarning(message);
 				}
@@ -145,7 +154,7 @@ namespace BepInEx.Bootstrap
 			{
 				var plugins = DiscoverPlugins();
 
-				Logger.LogInfo($"{plugins.Count} plugins to load");
+				Logger.LogInfo($"{plugins.Count} plugin{(plugins.Count == 1 ? "" : "s")} to load");
 
 				var sortedPlugins = ModifyLoadOrder(plugins);
 
@@ -159,18 +168,21 @@ namespace BepInEx.Bootstrap
 					var missingDependencies = new List<BepInDependency>();
 					foreach (var dependency in plugin.Dependencies)
 					{
-						// If the depenency wasn't already processed, it's missing altogether
-						bool depenencyExists = processedPlugins.TryGetValue(dependency.DependencyGUID, out var pluginVersion);
-						if (!depenencyExists || pluginVersion < dependency.MinimumVersion)
+						bool IsHardDependency(BepInDependency dep)
+							=> (dep.Flags & BepInDependency.DependencyFlags.HardDependency) != 0;
+
+						// If the dependency wasn't already processed, it's missing altogether
+						bool dependencyExists = processedPlugins.TryGetValue(dependency.DependencyGUID, out var pluginVersion);
+						if (!dependencyExists || pluginVersion < dependency.MinimumVersion)
 						{
 							// If the dependency is hard, collect it into a list to show
-							if ((dependency.Flags & BepInDependency.DependencyFlags.HardDependency) != 0)
+							if (IsHardDependency(dependency))
 								missingDependencies.Add(dependency);
 							continue;
 						}
 
-						// If the dependency is invalid (e.g. has missing depedencies), report that to the user
-						if (invalidPlugins.Contains(dependency.DependencyGUID))
+						// If the dependency is a hard and is invalid (e.g. has missing dependencies), report that to the user
+						if (invalidPlugins.Contains(dependency.DependencyGUID) && IsHardDependency(dependency))
 						{
 							dependsOnInvalidPlugin = true;
 							break;
@@ -181,7 +193,7 @@ namespace BepInEx.Bootstrap
 
 					if (dependsOnInvalidPlugin)
 					{
-						string message = $"Skipping [{plugin.Metadata.Name}] because it has a dependency that was not loaded. See previous errors for details.";
+						string message = $"Skipping [{plugin}] because it has a dependency that was not loaded. See previous errors for details.";
 						DependencyErrors.Add(message);
 						Logger.LogWarning(message);
 						continue;
@@ -191,7 +203,7 @@ namespace BepInEx.Bootstrap
 					{
 						bool IsEmptyVersion(Version v) => v.Major == 0 && v.Minor == 0 && v.Build <= 0 && v.Revision <= 0;
 
-						string message = $@"Could not load [{plugin.Metadata.Name}] because it has missing dependencies: {
+						string message = $@"Could not load [{plugin}] because it has missing dependencies: {
 								string.Join(", ", missingDependencies.Select(s => IsEmptyVersion(s.MinimumVersion) ? s.DependencyGUID : $"{s.DependencyGUID} (v{s.MinimumVersion} or newer)").ToArray())
 							}";
 						DependencyErrors.Add(message);
@@ -203,7 +215,7 @@ namespace BepInEx.Bootstrap
 
 					try
 					{
-						Logger.LogInfo($"Loading [{plugin.Metadata.Name} {plugin.Metadata.Version}]");
+						Logger.LogInfo($"Loading [{plugin}]");
 
 						if (!loadedAssemblies.TryGetValue(plugin.Location, out var ass))
 							loadedAssemblies[plugin.Location] = ass = Assembly.LoadFile(plugin.Location);
@@ -218,7 +230,7 @@ namespace BepInEx.Bootstrap
 						invalidPlugins.Add(plugin.Metadata.GUID);
 						Plugins.Remove(plugin.Metadata.GUID);
 
-						Logger.LogError($"Error loading [{plugin.Metadata.Name}] : {ex.Message}");
+						Logger.LogError($"Error loading [{plugin}] : {ex.Message}");
 						if (ex is ReflectionTypeLoadException re)
 							Logger.LogDebug(TypeLoader.TypeLoadExceptionToString(re));
 						else
@@ -228,6 +240,12 @@ namespace BepInEx.Bootstrap
 			}
 			catch (Exception ex)
 			{
+				try
+				{
+					ConsoleManager.CreateConsole();
+				}
+				catch { }
+
 				Logger.LogError("Error occurred starting the game");
 				Logger.LogDebug(ex);
 			}
@@ -241,6 +259,12 @@ namespace BepInEx.Bootstrap
 
 		private static Regex allowedGuidRegex { get; } = new Regex(@"^[a-zA-Z0-9\._\-]+$");
 
+		/// <summary>
+		/// Analyzes the given type definition and attempts to convert it to a valid <see cref="PluginInfo"/>
+		/// </summary>
+		/// <param name="type">Type definition to analyze.</param>
+		/// <param name="assemblyLocation">The filepath of the assembly, to keep as metadata.</param>
+		/// <returns>If the type represent a valid plugin, returns a <see cref="PluginInfo"/> instance. Otherwise, return null.</returns>
 		public static PluginInfo ToPluginInfo(TypeDefinition type, string assemblyLocation)
 		{
 			if (type.IsInterface || type.IsAbstract)
@@ -338,9 +362,9 @@ namespace BepInEx.Bootstrap
 			"Enables writing log messages to disk.");
 
 		private static readonly ConfigEntry<LogLevel> ConfigDiskConsoleDisplayedLevel = ConfigFile.CoreConfig.Bind(
-			"Logging.Disk", "DisplayedLogLevel",
-			LogLevel.Info,
-			"Only displays the specified log level and above in the console output.");
+			"Logging.Disk", "LogLevels",
+			LogLevel.Fatal | LogLevel.Error | LogLevel.Warning | LogLevel.Message | LogLevel.Info,
+			"Only displays the specified log levels in the disk log output.");
 
 		#endregion
 	}

@@ -8,23 +8,23 @@ namespace BepInEx.Logging
 	/// </summary>
 	public class ConsoleLogListener : ILogListener
 	{
+		/// <inheritdoc />
 		public void LogEvent(object sender, LogEventArgs eventArgs)
 		{
-			if (eventArgs.Level.GetHighestLevel() > ConfigConsoleDisplayedLevel.Value)
+			if ((eventArgs.Level & ConfigConsoleDisplayedLevel.Value) == 0)
 				return;
 
-			string log = $"[{eventArgs.Level,-7}:{((ILogSource)sender).SourceName,10}] {eventArgs.Data}\r\n";
-
 			ConsoleManager.SetConsoleColor(eventArgs.Level.GetConsoleColor());
-			Console.Write(log);
+			Console.Write(eventArgs.ToStringLine());
 			ConsoleManager.SetConsoleColor(ConsoleColor.Gray);
 		}
 
+		/// <inheritdoc />
 		public void Dispose() { }
 
-		private static readonly ConfigEntry<LogLevel> ConfigConsoleDisplayedLevel = ConfigFile.CoreConfig.Bind(
-			"Logging.Console","DisplayedLogLevel",
-			LogLevel.Info,
-			"Only displays the specified log level and above in the console output.");
+		protected static readonly ConfigEntry<LogLevel> ConfigConsoleDisplayedLevel = ConfigFile.CoreConfig.Bind(
+			"Logging.Console", "LogLevels",
+			LogLevel.Fatal | LogLevel.Error | LogLevel.Warning | LogLevel.Message | LogLevel.Info,
+			"Only displays the specified log levels in the console output.");
 	}
 }

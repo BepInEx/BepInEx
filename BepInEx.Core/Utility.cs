@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
 using Mono.Cecil;
+using MonoMod.Utils;
 
 namespace BepInEx
 {
@@ -14,27 +15,35 @@ namespace BepInEx
 	/// </summary>
 	public static class Utility
 	{
+		private static bool? sreEnabled;
+
 		/// <summary>
 		/// Whether current Common Language Runtime supports dynamic method generation using <see cref="System.Reflection.Emit"/> namespace.
 		/// </summary>
-		public static bool CLRSupportsDynamicAssemblies { get; }
+		public static bool CLRSupportsDynamicAssemblies => CheckSRE();
 
-		static Utility()
+		private static bool CheckSRE()
 		{
 			try
 			{
-				CLRSupportsDynamicAssemblies = true;
+				if (sreEnabled.HasValue)
+					return sreEnabled.Value;
+
 				// ReSharper disable once AssignNullToNotNullAttribute
-				var m = new CustomAttributeBuilder(null, new object[0]);
+				_ = new CustomAttributeBuilder(null, new object[0]);
 			}
 			catch (PlatformNotSupportedException)
 			{
-				CLRSupportsDynamicAssemblies = false;
+				sreEnabled = false;
+				return sreEnabled.Value;
 			}
 			catch (ArgumentNullException)
 			{
 				// Suppress ArgumentNullException
 			}
+
+			sreEnabled = true;
+			return sreEnabled.Value;
 		}
 
 		/// <summary>
@@ -64,6 +73,20 @@ namespace BepInEx
         /// <param name="parts">The multiple paths to combine together.</param>
         /// <returns>A combined path.</returns>
         public static string CombinePaths(params string[] parts) => parts.Aggregate(Path.Combine);
+
+		/// <summary>
+		/// Returns the parent directory of a path, optionally specifying the amount of levels.
+		/// </summary>
+		/// <param name="path">The path to get the parent directory of.</param>
+		/// <param name="levels">The amount of levels to traverse. Defaults to 1</param>
+		/// <returns>The parent directory.</returns>
+		public static string ParentDirectory(string path, int levels = 1)
+		{
+			for (int i = 0; i < levels; i++)
+				path = Path.GetDirectoryName(path);
+
+			return path;
+		}
 
 		/// <summary>
 		/// Tries to parse a bool, with a default value if unable to parse.
@@ -96,6 +119,14 @@ namespace BepInEx
 			return self == null || self.All(Char.IsWhiteSpace);
 		}
 
+		/// <summary>
+		/// Sorts a given dependency graph using a direct toposort, reporting possible cyclic dependencies.
+		/// </summary>
+		/// <param name="nodes">Nodes to sort</param>
+		/// <param name="dependencySelector">Function that maps a node to a collection of its dependencies.</param>
+		/// <typeparam name="TNode">Type of the node in a dependency graph.</typeparam>
+		/// <returns>Collection of nodes sorted in the order of least dependencies to the most.</returns>
+		/// <exception cref="Exception">Thrown when a cyclic dependency occurs.</exception>
 		public static IEnumerable<TNode> TopologicalSort<TNode>(IEnumerable<TNode> nodes, Func<TNode, IEnumerable<TNode>> dependencySelector)
 		{
 			List<TNode> sorted_list = new List<TNode>();
@@ -192,6 +223,12 @@ namespace BepInEx
 			return false;
 		}
 
+		/// <summary>
+		/// Checks whether a given cecil type definition is a subtype of a provided type.
+		/// </summary>
+		/// <param name="self">Cecil type definition</param>
+		/// <param name="td">Type to check against</param>
+		/// <returns>Whether the given cecil type is a subtype of the type.</returns>
 		public static bool IsSubtypeOf(this TypeDefinition self, Type td)
 		{
 			if (self.FullName == td.FullName)
@@ -216,6 +253,7 @@ namespace BepInEx
 		/// </summary>
 		/// <param name="assemblyName">Name of the assembly, of the type <see cref="AssemblyName" />.</param>
 		/// <param name="directory">Directory to search the assembly from.</param>
+		/// <param name="readerParameters">Reader parameters that contain possible custom assembly resolver.</param>
 		/// <param name="assembly">The loaded assembly.</param>
 		/// <returns>True, if the assembly was found and loaded. Otherwise, false.</returns>
 		public static bool TryResolveDllAssembly(AssemblyName assemblyName, string directory, ReaderParameters readerParameters, out AssemblyDefinition assembly)
@@ -269,6 +307,54 @@ namespace BepInEx
 				builder.AppendFormat("{0:x2}", b);
 
 			return builder.ToString();
+		}
+
+		/// <summary>
+		/// Try to parse given string as an assembly name
+		/// </summary>
+		/// <param name="fullName">Fully qualified assembly name</param>
+		/// <param name="assemblyName">Resulting <see cref="AssemblyName"/> instance</param>
+		/// <returns><c>true</c>, if parsing was successful, otherwise <c>false</c></returns>
+		/// <remarks>
+		/// On some versions of mono, using <see cref="Assembly.GetName()"/> fails because it runs on unmanaged side
+		/// which has problems with encoding.
+		/// Using <see cref="AssemblyName"/> solves this by doing parsing on managed side instead.
+		/// </remarks>
+		public static bool TryParseAssemblyName(string fullName, out AssemblyName assemblyName)
+		{
+			try
+			{
+				assemblyName = new AssemblyName(fullName);
+				return true;
+			}
+			catch (Exception)
+			{
+				assemblyName = null;
+				return false;
+			}
+		}
+
+		public static Platform CurrentPlatform { get; private set; } = CheckPlatform();
+
+		// Adapted from https://github.com/MonoMod/MonoMod.Common/blob/master/Utils/PlatformHelper.cs#L13
+		private static Platform CheckPlatform()
+		{
+			var pPlatform = typeof(Environment).GetProperty("Platform", BindingFlags.NonPublic | BindingFlags.Static);
+			string platId = pPlatform != null ? pPlatform.GetValue(null, new object[0]).ToString() : Environment.OSVersion.Platform.ToString();
+			platId = platId.ToLowerInvariant();
+
+			var cur = Platform.Unknown;
+			if (platId.Contains("win"))
+				cur = Platform.Windows;
+			else if (platId.Contains("mac") || platId.Contains("osx"))
+				cur = Platform.MacOS;
+			else if (platId.Contains("lin") || platId.Contains("unix"))
+				cur = Platform.Linux;
+
+			if (IntPtr.Size == 8)
+				cur |= Platform.Bits64;
+
+			return cur;
 		}
 	}
 }

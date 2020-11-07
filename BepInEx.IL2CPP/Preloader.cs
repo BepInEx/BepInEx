@@ -21,18 +21,20 @@ namespace BepInEx.IL2CPP
 		{
 			try
 			{
-				PreloaderLog = new PreloaderConsoleListener(true);
+				ConsoleManager.Initialize(false);
+
+				PreloaderLog = new PreloaderConsoleListener();
 				Logger.Listeners.Add(PreloaderLog);
 
 
 
-				if (ConsoleManager.ConfigConsoleEnabled.Value && !ConsoleManager.ConsoleActive)
+				if (ConsoleManager.ConfigConsoleEnabled.Value)
 				{
 					ConsoleManager.CreateConsole();
 					Logger.Listeners.Add(new ConsoleLogListener());
 				}
 
-				BasicLogInfo.PrintLogInfo(Log);
+				ChainloaderLogHelper.PrintLogInfo(Log);
 
 				Log.LogInfo($"Running under Unity v{FileVersionInfo.GetVersionInfo(Paths.ExecutablePath).FileVersion}");
 

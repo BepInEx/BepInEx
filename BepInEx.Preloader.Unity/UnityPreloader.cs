@@ -1,20 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using BepInEx.Bootstrap;
 using BepInEx.Configuration;
 using BepInEx.Core.Logging;
 using BepInEx.Logging;
 using BepInEx.Preloader.Core;
 using BepInEx.Preloader.Core.Logging;
-using BepInEx.Preloader.Core.RuntimeFixes;
 using BepInEx.Preloader.RuntimeFixes;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
-using MonoMod.RuntimeDetour;
+using MonoMod.Utils;
 using MethodAttributes = Mono.Cecil.MethodAttributes;
 
 namespace BepInEx.Preloader.Unity
@@ -39,44 +38,37 @@ namespace BepInEx.Preloader.Unity
 		{
 			try
 			{
+				InitializeHarmony();
+
+				ConsoleManager.Initialize(false);
 				AllocateConsole();
 
 				if (managedDirectory != null)
 					ManagedPath = managedDirectory;
 
-				bool bridgeInitialized = Utility.TryDo(() =>
+				
+				Utility.TryDo(() =>
 				{
-					if (ConfigShimHarmony.Value)
-						HarmonyDetourBridge.Init();
-				}, out var harmonyBridgeException);
-
-				Exception runtimePatchException = null;
-				if(bridgeInitialized)
-					Utility.TryDo(() =>
-					{
-						if (ConfigApplyRuntimePatches.Value)
-							UnityPatches.Apply();
-					}, out runtimePatchException);
+					if (ConfigApplyRuntimePatches.Value)
+						UnityPatches.Apply();
+				}, out var runtimePatchException);
 
 				Logger.Sources.Add(TraceLogSource.CreateSource());
+				Logger.Sources.Add(new HarmonyLogSource());
 
-				HarmonyFixes.Apply();
-
-				PreloaderLog = new PreloaderConsoleListener(ConfigPreloaderCOutLogging.Value);
+				Logger.Listeners.Add(new ConsoleLogListener());
+				PreloaderLog = new PreloaderConsoleListener();
 				Logger.Listeners.Add(PreloaderLog);
 
-				BasicLogInfo.PrintLogInfo(Log);
+				ChainloaderLogHelper.PrintLogInfo(Log);
 
-				Log.LogInfo($"Running under Unity v{FileVersionInfo.GetVersionInfo(Paths.ExecutablePath).FileVersion}");
+				Log.LogInfo($"Running under Unity v{GetUnityVersion()}");
 				Log.LogInfo($"CLR runtime version: {Environment.Version}");
 				Log.LogInfo($"Supports SRE: {Utility.CLRSupportsDynamicAssemblies}");
 
 				Log.LogDebug($"Game executable path: {Paths.ExecutablePath}");
 				Log.LogDebug($"Unity Managed directory: {ManagedPath}");
 				Log.LogDebug($"BepInEx root path: {Paths.BepInExRootPath}");
-
-				if (harmonyBridgeException != null)
-					Log.LogWarning($"Failed to enable fix for Harmony for .NET Standard API. Error message: {harmonyBridgeException.Message}");
 
 				if (runtimePatchException != null)
 					Log.LogWarning($"Failed to apply runtime patches for Mono. See more info in the output log. Error message: {runtimePatchException.Message}");
@@ -96,7 +88,7 @@ namespace BepInEx.Preloader.Unity
 
 					assemblyPatcher.AddPatchersFromDirectory(Paths.PatcherPluginPath);
 
-					Log.LogInfo($"{assemblyPatcher.PatcherPlugins.Count} patcher plugin(s) loaded");
+					Log.LogInfo($"{assemblyPatcher.PatcherPlugins.Count} patcher plugin{(assemblyPatcher.PatcherPlugins.Count == 1 ? "" : "s")} loaded");
 
 					assemblyPatcher.LoadAssemblyDirectory(ManagedPath);
 
@@ -109,7 +101,6 @@ namespace BepInEx.Preloader.Unity
 				Log.LogMessage("Preloader finished");
 
 				Logger.Listeners.Remove(PreloaderLog);
-				Logger.Listeners.Add(new ConsoleLogListener());
 
 				PreloaderLog.Dispose();
 
@@ -122,26 +113,32 @@ namespace BepInEx.Preloader.Unity
 					Log.LogFatal("Could not run preloader!");
 					Log.LogFatal(ex);
 
-					PreloaderLog?.Dispose();
-
 					if (!ConsoleManager.ConsoleActive)
 					{
 						//if we've already attached the console, then the log will already be written to the console
 						AllocateConsole();
 						Console.Write(PreloaderLog);
 					}
-
-					PreloaderLog = null;
 				}
-				finally
+				catch { }
+
+				string log = string.Empty;
+
+				try
 				{
-					File.WriteAllText(
-						Path.Combine(Paths.GameRootPath, $"preloader_{DateTime.Now:yyyyMMdd_HHmmss_fff}.log"),
-						PreloaderLog + "\r\n" + ex);
+					// We could use platform-dependent newlines, however the developers use Windows so this will be easier to read :)
+
+					log = string.Join("\r\n", PreloaderConsoleListener.LogEvents.Select(x => x.ToString()).ToArray());
+					log += "\r\n";
 
 					PreloaderLog?.Dispose();
 					PreloaderLog = null;
 				}
+				catch { }
+
+				File.WriteAllText(
+					Path.Combine(Paths.GameRootPath, $"preloader_{DateTime.Now:yyyyMMdd_HHmmss_fff}.log"),
+					log + ex);
 			}
 		}
 
@@ -163,7 +160,7 @@ namespace BepInEx.Preloader.Unity
 			var entryType = assembly.MainModule.Types.FirstOrDefault(x => x.Name == entrypointType);
 
 			if (entryType == null)
-				throw new Exception("The entrypoint type is invalid! Please check your config.ini");
+				throw new Exception("The entrypoint type is invalid! Please check your config/BepInEx.cfg file");
 
 			string chainloaderAssemblyPath = Path.Combine(Paths.BepInExAssemblyDirectory, "BepInEx.Unity.dll");
 
@@ -217,7 +214,7 @@ namespace BepInEx.Preloader.Unity
 					il.InsertBefore(ins,
 						il.Create(OpCodes.Ldnull)); // gameExePath (always null, we initialize the Paths class in Entrypoint
 
-                    il.InsertBefore(ins,
+					il.InsertBefore(ins,
 						il.Create(OpCodes.Call, startMethod)); // UnityChainloader.StaticStart(string gameExePath)
 				}
 			}
@@ -234,19 +231,45 @@ namespace BepInEx.Preloader.Unity
 			try
 			{
 				ConsoleManager.CreateConsole();
-
-				var encoding = (uint)Encoding.UTF8.CodePage;
-
-				if (ConsoleManager.ConfigConsoleShiftJis.Value)
-					encoding = 932;
-
-				ConsoleManager.SetConsoleEncoding(encoding);
 			}
 			catch (Exception ex)
 			{
 				Log.LogError("Failed to allocate console!");
 				Log.LogError(ex);
 			}
+		}
+
+		public static string GetUnityVersion()
+		{
+			if (Utility.CurrentPlatform == Platform.Windows)
+				return FileVersionInfo.GetVersionInfo(Paths.ExecutablePath).FileVersion;
+
+			return $"Unknown ({(IsPostUnity2017 ? "post" : "pre")}-2017)";
+		}
+
+		private static void InitializeHarmony()
+		{
+			switch (ConfigHarmonyBackend.Value)
+			{
+				case MonoModBackend.auto:
+					break;
+				case MonoModBackend.dynamicmethod:
+				case MonoModBackend.methodbuilder:
+				case MonoModBackend.cecil:
+					Environment.SetEnvironmentVariable("MONOMOD_DMD_TYPE", ConfigHarmonyBackend.Value.ToString());
+					break;
+				default:
+					throw new ArgumentOutOfRangeException(nameof(ConfigHarmonyBackend), ConfigHarmonyBackend.Value, "Unknown backend");
+			}
+		}
+
+		private enum MonoModBackend
+		{
+			// Enum names are important!
+			[Description("Auto")] auto = 0,
+			[Description("DynamicMethod")] dynamicmethod,
+			[Description("MethodBuilder")] methodbuilder,
+			[Description("Cecil")] cecil
 		}
 
 		#region Config
@@ -266,20 +289,16 @@ namespace BepInEx.Preloader.Unity
 			".cctor",
 			"The name of the method in the specified entrypoint assembly and type to hook and load Chainloader from.");
 
-		private static readonly ConfigEntry<bool> ConfigApplyRuntimePatches = ConfigFile.CoreConfig.Bind(
+		internal static readonly ConfigEntry<bool> ConfigApplyRuntimePatches = ConfigFile.CoreConfig.Bind(
 			"Preloader", "ApplyRuntimePatches",
 			true,
 			"Enables or disables runtime patches.\nThis should always be true, unless you cannot start the game due to a Harmony related issue (such as running .NET Standard runtime) or you know what you're doing.");
 
-		private static readonly ConfigEntry<bool> ConfigShimHarmony = ConfigFile.CoreConfig.Bind(
-			"Preloader", "ShimHarmonySupport",
-			!Utility.CLRSupportsDynamicAssemblies,
-			"If enabled, basic Harmony functionality is patched to use MonoMod's RuntimeDetour instead.\nTry using this if Harmony does not work in a game.");
-
-		private static readonly ConfigEntry<bool> ConfigPreloaderCOutLogging = ConfigFile.CoreConfig.Bind(
-			"Logging", "PreloaderConsoleOutRedirection",
-			true,
-			"Redirects text from Console.Out during preloader patch loading to the BepInEx logging system.");
+		private static readonly ConfigEntry<MonoModBackend> ConfigHarmonyBackend = ConfigFile.CoreConfig.Bind(
+			"Preloader",
+			"HarmonyBackend",
+			MonoModBackend.auto,
+			"Specifies which MonoMod backend to use for Harmony patches. Auto uses the best available backend.\nThis setting should only be used for development purposes (e.g. debugging in dnSpy). Other code might override this setting.");
 
 		#endregion
 	}

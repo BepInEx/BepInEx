@@ -36,13 +36,13 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Logging\BasicLogInfo.cs" />
-    <Compile Include="Logging\PreloaderLogWriter.cs" />
+    <Compile Include="Logging\ChainloaderLogHelper.cs" />
+    <Compile Include="Logging\PreloaderConsoleListener.cs" />
     <Compile Include="Patching\AssemblyPatcher.cs" />
     <Compile Include="Patching\PatcherPlugin.cs" />
     <Compile Include="InternalPreloaderLogger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RuntimeFixes\HarmonyFixes.cs" />
+    <Compile Include="RuntimeFixes\ConsoleSetOutFix.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\BepInEx.Core\BepInEx.Core.csproj">
@@ -52,17 +52,18 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="HarmonyX">
-      <Version>2.1.0-beta.3</Version>
+      <Version>2.1.0-beta.8</Version>
     </PackageReference>
     <PackageReference Include="Mono.Cecil">
       <Version>0.10.4</Version>
     </PackageReference>
     <PackageReference Include="MonoMod.RuntimeDetour">
-      <Version>20.5.21.5</Version>
+      <Version>20.11.5.1</Version>
     </PackageReference>
     <PackageReference Include="MonoMod.Utils">
-      <Version>20.5.21.5</Version>
+      <Version>20.11.5.1</Version>
     </PackageReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

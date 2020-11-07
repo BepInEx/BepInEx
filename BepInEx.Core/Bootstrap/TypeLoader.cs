@@ -51,36 +51,47 @@ namespace BepInEx.Bootstrap
 	/// </summary>
 	public static class TypeLoader
 	{
+		/// <summary>
+		/// Default assembly resolved used by the <see cref="TypeLoader"/>
+		/// </summary>
 		public static readonly DefaultAssemblyResolver CecilResolver;
-		private static readonly ReaderParameters readerParameters;
+
+		/// <summary>
+		/// Default reader parameters used by <see cref="TypeLoader"/>
+		/// </summary>
+		public static readonly ReaderParameters ReaderParameters;
 
 		public static HashSet<string> SearchDirectories = new HashSet<string>();
 
 		static TypeLoader()
 		{
 			CecilResolver = new DefaultAssemblyResolver();
-			readerParameters = new ReaderParameters { AssemblyResolver = CecilResolver };
+			ReaderParameters = new ReaderParameters { AssemblyResolver = CecilResolver };
 
 			CecilResolver.ResolveFailure += CecilResolveOnFailure;
 		}
 
 		public static AssemblyDefinition CecilResolveOnFailure(object sender, AssemblyNameReference reference)
 		{
-			var name = new AssemblyName(reference.FullName);
+			if (!Utility.TryParseAssemblyName(reference.FullName, out var name))
+				return null;
 
-			if (Utility.TryResolveDllAssembly(name, Paths.BepInExAssemblyDirectory, readerParameters, out var assembly) ||
-				Utility.TryResolveDllAssembly(name, Paths.PluginPath, readerParameters, out assembly))
+			if (Utility.TryResolveDllAssembly(name, Paths.BepInExAssemblyDirectory, ReaderParameters, out var assembly) ||
+				Utility.TryResolveDllAssembly(name, Paths.PluginPath, ReaderParameters, out assembly))
 				return assembly;
 
 			foreach (var dir in SearchDirectories)
 			{
-				if (Utility.TryResolveDllAssembly(name, Paths.BepInExAssemblyDirectory, readerParameters, out assembly))
+				if (Utility.TryResolveDllAssembly(name, dir, ReaderParameters, out assembly))
 					return assembly;
 			}
 
 			return AssemblyResolve?.Invoke(sender, reference);
 		}
 
+		/// <summary>
+		/// Event fired when <see cref="TypeLoader"/> fails to resolve a type during type loading.
+		/// </summary>
 		public static event AssemblyResolveEventHandler AssemblyResolve;
 
         /// <summary>
@@ -113,7 +124,7 @@ namespace BepInEx.Bootstrap
 						}
 					}
 
-					var ass = AssemblyDefinition.ReadAssembly(dll, readerParameters);
+					var ass = AssemblyDefinition.ReadAssembly(dll, ReaderParameters);
 
 					Logger.LogDebug($"Examining '{dll}'");
 
@@ -129,6 +140,10 @@ namespace BepInEx.Bootstrap
 									 .Where(t => t != null).ToList();
 					result[dll] = matches;
 					ass.Dispose();
+				}
+				catch (BadImageFormatException e)
+				{
+					Logger.LogDebug($"Skipping loading {dll} because it's not a valid .NET assembly. Full error: {e.Message}");
 				}
 				catch (Exception e)
 				{

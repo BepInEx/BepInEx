@@ -31,6 +31,12 @@ namespace BepInEx.Preloader.Core
 		/// </summary>
 		public List<PatcherPlugin> PatcherPlugins { get; } = new List<PatcherPlugin>();
 
+
+		/// <summary>
+		/// A cloned version of <see cref="PatcherPlugins"/> to ensure that any foreach loops do not break when the collection gets modified.
+		/// </summary>
+		private IEnumerable<PatcherPlugin> PatcherPluginsSafe => PatcherPlugins.ToList();
+
 		/// <summary>
 		/// <para>Contains a list of assemblies that will be patched and loaded into the runtime.</para>
 		/// <para>The dictionary has the name of the file, without any directories. These are used by the dumping functionality, and as such, these are also required to be unique. They do not have to be exactly the same as the real filename, however they have to be mapped deterministically.</para>
@@ -87,7 +93,6 @@ namespace BepInEx.Preloader.Core
 		///     Adds all patchers from all managed assemblies specified in a directory.
 		/// </summary>
 		/// <param name="directory">Directory to search patcher DLLs from.</param>
-		/// <param name="patcherLocator">A function that locates assembly patchers in a given managed assembly.</param>
 		public void AddPatchersFromDirectory(string directory)
 		{
 			if (!Directory.Exists(directory))
@@ -153,8 +158,9 @@ namespace BepInEx.Preloader.Core
 					}
 				}
 
+				var assName = ass.GetName();
 				Logger.Log(patcherCollection.Any() ? LogLevel.Info : LogLevel.Debug,
-					$"Loaded {patcherCollection.Count} patcher methods from {ass.GetName().FullName}");
+					$"Loaded {patcherCollection.Count} patcher method{(patcherCollection.Count == 1 ? "" : "s")} from [{assName.Name} {assName.Version}]");
 			}
 
 			foreach (KeyValuePair<string, PatcherPlugin> patcher in sortedPatchers)
@@ -245,19 +251,6 @@ namespace BepInEx.Preloader.Core
 			PatcherPlugins.Clear();
 		}
 
-		private static string GetAssemblyName(string fullName)
-		{
-			// We need to manually parse full name to avoid issues with encoding on mono
-			try
-			{
-				return new AssemblyName(fullName).Name;
-			}
-			catch (Exception e)
-			{
-				return fullName;
-			}
-		}
-
 		/// <summary>
 		///     Applies patchers to all assemblies in the given directory and loads patched assemblies into memory.
 		/// </summary>
@@ -265,28 +258,54 @@ namespace BepInEx.Preloader.Core
 		public void PatchAndLoad()
 		{
 			// First, create a copy of the assembly dictionary as the initializer can change them
-			var assemblies = new Dictionary<string, AssemblyDefinition>(AssembliesToPatch);
+			var assemblies = new Dictionary<string, AssemblyDefinition>(AssembliesToPatch, StringComparer.InvariantCultureIgnoreCase);
 
 			// Next, initialize all the patchers
-			foreach (var assemblyPatcher1 in PatcherPlugins)
-				assemblyPatcher1.Initializer?.Invoke();
+			foreach (var assemblyPatcher in PatcherPluginsSafe)
+			{
+				try
+				{
+					assemblyPatcher.Initializer?.Invoke();
+				}
+				catch (Exception ex)
+				{
+					Logger.LogError($"Failed to run initializer of {assemblyPatcher.TypeName}: {ex}");
+				}
+			}
 
 			// Then, perform the actual patching
-			var patchedAssemblies = new HashSet<string>();
+
+			var patchedAssemblies = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 			var resolvedAssemblies = new Dictionary<string, string>();
-			foreach (var assemblyPatcher in PatcherPlugins)
+
+			// TODO: Maybe instead reload the assembly and repatch with other valid patchers?
+			var invalidAssemblies = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+
+			foreach (var assemblyPatcher in PatcherPluginsSafe)
 				foreach (string targetDll in assemblyPatcher.TargetDLLs())
-					if (AssembliesToPatch.TryGetValue(targetDll, out var assembly))
+					if (AssembliesToPatch.TryGetValue(targetDll, out var assembly) && !invalidAssemblies.Contains(targetDll))
 					{
 						Logger.LogInfo($"Patching [{assembly.Name.Name}] with [{assemblyPatcher.TypeName}]");
 
-						assemblyPatcher.Patcher?.Invoke(ref assembly);
+						try
+						{
+							assemblyPatcher.Patcher?.Invoke(ref assembly);
+						}
+						catch (Exception e)
+						{
+							Logger.LogError($"Failed to run [{assemblyPatcher.TypeName}] when patching [{assembly.Name.Name}]. This assembly will not be patched. Error: {e}");
+							patchedAssemblies.Remove(targetDll);
+							invalidAssemblies.Add(targetDll);
+							continue;
+						}
+
 						AssembliesToPatch[targetDll] = assembly;
 						patchedAssemblies.Add(targetDll);
 
 						foreach (var resolvedAss in AppDomain.CurrentDomain.GetAssemblies())
 						{
-							var name = GetAssemblyName(resolvedAss.FullName);
+							var name = Utility.TryParseAssemblyName(resolvedAss.FullName, out var assName) ? assName.Name : resolvedAss.FullName;
+
 							// Report only the first type that caused the assembly to load, because any subsequent ones can be false positives
 							if (!resolvedAssemblies.ContainsKey(name))
 								resolvedAssemblies[name] = assemblyPatcher.TypeName;
@@ -295,7 +314,7 @@ namespace BepInEx.Preloader.Core
 
 			// Check if any patched assemblies have been already resolved by the CLR
 			// If there are any, they cannot be loaded by the preloader
-			var patchedAssemblyNames = new HashSet<string>(assemblies.Where(kv => patchedAssemblies.Contains(kv.Key)).Select(kv => kv.Value.Name.Name));
+			var patchedAssemblyNames = new HashSet<string>(assemblies.Where(kv => patchedAssemblies.Contains(kv.Key)).Select(kv => kv.Value.Name.Name), StringComparer.InvariantCultureIgnoreCase);
 			var earlyLoadAssemblies = resolvedAssemblies.Where(kv => patchedAssemblyNames.Contains(kv.Key)).ToList();
 
 			if (earlyLoadAssemblies.Count != 0)
@@ -364,8 +383,17 @@ namespace BepInEx.Preloader.Core
 			}
 
 			// Finally, run all finalizers
-			foreach (var assemblyPatcher2 in PatcherPlugins)
-				assemblyPatcher2.Finalizer?.Invoke();
+			foreach (var assemblyPatcher in PatcherPluginsSafe)
+			{
+				try
+				{
+					assemblyPatcher.Finalizer?.Invoke();
+				}
+				catch (Exception ex)
+				{
+					Logger.LogError($"Failed to run finalizer of {assemblyPatcher.TypeName}: {ex}");
+				}
+			}
 		}
 
 		#region Config

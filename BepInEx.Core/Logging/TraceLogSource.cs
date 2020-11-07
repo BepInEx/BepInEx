@@ -3,15 +3,22 @@
 namespace BepInEx.Logging
 {
 	/// <summary>
-	/// A trace listener that writes to an underlying <see cref="BaseLogger"/> instance.
+	/// A source that routes all logs from the inbuilt .NET <see cref="Trace"/> API to the BepInEx logging system.
 	/// </summary>
 	/// <inheritdoc cref="TraceListener"/>
 	public class TraceLogSource : TraceListener
 	{
+		/// <summary>
+		/// Whether Trace logs are currently being rerouted.
+		/// </summary>
 		public static bool IsListening { get; protected set; } = false;
 
 		private static TraceLogSource traceListener;
 
+		/// <summary>
+		/// Creates a new trace log source.
+		/// </summary>
+		/// <returns>New log source (or already existing one).</returns>
 		public static ILogSource CreateSource()
 		{
 			if (traceListener == null)
@@ -24,16 +31,21 @@ namespace BepInEx.Logging
 			return traceListener.LogSource;
 		}
 
+		/// <summary>
+		/// Internal log source.
+		/// </summary>
 		protected ManualLogSource LogSource { get; }
 
-		/// <param name="logger">The logger instance to write to.</param>
+		/// <summary>
+		/// Creates a new trace log source.
+		/// </summary>
 		protected TraceLogSource()
 		{
 			LogSource = new ManualLogSource("Trace");
 		}
 
 		/// <summary>
-		/// Writes a message to the underlying <see cref="BaseLogger"/> instance.
+		/// Writes a message to the underlying <see cref="ManualLogSource"/> instance.
 		/// </summary>
 		/// <param name="message">The message to write.</param>
 		public override void Write(string message)
@@ -42,7 +54,7 @@ namespace BepInEx.Logging
 		}
 
 		/// <summary>
-		/// Writes a message and a newline to the underlying <see cref="BaseLogger"/> instance.
+		/// Writes a message and a newline to the underlying <see cref="ManualLogSource"/> instance.
 		/// </summary>
 		/// <param name="message">The message to write.</param>
 		public override void WriteLine(string message)
@@ -50,9 +62,11 @@ namespace BepInEx.Logging
 			LogSource.LogInfo(message);
 		}
 
+		/// <inheritdoc />
 		public override void TraceEvent(TraceEventCache eventCache, string source, TraceEventType eventType, int id, string format, params object[] args)
 			=> TraceEvent(eventCache, source, eventType, id, string.Format(format, args));
 
+		/// <inheritdoc />
 		public override void TraceEvent(TraceEventCache eventCache, string source, TraceEventType eventType, int id, string message)
 		{
 			LogLevel level;

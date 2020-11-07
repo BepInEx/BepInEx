@@ -1,15 +1,14 @@
 ﻿using BepInEx.Configuration;
 using BepInEx.Logging;
-using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using BepInEx.Bootstrap;
-using BepInEx.Preloader.Core;
 using BepInEx.Preloader.Core.Logging;
 using BepInEx.Unity.Logging;
+using MonoMod.Utils;
 using UnityEngine;
 using Logger = BepInEx.Logging.Logger;
 
@@ -35,6 +34,20 @@ namespace BepInEx.Unity.Bootstrap
 		private string _consoleTitle;
 		protected override string ConsoleTitle => _consoleTitle;
 
+
+		// In some rare cases calling Application.unityVersion seems to cause MissingMethodException
+		// if a preloader patch applies Harmony patch to Chainloader.Initialize.
+		// The issue could be related to BepInEx being compiled against Unity 5.6 version of UnityEngine.dll,
+		// but the issue is apparently present with both official Harmony and HarmonyX
+		// We specifically prevent inlining to prevent early resolving
+		// TODO: Figure out better version obtaining mechanism (e.g. from globalmanagers)
+		private static string UnityVersion
+		{
+			[MethodImpl(MethodImplOptions.NoInlining)]
+			get => Application.unityVersion;
+		}
+
+
 		public override void Initialize(string gameExePath = null)
 		{
 			UnityTomlTypeConverters.AddUnityEngineConverters();
@@ -45,37 +58,21 @@ namespace BepInEx.Unity.Bootstrap
 			UnityEngine.Object.DontDestroyOnLoad(ManagerObject);
 
 			var productNameProp = typeof(Application).GetProperty("productName", BindingFlags.Public | BindingFlags.Static);
-			_consoleTitle = $"{CurrentAssemblyName} {CurrentAssemblyVersion} - {productNameProp?.GetValue(null, null) ?? Process.GetCurrentProcess().ProcessName}";
+			_consoleTitle = $"{CurrentAssemblyName} {CurrentAssemblyVersion} - {productNameProp?.GetValue(null, null) ?? Path.GetFileNameWithoutExtension(Process.GetCurrentProcess().ProcessName)}";
 
 			base.Initialize(gameExePath);
 		}
 
 		protected override void InitializeLoggers()
 		{
-			if (ConsoleManager.ConfigConsoleEnabled.Value)
-			{
-				ConsoleManager.CreateConsole();
-
-				if (!Logger.Listeners.Any(x => x is ConsoleLogListener))
-					Logger.Listeners.Add(new ConsoleLogListener());
-			}
-
-			// Fix for standard output getting overwritten by UnityLogger
-			if (ConsoleManager.StandardOut != null)
-			{
-				Console.SetOut(ConsoleManager.StandardOut);
-
-				var encoding = ConsoleManager.ConfigConsoleShiftJis.Value ? 932 : (uint)Encoding.UTF8.CodePage;
-				ConsoleManager.SetConsoleEncoding(encoding);
-			}
+			base.InitializeLoggers();
 
 			Logger.Listeners.Add(new UnityLogListener());
 
-			if (ConfigUnityLogging.Value)
-				Logger.Sources.Add(new UnityLogSource());
-
-
-			base.InitializeLoggers();
+			if (Utility.CurrentPlatform != Platform.Windows)
+			{
+				Logger.LogInfo($"Detected Unity version: v{UnityVersion}");
+			}
 
 
 			if (!ConfigDiskWriteUnityLog.Value)
@@ -84,20 +81,11 @@ namespace BepInEx.Unity.Bootstrap
 			}
 
 
-			// Temporarily disable the console log listener as we replay the preloader logs
+			ChainloaderLogHelper.RewritePreloaderLogs();
 
-			var logListener = Logger.Listeners.FirstOrDefault(logger => logger is ConsoleLogListener);
 
-			if (logListener != null)
-				Logger.Listeners.Remove(logListener);
-
-			foreach (var preloaderLogEvent in PreloaderConsoleListener.LogEvents)
-			{
-				PreloaderLogger.Log.Log(preloaderLogEvent.Level, preloaderLogEvent.Data);
-			}
-
-			if (logListener != null)
-				Logger.Listeners.Add(logListener);
+			if (ConfigUnityLogging.Value)
+				Logger.Sources.Add(new UnityLogSource());
 		}
 
 		public override BaseUnityPlugin LoadPlugin(PluginInfo pluginInfo, Assembly pluginAssembly)

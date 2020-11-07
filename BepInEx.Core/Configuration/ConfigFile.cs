@@ -118,7 +118,7 @@ namespace BepInEx.Configuration
 						continue;
 					}
 
-					string[] split = line.Split('='); //actual config line
+					string[] split = line.Split(new[] { '=' }, 2); //actual config line
 					if (split.Length != 2)
 						continue; //empty/invalid line
 
@@ -149,7 +149,7 @@ namespace BepInEx.Configuration
 				string directoryName = Path.GetDirectoryName(ConfigFilePath);
 				if (directoryName != null) Directory.CreateDirectory(directoryName);
 
-				using (var writer = new StreamWriter(File.Create(ConfigFilePath), Encoding.UTF8))
+				using (var writer = new StreamWriter(ConfigFilePath, false, Encoding.UTF8))
 				{
 					if (_ownerMetadata != null)
 					{
@@ -219,7 +219,7 @@ namespace BepInEx.Configuration
 		/// <summary>
 		/// Access one of the existing settings. If the setting has not been added yet, false is returned. Otherwise, true.
 		/// If the setting exists but has a different type than T, an exception is thrown.
-		/// New settings should be added with <see cref="Bind{T}"/>.
+		/// New settings should be added with <see cref="Bind{T}(BepInEx.Configuration.ConfigDefinition,T,BepInEx.Configuration.ConfigDescription)"/>.
 		/// </summary>
 		/// <typeparam name="T">Type of the value contained in this setting.</typeparam>
 		/// <param name="configDefinition">Section and Key of the setting.</param>
@@ -242,7 +242,7 @@ namespace BepInEx.Configuration
 		/// <summary>
 		/// Access one of the existing settings. If the setting has not been added yet, null is returned.
 		/// If the setting exists but has a different type than T, an exception is thrown.
-		/// New settings should be added with <see cref="Bind{T}"/>.
+		/// New settings should be added with <see cref="Bind{T}(BepInEx.Configuration.ConfigDefinition,T,BepInEx.Configuration.ConfigDescription)"/>.
 		/// </summary>
 		/// <typeparam name="T">Type of the value contained in this setting.</typeparam>
 		/// <param name="section">Section/category/group of the setting. Settings are grouped by this.</param>

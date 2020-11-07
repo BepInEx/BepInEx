@@ -2,6 +2,8 @@
 using System;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text;
+using BepInEx.Configuration;
 
 namespace BepInEx.Unity.Logging
 {
@@ -33,17 +35,25 @@ namespace BepInEx.Unity.Logging
 				Logger.LogError("Unable to start Unity log writer");
 		}
 
+		/// <inheritdoc />
 		public void LogEvent(object sender, LogEventArgs eventArgs)
 		{
-			if (sender is UnityLogSource)
+			if (eventArgs.Source is UnityLogSource)
 				return;
 
-			string log = $"[{eventArgs.Level}:{((ILogSource)sender).SourceName}] {eventArgs.Data}\r\n";
-
-			WriteStringToUnityLog?.Invoke(log);
+			// Special case: don't write console twice since Unity can already do that
+			if (LogConsoleToUnity.Value || eventArgs.Source.SourceName != "Console")
+				WriteStringToUnityLog?.Invoke(eventArgs.ToStringLine());
 		}
 
+		/// <inheritdoc />
 		public void Dispose() { }
+
+		private readonly ConfigEntry<bool> LogConsoleToUnity = ConfigFile.CoreConfig.Bind("Logging",
+			"LogConsoleToUnityLog", false,
+			new StringBuilder()
+				.AppendLine("If enabled, writes Standard Output messages to Unity log")
+				.AppendLine("NOTE: By default, Unity does so automatically. Only use this option if no console messages are visible in Unity log").ToString());
 	}
 }
 
