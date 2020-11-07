@@ -96,15 +96,13 @@ namespace BepInEx.IL2CPP
 			{
 				listener.DoPreloaderLog("Generating Il2CppUnhollower assemblies", LogLevel.Message);
 
-				if (Directory.Exists(Preloader.IL2CPPUnhollowedPath))
-					Directory.Delete(Preloader.IL2CPPUnhollowedPath, true);
-
 				Directory.CreateDirectory(Preloader.IL2CPPUnhollowedPath);
+
+				foreach (var dllFile in Directory.EnumerateFiles(Preloader.IL2CPPUnhollowedPath, "*.dll", SearchOption.TopDirectoryOnly))
+					File.Delete(dllFile);
 
 				string tempDumperDirectory = Path.Combine(Preloader.IL2CPPUnhollowedPath, "temp");
 				Directory.CreateDirectory(tempDumperDirectory);
-
-
 
 
 				var dumperConfig = new Config
@@ -130,12 +128,26 @@ namespace BepInEx.IL2CPP
 				UnhollowerBaseLib.LogSupport.TraceHandler += s => listener.DoUnhollowerLog(s, LogLevel.Debug);
 				UnhollowerBaseLib.LogSupport.ErrorHandler += s => listener.DoUnhollowerLog(s, LogLevel.Error);
 
+
+				string unityBaseLibDir = Path.Combine(Preloader.IL2CPPUnhollowedPath, "base");
+
+				if (Directory.Exists(unityBaseLibDir))
+				{
+					listener.DoPreloaderLog("Found base unity libraries", LogLevel.Debug);
+				}
+				else
+				{
+					unityBaseLibDir = null;
+				}
+
+
 				var unhollowerOptions = new UnhollowerOptions
 				{
 					GameAssemblyPath = GameAssemblyPath,
 					MscorlibPath = Path.Combine(Paths.GameRootPath, "mono", "Managed", "mscorlib.dll"),
 					SourceDir = Path.Combine(tempDumperDirectory, "DummyDll"),
-					OutputDir = Preloader.IL2CPPUnhollowedPath
+					OutputDir = Preloader.IL2CPPUnhollowedPath,
+					UnityBaseLibsDir = unityBaseLibDir
 				};
 
 				AssemblyUnhollower.Program.Main(unhollowerOptions);
