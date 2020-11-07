@@ -21,12 +21,14 @@ namespace BepInEx.IL2CPP
 		{
 			try
 			{
+				ConsoleManager.Initialize(false);
+
 				PreloaderLog = new PreloaderConsoleListener();
 				Logger.Listeners.Add(PreloaderLog);
 
 
 
-				if (ConsoleManager.ConfigConsoleEnabled.Value && !ConsoleManager.ConsoleActive)
+				if (ConsoleManager.ConfigConsoleEnabled.Value)
 				{
 					ConsoleManager.CreateConsole();
 					Logger.Listeners.Add(new ConsoleLogListener());

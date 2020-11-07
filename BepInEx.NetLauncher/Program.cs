@@ -15,7 +15,7 @@ namespace BepInEx.NetLauncher
 		{
 			Logger.Listeners.Add(new ConsoleLogListener());
 
-			ConsoleManager.ForceSetActive(true);
+			ConsoleManager.Initialize(true);
 
 			NetPreloader.Start(args);
 		}

@@ -12,7 +12,7 @@ namespace BepInEx.Core.Logging
 		{
 			string log = $"[{eventArgs.Level,-7}:{((ILogSource)sender).SourceName,10}] {eventArgs.Data}\r\n";
 
-			ConsoleWindow.OriginalOut?.Write(log);
+			ConsoleManager.StandardOutStream?.Write(log);
 		}
 
 		public void Dispose() { }

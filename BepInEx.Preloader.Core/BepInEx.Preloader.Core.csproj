@@ -58,10 +58,10 @@
       <Version>0.10.4</Version>
     </PackageReference>
     <PackageReference Include="MonoMod.RuntimeDetour">
-      <Version>20.8.3.5</Version>
+      <Version>20.11.5.1</Version>
     </PackageReference>
     <PackageReference Include="MonoMod.Utils">
-      <Version>20.8.3.5</Version>
+      <Version>20.11.5.1</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup />

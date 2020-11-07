@@ -32,7 +32,7 @@ namespace BepInEx
 
 		public static void Initialize(bool alreadyActive)
 		{
-			switch (Utility.CurrentPlatform)
+			switch (Utility.CurrentPlatform & ~Platform.Bits64)
 			{
 				case Platform.MacOS:
 				case Platform.Linux:
@@ -45,6 +45,11 @@ namespace BepInEx
 				{
 					Driver = new WindowsConsoleDriver();
 					break;
+				}
+
+				default:
+				{
+					throw new PlatformNotSupportedException("Was unable to determine console driver for platform " + Utility.CurrentPlatform);
 				}
 			}
 
@@ -70,6 +75,7 @@ namespace BepInEx
 			var codepage = ConfigConsoleShiftJis.Value ? SHIFT_JIS_CP: (uint)Encoding.UTF8.CodePage;
 			
 			Driver.CreateConsole(codepage);
+			Console.SetOut(ConsoleStream);
 		}
 
 		public static void DetachConsole()
