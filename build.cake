@@ -75,10 +75,10 @@ Task("Build")
 
     //buildSettings.Properties["TargetFrameworks"] = new []{ "net35" };
     MSBuild("./BepInEx.Unity/BepInEx.Unity.csproj", buildSettings);
-	
+    
     //buildSettings.Properties["TargetFrameworks"] = new []{ "net452" };
     MSBuild("./BepInEx.NetLauncher/BepInEx.NetLauncher.csproj", buildSettings);
-	
+    
     //buildSettings.Properties["TargetFrameworks"] = new []{ "net472" };
     MSBuild("./BepInEx.IL2CPP/BepInEx.IL2CPP.csproj", buildSettings);
 })
@@ -158,19 +158,19 @@ Task("MakeDist")
 
     void PackageBepin(string platform, string arch, string originDir, string doorstopConfigFile = null, bool copyMono = false) 
     {
-		string platformName = platform + (arch == null ? "" : "_" + arch);
-		bool isUnix = arch == "unix";
+        string platformName = platform + (arch == null ? "" : "_" + arch);
+        bool isUnix = arch == "unix";
 
-		Information("Creating distributions for platform \"" + platformName + "\"...");
-	
-		string doorstopArchPath = null;
-		
-		if (arch != null)
-		{
+        Information("Creating distributions for platform \"" + platformName + "\"...");
+    
+        string doorstopArchPath = null;
+        
+        if (arch != null)
+        {
             doorstopArchPath = doorstopPath + Directory(arch)
                 + File(isUnix ? "*.*" : DOORSTOP_DLL);
-		}
-		
+        }
+        
         var distArchDir = distDir + Directory(platformName);
         var bepinDir = distArchDir + Directory("BepInEx");
         var doorstopDir = distArchDir;
@@ -182,10 +182,10 @@ Task("MakeDist")
         CreateDirectory(bepinDir + Directory("plugins"));
         CreateDirectory(bepinDir + Directory("patchers"));
 
-		if (doorstopArchPath != null)
-		{
-			CopyFile("./doorstop/" + doorstopConfigFile, Directory(distArchDir) + File(isUnix ? "run_bepinex.sh" : "doorstop_config.ini"));
-			CopyFiles(doorstopArchPath, doorstopDir);
+        if (doorstopArchPath != null)
+        {
+            CopyFile("./doorstop/" + doorstopConfigFile, Directory(distArchDir) + File(isUnix ? "run_bepinex.sh" : "doorstop_config.ini"));
+            CopyFiles(doorstopArchPath, doorstopDir);
 
             if (isUnix)
             {
@@ -196,7 +196,7 @@ Task("MakeDist")
             {
                 CopyDirectory("./bin/doorstop/mono/" + arch + "/mono", Directory(distArchDir) + Directory("mono"));
             }
-		}
+        }
 
         CopyFiles("./bin/" + Directory(originDir) + "/*.*", Directory(bepinDir) + Directory("core"));
 
