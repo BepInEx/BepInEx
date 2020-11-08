@@ -23,8 +23,8 @@
     <DocumentationFile>..\bin\BepInEx.Preloader.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="0Harmony, Version=2.1.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>$(SolutionDir)\packages\HarmonyX.2.1.0\lib\net35\0Harmony.dll</HintPath>
+    <Reference Include="0Harmony, Version=2.1.1.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>$(SolutionDir)\packages\HarmonyX.2.1.1\lib\net35\0Harmony.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Mono.Cecil, Version=0.10.4.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e, processorArchitecture=MSIL">
