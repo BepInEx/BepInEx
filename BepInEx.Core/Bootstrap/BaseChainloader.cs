@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
 using BepInEx.Configuration;
 using BepInEx.Logging;
@@ -70,7 +70,7 @@ namespace BepInEx.Bootstrap
 			}
 
 			if (ConfigDiskLogging.Value)
-				Logger.Listeners.Add(new DiskLogListener("LogOutput.log", ConfigDiskConsoleDisplayedLevel.Value, ConfigDiskAppend.Value));
+				Logger.Listeners.Add(new DiskLogListener("LogOutput.log", ConfigDiskLoggingDisplayedLevel.Value, ConfigDiskAppend.Value, ConfigDiskLoggingInstantFlushing.Value));
 
 			if (!TraceLogSource.IsListening)
 				Logger.Sources.Add(TraceLogSource.CreateSource());
@@ -361,10 +361,18 @@ namespace BepInEx.Bootstrap
 			true,
 			"Enables writing log messages to disk.");
 
-		private static readonly ConfigEntry<LogLevel> ConfigDiskConsoleDisplayedLevel = ConfigFile.CoreConfig.Bind(
+		private static readonly ConfigEntry<LogLevel> ConfigDiskLoggingDisplayedLevel = ConfigFile.CoreConfig.Bind(
 			"Logging.Disk", "LogLevels",
 			LogLevel.Fatal | LogLevel.Error | LogLevel.Warning | LogLevel.Message | LogLevel.Info,
 			"Only displays the specified log levels in the disk log output.");
+
+		private static readonly ConfigEntry<bool> ConfigDiskLoggingInstantFlushing = ConfigFile.CoreConfig.Bind(
+			"Logging.Disk", "InstantFlushing",
+			false,
+			new StringBuilder()
+				.AppendLine("If true, instantly writes any received log entries to disk.")
+				.AppendLine("This incurs a major performance hit if a lot of log messages are being written, however it is really useful for debugging crashes.")
+				.ToString());
 
 		#endregion
 	}

@@ -23,7 +23,9 @@ namespace BepInEx.Logging
 		/// <summary>
 		/// Timer for flushing the logs to a file.
 		/// </summary>
-		public Timer FlushTimer { get; protected set; }
+		private Timer FlushTimer { get; set; }
+
+		private bool InstantFlushing { get; set; }
 
 		/// <summary>
 		/// Creates a new disk log listener.
@@ -31,7 +33,8 @@ namespace BepInEx.Logging
 		/// <param name="localPath">Path to the log.</param>
 		/// <param name="displayedLogLevel">Log levels to display.</param>
 		/// <param name="appendLog">Whether to append logs to an already existing log file.</param>
-		public DiskLogListener(string localPath, LogLevel displayedLogLevel = LogLevel.Info, bool appendLog = false)
+		/// <param name="delayedFlushing">Whether to delay flushing to disk to improve performance. Useful to set this to false when debugging crashes.</param>
+		public DiskLogListener(string localPath, LogLevel displayedLogLevel = LogLevel.Info, bool appendLog = false, bool delayedFlushing = true)
 		{
 			DisplayedLogLevel = displayedLogLevel;
 
@@ -55,8 +58,12 @@ namespace BepInEx.Logging
 
 			LogWriter = TextWriter.Synchronized(new StreamWriter(fileStream, Encoding.UTF8));
 
+			if (delayedFlushing)
+			{
+				FlushTimer = new Timer(o => { LogWriter?.Flush(); }, null, 2000, 2000);
+			}
 
-			FlushTimer = new Timer(o => { LogWriter?.Flush(); }, null, 2000, 2000);
+			InstantFlushing = !delayedFlushing;
 		}
 
 		public static HashSet<string> BlacklistedSources = new HashSet<string>();
@@ -71,6 +78,9 @@ namespace BepInEx.Logging
 				return;
 
 			LogWriter.WriteLine(eventArgs.ToString());
+
+			if (InstantFlushing)
+				LogWriter.Flush();
 		}
 
 		/// <inheritdoc />
