@@ -202,6 +202,12 @@ Task("MakeDist")
 
 
         FileWriteText(distArchDir + File("changelog.txt"), changelog);
+
+        if (platform == "NetLauncher")
+        {
+            DeleteFile(Directory(bepinDir) + Directory("core") + File("BepInEx.NetLauncher.exe.config"));
+            MoveFiles(Directory(bepinDir) + Directory("core") + File("BepInEx.NetLauncher.*"), Directory(distArchDir));
+        }
     }
 
     PackageBepin("UnityMono", "x86", "Unity", "doorstop_config_mono.ini");
