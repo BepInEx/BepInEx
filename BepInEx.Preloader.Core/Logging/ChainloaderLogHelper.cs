@@ -1,7 +1,6 @@
-﻿using System.Diagnostics;
-using System.IO;
-using System.Linq;
+﻿using System.Linq;
 using BepInEx.Logging;
+using MonoMod.Utils;
 
 namespace BepInEx.Preloader.Core.Logging
 {
@@ -23,6 +22,8 @@ namespace BepInEx.Preloader.Core.Logging
 				var attribute = (BuildInfoAttribute)attributes[0];
 				log.LogMessage(attribute.Info);
 			}
+
+			Logger.LogInfo($"System platform: {PlatformHelper.Current}");
 		}
 
 		public static void RewritePreloaderLogs()

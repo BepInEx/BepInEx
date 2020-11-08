@@ -14,7 +14,7 @@ namespace BepInEx
 			ExecutablePath = executablePath;
 			ProcessName = Path.GetFileNameWithoutExtension(executablePath);
 
-			GameRootPath = Utility.CurrentPlatform == Platform.MacOS
+			GameRootPath = PlatformHelper.Is(Platform.MacOS)
 				? Utility.ParentDirectory(executablePath, 4)
 				: Path.GetDirectoryName(executablePath);
 

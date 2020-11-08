@@ -22,6 +22,10 @@ using System.Runtime.InteropServices;
 // The following GUID is for the ID of the typelib if this project is exposed to COM
 [assembly: Guid("15f8bc38-a761-4f93-8903-1b531ac5d9f9")]
 
+[assembly: InternalsVisibleTo("BepInEx.Preloader.Unity")]
+[assembly: InternalsVisibleTo("BepInEx.NetLauncher")]
+[assembly: InternalsVisibleTo("BepInEx.IL2CPP")]
+
 // Version information for an assembly consists of the following four values:
 //
 //      Major Version

@@ -241,7 +241,7 @@ namespace BepInEx.Preloader.Unity
 
 		public static string GetUnityVersion()
 		{
-			if (Utility.CurrentPlatform == Platform.Windows)
+			if (PlatformHelper.Is(Platform.Windows))
 				return FileVersionInfo.GetVersionInfo(Paths.ExecutablePath).FileVersion;
 
 			return $"Unknown ({(IsPostUnity2017 ? "post" : "pre")}-2017)";

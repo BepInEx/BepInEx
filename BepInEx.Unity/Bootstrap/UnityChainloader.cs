@@ -69,7 +69,7 @@ namespace BepInEx.Unity.Bootstrap
 
 			Logger.Listeners.Add(new UnityLogListener());
 
-			if (Utility.CurrentPlatform != Platform.Windows)
+			if (!PlatformHelper.Is(Platform.Windows))
 			{
 				Logger.LogInfo($"Detected Unity version: v{UnityVersion}");
 			}

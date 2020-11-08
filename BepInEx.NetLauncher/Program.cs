@@ -13,6 +13,8 @@ namespace BepInEx.NetLauncher
 	{
 		internal static void PreloaderMain(string[] args)
 		{
+			PlatformUtils.SetPlatform();
+
 			Logger.Listeners.Add(new ConsoleLogListener());
 
 			ConsoleManager.Initialize(true);

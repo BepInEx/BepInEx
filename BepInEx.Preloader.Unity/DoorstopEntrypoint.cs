@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using BepInEx.Preloader.Core;
 using BepInEx.Preloader.RuntimeFixes;
 
 namespace BepInEx.Preloader.Unity
@@ -53,6 +54,8 @@ namespace BepInEx.Preloader.Unity
 
 		private static void PreloaderMain()
 		{
+			PlatformUtils.SetPlatform();
+
 			if (UnityPreloader.ConfigApplyRuntimePatches.Value)
 			{
 				XTermFix.Apply();

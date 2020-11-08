@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -8,7 +7,7 @@ using BepInEx.Configuration;
 using BepInEx.Logging;
 using BepInEx.NetLauncher.RuntimeFixes;
 using BepInEx.Preloader.Core;
-using MonoMod.RuntimeDetour;
+using BepInEx.Preloader.Core.Logging;
 
 namespace BepInEx.NetLauncher
 {
@@ -39,33 +38,11 @@ namespace BepInEx.NetLauncher
 			Program.ResolveDirectories.Add(Paths.GameRootPath);
 			TypeLoader.SearchDirectories.Add(Paths.GameRootPath);
 
-			bool bridgeInitialized = Utility.TryDo(() =>
-			{
-				if (ConfigShimHarmony.Value)
-					HarmonyDetourBridge.Init();
-			}, out var harmonyBridgeException);
-
 			Logger.Sources.Add(TraceLogSource.CreateSource());
 
-			string consoleTile = $"BepInEx {typeof(Paths).Assembly.GetName().Version} - {Process.GetCurrentProcess().ProcessName}";
-			Log.LogMessage(consoleTile);
-
-			if (ConsoleManager.ConsoleActive)
-				ConsoleManager.SetConsoleTitle(consoleTile);
-
-			//See BuildInfoAttribute for more information about this section.
-			object[] attributes = typeof(BuildInfoAttribute).Assembly.GetCustomAttributes(typeof(BuildInfoAttribute), false);
-
-			if (attributes.Length > 0)
-			{
-				var attribute = (BuildInfoAttribute)attributes[0];
-				Log.LogMessage(attribute.Info);
-			}
+			ChainloaderLogHelper.PrintLogInfo(Log);
 
 			Log.LogInfo($"CLR runtime version: {Environment.Version}");
-
-			if (harmonyBridgeException != null)
-				Log.LogWarning($"Failed to enable fix for Harmony for .NET Standard API. Error message: {harmonyBridgeException.Message}");
 
 			Log.LogMessage("Preloader started");
 
@@ -117,16 +94,6 @@ namespace BepInEx.NetLauncher
 			"Preloader.Entrypoint", "Assembly",
 			null,
 			"The local filename of the .NET executable to target.");
-
-		private static readonly ConfigEntry<bool> ConfigShimHarmony = ConfigFile.CoreConfig.Bind(
-			"Preloader", "ShimHarmonySupport",
-			!Utility.CLRSupportsDynamicAssemblies,
-			"If enabled, basic Harmony functionality is patched to use MonoMod's RuntimeDetour instead.\nTry using this if Harmony does not work in a game.");
-
-		private static readonly ConfigEntry<bool> ConfigPreloaderCOutLogging = ConfigFile.CoreConfig.Bind(
-			"Logging", "PreloaderConsoleOutRedirection",
-			true,
-			"Redirects text from Console.Out during preloader patch loading to the BepInEx logging system.");
 
 		#endregion
 	}

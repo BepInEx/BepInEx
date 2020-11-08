@@ -32,25 +32,17 @@ namespace BepInEx
 
 		public static void Initialize(bool alreadyActive)
 		{
-			switch (Utility.CurrentPlatform & ~Platform.Bits64)
+			if (PlatformHelper.Is(Platform.MacOS) || PlatformHelper.Is(Platform.Linux))
 			{
-				case Platform.MacOS:
-				case Platform.Linux:
-				{
-					Driver = new LinuxConsoleDriver();
-					break;
-				}
-
-				case Platform.Windows:
-				{
-					Driver = new WindowsConsoleDriver();
-					break;
-				}
-
-				default:
-				{
-					throw new PlatformNotSupportedException("Was unable to determine console driver for platform " + Utility.CurrentPlatform);
-				}
+				Driver = new LinuxConsoleDriver();
+			}
+			else if (PlatformHelper.Is(Platform.Windows))
+			{
+				Driver = new WindowsConsoleDriver();
+			}
+			else
+			{
+				throw new PlatformNotSupportedException("Was unable to determine console driver for platform " + PlatformHelper.Current);
 			}
 
 			Driver.Initialize(alreadyActive);

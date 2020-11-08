@@ -13,7 +13,7 @@ namespace BepInEx.Preloader.RuntimeFixes
 	{
 		public static void Apply()
 		{
-			if (Utility.CurrentPlatform == Platform.Windows)
+			if (PlatformHelper.Is(Platform.Windows))
 				return;
 
 			if (typeof(Console).Assembly.GetType("System.ConsoleDriver") == null)

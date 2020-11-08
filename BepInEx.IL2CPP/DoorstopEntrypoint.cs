@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using BepInEx.Preloader.Core;
 
 namespace BepInEx.IL2CPP
 {
@@ -16,6 +17,8 @@ namespace BepInEx.IL2CPP
 
 			AppDomain.CurrentDomain.AssemblyResolve += LocalResolve;
 			AppDomain.CurrentDomain.AssemblyResolve -= DoorstopEntrypoint.ResolveCurrentDirectory;
+
+			PlatformUtils.SetPlatform();
 
 			Preloader.Run();
 		}
