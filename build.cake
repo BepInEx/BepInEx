@@ -92,7 +92,7 @@ Task("Build")
     }
 });
 
-const string DOORSTOP_VER_WIN = "3.0.2.2";
+const string DOORSTOP_VER_WIN = "3.1.0.0";
 const string DOORSTOP_VER_UNIX = "1.3.0.0";
 const string MONO_VER = "2020.11.08";
 const string DOORSTOP_DLL = "winhttp.dll";
