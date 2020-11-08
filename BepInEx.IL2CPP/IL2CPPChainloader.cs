@@ -1,31 +1,26 @@
-﻿using System;
+﻿extern alias il2cpp;
+
+using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using BepInEx.Bootstrap;
+using BepInEx.Configuration;
 using BepInEx.IL2CPP.Hook;
+using BepInEx.IL2CPP.Logging;
 using BepInEx.Logging;
 using BepInEx.Preloader.Core;
 using BepInEx.Preloader.Core.Logging;
 using HarmonyLib.Public.Patching;
 using UnhollowerBaseLib.Runtime;
 using UnhollowerRuntimeLib;
-using UnityEngine;
-using Logger = BepInEx.Logging.Logger;
-using BaseUnityEngine = UnityEngine;
+using IL2CPPUnityEngine = il2cpp::UnityEngine;
 
 namespace BepInEx.IL2CPP
 {
 	public class IL2CPPChainloader : BaseChainloader<BasePlugin>
 	{
-		private static ManualLogSource UnityLogSource = new ManualLogSource("Unity");
-
-		public static void UnityLogCallback(string logLine, string exception, LogType type)
-		{
-			UnityLogSource.LogInfo(logLine.Trim());
-		}
-
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		private delegate IntPtr RuntimeInvokeDetourDelegate(IntPtr method, IntPtr obj, IntPtr parameters, IntPtr exc);
 
@@ -95,9 +90,12 @@ namespace BepInEx.IL2CPP
 			{
 				try
 				{
-					//Application.s_LogCallbackHandler = new Action<string, string, LogType>(UnityLogCallback);
+					if (ConfigUnityLogging.Value)
+					{
+						Logger.Sources.Add(new IL2CPPUnityLogSource());
 
-					//Application.CallLogCallback("test from OnInvokeMethod", "", LogType.Log, true);
+						IL2CPPUnityEngine.Application.CallLogCallback("Test call after applying unity logging hook", "", IL2CPPUnityEngine.LogType.Assert, true);
+					}
 
 					unhook = true;
 
@@ -105,7 +103,8 @@ namespace BepInEx.IL2CPP
 				}
 				catch (Exception ex)
 				{
-					UnityLogSource.LogError(ex);
+					Logger.LogFatal("Unable to execute IL2CPP chainloader");
+					Logger.LogError(ex);
 				}
 			}
 
@@ -123,30 +122,16 @@ namespace BepInEx.IL2CPP
 
 		protected override void InitializeLoggers()
 		{
-			//Logger.Listeners.Add(new UnityLogListener());
-
-			//if (ConfigUnityLogging.Value)
-			//	Logger.Sources.Add(new UnityLogSource());
-
-			Logger.Sources.Add(UnityLogSource);
-
 			base.InitializeLoggers();
 
-
-			//if (!ConfigDiskWriteUnityLog.Value)
-			//{
-			//	DiskLogListener.BlacklistedSources.Add("Unity Log");
-			//}
-
+			if (!ConfigDiskWriteUnityLog.Value)
+			{
+				DiskLogListener.BlacklistedSources.Add("Unity");
+			}
 
 			ChainloaderLogHelper.RewritePreloaderLogs();
 
-
-			//UnityEngine.Application.s_LogCallbackHandler = DelegateSupport.ConvertDelegate<Application.LogCallback>(new Action<string>(UnityLogCallback));
-			//UnityEngine.Application.s_LogCallbackHandler = (Application.LogCallback)new Action<string>(UnityLogCallback);
-
-			//var loggerPointer = Marshal.GetFunctionPointerForDelegate(new UnityLogCallbackDelegate(UnityLogCallback));
-			//UnhollowerBaseLib.IL2CPP.il2cpp_register_log_callback(loggerPointer);
+			Logger.Sources.Add(new IL2CPPLogSource());
 		}
 
 		public override BasePlugin LoadPlugin(PluginInfo pluginInfo, Assembly pluginAssembly)
@@ -159,5 +144,15 @@ namespace BepInEx.IL2CPP
 
 			return pluginInstance;
 		}
+
+		private static readonly ConfigEntry<bool> ConfigUnityLogging = ConfigFile.CoreConfig.Bind(
+			"Logging", "UnityLogListening",
+			true,
+			"Enables showing unity log messages in the BepInEx logging system.");
+
+		private static readonly ConfigEntry<bool> ConfigDiskWriteUnityLog = ConfigFile.CoreConfig.Bind(
+			"Logging.Disk", "WriteUnityLog",
+			false,
+			"Include unity log messages in log file output.");
 	}
 }

@@ -57,10 +57,12 @@
     <Reference Include="UnityEngine-IL2CPP">
       <HintPath>..\lib\UnityEngine-IL2CPP.dll</HintPath>
       <Private>False</Private>
+      <Aliases>il2cpp</Aliases>
     </Reference>
     <Reference Include="UnityEngine.CoreModule-IL2CPP">
       <HintPath>..\lib\UnityEngine.CoreModule-IL2CPP.dll</HintPath>
       <Private>False</Private>
+      <Aliases>il2cpp</Aliases>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -70,6 +72,8 @@
     <Compile Include="Hook\FastNativeDetour.cs" />
     <Compile Include="Hook\IL2CPPDetourMethodPatcher.cs" />
     <Compile Include="IL2CPPChainloader.cs" />
+    <Compile Include="Logging\IL2CPPUnityLogSource.cs" />
+    <Compile Include="Logging\IL2CPPLogSource.cs" />
     <Compile Include="MonoExtensions.cs" />
     <Compile Include="Preloader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

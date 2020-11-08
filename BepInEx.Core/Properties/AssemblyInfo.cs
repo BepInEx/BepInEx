@@ -27,6 +27,7 @@ using BepInEx;
 [assembly: InternalsVisibleTo("BepInEx.Preloader.Core")]
 [assembly: InternalsVisibleTo("BepInEx.Unity")]
 [assembly: InternalsVisibleTo("BepInEx.NetLauncher")]
+[assembly: InternalsVisibleTo("BepInEx.IL2CPP")]
 [assembly: InternalsVisibleTo("BepInExTests")]
 
 // Version information for an assembly consists of the following four values:
