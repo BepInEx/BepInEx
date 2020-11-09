@@ -12,6 +12,7 @@
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>..\bin\patcher\</OutputPath>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject>BepInEx.Patcher.Program</StartupObject>

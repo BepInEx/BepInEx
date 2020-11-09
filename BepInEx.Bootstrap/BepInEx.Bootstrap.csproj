@@ -6,6 +6,7 @@
     <Copyright>Copyright ©  2018</Copyright>
     <DebugType>none</DebugType>
     <OutputPath>..\bin\patcher\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\BepInEx.Core\BepInEx.Core.csproj" />
