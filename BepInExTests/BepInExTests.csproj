@@ -39,4 +39,10 @@
     <ProjectReference Include="..\BepInEx.IL2CPP\BepInEx.IL2CPP.csproj" />
     <ProjectReference Include="..\BepInEx.Unity\BepInEx.Unity.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Properties" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
 </Project>

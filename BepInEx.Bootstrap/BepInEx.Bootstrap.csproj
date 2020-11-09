@@ -3,13 +3,17 @@
     <TargetFramework>net35</TargetFramework>
     <AssemblyTitle>BepInEx.Bootstrap</AssemblyTitle>
     <Product>BepInEx.Bootstrap</Product>
-    <Copyright>Copyright ©  2018</Copyright>
     <DebugType>none</DebugType>
     <OutputPath>..\bin\patcher\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
+    <GenerateAssemblyCopyrightAttribute>false</GenerateAssemblyCopyrightAttribute>
+    <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
+    <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\BepInEx.Core\BepInEx.Core.csproj" />
     <ProjectReference Include="..\BepInEx.Unity\BepInEx.Unity.csproj" />
   </ItemGroup>
+  <Import Project="..\BepInEx.Shared\BepInEx.Shared.projitems" Label="Shared" />
 </Project>
