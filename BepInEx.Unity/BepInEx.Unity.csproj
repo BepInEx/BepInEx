@@ -4,6 +4,7 @@
     <AssemblyTitle>BepInEx.Unity</AssemblyTitle>
     <Product>BepInEx.Unity</Product>
     <OutputPath>..\bin\Unity\</OutputPath>
+    <LangVersion>8</LangVersion>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
     <GenerateAssemblyCopyrightAttribute>false</GenerateAssemblyCopyrightAttribute>

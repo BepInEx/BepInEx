@@ -4,6 +4,7 @@
     <AssemblyTitle>BepInEx.Preloader.Core</AssemblyTitle>
     <Product>BepInEx.Preloader.Core</Product>
     <OutputPath>..\bin\</OutputPath>
+    <LangVersion>8</LangVersion>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
     <GenerateAssemblyCopyrightAttribute>false</GenerateAssemblyCopyrightAttribute>
