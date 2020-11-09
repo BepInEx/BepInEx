@@ -39,6 +39,7 @@
     <Reference Include="UnityEngine.CoreModule-IL2CPP">
       <HintPath>..\lib\UnityEngine.CoreModule-IL2CPP.dll</HintPath>
       <Private>False</Private>
+      <Aliases>il2cpp</Aliases>
     </Reference>
   </ItemGroup>
   <ItemGroup>
