@@ -13,7 +13,7 @@
     <OutputPath>..\bin\net\</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
+    <DebugType>portable</DebugType>
     <OutputPath>..\bin\NetLauncher\</OutputPath>
     <DocumentationFile />
   </PropertyGroup>
