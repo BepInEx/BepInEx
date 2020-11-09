@@ -1,40 +1,20 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{429D5F83-7FEC-4D09-AB82-E868EB61AF59}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>BepInEx.IL2CPP</RootNamespace>
-    <AssemblyName>BepInEx.IL2CPP</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <Deterministic>true</Deterministic>
-    <TargetFrameworkProfile />
+    <TargetFramework>net472</TargetFramework>
+    <AssemblyTitle>BepInEx.IL2CPP</AssemblyTitle>
+    <Product>BepInEx.IL2CPP</Product>
+    <Copyright>Copyright ©  2020</Copyright>
+    <AssemblyVersion>6.0.0.0</AssemblyVersion>
+    <FileVersion>6.0.0.0</FileVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <OutputPath>..\bin\IL2CPP\</OutputPath>
+    <LangVersion>8</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>..\bin\IL2CPP\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <LangVersion>8</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>portable</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>..\bin\IL2CPP\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DebugSymbols>true</DebugSymbols>
-    <LangVersion>8</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="AssemblyUnhollower">
@@ -47,8 +27,6 @@
       <HintPath>..\lib\Il2Cppmscorlib.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="UnhollowerBaseLib">
       <HintPath>..\lib\UnhollowerBaseLib.dll</HintPath>
@@ -57,53 +35,19 @@
     <Reference Include="UnityEngine-IL2CPP">
       <HintPath>..\lib\UnityEngine-IL2CPP.dll</HintPath>
       <Private>False</Private>
-      <Aliases>il2cpp</Aliases>
     </Reference>
     <Reference Include="UnityEngine.CoreModule-IL2CPP">
       <HintPath>..\lib\UnityEngine.CoreModule-IL2CPP.dll</HintPath>
       <Private>False</Private>
-      <Aliases>il2cpp</Aliases>
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BasePlugin.cs" />
-    <Compile Include="DoorstopEntrypoint.cs" />
-    <Compile Include="EnvVars.cs" />
-    <Compile Include="Hook\FastNativeDetour.cs" />
-    <Compile Include="Hook\IL2CPPDetourMethodPatcher.cs" />
-    <Compile Include="IL2CPPChainloader.cs" />
-    <Compile Include="Logging\IL2CPPUnityLogSource.cs" />
-    <Compile Include="Logging\IL2CPPLogSource.cs" />
-    <Compile Include="MonoExtensions.cs" />
-    <Compile Include="Preloader.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Hook\DetourGenerator.cs" />
-    <Compile Include="ProxyAssemblyGenerator.cs" />
-    <Compile Include="UnityEngine\Input.cs" />
+    <ProjectReference Include="..\BepInEx.Core\BepInEx.Core.csproj" />
+    <ProjectReference Include="..\BepInEx.Preloader.Core\BepInEx.Preloader.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\BepInEx.Core\BepInEx.Core.csproj">
-      <Project>{4ffba620-f5ed-47f9-b90c-dad1316fd9b9}</Project>
-      <Name>BepInEx.Core</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\BepInEx.Preloader.Core\BepInEx.Preloader.Core.csproj">
-      <Project>{15f8bc38-a761-4f93-8903-1b531ac5d9f9}</Project>
-      <Name>BepInEx.Preloader.Core</Name>
-    </ProjectReference>
+    <PackageReference Include="HarmonyX" Version="2.1.1" />
+    <PackageReference Include="Iced" Version="1.6.0" />
+    <PackageReference Include="MonoMod.RuntimeDetour" Version="20.11.5.1" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="app.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="HarmonyX">
-      <Version>2.1.1</Version>
-    </PackageReference>
-    <PackageReference Include="Iced">
-      <Version>1.6.0</Version>
-    </PackageReference>
-    <PackageReference Include="MonoMod.RuntimeDetour">
-      <Version>20.11.5.1</Version>
-    </PackageReference>
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

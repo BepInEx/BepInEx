@@ -1,73 +1,30 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{EAE9FAE6-8011-45A3-8B6E-0C7F14210533}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>BepInEx.Unity</RootNamespace>
-    <AssemblyName>BepInEx.Unity</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <Deterministic>true</Deterministic>
+    <TargetFramework>net35</TargetFramework>
+    <AssemblyTitle>BepInEx.Unity</AssemblyTitle>
+    <Product>BepInEx.Unity</Product>
+    <Copyright>Copyright ©  2020</Copyright>
+    <OutputPath>..\bin\Unity\</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>..\bin\Unity\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>none</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>..\bin\Unity\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
     <DocumentationFile>..\bin\BepInEx.Unity.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
     <Reference Include="UnityEngine">
       <HintPath>..\lib\UnityEngine.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BaseUnityPlugin.cs" />
-    <Compile Include="Bootstrap\UnityChainloader.cs" />
-    <Compile Include="BepInExInstance.cs" />
-    <Compile Include="Configuration\KeyboardShortcut.cs" />
-    <Compile Include="Logging\UnityLogListener.cs" />
-    <Compile Include="Logging\UnityLogSource.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ThreadingHelper.cs" />
-    <Compile Include="UnityTomlTypeConverters.cs" />
+    <ProjectReference Include="..\BepInEx.Core\BepInEx.Core.csproj" />
+    <ProjectReference Include="..\BepInEx.Preloader.Core\BepInEx.Preloader.Core.csproj" />
+    <ProjectReference Include="..\BepInEx.Preloader.Unity\BepInEx.Preloader.Unity.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\BepInEx.Core\BepInEx.Core.csproj">
-      <Project>{4ffba620-f5ed-47f9-b90c-dad1316fd9b9}</Project>
-      <Name>BepInEx.Core</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\BepInEx.Preloader.Core\BepInEx.Preloader.Core.csproj">
-      <Project>{15F8BC38-A761-4F93-8903-1B531AC5D9F9}</Project>
-      <Name>BepInEx.Preloader.Core</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\BepInEx.Preloader.Unity\BepInEx.Preloader.Unity.csproj">
-      <Project>{d404c973-441d-48ed-b266-c21320ba0d87}</Project>
-      <Name>BepInEx.Preloader.Unity</Name>
-    </ProjectReference>
+    <PackageReference Include="HarmonyX" Version="2.1.1" />
   </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="HarmonyX">
-      <Version>2.1.1</Version>
-    </PackageReference>
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

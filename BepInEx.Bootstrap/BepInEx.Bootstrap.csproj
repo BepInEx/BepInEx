@@ -1,44 +1,14 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{6E6BC1E5-5BE8-4566-B3AE-52C4CB218AEB}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>BepInEx.Bootstrap</RootNamespace>
-    <AssemblyName>BepInEx.Bootstrap</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <TargetFramework>net35</TargetFramework>
+    <AssemblyTitle>BepInEx.Bootstrap</AssemblyTitle>
+    <Product>BepInEx.Bootstrap</Product>
+    <Copyright>Copyright ©  2018</Copyright>
     <DebugType>none</DebugType>
-    <Optimize>true</Optimize>
     <OutputPath>..\bin\patcher\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
+    <ProjectReference Include="..\BepInEx.Core\BepInEx.Core.csproj" />
+    <ProjectReference Include="..\BepInEx.Unity\BepInEx.Unity.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Entrypoint.cs" />
-    <Compile Include="Linker.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\BepInEx.Core\BepInEx.Core.csproj">
-      <Project>{4ffba620-f5ed-47f9-b90c-dad1316fd9b9}</Project>
-      <Name>BepInEx.Core</Name>
-      <Private>False</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\BepInEx.Unity\BepInEx.Unity.csproj">
-      <Project>{EAE9FAE6-8011-45A3-8B6E-0C7F14210533}</Project>
-      <Name>BepInEx.Unity</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
