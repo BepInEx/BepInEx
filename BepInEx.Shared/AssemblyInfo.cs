@@ -6,8 +6,3 @@ using BepInEx.Shared;
 [assembly: AssemblyVersion(VersionInfo.VERSION)]
 [assembly: AssemblyFileVersion(VersionInfo.VERSION)]
 [assembly: AssemblyInformationalVersion(VersionInfo.VERSION)]
-
-internal static class VersionInfo
-{
-	public const string VERSION = "6.0.0.0";
-}

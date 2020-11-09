@@ -11,5 +11,6 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)AssemblyInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)BuildInfoAttribute.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)VersionInfo.cs" />
   </ItemGroup>
 </Project>

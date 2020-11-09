@@ -51,12 +51,13 @@ Task("Build")
     .IsDependentOn("PullDependencies")
     .Does(() =>
 {
-    var bepinExProperties = Directory("./BepInEx.Core/Properties");
+    var bepinExProperties = Directory("./BepInEx.Shared");
 
     if(isBleedingEdge)
     {
+        CopyFile(bepinExProperties + File("VersionInfo.cs"), bepinExProperties + File("VersionInfo.cs.bak"));
         CopyFile(bepinExProperties + File("AssemblyInfo.cs"), bepinExProperties + File("AssemblyInfo.cs.bak"));
-        ReplaceRegexInFiles(bepinExProperties + File("AssemblyInfo.cs"), "([0-9]+\\.[0-9]+\\.[0-9]+\\.)[0-9]+", "${1}" + buildId);
+        ReplaceRegexInFiles(bepinExProperties + File("VersionInfo.cs"), "([0-9]+\\.[0-9]+\\.[0-9]+\\.)[0-9]+", "${1}" + buildId);
 
         FileAppendText(bepinExProperties + File("AssemblyInfo.cs"), 
             TransformText("\n[assembly: BuildInfo(\"BLEEDING EDGE Build #<%buildNumber%> from <%shortCommit%> at <%branchName%>\")]\n")
@@ -66,7 +67,7 @@ Task("Build")
                 .ToString());
     }
 
-    buildVersion = FindRegexMatchInFile(bepinExProperties + File("AssemblyInfo.cs"), "[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+", System.Text.RegularExpressions.RegexOptions.None);
+    buildVersion = FindRegexMatchInFile(bepinExProperties + File("VersionInfo.cs"), "[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+", System.Text.RegularExpressions.RegexOptions.None);
 
     var buildSettings = new MSBuildSettings {
         Configuration = "Release",
@@ -84,11 +85,13 @@ Task("Build")
 })
 .Finally(() => 
 {
-    var bepinExProperties = Directory("./BepInEx.Core/Properties");
+    var bepinExProperties = Directory("./BepInEx.Shared");
     if(isBleedingEdge)
     {
         DeleteFile(bepinExProperties + File("AssemblyInfo.cs"));
+        DeleteFile(bepinExProperties + File("VersionInfo.cs"));
         MoveFile(bepinExProperties + File("AssemblyInfo.cs.bak"), bepinExProperties + File("AssemblyInfo.cs"));
+        MoveFile(bepinExProperties + File("VersionInfo.cs.bak"), bepinExProperties + File("VersionInfo.cs"));
     }
 });
 
