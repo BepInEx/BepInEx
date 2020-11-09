@@ -1,6 +1,4 @@
 ﻿using System.Runtime.CompilerServices;
-// ReSharper disable once RedundantUsingDirective
-using BepInEx;
 
 [assembly: InternalsVisibleTo("BepInEx.Preloader.Core")]
 [assembly: InternalsVisibleTo("BepInEx.Unity")]

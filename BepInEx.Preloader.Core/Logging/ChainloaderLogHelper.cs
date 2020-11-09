@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using BepInEx.Logging;
+using BepInEx.Shared;
 using MonoMod.Utils;
 
 namespace BepInEx.Preloader.Core.Logging
