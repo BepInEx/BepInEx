@@ -36,7 +36,19 @@ A more comprehensive comparison list of features and compatibility is available 
 
 **[User and developer guides](https://bepinex.github.io/bepinex_docs/master/articles/index.html)**
 
-**[Discord server](https://discord.gg/MpFEDAg)
+**[Discord server](https://discord.gg/MpFEDAg)**
+
+### Available plugin loaders
+
+| Name              | Link to project                                                                           |
+|-------------------|-------------------------------------------------------------------------------------------|
+| MelonLoader       | [BepInEx.MelonLoader.Loader](https://github.com/BepInEx/BepInEx.MelonLoader.Loader)       |
+| IPA               | [IPALoaderX](https://github.com/BepInEx/IPALoaderX)                                       |
+| UnityInjector     | [BepInEx.UnityInjector.Loader](https://github.com/BepInEx/BepInEx.UnityInjectorLoader)    |
+| Sybaris           | [BepInEx.SybarisLoader.Patcher](https://github.com/BepInEx/BepInEx.SybarisLoader.Patcher) |
+| MonoMod           | [BepInEx.MonoMod.Loader](https://github.com/BepInEx/BepInEx.MonoMod.Loader)               |
+| BSIPA             | [BepINEx.BSIPA.Loader](https://github.com/BepInEx/BepInEx.BSIPA.Loader)                   |
+| Unity Mod Manager | [BepInEx.UMMLoader](https://github.com/BepInEx/BepInEx.UMMLoader)                         |
 
 ## Used libraries
 - [NeighTools/UnityDoorstop](https://github.com/NeighTools/UnityDoorstop) - 3.1 ([1646a74](https://github.com/NeighTools/UnityDoorstop/commit/1646a74fd58c287533b67ac576ef974908d24346))
