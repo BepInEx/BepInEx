@@ -33,6 +33,7 @@ namespace BepInEx.Preloader
 			try
 			{
 				InitializeHarmony();
+				HarmonyInteropFix.Apply();
 
 				ConsoleManager.Initialize(false);
 				AllocateConsole();

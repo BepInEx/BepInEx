@@ -57,6 +57,7 @@
     <Compile Include="Patching\PatcherPlugin.cs" />
     <Compile Include="Platform.cs" />
     <Compile Include="RuntimeFixes\ConsoleSetOutFix.cs" />
+    <Compile Include="RuntimeFixes\HarmonyInteropFix.cs" />
     <Compile Include="RuntimeFixes\TraceFix.cs" />
     <Compile Include="Preloader.cs" />
     <Compile Include="Logger\PreloaderConsoleListener.cs" />

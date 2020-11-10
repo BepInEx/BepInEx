@@ -39,16 +39,6 @@ namespace BepInEx.Preloader
 			}
 		}
 
-		// Do this in a separate method to not trigger cctor prematurely
-		private static void InitializeAssemblyResolvers()
-		{
-			// Need to initialize interop first because it installs its own special assembly resolver
-			HarmonyInterop.Initialize();
-			AppDomain.CurrentDomain.AssemblyResolve += LocalResolve;
-			// Remove temporary resolver early so it won't override local resolver
-			AppDomain.CurrentDomain.AssemblyResolve -= Entrypoint.ResolveCurrentDirectory;
-		}
-
 		public static void PreloaderPreMain()
 		{
 			PlatformUtils.SetPlatform();
@@ -58,7 +48,9 @@ namespace BepInEx.Preloader
 			Paths.SetExecutablePath(EnvVars.DOORSTOP_PROCESS_PATH, bepinPath, EnvVars.DOORSTOP_MANAGED_FOLDER_DIR);
 
 			LoadCriticalAssemblies();
-			InitializeAssemblyResolvers();
+			AppDomain.CurrentDomain.AssemblyResolve += LocalResolve;
+			// Remove temporary resolver early so it won't override local resolver
+			AppDomain.CurrentDomain.AssemblyResolve -= Entrypoint.ResolveCurrentDirectory;
 			PreloaderMain();
 		}
 
@@ -75,6 +67,7 @@ namespace BepInEx.Preloader
 
 		private static Assembly LocalResolve(object sender, ResolveEventArgs args)
 		{
+			File.AppendAllText("bepinresolve.log", $"{args.Name}\n");
 			if (!Utility.TryParseAssemblyName(args.Name, out var assemblyName))
 				return null;
 
@@ -94,7 +87,7 @@ namespace BepInEx.Preloader
 
 			if (foundAssembly != null)
 				return foundAssembly;
-
+			
 			if (Utility.TryResolveDllAssembly(assemblyName, Paths.BepInExAssemblyDirectory, out foundAssembly)
 				|| Utility.TryResolveDllAssembly(assemblyName, Paths.PatcherPluginPath, out foundAssembly)
 				|| Utility.TryResolveDllAssembly(assemblyName, Paths.PluginPath, out foundAssembly))
@@ -146,6 +139,7 @@ namespace BepInEx.Preloader
 
 		internal static Assembly ResolveCurrentDirectory(object sender, ResolveEventArgs args)
 		{
+			File.AppendAllText("preresolve.log", $"{args.Name}\n");
 			// Can't use Utils here because it's not yet resolved
 			var name = new AssemblyName(args.Name);
 
