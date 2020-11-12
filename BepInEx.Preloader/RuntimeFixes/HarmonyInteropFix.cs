@@ -23,7 +23,7 @@ namespace BepInEx.Preloader.RuntimeFixes
 		[HarmonyPrefix]
 		private static bool OnAssemblyLoad(ref Assembly __result, string path)
 		{
-			var bytes = HarmonyInterop.TryShim(path, Logger.LogWarning, TypeLoader.ReaderParameters);
+			var bytes = HarmonyInterop.TryShim(path, Paths.GameRootPath, Logger.LogWarning, TypeLoader.ReaderParameters);
 			if (bytes == null)
 				return true;
 			__result = Assembly.Load(bytes);
