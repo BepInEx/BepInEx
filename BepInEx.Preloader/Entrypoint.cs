@@ -138,7 +138,6 @@ namespace BepInEx.Preloader
 
 		internal static Assembly ResolveCurrentDirectory(object sender, ResolveEventArgs args)
 		{
-			File.AppendAllText("preresolve.log", $"{args.Name}\n");
 			// Can't use Utils here because it's not yet resolved
 			var name = new AssemblyName(args.Name);
 

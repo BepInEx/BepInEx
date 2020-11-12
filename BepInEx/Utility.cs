@@ -289,7 +289,6 @@ namespace BepInEx
 			}
 			catch (Exception e)
 			{
-				File.AppendAllText("tryparseerr.log", $"Failed to parse {fullName}: {e}");
 				assemblyName = null;
 				return false;
 			}
