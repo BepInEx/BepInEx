@@ -67,7 +67,6 @@ namespace BepInEx.Preloader
 
 		private static Assembly LocalResolve(object sender, ResolveEventArgs args)
 		{
-			File.AppendAllText("bepinresolve.log", $"{args.Name}\n");
 			if (!Utility.TryParseAssemblyName(args.Name, out var assemblyName))
 				return null;
 
