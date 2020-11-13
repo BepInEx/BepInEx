@@ -12,13 +12,14 @@ namespace BepInEx.IL2CPP
 		{
 			string bepinPath = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetFullPath(EnvVars.DOORSTOP_INVOKE_DLL_PATH)));
 
+			PlatformUtils.SetPlatform();
+			
 			Paths.SetExecutablePath(EnvVars.DOORSTOP_PROCESS_PATH, bepinPath);
 			Preloader.IL2CPPUnhollowedPath = Path.Combine(Paths.BepInExRootPath, "unhollowed");
 
 			AppDomain.CurrentDomain.AssemblyResolve += LocalResolve;
 			AppDomain.CurrentDomain.AssemblyResolve -= DoorstopEntrypoint.ResolveCurrentDirectory;
 
-			PlatformUtils.SetPlatform();
 
 			Preloader.Run();
 		}
