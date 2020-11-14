@@ -8,7 +8,7 @@ namespace BepInEx.IL2CPP
 	/// <summary>
 	///     Based on https://github.com/kubo/funchook
 	/// </summary>
-	internal class WindowsMemoryBuffer : MemoryBuffer
+	internal class WindowsMemoryAllocator : MemoryAllocator
 	{
 		private readonly LinkedList<IntPtr> allocatedChunks = new LinkedList<IntPtr>();
 

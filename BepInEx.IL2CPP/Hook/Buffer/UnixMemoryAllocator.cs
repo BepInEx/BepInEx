@@ -5,7 +5,7 @@ namespace BepInEx.IL2CPP
 	/// <summary>
 	///     Based on https://github.com/kubo/funchook
 	/// </summary>
-	internal class UnixMemoryBuffer : MemoryBuffer
+	internal class UnixMemoryAllocator : MemoryAllocator
 	{
 		public override IntPtr Allocate(IntPtr func)
 		{

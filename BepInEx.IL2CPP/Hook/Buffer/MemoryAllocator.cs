@@ -8,7 +8,7 @@ namespace BepInEx.IL2CPP
 	/// 
 	///     Based on https://github.com/kubo/funchook
 	/// </summary>
-	internal abstract class MemoryBuffer
+	internal abstract class MemoryAllocator
 	{
 		/// <summary>
 		///     Common page size on Unix and Windows (4k).
@@ -20,8 +20,8 @@ namespace BepInEx.IL2CPP
 		/// </summary>
 		protected const int ALLOCATION_UNIT = 0x100000;
 
-		private static MemoryBuffer instance;
-		public static MemoryBuffer Instance => instance ??= Init();
+		private static MemoryAllocator instance;
+		public static MemoryAllocator Instance => instance ??= Init();
 
 		public abstract IntPtr Allocate(IntPtr func);
 		public abstract void Free(IntPtr buffer);
@@ -38,12 +38,12 @@ namespace BepInEx.IL2CPP
 			return (num + unit - 1) & ~ (unit - 1);
 		}
 
-		private static MemoryBuffer Init()
+		private static MemoryAllocator Init()
 		{
 			if (PlatformHelper.Is(Platform.Windows))
-				return new WindowsMemoryBuffer();
+				return new WindowsMemoryAllocator();
 			if (PlatformHelper.Is(Platform.Unix))
-				return new UnixMemoryBuffer();
+				return new UnixMemoryAllocator();
 			throw new NotImplementedException();
 		}
 	}
