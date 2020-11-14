@@ -5,9 +5,10 @@ using MonoMod.Utils;
 namespace BepInEx.IL2CPP
 {
 	/// <summary>
-	/// 
-	///     Based on https://github.com/kubo/funchook
+	///     A general purpose memory allocator for patching purposes.
+	///     Allows to allocate memory within the 2GB radius of a given address.
 	/// </summary>
+	/// <remarks>Based on https://github.com/kubo/funchook</remarks>
 	internal abstract class MemoryAllocator
 	{
 		/// <summary>
