@@ -2,7 +2,10 @@
 
 namespace BepInEx.IL2CPP
 {
-	public class UnixMemoryBuffer : MemoryBuffer
+	/// <summary>
+	///     Based on https://github.com/kubo/funchook
+	/// </summary>
+	internal class UnixMemoryBuffer : MemoryBuffer
 	{
 		public override IntPtr Allocate(IntPtr func)
 		{
