@@ -34,7 +34,8 @@ namespace BepInEx.Logging
 		/// <param name="displayedLogLevel">Log levels to display.</param>
 		/// <param name="appendLog">Whether to append logs to an already existing log file.</param>
 		/// <param name="delayedFlushing">Whether to delay flushing to disk to improve performance. Useful to set this to false when debugging crashes.</param>
-		public DiskLogListener(string localPath, LogLevel displayedLogLevel = LogLevel.Info, bool appendLog = false, bool delayedFlushing = true)
+		/// <param name="fileLimit">Maximum amount of concurrently opened log files. Can help with infinite game boot loops.</param>
+		public DiskLogListener(string localPath, LogLevel displayedLogLevel = LogLevel.Info, bool appendLog = false, bool delayedFlushing = true, int fileLimit = 5)
 		{
 			DisplayedLogLevel = displayedLogLevel;
 
@@ -44,7 +45,7 @@ namespace BepInEx.Logging
 
 			while (!Utility.TryOpenFileStream(Path.Combine(Paths.BepInExRootPath, localPath), appendLog ? FileMode.Append : FileMode.Create, out fileStream, share: FileShare.Read, access: FileAccess.Write))
 			{
-				if (counter == 5)
+				if (counter == fileLimit)
 				{
 					Logger.LogError("Couldn't open a log file for writing. Skipping log file creation");
 
@@ -53,7 +54,7 @@ namespace BepInEx.Logging
 
 				Logger.LogWarning($"Couldn't open log file '{localPath}' for writing, trying another...");
 
-				localPath = $"LogOutput.log.{counter++}";
+				localPath = $"LogOutput.{counter++}.log";
 			}
 
 			LogWriter = TextWriter.Synchronized(new StreamWriter(fileStream, Encoding.UTF8));
@@ -71,6 +72,9 @@ namespace BepInEx.Logging
 		/// <inheritdoc />
 		public void LogEvent(object sender, LogEventArgs eventArgs)
 		{
+			if (LogWriter == null)
+				return;
+			
 			if (BlacklistedSources.Contains(eventArgs.Source.SourceName))
 				return;
 
