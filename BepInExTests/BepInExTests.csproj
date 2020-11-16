@@ -10,7 +10,7 @@
     <UpgradeBackupLocation />
     <AssemblyTitle>BepInExTests</AssemblyTitle>
     <Product>BepInExTests</Product>
-    <Copyright>Copyright ©  2019</Copyright>
+    <Copyright>Copyright © 2020 BepInEx Team</Copyright>
     <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
@@ -38,11 +38,5 @@
     <ProjectReference Include="..\BepInEx.Core\BepInEx.Core.csproj" />
     <ProjectReference Include="..\BepInEx.IL2CPP\BepInEx.IL2CPP.csproj" />
     <ProjectReference Include="..\BepInEx.Unity\BepInEx.Unity.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Properties" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Remove="Properties\AssemblyInfo.cs" />
   </ItemGroup>
 </Project>

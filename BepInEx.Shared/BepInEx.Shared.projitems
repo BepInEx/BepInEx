@@ -4,13 +4,19 @@
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
     <HasSharedItems>true</HasSharedItems>
     <SharedGUID>E312EFD4-47ED-4DCE-B279-6B0EE314989F</SharedGUID>
+    <Copyright>Copyright © 2020 BepInEx Team</Copyright>
+    <Version>6.0.0</Version>
   </PropertyGroup>
   <PropertyGroup Label="Configuration">
     <Import_RootNamespace>BepInEx.Shared</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)AssemblyInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)BuildInfoAttribute.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)VersionInfo.cs" />
+  </ItemGroup>
+  
+  <ItemGroup Condition="'$(BuildInfo)' != ''">
+    <AssemblyAttribute Include="BepInEx.Shared.BuildInfoAttribute">
+        <_Parameter1>$(BuildInfo)</_Parameter1>
+    </AssemblyAttribute>
   </ItemGroup>
 </Project>
