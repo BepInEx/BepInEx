@@ -70,7 +70,7 @@ namespace BepInEx.Bootstrap
 			}
 
 			if (ConfigDiskLogging.Value)
-				Logger.Listeners.Add(new DiskLogListener("LogOutput.log", ConfigDiskLoggingDisplayedLevel.Value, ConfigDiskAppend.Value, ConfigDiskLoggingInstantFlushing.Value));
+				Logger.Listeners.Add(new DiskLogListener("LogOutput.log", ConfigDiskLoggingDisplayedLevel.Value, ConfigDiskAppend.Value, ConfigDiskLoggingInstantFlushing.Value, ConfigDiskLoggingFileLimit.Value));
 
 			if (!TraceLogSource.IsListening)
 				Logger.Sources.Add(TraceLogSource.CreateSource());
@@ -373,6 +373,11 @@ namespace BepInEx.Bootstrap
 				.AppendLine("If true, instantly writes any received log entries to disk.")
 				.AppendLine("This incurs a major performance hit if a lot of log messages are being written, however it is really useful for debugging crashes.")
 				.ToString());
+
+		private static readonly ConfigEntry<int> ConfigDiskLoggingFileLimit = ConfigFile.CoreConfig.Bind(
+			"Logging.Disk", "FileLimit",
+			5,
+			"Maximum amount of concurrently opened log files. Can help with infinite game boot loops.");
 
 		#endregion
 	}
