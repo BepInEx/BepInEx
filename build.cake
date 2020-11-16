@@ -1,8 +1,8 @@
-#addin nuget:?package=Cake.FileHelpers&version=3.2.1
-#addin nuget:?package=SharpZipLib&version=1.2.0
+#addin nuget:?package=Cake.FileHelpers&version=3.3.0
+#addin nuget:?package=SharpZipLib&version=1.3.0
 #addin nuget:?package=Cake.Compression&version=0.2.4
-#addin nuget:?package=Cake.Json&version=4.0.0
-#addin nuget:?package=Newtonsoft.Json&version=11.0.2
+#addin nuget:?package=Cake.Json&version=5.2.0
+#addin nuget:?package=Newtonsoft.Json&version=12.0.3
 
 var target = Argument("target", "Build");
 var isBleedingEdge = Argument("bleeding_edge", false);
@@ -53,26 +53,29 @@ Task("Build")
 {
     var bepinExProperties = Directory("./BepInEx.Shared");
 
-    if(isBleedingEdge)
-    {
-        CopyFile(bepinExProperties + File("VersionInfo.cs"), bepinExProperties + File("VersionInfo.cs.bak"));
-        CopyFile(bepinExProperties + File("AssemblyInfo.cs"), bepinExProperties + File("AssemblyInfo.cs.bak"));
-        ReplaceRegexInFiles(bepinExProperties + File("VersionInfo.cs"), "([0-9]+\\.[0-9]+\\.[0-9]+\\.)[0-9]+", "${1}" + buildId);
-
-        FileAppendText(bepinExProperties + File("AssemblyInfo.cs"), 
-            TransformText("\n[assembly: BuildInfo(\"BLEEDING EDGE Build #<%buildNumber%> from <%shortCommit%> at <%branchName%>\")]\n")
-                .WithToken("buildNumber", buildId)
-                .WithToken("shortCommit", currentCommit)
-                .WithToken("branchName", currentBranch)
-                .ToString());
-    }
-
-    buildVersion = FindRegexMatchInFile(bepinExProperties + File("VersionInfo.cs"), "[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+", System.Text.RegularExpressions.RegexOptions.None);
+    buildVersion = FindRegexMatchGroupInFile(bepinExProperties + File("BepInEx.Shared.projitems"), @"\<Version\>([0-9]+\.[0-9]+\.[0-9]+)\<\/Version\>", 1, System.Text.RegularExpressions.RegexOptions.None).Value;
 
     var buildSettings = new MSBuildSettings {
         Configuration = "Release",
         Restore = true
     };
+
+    if (isBleedingEdge) 
+    {
+        buildSettings.Properties["BuildInfo"] = new[] {
+            TransformText("BLEEDING EDGE Build #<%buildNumber%> from <%shortCommit%> at <%branchName%>")
+                .WithToken("buildNumber", buildId)
+                .WithToken("shortCommit", currentCommit)
+                .WithToken("branchName", currentBranch)
+                .ToString()
+        };
+
+        buildSettings.Properties["AssemblyVersion"] = new[] { buildVersion + "." + buildId };
+
+        buildVersion += "-ci." + buildId;
+
+        buildSettings.Properties["Version"] = new[] { buildVersion };
+    }
 
     //buildSettings.Properties["TargetFrameworks"] = new []{ "net35" };
     MSBuild("./BepInEx.Unity/BepInEx.Unity.csproj", buildSettings);
@@ -82,17 +85,6 @@ Task("Build")
     
     //buildSettings.Properties["TargetFrameworks"] = new []{ "net472" };
     MSBuild("./BepInEx.IL2CPP/BepInEx.IL2CPP.csproj", buildSettings);
-})
-.Finally(() => 
-{
-    var bepinExProperties = Directory("./BepInEx.Shared");
-    if(isBleedingEdge)
-    {
-        DeleteFile(bepinExProperties + File("AssemblyInfo.cs"));
-        DeleteFile(bepinExProperties + File("VersionInfo.cs"));
-        MoveFile(bepinExProperties + File("AssemblyInfo.cs.bak"), bepinExProperties + File("AssemblyInfo.cs"));
-        MoveFile(bepinExProperties + File("VersionInfo.cs.bak"), bepinExProperties + File("VersionInfo.cs"));
-    }
 });
 
 const string DOORSTOP_VER_WIN = "3.1.0.0";
