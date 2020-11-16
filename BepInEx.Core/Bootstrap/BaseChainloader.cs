@@ -375,9 +375,12 @@ namespace BepInEx.Bootstrap
 				.ToString());
 
 		private static readonly ConfigEntry<int> ConfigDiskLoggingFileLimit = ConfigFile.CoreConfig.Bind(
-			"Logging.Disk", "FileLimit",
+			"Logging.Disk", "ConcurrentFileLimit",
 			5,
-			"Maximum amount of concurrently opened log files. Can help with infinite game boot loops.");
+			new StringBuilder()
+				.AppendLine("The maximum amount of concurrent log files that will be written to disk.")
+				.AppendLine("As one log file is used per open game instance, you may find it necessary to increase this limit when debugging multiple instances at the same time.")
+				.ToString());
 
 		#endregion
 	}
