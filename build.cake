@@ -72,7 +72,7 @@ Task("Build")
 
         buildSettings.Properties["AssemblyVersion"] = new[] { buildVersion + "." + buildId };
 
-        buildVersion += "-ci." + buildId;
+        buildVersion += "-be." + buildId;
 
         buildSettings.Properties["Version"] = new[] { buildVersion };
     }
