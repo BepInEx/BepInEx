@@ -174,7 +174,7 @@ namespace BepInEx.Bootstrap
 
 						// If the dependency wasn't already processed, it's missing altogether
 						bool dependencyExists = processedPlugins.TryGetValue(dependency.DependencyGUID, out var pluginVersion);
-						if (!dependencyExists || (dependency.MinimumVersion != null && dependency.MinimumVersion > pluginVersion))
+						if (!dependencyExists || (dependency.MinimumVersion != null && pluginVersion < dependency.MinimumVersion))
 						{
 							// If the dependency is hard, collect it into a list to show
 							if (IsHardDependency(dependency))
