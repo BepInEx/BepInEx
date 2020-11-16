@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using BepInEx.Bootstrap;
+using BepInEx.Core;
 using Mono.Cecil;
 
 namespace BepInEx
@@ -30,7 +31,7 @@ namespace BepInEx
 		/// <summary>
 		/// The specfic version of the plugin.
 		/// </summary>
-		public Version Version { get; protected set; }
+		public SemVersion Version { get; protected set; }
 
 		/// <param name="GUID">The unique identifier of the plugin. Should not change between plugin versions.</param>
 		/// <param name="Name">The user friendly name of the plugin. Is able to be changed between versions.</param>
@@ -42,7 +43,7 @@ namespace BepInEx
 
 			try
 			{
-				this.Version = new Version(Version);
+				this.Version = SemVersion.Parse(Version);
 			}
 			catch
 			{
@@ -97,7 +98,7 @@ namespace BepInEx
 		/// <summary>
 		/// The minimum version of the referenced plugin.
 		/// </summary>
-		public Version MinimumVersion { get; protected set; }
+		public SemVersion MinimumVersion { get; protected set; }
 
 		/// <summary>
 		/// Marks this <see cref="BaseUnityPlugin"/> as depenant on another plugin. The other plugin will be loaded before this one.
@@ -109,7 +110,7 @@ namespace BepInEx
 		{
 			this.DependencyGUID = DependencyGUID;
 			this.Flags = Flags;
-			MinimumVersion = new Version();
+			MinimumVersion = null;
 		}
 
 		/// <summary>
@@ -121,7 +122,7 @@ namespace BepInEx
 		/// <remarks>When version is supplied the dependency is always treated as HardDependency</remarks>
 		public BepInDependency(string DependencyGUID, string MinimumDependencyVersion) : this(DependencyGUID)
 		{
-			MinimumVersion = new Version(MinimumDependencyVersion);
+			MinimumVersion = SemVersion.Parse(MinimumDependencyVersion);
 		}
 
 		internal static IEnumerable<BepInDependency> FromCecilType(TypeDefinition td)
@@ -147,7 +148,7 @@ namespace BepInEx
 		{
 			DependencyGUID = br.ReadString();
 			Flags = (DependencyFlags)br.ReadInt32();
-			MinimumVersion = new Version(br.ReadString());
+			MinimumVersion = SemVersion.Parse(br.ReadString());
 		}
 	}
 

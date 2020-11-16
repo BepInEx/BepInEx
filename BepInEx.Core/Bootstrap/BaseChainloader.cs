@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using BepInEx.Configuration;
+using BepInEx.Core;
 using BepInEx.Logging;
 using Mono.Cecil;
 
@@ -15,7 +16,7 @@ namespace BepInEx.Bootstrap
 	{
 		#region Contract
 
-		protected virtual string ConsoleTitle => $"BepInEx {typeof(Paths).Assembly.GetName().Version} - {Paths.ProcessName}";
+		protected virtual string ConsoleTitle => $"BepInEx {Paths.BepInExVersion} - {Paths.ProcessName}";
 
 		private bool _initialized = false;
 
@@ -159,7 +160,7 @@ namespace BepInEx.Bootstrap
 				var sortedPlugins = ModifyLoadOrder(plugins);
 
 				var invalidPlugins = new HashSet<string>();
-				var processedPlugins = new Dictionary<string, Version>();
+				var processedPlugins = new Dictionary<string, SemVersion>();
 				var loadedAssemblies = new Dictionary<string, Assembly>();
 
 				foreach (var plugin in sortedPlugins)
@@ -173,7 +174,7 @@ namespace BepInEx.Bootstrap
 
 						// If the dependency wasn't already processed, it's missing altogether
 						bool dependencyExists = processedPlugins.TryGetValue(dependency.DependencyGUID, out var pluginVersion);
-						if (!dependencyExists || pluginVersion < dependency.MinimumVersion)
+						if (!dependencyExists || (dependency.MinimumVersion != null && dependency.MinimumVersion > pluginVersion))
 						{
 							// If the dependency is hard, collect it into a list to show
 							if (IsHardDependency(dependency))
@@ -201,10 +202,8 @@ namespace BepInEx.Bootstrap
 
 					if (missingDependencies.Count != 0)
 					{
-						bool IsEmptyVersion(Version v) => v.Major == 0 && v.Minor == 0 && v.Build <= 0 && v.Revision <= 0;
-
 						string message = $@"Could not load [{plugin}] because it has missing dependencies: {
-								string.Join(", ", missingDependencies.Select(s => IsEmptyVersion(s.MinimumVersion) ? s.DependencyGUID : $"{s.DependencyGUID} (v{s.MinimumVersion} or newer)").ToArray())
+								string.Join(", ", missingDependencies.Select(s => s.MinimumVersion == null ? s.DependencyGUID : $"{s.DependencyGUID} (v{s.MinimumVersion} or newer)").ToArray())
 							}";
 						DependencyErrors.Add(message);
 						Logger.LogError(message);
