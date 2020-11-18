@@ -107,8 +107,8 @@ namespace BepInEx.IL2CPP
 
 		private class PageChunk
 		{
-			public IntPtr BaseAddress;
 			public readonly bool[] Pages = new bool[PAGES_PER_UNIT];
+			public IntPtr BaseAddress;
 			public int UsedPages;
 
 			public IntPtr GetPage(int index)

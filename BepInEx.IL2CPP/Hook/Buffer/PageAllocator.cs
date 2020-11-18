@@ -13,6 +13,7 @@ namespace BepInEx.IL2CPP
 	{
 		/// <summary>
 		///     Common page size on Unix and Windows (4k).
+		///     Call to <see cref="Allocate" /> will allocate a single page of this size.
 		/// </summary>
 		public const int PAGE_SIZE = 0x1000;
 
@@ -24,17 +25,25 @@ namespace BepInEx.IL2CPP
 		protected const int PAGES_PER_UNIT = ALLOCATION_UNIT / PAGE_SIZE;
 
 		private static PageAllocator instance;
+
+		/// <summary>
+		///     Platform-specific instance of page allocator.
+		/// </summary>
 		public static PageAllocator Instance => instance ??= Init();
 
+		/// <summary>
+		///     Allocates a single page of size <see cref="PAGE_SIZE" /> near the provided address.
+		///     Attempts to allocate the page within the +-1GB region of the hinted address.
+		/// </summary>
+		/// <param name="hint">Address near which to attempt to allocate the page.</param>
+		/// <returns>Address to the allocated page.</returns>
 		public abstract IntPtr Allocate(IntPtr hint);
 
+		/// <summary>
+		///     Frees the page allocated with <see cref="Allocate" />
+		/// </summary>
+		/// <param name="page"></param>
 		public abstract void Free(IntPtr page);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static long RoundDown(long num, long unit)
-		{
-			return num & ~(unit - 1);
-		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected static long RoundUp(long num, long unit)
@@ -42,8 +51,14 @@ namespace BepInEx.IL2CPP
 			return (num + unit - 1) & ~ (unit - 1);
 		}
 
+		/// <summary>
+		///     Checks if the given address is within the relative jump range.
+		/// </summary>
+		/// <param name="src">Source address to jump from.</param>
+		/// <param name="dst">Destination address to jump to.</param>
+		/// <returns>True, if the distance between the addresses is within the relative jump range (usually 1GB), otherwise false.</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static bool IsInRelJmpRange(IntPtr src, IntPtr dst)
+		public static bool IsInRelJmpRange(IntPtr src, IntPtr dst)
 		{
 			long diff = dst.ToInt64() - src.ToInt64();
 			return int.MinValue <= diff && diff <= int.MaxValue;
