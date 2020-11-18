@@ -66,9 +66,9 @@ namespace BepInEx.IL2CPP
 			byte[] instructionBuffer = new byte[32];
 			Marshal.Copy(originalFuncPointer, instructionBuffer, 0, 32);
 
-			var trampolinePtr = DetourHelper.Native.MemAlloc(80);
+			var trampolinePtr = PageAllocator.Instance.Allocate(originalFuncPointer);
 
-			DetourHelper.Native.MakeWritable(trampolinePtr, 80);
+			DetourHelper.Native.MakeWritable(trampolinePtr, PageAllocator.PAGE_SIZE);
 
 			var arch = IntPtr.Size == 8 ? Architecture.X64 : Architecture.X86;
 
@@ -77,7 +77,7 @@ namespace BepInEx.IL2CPP
 			CreateTrampolineFromFunction(instructionBuffer, originalFuncPointer, trampolinePtr, minimumTrampolineLength, arch, out trampolineLength, out jmpLength);
 
 			DetourHelper.Native.MakeExecutable(originalFuncPointer, 32);
-			DetourHelper.Native.MakeExecutable(trampolinePtr, (uint)trampolineLength);
+			DetourHelper.Native.MakeExecutable(trampolinePtr, PageAllocator.PAGE_SIZE);
 
 			return trampolinePtr;
 		}
@@ -106,27 +106,6 @@ namespace BepInEx.IL2CPP
 			{
 				decoder.Decode(out var instr);
 
-				if (instr.IsIPRelativeMemoryOperand)
-				{
-					// TODO: AssemlberRegisters not needed, figure out what props to actually change
-					// TODO: Check if it's better to use InternalOp0Kind (and other similar props) instead of normal ones
-					// TODO: Probably need to check if the target is within the trampoline boundaries and thus shouldn't be fixed
-					logger.LogDebug($"Got ptr with relative memory operand: {instr}");
-					var addr = instr.IPRelativeMemoryAddress;
-					logger.LogDebug($"Address: {addr:X}");
-					instr.MemoryBase = Register.None;
-					var op = AssemblerRegisters.__byte_ptr[addr].ToMemoryOperand(64);
-					instr.Op0Kind = OpKind.Memory;
-					instr.MemoryBase = op.Base;
-					instr.MemoryIndex = op.Index;
-					instr.MemoryIndexScale = op.Scale;
-					instr.MemoryDisplSize = op.DisplSize;
-					instr.MemoryDisplacement = (uint)op.Displacement;
-					instr.IsBroadcast = op.IsBroadcast;
-					instr.SegmentPrefix = op.SegmentPrefix;
-					logger.LogDebug($"After edit: {instr}");
-				}
-				
 				origInstructions.Add(instr);
 				
 				totalBytes += (uint)instr.Length;
@@ -140,19 +119,14 @@ namespace BepInEx.IL2CPP
 					case FlowControl.Next:
 						break;
 
-					case FlowControl.UnconditionalBranch:
-						if (instr.Op0Kind == OpKind.NearBranch64)
-						{
-							var target = instr.NearBranchTarget;
-						}
-
-						break;
-					//goto default;
 					case FlowControl.Interrupt:// eg. int n
 						break;
 
+					// Handled by BlockEncoder in most cases
+					case FlowControl.UnconditionalBranch:
 					case FlowControl.IndirectBranch:// eg. jmp reg/mem
 					case FlowControl.ConditionalBranch:// eg. je, jno, etc
+						break;
 					case FlowControl.Return:// eg. ret
 					case FlowControl.Call:// eg. call method
 					case FlowControl.IndirectCall:// eg. call reg/mem
