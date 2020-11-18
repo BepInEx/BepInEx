@@ -5,14 +5,14 @@ namespace BepInEx.IL2CPP
 	/// <summary>
 	///     Based on https://github.com/kubo/funchook
 	/// </summary>
-	internal class UnixMemoryAllocator : MemoryAllocator
+	internal class UnixPageAllocator : PageAllocator
 	{
-		public override IntPtr Allocate(IntPtr func)
+		public override IntPtr Allocate(IntPtr hint)
 		{
 			throw new NotImplementedException();
 		}
 
-		public override void Free(IntPtr buffer)
+		public override void Free(IntPtr page)
 		{
 			throw new NotImplementedException();
 		}
