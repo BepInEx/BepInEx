@@ -22,13 +22,13 @@ namespace BepInEx.Preloader.RuntimeFixes
 		[HarmonyPatch(typeof(Assembly), nameof(Assembly.LoadFile), typeof(string))]
 		[HarmonyPatch(typeof(Assembly), nameof(Assembly.LoadFrom), typeof(string))]
 		[HarmonyPrefix]
-		private static bool OnAssemblyLoad(ref Assembly __result, string path)
+		private static bool OnAssemblyLoad(ref Assembly __result, string __0)
 		{
-			var bytes = HarmonyInterop.TryShim(path, Paths.GameRootPath, Logger.LogWarning, TypeLoader.ReaderParameters);
+			var bytes = HarmonyInterop.TryShim(__0, Paths.GameRootPath, Logger.LogWarning, TypeLoader.ReaderParameters);
 			if (bytes == null)
 				return true;
 			__result = Assembly.Load(bytes);
-			AssemblyLocations[__result.FullName] = Path.GetFullPath(path);
+			AssemblyLocations[__result.FullName] = Path.GetFullPath(__0);
 			return false;
 		}
 		
