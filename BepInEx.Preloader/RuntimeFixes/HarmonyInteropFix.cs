@@ -20,6 +20,7 @@ namespace BepInEx.Preloader.RuntimeFixes
 		}
 
 		[HarmonyPatch(typeof(Assembly), nameof(Assembly.LoadFile), typeof(string))]
+		[HarmonyPatch(typeof(Assembly), nameof(Assembly.LoadFrom), typeof(string))]
 		[HarmonyPrefix]
 		private static bool OnAssemblyLoad(ref Assembly __result, string path)
 		{
