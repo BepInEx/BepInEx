@@ -20,7 +20,7 @@ BepInEx is a plugin / modding framework for Unity Mono, IL2CPP and .NET framewor
 |              | Windows | OSX  | Linux | ARM |
 |--------------|---------|------|-------|-----|
 | Unity Mono   | ✔️       | ✔️    | ✔️     | N/A |
-| Unity IL2CPP | ✔️       | ❌    | ❌     | ❌   |
+| Unity IL2CPP | ✔️       | ❌    | ❌ (Wine only)  | ❌   |
 | .NET / XNA   | ✔️       | Mono | Mono  | N/A |
 
 A more comprehensive comparison list of features and compatibility is available at https://bepis.io/unity.html
@@ -42,13 +42,14 @@ A more comprehensive comparison list of features and compatibility is available 
 
 | Name              | Link to project                                                                           |
 |-------------------|-------------------------------------------------------------------------------------------|
-| MelonLoader       | [BepInEx.MelonLoader.Loader](https://github.com/BepInEx/BepInEx.MelonLoader.Loader)       |
+| BSIPA             | [BepInEx.BSIPA.Loader](https://github.com/BepInEx/BepInEx.BSIPA.Loader)                   |
 | IPA               | [IPALoaderX](https://github.com/BepInEx/IPALoaderX)                                       |
-| UnityInjector     | [BepInEx.UnityInjector.Loader](https://github.com/BepInEx/BepInEx.UnityInjectorLoader)    |
-| Sybaris           | [BepInEx.SybarisLoader.Patcher](https://github.com/BepInEx/BepInEx.SybarisLoader.Patcher) |
+| MelonLoader       | [BepInEx.MelonLoader.Loader](https://github.com/BepInEx/BepInEx.MelonLoader.Loader)       |
 | MonoMod           | [BepInEx.MonoMod.Loader](https://github.com/BepInEx/BepInEx.MonoMod.Loader)               |
-| BSIPA             | [BepINEx.BSIPA.Loader](https://github.com/BepInEx/BepInEx.BSIPA.Loader)                   |
-| Unity Mod Manager | [BepInEx.UMMLoader](https://github.com/BepInEx/BepInEx.UMMLoader)                         |
+| Partiality        | [BepInEx-Partiality-Wrapper](https://github.com/sinai-dev/BepInEx-Partiality-Wrapper)     |
+| Sybaris           | [BepInEx.SybarisLoader.Patcher](https://github.com/BepInEx/BepInEx.SybarisLoader.Patcher) |
+| UnityInjector     | [BepInEx.UnityInjector.Loader](https://github.com/BepInEx/BepInEx.UnityInjectorLoader)    |
+| Unity Mod Manager | [Yan.UMMLoader](https://github.com/hacknet-bar/Yan.UMMLoader)                             |
 
 ## Used libraries
 - [NeighTools/UnityDoorstop](https://github.com/NeighTools/UnityDoorstop) - 3.1 ([1646a74](https://github.com/NeighTools/UnityDoorstop/commit/1646a74fd58c287533b67ac576ef974908d24346))
