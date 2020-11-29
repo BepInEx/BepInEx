@@ -160,7 +160,7 @@ namespace BepInEx.Bootstrap
 				var sortedPlugins = ModifyLoadOrder(plugins);
 
 				var invalidPlugins = new HashSet<string>();
-				var processedPlugins = new Dictionary<string, SemVersion>();
+				var processedPlugins = new Dictionary<string, SemVer.Version>();
 				var loadedAssemblies = new Dictionary<string, Assembly>();
 
 				foreach (var plugin in sortedPlugins)
@@ -174,7 +174,7 @@ namespace BepInEx.Bootstrap
 
 						// If the dependency wasn't already processed, it's missing altogether
 						bool dependencyExists = processedPlugins.TryGetValue(dependency.DependencyGUID, out var pluginVersion);
-						if (!dependencyExists || (dependency.MinimumVersion != null && pluginVersion < dependency.MinimumVersion))
+						if (!dependencyExists || (dependency.VersionRange != null && !dependency.VersionRange.IsSatisfied(pluginVersion)))
 						{
 							// If the dependency is hard, collect it into a list to show
 							if (IsHardDependency(dependency))
@@ -203,7 +203,7 @@ namespace BepInEx.Bootstrap
 					if (missingDependencies.Count != 0)
 					{
 						string message = $@"Could not load [{plugin}] because it has missing dependencies: {
-								string.Join(", ", missingDependencies.Select(s => s.MinimumVersion == null ? s.DependencyGUID : $"{s.DependencyGUID} (v{s.MinimumVersion} or newer)").ToArray())
+								string.Join(", ", missingDependencies.Select(s => s.VersionRange == null ? s.DependencyGUID : $"{s.DependencyGUID} ({s.VersionRange})").ToArray())
 							}";
 						DependencyErrors.Add(message);
 						Logger.LogError(message);

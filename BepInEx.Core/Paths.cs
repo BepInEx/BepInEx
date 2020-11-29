@@ -34,7 +34,7 @@ namespace BepInEx
 			PluginPath = Utility.CombinePaths(BepInExRootPath, pluginPath);
 		}
 
-		public static SemVersion BepInExVersion { get; } = SemVersion.Parse(typeof(Paths).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion);
+		public static SemVer.Version BepInExVersion { get; } = SemVer.Version.Parse(typeof(Paths).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion);
 
 		/// <summary>
 		///     The directory that the core BepInEx DLLs reside in.
