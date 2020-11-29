@@ -109,12 +109,12 @@ namespace BepInEx
 		/// Marks this <see cref="BaseUnityPlugin"/> as depenant on another plugin. The other plugin will be loaded before this one.
 		/// If the other plugin doesn't exist or is of a version not satisfying <see cref="VersionRange"/>, this plugin will not load and an error will be logged instead.
 		/// </summary>
-		/// <param name="DependencyGUID">The GUID of the referenced plugin.</param>
-		/// <param name="MinimumDependencyVersion">The minimum version of the referenced plugin.</param>
+		/// <param name="guid">The GUID of the referenced plugin.</param>
+		/// <param name="version">The version range of the referenced plugin.</param>
 		/// <remarks>When version is supplied the dependency is always treated as HardDependency</remarks>
-		public BepInDependency(string DependencyGUID, string MinimumDependencyVersion) : this(DependencyGUID)
+		public BepInDependency(string guid, string version) : this(guid)
 		{
-			VersionRange = SemVer.Range.Parse(MinimumDependencyVersion);
+			VersionRange = SemVer.Range.Parse(version);
 		}
 
 		internal static IEnumerable<BepInDependency> FromCecilType(TypeDefinition td)
