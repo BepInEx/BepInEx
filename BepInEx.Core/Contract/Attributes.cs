@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using BepInEx.Bootstrap;
+using BepInEx.Core;
 using Mono.Cecil;
 
 namespace BepInEx
@@ -30,7 +31,7 @@ namespace BepInEx
 		/// <summary>
 		/// The specfic version of the plugin.
 		/// </summary>
-		public Version Version { get; protected set; }
+		public SemVer.Version Version { get; protected set; }
 
 		/// <param name="GUID">The unique identifier of the plugin. Should not change between plugin versions.</param>
 		/// <param name="Name">The user friendly name of the plugin. Is able to be changed between versions.</param>
@@ -39,15 +40,7 @@ namespace BepInEx
 		{
 			this.GUID = GUID;
 			this.Name = Name;
-
-			try
-			{
-				this.Version = new Version(Version);
-			}
-			catch
-			{
-				this.Version = null;
-			}
+			this.Version = SemVer.Version.TryParse(Version, out var v) ? v : null;
 		}
 
 		internal static BepInPlugin FromCecilType(TypeDefinition td)
@@ -95,9 +88,9 @@ namespace BepInEx
 		public DependencyFlags Flags { get; protected set; }
 
 		/// <summary>
-		/// The minimum version of the referenced plugin.
+		/// The version <see cref="SemVer.Range">range</see> of the referenced plugin.
 		/// </summary>
-		public Version MinimumVersion { get; protected set; }
+		public SemVer.Range VersionRange { get; protected set; }
 
 		/// <summary>
 		/// Marks this <see cref="BaseUnityPlugin"/> as depenant on another plugin. The other plugin will be loaded before this one.
@@ -109,19 +102,19 @@ namespace BepInEx
 		{
 			this.DependencyGUID = DependencyGUID;
 			this.Flags = Flags;
-			MinimumVersion = new Version();
+			VersionRange = null;
 		}
 
 		/// <summary>
 		/// Marks this <see cref="BaseUnityPlugin"/> as depenant on another plugin. The other plugin will be loaded before this one.
-		/// If the other plugin doesn't exist or is of a version below <see cref="MinimumVersion"/>, this plugin will not load and an error will be logged instead.
+		/// If the other plugin doesn't exist or is of a version not satisfying <see cref="VersionRange"/>, this plugin will not load and an error will be logged instead.
 		/// </summary>
-		/// <param name="DependencyGUID">The GUID of the referenced plugin.</param>
-		/// <param name="MinimumDependencyVersion">The minimum version of the referenced plugin.</param>
+		/// <param name="guid">The GUID of the referenced plugin.</param>
+		/// <param name="version">The version range of the referenced plugin.</param>
 		/// <remarks>When version is supplied the dependency is always treated as HardDependency</remarks>
-		public BepInDependency(string DependencyGUID, string MinimumDependencyVersion) : this(DependencyGUID)
+		public BepInDependency(string guid, string version) : this(guid)
 		{
-			MinimumVersion = new Version(MinimumDependencyVersion);
+			VersionRange = SemVer.Range.Parse(version);
 		}
 
 		internal static IEnumerable<BepInDependency> FromCecilType(TypeDefinition td)
@@ -140,14 +133,14 @@ namespace BepInEx
 		{
 			bw.Write(DependencyGUID);
 			bw.Write((int)Flags);
-			bw.Write(MinimumVersion.ToString());
+			bw.Write(VersionRange.ToString());
 		}
 
 		void ICacheable.Load(BinaryReader br)
 		{
 			DependencyGUID = br.ReadString();
 			Flags = (DependencyFlags)br.ReadInt32();
-			MinimumVersion = new Version(br.ReadString());
+			VersionRange = SemVer.Range.Parse(br.ReadString());
 		}
 	}
 
