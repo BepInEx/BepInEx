@@ -8,7 +8,7 @@ namespace BepInEx.IL2CPP.Allocator
 		{
 			throw new System.NotImplementedException();
 		}
-		
+
 		protected class MacOsMemoryMapper : IMemoryMapper
 		{
 			public void Dispose()

@@ -21,9 +21,10 @@ namespace BepInEx.IL2CPP.Allocator
 				if (hint.ToInt64() - addr.ToInt64() < int.MaxValue)
 					result[0] = addr;
 			}
+
 			return false;
 		}
-		
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static bool CheckFreeRegionAfter(IntPtr end, IntPtr hint, IntPtr[] result)
 		{
@@ -33,15 +34,16 @@ namespace BepInEx.IL2CPP.Allocator
 					result[1] = end;
 				return true;
 			}
+
 			return false;
 		}
-			
+
 		private IntPtr[] GetFreeAddresses(IntPtr hint)
 		{
 			var result = new IntPtr[2];
 			var prevEnd = IntPtr.Zero;
 			using var mapper = OpenMemoryMap();
-			
+
 			while (mapper.FindNextFree(out var start, out var end))
 			{
 				if ((prevEnd + PAGE_SIZE).ToInt64() <= start.ToInt64())
@@ -49,22 +51,18 @@ namespace BepInEx.IL2CPP.Allocator
 						return result;
 				prevEnd = end;
 			}
+
 			if (CheckFreeRegionAfter(prevEnd, hint, result))
 				return result;
 			throw new PageAllocatorException($"Could not find free region near {hint.ToInt64():X8}");
 		}
-		
-		public override IntPtr Allocate(IntPtr hint)
+
+		protected override IntPtr AllocateChunk(IntPtr hint)
 		{
 			throw new NotImplementedException();
 		}
 
-		public override void Free(IntPtr page)
-		{
-			throw new NotImplementedException();
-		}
-
-		protected interface IMemoryMapper: IDisposable
+		protected interface IMemoryMapper : IDisposable
 		{
 			bool FindNextFree(out IntPtr start, out IntPtr end);
 		}
