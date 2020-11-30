@@ -32,6 +32,8 @@ namespace BepInEx.IL2CPP.Allocator
 
 		private static PageAllocator instance;
 
+		private readonly List<PageChunk> allocatedChunks = new List<PageChunk>();
+
 		/// <summary>
 		///     Platform-specific instance of page allocator.
 		/// </summary>
@@ -116,14 +118,16 @@ namespace BepInEx.IL2CPP.Allocator
 			return int.MinValue <= diff && diff <= int.MaxValue;
 		}
 
-		private static PageAllocator Init() =>
-			PlatformHelper.Current switch
+		private static PageAllocator Init()
+		{
+			return PlatformHelper.Current switch
 			{
 				var v when v.Is(Platform.Windows) => new WindowsPageAllocator(),
 				var v when v.Is(Platform.Linux)   => new LinuxPageAllocator(),
 				var v when v.Is(Platform.MacOS)   => new MacOsPageAllocator(),
 				_                                 => throw new NotImplementedException()
 			};
+		}
 
 		private class PageChunk
 		{
@@ -136,12 +140,13 @@ namespace BepInEx.IL2CPP.Allocator
 				return BaseAddress + index * PAGE_SIZE;
 			}
 		}
-
-		private readonly List<PageChunk> allocatedChunks = new List<PageChunk>();
 	}
 
 	internal static class PlatformExt
 	{
-		public static bool Is(this Platform pl, Platform val) => (pl & val) == val;
+		public static bool Is(this Platform pl, Platform val)
+		{
+			return (pl & val) == val;
+		}
 	}
 }

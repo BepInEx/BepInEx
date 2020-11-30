@@ -6,7 +6,7 @@ namespace BepInEx.IL2CPP.Allocator
 	{
 		protected override IMemoryMapper OpenMemoryMap()
 		{
-			throw new System.NotImplementedException();
+			throw new NotImplementedException();
 		}
 
 		protected class MacOsMemoryMapper : IMemoryMapper
