@@ -2,7 +2,7 @@
 using System.Runtime.CompilerServices;
 using MonoMod.Utils;
 
-namespace BepInEx.IL2CPP
+namespace BepInEx.IL2CPP.Allocator
 {
 	/// <summary>
 	///     A general purpose page allocator for patching purposes.
@@ -64,13 +64,18 @@ namespace BepInEx.IL2CPP
 			return int.MinValue <= diff && diff <= int.MaxValue;
 		}
 
-		private static PageAllocator Init()
-		{
-			if (PlatformHelper.Is(Platform.Windows))
-				return new WindowsPageAllocator();
-			if (PlatformHelper.Is(Platform.Unix))
-				return new UnixPageAllocator();
-			throw new NotImplementedException();
-		}
+		private static PageAllocator Init() =>
+			PlatformHelper.Current switch
+			{
+				var v when v.Is(Platform.Windows) => new WindowsPageAllocator(),
+				var v when v.Is(Platform.Linux)   => new LinuxPageAllocator(),
+				var v when v.Is(Platform.MacOS)   => new MacOsPageAllocator(),
+				_                                 => throw new NotImplementedException()
+			};
+	}
+	
+	internal static class PlatformExt
+	{
+		public static bool Is(this Platform pl, Platform val) => (pl & val) == val;
 	}
 }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 
-namespace BepInEx.IL2CPP
+namespace BepInEx.IL2CPP.Allocator
 {
 	/// <summary>
 	///     Based on https://github.com/kubo/funchook

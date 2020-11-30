@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using BepInEx.IL2CPP.Allocator;
 using BepInEx.Logging;
 using MonoMod.RuntimeDetour;
 using MonoMod.Utils;
