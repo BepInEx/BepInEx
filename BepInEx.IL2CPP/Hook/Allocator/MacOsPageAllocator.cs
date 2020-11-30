@@ -16,7 +16,7 @@ namespace BepInEx.IL2CPP.Allocator
 				throw new NotImplementedException();
 			}
 
-			public bool FindNextFree(ref IntPtr start, ref ulong size)
+			public bool FindNextFree(out IntPtr start, out IntPtr end)
 			{
 				throw new NotImplementedException();
 			}

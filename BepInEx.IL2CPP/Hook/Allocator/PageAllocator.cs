@@ -4,6 +4,11 @@ using MonoMod.Utils;
 
 namespace BepInEx.IL2CPP.Allocator
 {
+	public class PageAllocatorException : Exception
+	{
+		public PageAllocatorException(string message) : base(message) {}
+	}
+	
 	/// <summary>
 	///     A general purpose page allocator for patching purposes.
 	///     Allows to allocate pages (4k memory chunks) within the 1GB radius of a given address.
