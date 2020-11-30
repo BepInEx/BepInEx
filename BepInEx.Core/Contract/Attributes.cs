@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using BepInEx.Bootstrap;
-using BepInEx.Core;
 using Mono.Cecil;
 
 namespace BepInEx
@@ -267,6 +267,17 @@ namespace BepInEx
 		public static T[] GetAttributes<T>(Type pluginType) where T : Attribute
 		{
 			return (T[])pluginType.GetCustomAttributes(typeof(T), true);
+		}
+
+		/// <summary>
+		/// Gets the specified attributes of an assembly, if they exist.
+		/// </summary>
+		/// <param name="assembly">The assembly.</param>
+		/// <typeparam name="T">The attribute type to retrieve.</typeparam>
+		/// <returns>The attributes of the type, if existing.</returns>
+		public static T[] GetAttributes<T>(Assembly assembly) where T : Attribute
+		{
+			return (T[])assembly.GetCustomAttributes(typeof(T), true);
 		}
 
 		/// <summary>
