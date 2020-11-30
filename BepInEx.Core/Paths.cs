@@ -1,6 +1,6 @@
 ﻿using System.IO;
+using System.Linq;
 using System.Reflection;
-using BepInEx.Core;
 using MonoMod.Utils;
 
 namespace BepInEx
@@ -34,7 +34,7 @@ namespace BepInEx
 			PluginPath = Utility.CombinePaths(BepInExRootPath, pluginPath);
 		}
 
-		public static SemVer.Version BepInExVersion { get; } = SemVer.Version.Parse(typeof(Paths).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion);
+		public static SemVer.Version BepInExVersion { get; } = SemVer.Version.Parse(typeof(Paths).Assembly.GetCustomAttributes(typeof(AssemblyInformationalVersionAttribute), false).Cast<AssemblyInformationalVersionAttribute>().First().InformationalVersion);
 
 		/// <summary>
 		///     The directory that the core BepInEx DLLs reside in.
