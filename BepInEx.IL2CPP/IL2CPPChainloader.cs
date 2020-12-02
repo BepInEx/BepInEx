@@ -33,9 +33,9 @@ namespace BepInEx.IL2CPP
 
 		private static IL2CPPChainloader Instance { get; set; }
 
-
 		public override unsafe void Initialize(string gameExePath = null)
 		{
+			UnhollowerBaseLib.GeneratedDatabasesUtil.DatabasesLocationOverride = Preloader.IL2CPPUnhollowedPath;
 			PatchManager.ResolvePatcher += IL2CPPDetourMethodPatcher.TryResolve;
 
 			base.Initialize(gameExePath);
