@@ -55,6 +55,20 @@ namespace BepInEx.IL2CPP
 					ProxyAssemblyGenerator.GenerateAssemblies();
 
 
+				using (var assemblyPatcher = new AssemblyPatcher())
+				{
+					assemblyPatcher.AddPatchersFromDirectory(Paths.PatcherPluginPath);
+
+					Log.LogInfo($"{assemblyPatcher.PatcherPlugins.Count} patcher plugin{(assemblyPatcher.PatcherPlugins.Count == 1 ? "" : "s")} loaded");
+
+					assemblyPatcher.LoadAssemblyDirectory(IL2CPPUnhollowedPath);
+
+					Log.LogInfo($"{assemblyPatcher.PatcherPlugins.Count} assemblies discovered");
+					
+					assemblyPatcher.PatchAndLoad();
+				}
+
+
 				Logger.Listeners.Remove(PreloaderLog);
 
 
