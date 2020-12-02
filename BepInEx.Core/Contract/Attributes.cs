@@ -29,18 +29,35 @@ namespace BepInEx
 
 
 		/// <summary>
-		/// The specfic version of the plugin.
+		/// The specific version of the plugin.
 		/// </summary>
 		public SemVer.Version Version { get; protected set; }
 
 		/// <param name="GUID">The unique identifier of the plugin. Should not change between plugin versions.</param>
 		/// <param name="Name">The user friendly name of the plugin. Is able to be changed between versions.</param>
-		/// <param name="Version">The specfic version of the plugin.</param>
+		/// <param name="Version">The specific version of the plugin.</param>
 		public BepInPlugin(string GUID, string Name, string Version)
 		{
 			this.GUID = GUID;
 			this.Name = Name;
-			this.Version = SemVer.Version.TryParse(Version, out var v) ? v : null;
+			this.Version = TryParseLongVersion(Version);
+		}
+
+		private static SemVer.Version TryParseLongVersion(string version)
+		{
+			if (SemVer.Version.TryParse(version, out var v))
+				return v;
+
+			// no System.Version.TryParse() on .NET 3.5
+			try
+			{
+				var longVersion = new System.Version(version);
+
+				return new SemVer.Version(longVersion.Major, longVersion.Minor, longVersion.Build);
+			}
+			catch { }
+
+			return null;
 		}
 
 		internal static BepInPlugin FromCecilType(TypeDefinition td)
@@ -93,7 +110,7 @@ namespace BepInEx
 		public SemVer.Range VersionRange { get; protected set; }
 
 		/// <summary>
-		/// Marks this <see cref="BaseUnityPlugin"/> as depenant on another plugin. The other plugin will be loaded before this one.
+		/// Marks this <see cref="BaseUnityPlugin"/> as dependent on another plugin. The other plugin will be loaded before this one.
 		/// If the other plugin doesn't exist, what happens depends on the <see cref="Flags"/> parameter.
 		/// </summary>
 		/// <param name="DependencyGUID">The GUID of the referenced plugin.</param>
@@ -106,7 +123,7 @@ namespace BepInEx
 		}
 
 		/// <summary>
-		/// Marks this <see cref="BaseUnityPlugin"/> as depenant on another plugin. The other plugin will be loaded before this one.
+		/// Marks this <see cref="BaseUnityPlugin"/> as dependent on another plugin. The other plugin will be loaded before this one.
 		/// If the other plugin doesn't exist or is of a version not satisfying <see cref="VersionRange"/>, this plugin will not load and an error will be logged instead.
 		/// </summary>
 		/// <param name="guid">The GUID of the referenced plugin.</param>
