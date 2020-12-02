@@ -147,7 +147,8 @@ namespace BepInEx.IL2CPP
 					MscorlibPath = Path.Combine(Paths.GameRootPath, "mono", "Managed", "mscorlib.dll"),
 					SourceDir = Path.Combine(tempDumperDirectory, "DummyDll"),
 					OutputDir = Preloader.IL2CPPUnhollowedPath,
-					UnityBaseLibsDir = unityBaseLibDir
+					UnityBaseLibsDir = unityBaseLibDir,
+					NoCopyUnhollowerLibs = true
 				};
 
 				AssemblyUnhollower.Program.Main(unhollowerOptions);
