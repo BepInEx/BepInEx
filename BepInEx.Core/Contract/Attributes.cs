@@ -53,7 +53,7 @@ namespace BepInEx
 			{
 				var longVersion = new System.Version(version);
 
-				return new SemVer.Version(longVersion.Major, longVersion.Minor, longVersion.Build);
+				return new SemVer.Version(longVersion.Major, longVersion.Minor, longVersion.Build != -1 ? longVersion.Build : 0);
 			}
 			catch { }
 
