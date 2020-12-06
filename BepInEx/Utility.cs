@@ -287,7 +287,7 @@ namespace BepInEx
 				assemblyName = new AssemblyName(fullName);
 				return true;
 			}
-			catch (Exception e)
+			catch (Exception)
 			{
 				assemblyName = null;
 				return false;
