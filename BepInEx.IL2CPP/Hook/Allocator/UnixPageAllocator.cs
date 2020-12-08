@@ -12,7 +12,7 @@ namespace BepInEx.IL2CPP.Allocator
 	/// </summary>
 	internal abstract class UnixPageAllocator : PageAllocator
 	{
-		protected abstract IMemoryMapper OpenMemoryMap();
+		protected abstract IEnumerable<(IntPtr, IntPtr)> MapMemoryAreas();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static bool CheckFreeRegionBefore(IntPtr start, IntPtr hint, IntPtr[] result)
@@ -44,9 +44,8 @@ namespace BepInEx.IL2CPP.Allocator
 		{
 			var result = new IntPtr[2];
 			var prevEnd = IntPtr.Zero;
-			using var mapper = OpenMemoryMap();
 
-			while (mapper.FindNextFree(out var start, out var end))
+			foreach (var (start, end) in MapMemoryAreas())
 			{
 				if ((prevEnd + PAGE_SIZE).ToInt64() <= start.ToInt64())
 					if (CheckFreeRegionBefore(start, hint, result) || CheckFreeRegionAfter(prevEnd, hint, result))
@@ -87,11 +86,6 @@ namespace BepInEx.IL2CPP.Allocator
 			}
 
 			throw new PageAllocatorException("Failed to allocate memory in unused regions");
-		}
-
-		protected interface IMemoryMapper : IDisposable
-		{
-			bool FindNextFree(out IntPtr start, out IntPtr end);
 		}
 
 		private static class Unix
