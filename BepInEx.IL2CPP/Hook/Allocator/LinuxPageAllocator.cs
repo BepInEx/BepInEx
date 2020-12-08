@@ -1,54 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
 using MonoMod.Utils;
 
 namespace BepInEx.IL2CPP.Allocator
 {
 	internal class LinuxPageAllocator : UnixPageAllocator
 	{
-		protected override IMemoryMapper OpenMemoryMap()
+		protected override IEnumerable<(IntPtr, IntPtr)> MapMemoryAreas()
 		{
-			throw new NotImplementedException();
-		}
+			// Each row of /proc/self/maps is as follows:
+			// <start_address>-<end_address> <perms> <offset> <dev> <inode>		<owner_name>
+			// More info: https://stackoverflow.com/a/1401595
+			using var procMap = new StreamReader(File.OpenRead("/proc/self/maps"));
 
-		protected class LinuxMemoryMapper : IMemoryMapper
-		{
-			public void Dispose()
+			string line;
+			while ((line = procMap.ReadLine()) != null)
 			{
-				throw new NotImplementedException();
-			}
-
-			public bool FindNextFree(out IntPtr start, out IntPtr end)
-			{
-				throw new NotImplementedException();
-			}
-		}
-
-		private static class Unix
-		{
-			[DynDllImport("mmap")]
-			public static mmapDelegate mmap;
-
-			[DynDllImport("munmap")]
-			public static munmapDelegate munmap;
-
-			[DynDllImport("libc")]
-			public static fdopenDelegate fdopen;
-
-			public delegate IntPtr fdopenDelegate(int fd, string mode);
-			public delegate IntPtr mmapDelegate(IntPtr addr, UIntPtr length, int prot, int flags, int fd, int offset);
-			public delegate int munmapDelegate(IntPtr addr, UIntPtr length);
-
-			static Unix()
-			{
-				typeof(Unix).ResolveDynDllImports(new Dictionary<string, List<DynDllMapping>>
-				{
-					["libc"] = new List<DynDllMapping>
-					{
-						"libc.so.6", // Ubuntu glibc
-						"libc"       // Linux glibc
-					}
-				});
+				int startIndex = line.IndexOf('-');
+				int endIndex = line.IndexOf(' ');
+				long startAddr = long.Parse(line.Substring(0, startIndex), NumberStyles.HexNumber);
+				long endAddr = long.Parse(line.Substring(startIndex + 1, endIndex - startIndex - 1), NumberStyles.HexNumber);
+				yield return (new IntPtr(startAddr), new IntPtr(endAddr));
 			}
 		}
 	}
