@@ -15,45 +15,45 @@ namespace BepInEx.IL2CPP.Allocator
 		protected abstract IEnumerable<(IntPtr, IntPtr)> MapMemoryAreas();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static bool CheckFreeRegionBefore(IntPtr start, IntPtr hint, IntPtr[] result)
+		private static bool CheckFreeRegionBefore(IntPtr start, IntPtr hint, ref (IntPtr Start, IntPtr End) region)
 		{
 			if (start.ToInt64() < hint.ToInt64())
 			{
 				var addr = start - PAGE_SIZE;
 				if (hint.ToInt64() - addr.ToInt64() < int.MaxValue)
-					result[0] = addr;
+					region.Start = addr;
 			}
 
 			return false;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static bool CheckFreeRegionAfter(IntPtr end, IntPtr hint, IntPtr[] result)
+		private static bool CheckFreeRegionAfter(IntPtr end, IntPtr hint, ref (IntPtr Start, IntPtr End) region)
 		{
 			if (hint.ToInt64() < end.ToInt64())
 			{
 				if (end.ToInt64() - hint.ToInt64() < int.MaxValue)
-					result[1] = end;
+					region.End = end;
 				return true;
 			}
 
 			return false;
 		}
 
-		private IntPtr[] GetFreeAddresses(IntPtr hint)
+		private (IntPtr, IntPtr) GetFreeArea(IntPtr hint)
 		{
-			var result = new IntPtr[2];
+			var result = (IntPtr.Zero, IntPtr.Zero);
 			var prevEnd = IntPtr.Zero;
 
 			foreach (var (start, end) in MapMemoryAreas())
 			{
 				if ((prevEnd + PAGE_SIZE).ToInt64() <= start.ToInt64())
-					if (CheckFreeRegionBefore(start, hint, result) || CheckFreeRegionAfter(prevEnd, hint, result))
+					if (CheckFreeRegionBefore(start, hint, ref result) || CheckFreeRegionAfter(prevEnd, hint, ref result))
 						return result;
 				prevEnd = end;
 			}
 
-			if (CheckFreeRegionAfter(prevEnd, hint, result))
+			if (CheckFreeRegionAfter(prevEnd, hint, ref result))
 				return result;
 			throw new PageAllocatorException($"Could not find free region near {hint.ToInt64():X8}");
 		}
@@ -69,15 +69,15 @@ namespace BepInEx.IL2CPP.Allocator
 
 			for (var attempt = 0; attempt < retryCount; attempt++)
 			{
-				var freeAdrresses = GetFreeAddresses(hint);
-				// Try to use addr[1] (allocated after original method) first, then try before
-				for (int i = freeAdrresses.Length - 1; i >= 0; i--)
+				var (start, end) = GetFreeArea(hint);
+				// Try to allocate to end (after original method) first, then try before
+				var addrs = new [] { end, start };
+				foreach (var addr in addrs)
 				{
-					var addr = freeAdrresses[i];
 					if (addr == IntPtr.Zero)
 						continue;
-					var result = Unix.mmap(freeAdrresses[i], (UIntPtr)PAGE_SIZE, Unix.Protection.PROT_READ | Unix.Protection.PROT_WRITE, Unix.MapFlags.MAP_PRIVATE | Unix.MapFlags.MAP_ANONYMOUS, -1, 0);
-					if (result == freeAdrresses[i])
+					var result = Unix.mmap(addr, (UIntPtr)PAGE_SIZE, Unix.Protection.PROT_READ | Unix.Protection.PROT_WRITE, Unix.MapFlags.MAP_PRIVATE | Unix.MapFlags.MAP_ANONYMOUS, -1, 0);
+					if (result == addr)
 						return result;
 					if (result == Unix.MAP_FAILED)
 						throw new Win32Exception(Marshal.GetLastWin32Error()); // Yes, this should work on unix too
