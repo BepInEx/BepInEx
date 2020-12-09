@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using BepInEx.IL2CPP.Allocator;
 using BepInEx.Logging;
 using MonoMod.RuntimeDetour;
 using MonoMod.Utils;
@@ -36,12 +37,12 @@ namespace BepInEx.IL2CPP.Hook
 			Marshal.Copy(originalFunctionPtr, BackupBytes, 0, 20);
 		}
 
+		private static ManualLogSource logger = Logger.CreateLogSource("FastNativeDetour");
 
 		public void Apply()
 		{
 			Apply(null);
 		}
-
 
 		public void Apply(ManualLogSource debuggerLogSource)
 		{
@@ -51,14 +52,10 @@ namespace BepInEx.IL2CPP.Hook
 
 			DetourHelper.Native.MakeWritable(OriginalFunctionPtr, 32);
 
-
 			if (debuggerLogSource != null)
 			{
 				debuggerLogSource.LogDebug($"Detouring 0x{OriginalFunctionPtr.ToString("X")} -> 0x{DetourFunctionPtr.ToString("X")}");
-
-
 				debuggerLogSource.LogDebug("Original (32) asm");
-
 				DetourGenerator.Disassemble(debuggerLogSource, OriginalFunctionPtr, 32);
 			}
 
@@ -68,17 +65,12 @@ namespace BepInEx.IL2CPP.Hook
 
 			DetourGenerator.ApplyDetour(OriginalFunctionPtr, DetourFunctionPtr, arch, trampolineLength - jmpLength);
 
-
 			if (debuggerLogSource != null)
 			{
 				debuggerLogSource.LogDebug($"Trampoline allocation: 0x{TrampolinePtr.ToString("X")}");
-
 				debuggerLogSource.LogDebug("Modified (32) asm");
-
 				DetourGenerator.Disassemble(debuggerLogSource, OriginalFunctionPtr, 32);
-
 				debuggerLogSource.LogDebug($"Trampoline ({trampolineLength}) asm");
-
 				DetourGenerator.Disassemble(debuggerLogSource, TrampolinePtr, trampolineLength);
 			}
 
@@ -100,16 +92,18 @@ namespace BepInEx.IL2CPP.Hook
 			byte[] instructionBuffer = new byte[32];
 			Marshal.Copy(OriginalFunctionPtr, instructionBuffer, 0, 32);
 
-			var trampolineAlloc = DetourHelper.Native.MemAlloc(80);
-
-			DetourHelper.Native.MakeWritable(trampolineAlloc, 80);
+			var trampolineAlloc = PageAllocator.Instance.Allocate(OriginalFunctionPtr);
+			
+			logger.LogDebug($"Original: {OriginalFunctionPtr.ToInt64():X}, Trampoline: {trampolineAlloc.ToInt64():X}, diff: {Math.Abs(OriginalFunctionPtr.ToInt64() - trampolineAlloc.ToInt64()):X}; is within +-1GB range: {PageAllocator.IsInRelJmpRange(OriginalFunctionPtr, trampolineAlloc)}");
+			
+			DetourHelper.Native.MakeWritable(trampolineAlloc, PageAllocator.PAGE_SIZE);
 
 			var arch = IntPtr.Size == 8 ? Architecture.X64 : Architecture.X86;
 
 			DetourGenerator.CreateTrampolineFromFunction(instructionBuffer, OriginalFunctionPtr, trampolineAlloc,
 				DetourGenerator.GetDetourLength(arch), arch, out trampolineLength, out jmpLength);
 
-			DetourHelper.Native.MakeExecutable(trampolineAlloc, 80);
+			DetourHelper.Native.MakeExecutable(trampolineAlloc, PageAllocator.PAGE_SIZE);
 
 			TrampolinePtr = trampolineAlloc;
 			TrampolineSize = trampolineLength;
@@ -124,7 +118,7 @@ namespace BepInEx.IL2CPP.Hook
 
 			Marshal.Copy(BackupBytes, 0, OriginalFunctionPtr, BackupBytes.Length);
 
-			DetourHelper.Native.MemFree(TrampolinePtr);
+			PageAllocator.Instance.Free(TrampolinePtr);
 
 			TrampolinePtr = IntPtr.Zero;
 			TrampolineSize = 0;
