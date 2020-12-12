@@ -26,7 +26,7 @@
     <ProjectReference Include="..\BepInEx.Preloader.Unity\BepInEx.Preloader.Unity.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="HarmonyX" Version="2.1.1" />
+    <PackageReference Include="HarmonyX" Version="2.2.0" />
   </ItemGroup>
   <Import Project="..\BepInEx.Shared\BepInEx.Shared.projitems" Label="Shared" />
 </Project>

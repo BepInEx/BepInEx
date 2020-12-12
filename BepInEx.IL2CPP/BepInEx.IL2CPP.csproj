@@ -45,7 +45,7 @@
     <ProjectReference Include="..\BepInEx.Preloader.Core\BepInEx.Preloader.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="HarmonyX" Version="2.1.1" />
+    <PackageReference Include="HarmonyX" Version="2.2.0" />
     <PackageReference Include="Iced" Version="1.6.0" />
     <PackageReference Include="MonoMod.RuntimeDetour" Version="20.11.5.1" />
   </ItemGroup>

@@ -18,7 +18,7 @@
     <ProjectReference Include="..\BepInEx.Core\BepInEx.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="HarmonyX" Version="2.1.1" />
+    <PackageReference Include="HarmonyX" Version="2.2.0" />
     <PackageReference Include="Mono.Cecil" Version="0.10.4" />
     <PackageReference Include="MonoMod.RuntimeDetour" Version="20.11.5.1" />
     <PackageReference Include="MonoMod.Utils" Version="20.11.5.1" />
