@@ -5,7 +5,7 @@ using MonoMod.Utils;
 
 namespace BepInEx.IL2CPP.Allocator
 {
-	public class PageAllocatorException : Exception
+	internal class PageAllocatorException : Exception
 	{
 		public PageAllocatorException(string message) : base(message) { }
 	}
