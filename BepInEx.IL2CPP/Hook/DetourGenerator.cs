@@ -103,6 +103,7 @@ namespace BepInEx.IL2CPP
 
 			uint totalBytes = 0;
 			var origInstructions = new InstructionList();
+			var readOverflowArea = false;
 			while (codeReader.CanReadByte)
 			{
 				decoder.Decode(out var instr);
@@ -115,26 +116,37 @@ namespace BepInEx.IL2CPP
 				if (totalBytes >= minimumTrampolineLength)
 					break;
 
+				if (readOverflowArea)
+				{
+					if (instr.Mnemonic != Mnemonic.Int && instr.Mnemonic != Mnemonic.Nop)
+						throw new Exception("Function is too short to hook");
+					continue;
+				}
+				
 				switch (instr.FlowControl)
 				{
 					case FlowControl.Next:
 						break;
 
+					// Interrupts are usually used for aligning
 					case FlowControl.Interrupt:// eg. int n
 						break;
 
 					// Handled by BlockEncoder in most cases
 					case FlowControl.UnconditionalBranch:
-					case FlowControl.IndirectBranch:// eg. jmp reg/mem
-					case FlowControl.ConditionalBranch:// eg. je, jno, etc
+					case FlowControl.IndirectBranch:    // eg. jmp reg/mem
+					case FlowControl.ConditionalBranch: // eg. je, jno, etc
 						break;
-					case FlowControl.Return:// eg. ret
+					case FlowControl.Return: // eg. ret
+						// There is a possibility of an overflow area, attempt to allocate trampoline onto it
+						readOverflowArea = true;
+						break;
 					case FlowControl.Call:// eg. call method
 					case FlowControl.IndirectCall:// eg. call reg/mem
 					case FlowControl.XbeginXabortXend:
 					case FlowControl.Exception:// eg. ud0
 					default:
-						throw new Exception("Not supported by this simple example - " + instr.FlowControl);
+						throw new Exception("Not supported yet - " + instr.FlowControl);
 				}
 			}
 			if (totalBytes < minimumTrampolineLength)
