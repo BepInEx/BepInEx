@@ -10,12 +10,14 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugType>full</DebugType>
-    <OutputPath>..\bin\net\</OutputPath>
+    <OutputPath>bin\Debug</OutputPath>
+    <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>portable</DebugType>
     <OutputPath>..\bin\NetLauncher\</OutputPath>
     <DocumentationFile />
+    <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\BepInEx.Core\BepInEx.Core.csproj" />

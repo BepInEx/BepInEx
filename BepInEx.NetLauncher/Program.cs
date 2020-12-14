@@ -13,24 +13,13 @@ namespace BepInEx.NetLauncher
 	{
 		internal static void PreloaderMain(string[] args)
 		{
-			PlatformUtils.SetPlatform();
-
-			Logger.Listeners.Add(new ConsoleLogListener());
-
-			ConsoleManager.Initialize(true);
-
-			NetPreloader.Start(args);
-		}
-
-		internal static void OuterMain(string[] args, string filename)
-		{
 			try
 			{
-				Paths.SetExecutablePath(filename);
+				Logger.Listeners.Add(new ConsoleLogListener());
 
-				AppDomain.CurrentDomain.AssemblyResolve += LocalResolve;
+				ConsoleManager.Initialize(true);
 
-				PreloaderMain(args);
+				NetPreloader.Start(args);
 			}
 			catch (Exception ex)
 			{
@@ -38,6 +27,15 @@ namespace BepInEx.NetLauncher
 				PreloaderLogger.Log.LogFatal(ex);
 				Program.ReadExit();
 			}
+		}
+
+		internal static void OuterMain(string[] args, string filename)
+		{
+			Paths.SetExecutablePath(filename);
+
+			AppDomain.CurrentDomain.AssemblyResolve += LocalResolve;
+
+			PreloaderMain(args);
 		}
 
 		private static Assembly LocalResolve(object sender, ResolveEventArgs args)
@@ -72,8 +70,6 @@ namespace BepInEx.NetLauncher
 		{
 			try
 			{
-				Console.WriteLine("test");
-
 				string filename;
 
 #if DEBUG

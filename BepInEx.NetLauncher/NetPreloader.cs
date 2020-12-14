@@ -18,7 +18,7 @@ namespace BepInEx.NetLauncher
 
 		public static void Start(string[] args)
 		{
-			if (ConfigEntrypointExecutable.Value == null)
+			if (string.IsNullOrEmpty(ConfigEntrypointExecutable.Value))
 			{
 				Log.LogFatal($"Entry executable was not set. Please set this in your config before launching the application");
 				Program.ReadExit();
