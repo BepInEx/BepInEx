@@ -163,5 +163,14 @@ namespace BepInEx.IL2CPP.Hook
 			Undo();
 			Free();
 		}
+
+		public static FastNativeDetour CreateAndApply<T>(IntPtr from, T to, out T original, CallingConvention? callingConvention = null) where T : Delegate
+		{
+			var toPtr = callingConvention != null ? MonoExtensions.GetFunctionPointerForDelegate(to, callingConvention.Value) : Marshal.GetFunctionPointerForDelegate(to);
+			var result = new FastNativeDetour(from, toPtr);
+			original = result.GenerateTrampoline<T>();
+			result.Apply();
+			return result;
+		}
 	}
 }
