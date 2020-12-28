@@ -13,6 +13,7 @@ using BepInEx.Logging;
 using BepInEx.Preloader.Core;
 using BepInEx.Preloader.Core.Logging;
 using HarmonyLib.Public.Patching;
+using Il2Cpp.TlsAdapter;
 using UnhollowerBaseLib.Runtime;
 using UnhollowerRuntimeLib;
 using IL2CPPUnityEngine = il2cpp::UnityEngine;
@@ -24,12 +25,17 @@ namespace BepInEx.IL2CPP
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		private delegate IntPtr RuntimeInvokeDetourDelegate(IntPtr method, IntPtr obj, IntPtr parameters, IntPtr exc);
 
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		private delegate void InstallUnityTlsInterfaceDelegate(IntPtr unityTlsInterfaceStruct);
+
 		[DllImport("kernel32", CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]
 		private static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
 
 		private static RuntimeInvokeDetourDelegate originalInvoke;
+		private static InstallUnityTlsInterfaceDelegate originalInstallUnityTlsInterface;
 
 		private static FastNativeDetour RuntimeInvokeDetour { get; set; }
+		private static FastNativeDetour InstallUnityTlsInterfaceDetour { get; set; }
 
 		private static IL2CPPChainloader Instance { get; set; }
 
@@ -63,22 +69,29 @@ namespace BepInEx.IL2CPP
 
 			var gameAssemblyModule = Process.GetCurrentProcess().Modules.Cast<ProcessModule>().First(x => x.ModuleName.Contains("GameAssembly"));
 
-			var functionPtr = GetProcAddress(gameAssemblyModule.BaseAddress, "il2cpp_runtime_invoke"); //DynDll.GetFunction(gameAssemblyModule.BaseAddress, "il2cpp_runtime_invoke");
+			// TODO: Check that DynDll.GetFunction works fine now
+			var runtimeInvokePtr = GetProcAddress(gameAssemblyModule.BaseAddress, "il2cpp_runtime_invoke"); //DynDll.GetFunction(gameAssemblyModule.BaseAddress, "il2cpp_runtime_invoke");
+			PreloaderLogger.Log.LogDebug($"Runtime invoke pointer: 0x{runtimeInvokePtr.ToInt64():X}");
+			RuntimeInvokeDetour = FastNativeDetour.CreateAndApply(runtimeInvokePtr, OnInvokeMethod, out originalInvoke, CallingConvention.Cdecl);
 
-
-			PreloaderLogger.Log.LogDebug($"Runtime invoke pointer: 0x{functionPtr.ToInt64():X}");
-
-			RuntimeInvokeDetour = new FastNativeDetour(functionPtr,
-				MonoExtensions.GetFunctionPointerForDelegate(new RuntimeInvokeDetourDelegate(OnInvokeMethod), CallingConvention.Cdecl));
-
-			RuntimeInvokeDetour.Apply();
-
-			originalInvoke = RuntimeInvokeDetour.GenerateTrampoline<RuntimeInvokeDetourDelegate>();
-
+			var installTlsPtr = GetProcAddress(gameAssemblyModule.BaseAddress, "il2cpp_unity_install_unitytls_interface");
+			if (installTlsPtr != IntPtr.Zero)
+				InstallUnityTlsInterfaceDetour = FastNativeDetour.CreateAndApply(installTlsPtr, OnInstallUnityTlsInterface, out originalInstallUnityTlsInterface, CallingConvention.Cdecl);
+			
+			Logger.LogDebug("Initializing TLS adapters");
+			Il2CppTlsAdapter.Initialize();
+			
 			PreloaderLogger.Log.LogDebug("Runtime invoke patched");
 		}
 
-
+		private void OnInstallUnityTlsInterface(IntPtr unityTlsInterfaceStruct)
+		{
+			Logger.LogDebug($"Captured UnityTls interface at {unityTlsInterfaceStruct.ToInt64():x8}");
+			Il2CppTlsAdapter.Options.UnityTlsInterface = unityTlsInterfaceStruct;
+			originalInstallUnityTlsInterface(unityTlsInterfaceStruct);
+			InstallUnityTlsInterfaceDetour.Dispose();
+			InstallUnityTlsInterfaceDetour = null;
+		}
 
 		private static IntPtr OnInvokeMethod(IntPtr method, IntPtr obj, IntPtr parameters, IntPtr exc)
 		{
