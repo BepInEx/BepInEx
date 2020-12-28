@@ -54,8 +54,8 @@ A more comprehensive comparison list of features and compatibility is available 
 ## Used libraries
 - [NeighTools/UnityDoorstop](https://github.com/NeighTools/UnityDoorstop) - 3.1 ([1646a74](https://github.com/NeighTools/UnityDoorstop/commit/1646a74fd58c287533b67ac576ef974908d24346))
 - [NeighTools/UnityDoorstop.Unix](https://github.com/NeighTools/UnityDoorstop.Unix) - 1.2.0.0 ([94c882f](https://github.com/NeighTools/UnityDoorstop.Unix/commit/94c882f9c42b53685571b2d160ccf6e2e9492434))
-- [BepInEx/HarmonyX](https://github.com/BepInEx/HarmonyX) - 2.2.0 ([e335b30](https://github.com/BepInEx/HarmonyX/commit/e335b3013c8219af4180033de56d739a99980762))
-- [0x0ade/MonoMod](https://github.com/0x0ade/MonoMod) - v20.11.05.01 ([1775ec9](https://github.com/MonoMod/MonoMod/commit/1775ec98e76d3420b2365d6103b4f1b69761a197))
+- [BepInEx/HarmonyX](https://github.com/BepInEx/HarmonyX) - 2.3.1 ([bbc07d](https://github.com/BepInEx/HarmonyX/commit/bbc07dd1a6537cb1397c490f93a5619ad1d1fe3e))
+- [0x0ade/MonoMod](https://github.com/0x0ade/MonoMod) - v20.11.26.02 ([1775ec9](https://github.com/MonoMod/MonoMod/commit/1775ec98e76d3420b2365d6103b4f1b69761a197))
 - [jbevain/cecil](https://github.com/jbevain/cecil) - 0.10.4 ([98ec890](https://github.com/jbevain/cecil/commit/98ec890d44643ad88d573e97be0e120435eda732))
 
 #### IL2CPP libraries
