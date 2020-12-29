@@ -1,11 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net472</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <AssemblyTitle>BepInEx.IL2CPP</AssemblyTitle>
     <Product>BepInEx.IL2CPP</Product>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputPath>..\bin\IL2CPP\</OutputPath>
     <LangVersion>8</LangVersion>
+    <Configurations>Debug;Release</Configurations>
+    <Platforms>AnyCPU</Platforms>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -25,7 +28,6 @@
       <HintPath>..\lib\Il2Cppmscorlib.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Microsoft.CSharp" />
     <Reference Include="UnhollowerBaseLib">
       <HintPath>..\lib\UnhollowerBaseLib.dll</HintPath>
       <Private>True</Private>
@@ -51,4 +53,14 @@
     <PackageReference Include="MonoMod.RuntimeDetour" Version="20.11.26.2" />
   </ItemGroup>
   <Import Project="..\BepInEx.Shared\BepInEx.Shared.projitems" Label="Shared" />
+  
+  <!-- CopyLocalLockFileAssemblies causes to also output shared assemblies: https://github.com/NuGet/Home/issues/4837#issuecomment-354536302 -->
+  <!-- Since all core assemblies usually follow naming of System.*, we just delete them for now -->
+  <Target Name="DeleteSys" AfterTargets="Build">
+    <ItemGroup>
+      <FilesToDelete Include="$(OutputPath)System.*.dll"/>
+    </ItemGroup>
+    <Delete Files="@(FilesToDelete)" />
+  </Target>
+  
 </Project>
