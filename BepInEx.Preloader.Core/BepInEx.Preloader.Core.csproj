@@ -1,9 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net35</TargetFramework>
+    <TargetFrameworks>net35;netstandard2.1</TargetFrameworks>
     <AssemblyTitle>BepInEx.Preloader.Core</AssemblyTitle>
     <Product>BepInEx.Preloader.Core</Product>
-    <OutputPath>..\bin\</OutputPath>
+    <OutputPath>..\bin\Core\$(TargetFramework)</OutputPath>
+    <DocumentationFile>$(OutputPath)\BepInEx.Preloader.Core.xml</DocumentationFile>
     <LangVersion>8</LangVersion>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
@@ -12,14 +13,12 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>none</DebugType>
-    <DocumentationFile>..\bin\BepInEx.Preloader.Core.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\BepInEx.Core\BepInEx.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="HarmonyX" Version="2.3.1" />
-    <PackageReference Include="Mono.Cecil" Version="0.10.4" />
     <PackageReference Include="MonoMod.RuntimeDetour" Version="20.11.26.2" />
     <PackageReference Include="MonoMod.Utils" Version="20.11.26.2" />
   </ItemGroup>

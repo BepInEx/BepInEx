@@ -7,7 +7,7 @@
     <Product>BepInEx.Patcher</Product>
     <DebugType>embedded</DebugType>
     <DebugSymbols>true</DebugSymbols>
-    <OutputPath>..\bin\patcher\</OutputPath>
+    <OutputPath>..\bin\Patcher\</OutputPath>
     <LangVersion>8</LangVersion>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
