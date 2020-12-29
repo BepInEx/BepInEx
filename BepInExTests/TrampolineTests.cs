@@ -49,10 +49,7 @@ namespace BepInEx.Tests
 
 			Disassemble(exampleCode, (ulong)exampleCodePointer.ToInt64());
 
-
-			int trampolineLength = TrampolineGenerator.Generate(exampleCodePointer, new IntPtr(0xBEEF), trampolineCodePointer, bitness);
-
-
+			DetourGenerator.CreateTrampolineFromFunction(exampleCodePointer, out var trampolineLength, out _);
 
 			Console.WriteLine("Modified:");
 			Console.WriteLine();
