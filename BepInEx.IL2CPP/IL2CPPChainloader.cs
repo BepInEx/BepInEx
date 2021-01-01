@@ -37,7 +37,7 @@ namespace BepInEx.IL2CPP
 		private static FastNativeDetour RuntimeInvokeDetour { get; set; }
 		private static FastNativeDetour InstallUnityTlsInterfaceDetour { get; set; }
 
-		private static IL2CPPChainloader Instance { get; set; }
+		public static IL2CPPChainloader Instance { get; set; }
 
 		public override unsafe void Initialize(string gameExePath = null)
 		{
