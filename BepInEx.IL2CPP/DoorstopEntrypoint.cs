@@ -8,13 +8,20 @@ namespace BepInEx.IL2CPP
 {
 	internal static class UnityPreloaderRunner
 	{
+		private const string TRUSTED_PLATFORM_ASSEMBLIES = "TRUSTED_PLATFORM_ASSEMBLIES";
+		
 		public static void PreloaderMain(string[] args)
 		{
+			
 			string bepinPath = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetFullPath(EnvVars.DOORSTOP_INVOKE_DLL_PATH)));
 
 			PlatformUtils.SetPlatform();
 			
 			Paths.SetExecutablePath(EnvVars.DOORSTOP_PROCESS_PATH, bepinPath, EnvVars.DOORSTOP_MANAGED_FOLDER_DIR);
+			
+			// Cecil 0.11 requires one to manually set up list of trusted assemblies for assembly resolving
+			AppDomain.CurrentDomain.SetData(TRUSTED_PLATFORM_ASSEMBLIES, string.Join(Path.PathSeparator, Directory.GetFiles(Paths.ManagedPath, "*.dll", SearchOption.TopDirectoryOnly)));
+
 			Preloader.IL2CPPUnhollowedPath = Path.Combine(Paths.BepInExRootPath, "unhollowed");
 
 			AppDomain.CurrentDomain.AssemblyResolve += LocalResolve;
