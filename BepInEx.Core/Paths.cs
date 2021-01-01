@@ -9,7 +9,7 @@ namespace BepInEx
 	/// </summary>
 	public static class Paths
 	{
-		public static void SetExecutablePath(string executablePath, string bepinRootPath = null)
+		public static void SetExecutablePath(string executablePath, string bepinRootPath = null, string managedPath = null)
 		{
 			ExecutablePath = executablePath;
 			ProcessName = Path.GetFileNameWithoutExtension(executablePath);
@@ -18,6 +18,7 @@ namespace BepInEx
 				? Utility.ParentDirectory(executablePath, 4)
 				: Path.GetDirectoryName(executablePath);
 
+			ManagedPath = managedPath ?? Utility.CombinePaths(GameRootPath, $"{ProcessName}_Data", "Managed");
 			BepInExRootPath = bepinRootPath ?? Path.Combine(GameRootPath, "BepInEx");
 			ConfigPath = Path.Combine(BepInExRootPath, "config");
 			BepInExConfigPath = Path.Combine(ConfigPath, "BepInEx.cfg");
@@ -35,6 +36,11 @@ namespace BepInEx
 
 		public static SemVer.Version BepInExVersion { get; } = SemVer.Version.Parse(MetadataHelper.GetAttributes<AssemblyInformationalVersionAttribute>(typeof(Paths).Assembly)[0].InformationalVersion);
 
+		/// <summary>
+		///     The path to the Managed folder of the currently running Unity game.
+		/// </summary>
+		public static string ManagedPath { get; private set; }
+		
 		/// <summary>
 		///     The directory that the core BepInEx DLLs reside in.
 		/// </summary>

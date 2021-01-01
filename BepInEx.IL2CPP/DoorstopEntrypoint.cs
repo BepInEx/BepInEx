@@ -14,7 +14,7 @@ namespace BepInEx.IL2CPP
 
 			PlatformUtils.SetPlatform();
 			
-			Paths.SetExecutablePath(EnvVars.DOORSTOP_PROCESS_PATH, bepinPath);
+			Paths.SetExecutablePath(EnvVars.DOORSTOP_PROCESS_PATH, bepinPath, EnvVars.DOORSTOP_MANAGED_FOLDER_DIR);
 			Preloader.IL2CPPUnhollowedPath = Path.Combine(Paths.BepInExRootPath, "unhollowed");
 
 			AppDomain.CurrentDomain.AssemblyResolve += LocalResolve;

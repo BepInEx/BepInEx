@@ -77,7 +77,8 @@ namespace BepInEx.Bootstrap
 				return null;
 
 			if (Utility.TryResolveDllAssembly(name, Paths.BepInExAssemblyDirectory, ReaderParameters, out var assembly) ||
-				Utility.TryResolveDllAssembly(name, Paths.PluginPath, ReaderParameters, out assembly))
+				Utility.TryResolveDllAssembly(name, Paths.PluginPath, ReaderParameters, out assembly) ||
+				Utility.TryResolveDllAssembly(name, Paths.ManagedPath, ReaderParameters, out assembly))
 				return assembly;
 
 			foreach (var dir in SearchDirectories)
