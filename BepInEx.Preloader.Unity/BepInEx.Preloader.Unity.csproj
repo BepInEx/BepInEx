@@ -3,7 +3,8 @@
     <TargetFramework>net35</TargetFramework>
     <AssemblyTitle>BepInEx.Preloader.Unity</AssemblyTitle>
     <Product>BepInEx.Preloader.Unity</Product>
-    <OutputPath>..\bin\</OutputPath>
+    <OutputPath>..\bin\Unity\</OutputPath>
+    <DocumentationFile>$(OutputPath)\BepInEx.Preloader.Unity.xml</DocumentationFile>
     <LangVersion>8</LangVersion>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
@@ -12,7 +13,6 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>none</DebugType>
-    <DocumentationFile>..\bin\BepInEx.Preloader.Unity.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\BepInEx.Core\BepInEx.Core.csproj" />

@@ -3,12 +3,41 @@ using System.IO;
 using System.Security.Cryptography;
 using AssemblyUnhollower;
 using BepInEx.Logging;
+using HarmonyLib;
 using Il2CppDumper;
 
 namespace BepInEx.IL2CPP
 {
 	internal static class ProxyAssemblyGenerator
 	{
+		static class AppDomainHelper
+		{
+			public class AppDomainSetup
+			{
+				public string ApplicationBase { get; set; }
+			}
+			
+			public static Func<AppDomain, string, string, object> CreateInstanceAndUnwrap { get; }
+			private static FastInvokeHandler CreateDomainInternal { get; }
+			private static Type AppDomainSetupType { get; }
+
+			static AppDomainHelper()
+			{
+				var appDomain = typeof(AppDomain);
+				var evidenceType = typeof(AppDomain).Assembly.GetType("System.Security.Policy.Evidence");
+				AppDomainSetupType = typeof(AppDomain).Assembly.GetType("System.AppDomainSetup");
+				CreateDomainInternal = MethodInvoker.GetHandler(AccessTools.Method(appDomain, "CreateDomain", new[] { typeof(string), evidenceType, AppDomainSetupType }));
+				CreateInstanceAndUnwrap = AccessTools.MethodDelegate<Func<AppDomain, string, string, object>>(AccessTools.Method(appDomain, nameof(CreateInstanceAndUnwrap), new[] { typeof(string), typeof(string) }));
+			}
+
+			public static AppDomain CreateDomain(string name, AppDomainSetup setup)
+			{
+				var realSetup = AccessTools.CreateInstance(AppDomainSetupType);
+				Traverse.IterateProperties(setup, realSetup, (pSrc, pTgt) => pTgt.SetValue(pSrc.GetValue()));
+				return CreateDomainInternal(null, name, null, realSetup) as AppDomain;
+			}
+		}
+		
 		public static string GameAssemblyPath => Path.Combine(Paths.GameRootPath, "GameAssembly.dll");
 
 		private static string HashPath => Path.Combine(Preloader.IL2CPPUnhollowedPath, "assembly-hash.txt");
@@ -47,12 +76,12 @@ namespace BepInEx.IL2CPP
 
 		public static void GenerateAssemblies()
 		{
-			var domain = AppDomain.CreateDomain("GeneratorDomain", null, new AppDomainSetup
+			var domain = AppDomainHelper.CreateDomain("GeneratorDomain", new AppDomainHelper.AppDomainSetup
 			{
 				ApplicationBase = Paths.BepInExAssemblyDirectory
 			});
-
-			var runner = (AppDomainRunner)domain.CreateInstanceAndUnwrap(typeof(AppDomainRunner).Assembly.FullName, typeof(AppDomainRunner).FullName);
+			
+			var runner = (AppDomainRunner)AppDomainHelper.CreateInstanceAndUnwrap(domain, typeof(AppDomainRunner).Assembly.FullName, typeof(AppDomainRunner).FullName);
 			
 			runner.Setup(Paths.ExecutablePath, Preloader.IL2CPPUnhollowedPath);
 			runner.GenerateAssembliesInternal(new AppDomainListener());

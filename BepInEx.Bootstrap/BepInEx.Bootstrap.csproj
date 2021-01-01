@@ -4,7 +4,7 @@
     <AssemblyTitle>BepInEx.Bootstrap</AssemblyTitle>
     <Product>BepInEx.Bootstrap</Product>
     <DebugType>none</DebugType>
-    <OutputPath>..\bin\patcher\</OutputPath>
+    <OutputPath>..\bin\Patcher\</OutputPath>
     <LangVersion>8</LangVersion>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>

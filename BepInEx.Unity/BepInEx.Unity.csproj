@@ -4,6 +4,7 @@
     <AssemblyTitle>BepInEx.Unity</AssemblyTitle>
     <Product>BepInEx.Unity</Product>
     <OutputPath>..\bin\Unity\</OutputPath>
+    <DocumentationFile>$(OutputPath)\BepInEx.Unity.xml</DocumentationFile>
     <LangVersion>8</LangVersion>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
@@ -12,7 +13,6 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>none</DebugType>
-    <DocumentationFile>..\bin\BepInEx.Unity.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">
