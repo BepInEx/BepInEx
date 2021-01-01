@@ -15,7 +15,8 @@ namespace BepInEx.IL2CPP
 		internal static ManualLogSource Log => PreloaderLogger.Log;
 		internal static ManualLogSource UnhollowerLog { get; set; }
 
-		public static IL2CPPChainloader Chainloader { get; private set; }
+		// TODO: This is not needed, maybe remove? (Instance is saved in IL2CPPChainloader itself)
+		private static IL2CPPChainloader Chainloader { get; set; }
 
 		public static void Run()
 		{
