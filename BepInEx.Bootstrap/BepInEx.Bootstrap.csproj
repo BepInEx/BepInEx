@@ -5,12 +5,15 @@
     <Product>BepInEx.Bootstrap</Product>
     <DebugType>none</DebugType>
     <OutputPath>..\bin\Patcher\</OutputPath>
-    <LangVersion>8</LangVersion>
+    <LangVersion>9</LangVersion>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\BepInEx.Core\BepInEx.Core.csproj" />
     <ProjectReference Include="..\BepInEx.Unity\BepInEx.Unity.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="jnm2.ReferenceAssemblies.net35" Version="1.0.1" PrivateAssets="All" />
   </ItemGroup>
   <Import Project="..\BepInEx.Shared\BepInEx.Shared.projitems" Label="Shared" />
 </Project>

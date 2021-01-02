@@ -6,7 +6,7 @@
     <Product>BepInEx.IL2CPP</Product>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputPath>..\bin\IL2CPP\</OutputPath>
-    <LangVersion>8</LangVersion>
+    <LangVersion>9</LangVersion>
     <Configurations>Debug;Release</Configurations>
     <Platforms>AnyCPU</Platforms>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>

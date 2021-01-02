@@ -5,7 +5,7 @@
     <Product>BepInEx.Unity</Product>
     <OutputPath>..\bin\Unity\</OutputPath>
     <DocumentationFile>$(OutputPath)\BepInEx.Unity.xml</DocumentationFile>
-    <LangVersion>8</LangVersion>
+    <LangVersion>9</LangVersion>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -26,6 +26,7 @@
     <ProjectReference Include="..\BepInEx.Preloader.Unity\BepInEx.Preloader.Unity.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="jnm2.ReferenceAssemblies.net35" Version="1.0.1" PrivateAssets="All" />
     <PackageReference Include="HarmonyX" Version="2.3.1" />
   </ItemGroup>
   <Import Project="..\BepInEx.Shared\BepInEx.Shared.projitems" Label="Shared" />

@@ -8,7 +8,7 @@
     <DebugType>embedded</DebugType>
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>..\bin\Patcher\</OutputPath>
-    <LangVersion>8</LangVersion>
+    <LangVersion>9</LangVersion>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
@@ -17,6 +17,7 @@
   </PropertyGroup>
   <Import Project="$(SolutionDir)\packages\ILRepack.Lib.MSBuild.Task.2.0.16.1\build\ILRepack.Lib.MSBuild.Task.targets" Condition="Exists('$(SolutionDir)\packages\ILRepack.Lib.MSBuild.Task.2.0.16.1\build\ILRepack.Lib.MSBuild.Task.targets')" />
   <ItemGroup>
+    <PackageReference Include="jnm2.ReferenceAssemblies.net35" Version="1.0.1" PrivateAssets="All" />
     <PackageReference Include="ILRepack" Version="2.0.16" />
     <PackageReference Include="ILRepack.Lib.MSBuild.Task" Version="2.0.16.1" />
     <PackageReference Include="Mono.Cecil" Version="0.10.4" />
