@@ -1,14 +1,21 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace BepInEx.IL2CPP.Allocator
+namespace BepInEx.IL2CPP.Hook.Allocator
 {
 	/// <summary>
 	///     Based on https://github.com/kubo/funchook
 	/// </summary>
 	internal class WindowsPageAllocator : PageAllocator
 	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static nint RoundUp(nint num, nint unit)
+		{
+			return (num + unit - 1) & ~ (unit - 1);
+		}
+		
 		protected override IntPtr AllocateChunk(IntPtr hint)
 		{
 			while (true)
@@ -19,26 +26,26 @@ namespace BepInEx.IL2CPP.Allocator
 
 				if (mbi.State == WinApi.PageState.MEM_FREE)
 				{
-					long nextAddress = RoundUp(mbi.BaseAddress.ToInt64(), ALLOCATION_UNIT);
-					long d = nextAddress - mbi.BaseAddress.ToInt64();
-					if (d >= 0 && mbi.RegionSize.ToInt64() - d >= ALLOCATION_UNIT)
+					var nextAddress = RoundUp(mbi.BaseAddress, ALLOCATION_UNIT);
+					var d = nextAddress - mbi.BaseAddress;
+					if (d >= 0 && mbi.RegionSize - d >= ALLOCATION_UNIT)
 					{
-						hint = (IntPtr)nextAddress;
+						hint = nextAddress;
 						break;
 					}
 				}
 
-				hint = (IntPtr)(mbi.BaseAddress.ToInt64() + mbi.RegionSize.ToInt64());
+				hint = mbi.BaseAddress + mbi.RegionSize;
 			}
 
-			var chunk = WinApi.VirtualAlloc(hint, (UIntPtr)ALLOCATION_UNIT, WinApi.AllocationType.MEM_RESERVE, WinApi.ProtectConstant.PAGE_NOACCESS);
-			if (chunk == null)
+			var chunk = WinApi.VirtualAlloc(hint, ALLOCATION_UNIT, WinApi.AllocationType.MEM_RESERVE, WinApi.ProtectConstant.PAGE_NOACCESS);
+			if (chunk == 0)
 				throw new Win32Exception(Marshal.GetLastWin32Error());
-			var addr = WinApi.VirtualAlloc(chunk, (UIntPtr)PAGE_SIZE, WinApi.AllocationType.MEM_COMMIT, WinApi.ProtectConstant.PAGE_READWRITE);
-			if (addr == IntPtr.Zero)
+			var addr = WinApi.VirtualAlloc(chunk, PAGE_SIZE, WinApi.AllocationType.MEM_COMMIT, WinApi.ProtectConstant.PAGE_READWRITE);
+			if (addr == 0)
 			{
 				int error = Marshal.GetLastWin32Error();
-				WinApi.VirtualFree(chunk, UIntPtr.Zero, WinApi.FreeType.MEM_RELEASE);
+				WinApi.VirtualFree(chunk, 0, WinApi.FreeType.MEM_RELEASE);
 				throw new Win32Exception(error);
 			}
 
@@ -48,7 +55,7 @@ namespace BepInEx.IL2CPP.Allocator
 		public override IntPtr Allocate(IntPtr hint)
 		{
 			var pageAddress = base.Allocate(hint);
-			if (WinApi.VirtualAlloc(pageAddress, (UIntPtr)PAGE_SIZE, WinApi.AllocationType.MEM_COMMIT, WinApi.ProtectConstant.PAGE_READWRITE) == IntPtr.Zero)
+			if (WinApi.VirtualAlloc(pageAddress, PAGE_SIZE, WinApi.AllocationType.MEM_COMMIT, WinApi.ProtectConstant.PAGE_READWRITE) == 0)
 				throw new Win32Exception(Marshal.GetLastWin32Error());
 			return pageAddress;
 		}
@@ -92,22 +99,22 @@ namespace BepInEx.IL2CPP.Allocator
 			}
 
 			[DllImport("kernel32", SetLastError = true)]
-			public static extern int VirtualQuery(IntPtr lpAddress, ref MEMORY_BASIC_INFORMATION lpBuffer, int dwLength);
+			public static extern int VirtualQuery(nint lpAddress, ref MEMORY_BASIC_INFORMATION lpBuffer, int dwLength);
 
 			[DllImport("kernel32", SetLastError = true)]
-			public static extern IntPtr VirtualAlloc(IntPtr lpAddress, UIntPtr dwSize, AllocationType flAllocationType, ProtectConstant flProtect);
+			public static extern nint VirtualAlloc(nint lpAddress, nuint dwSize, AllocationType flAllocationType, ProtectConstant flProtect);
 
 			[DllImport("kernel32", SetLastError = true)]
-			public static extern bool VirtualFree(IntPtr lpAddress, UIntPtr dwSize, FreeType dwFreeType);
+			public static extern bool VirtualFree(nint lpAddress, nuint dwSize, FreeType dwFreeType);
 
 			[StructLayout(LayoutKind.Sequential)]
 			// ReSharper disable once InconsistentNaming
 			public readonly struct MEMORY_BASIC_INFORMATION
 			{
-				public readonly IntPtr BaseAddress;
-				public readonly IntPtr AllocationBase;
+				public readonly nint BaseAddress;
+				public readonly nint AllocationBase;
 				public readonly uint AllocationProtect;
-				public readonly IntPtr RegionSize;
+				public readonly nint RegionSize;
 				public readonly PageState State;
 				public readonly uint Protect;
 				public readonly uint Type;

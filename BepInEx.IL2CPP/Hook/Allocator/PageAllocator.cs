@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using MonoMod.Utils;
 
-namespace BepInEx.IL2CPP.Allocator
+namespace BepInEx.IL2CPP.Hook.Allocator
 {
 	internal class PageAllocatorException : Exception
 	{
@@ -91,18 +91,12 @@ namespace BepInEx.IL2CPP.Allocator
 		{
 			foreach (var allocatedChunk in allocatedChunks)
 			{
-				long index = (page.ToInt64() - allocatedChunk.BaseAddress.ToInt64()) / PAGE_SIZE;
+				long index = (page - allocatedChunk.BaseAddress) / PAGE_SIZE;
 				if (index < 0 || index > PAGES_PER_UNIT)
 					continue;
 				allocatedChunk.Pages[index] = false;
 				return;
 			}
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static long RoundUp(long num, long unit)
-		{
-			return (num + unit - 1) & ~ (unit - 1);
 		}
 
 		/// <summary>
@@ -112,10 +106,9 @@ namespace BepInEx.IL2CPP.Allocator
 		/// <param name="dst">Destination address to jump to.</param>
 		/// <returns>True, if the distance between the addresses is within the relative jump range (usually 1GB), otherwise false.</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsInRelJmpRange(IntPtr src, IntPtr dst)
+		public static bool IsInRelJmpRange(nint src, nint dst)
 		{
-			long diff = dst.ToInt64() - src.ToInt64();
-			return int.MinValue <= diff && diff <= int.MaxValue;
+			return dst - src is <= int.MaxValue and >= int.MinValue;
 		}
 
 		private static PageAllocator Init()
@@ -132,10 +125,10 @@ namespace BepInEx.IL2CPP.Allocator
 		private class PageChunk
 		{
 			public readonly bool[] Pages = new bool[PAGES_PER_UNIT];
-			public IntPtr BaseAddress;
+			public nint BaseAddress;
 			public int UsedPages;
 
-			public IntPtr GetPage(int index)
+			public nint GetPage(int index)
 			{
 				return BaseAddress + index * PAGE_SIZE;
 			}
