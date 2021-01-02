@@ -315,7 +315,7 @@ namespace BepInEx.IL2CPP.Hook
 			if (managedParamType.IsValueType) // don't need to convert blittable types
 				return;
 
-			void EmitCreateIl2CppObject()
+			void EmitCreateIl2CppObject(Type originalType)
 			{
 				Label endLabel = il.DefineLabel();
 				Label notNullLabel = il.DefineLabel();
@@ -328,7 +328,7 @@ namespace BepInEx.IL2CPP.Hook
 				il.Emit(OpCodes.Br_S, endLabel);
 
 				il.MarkLabel(notNullLabel);
-				il.Emit(OpCodes.Newobj, AccessTools.DeclaredConstructor(managedParamType, new[] { typeof(IntPtr) }));
+				il.Emit(OpCodes.Newobj, AccessTools.DeclaredConstructor(originalType, new[] { typeof(IntPtr) }));
 
 				il.MarkLabel(endLabel);
 			}
@@ -341,7 +341,7 @@ namespace BepInEx.IL2CPP.Hook
 				}
 				else if (originalType.IsSubclassOf(typeof(Il2CppObjectBase)))
 				{
-					EmitCreateIl2CppObject();
+					EmitCreateIl2CppObject(originalType);
 				}
 			}
 
