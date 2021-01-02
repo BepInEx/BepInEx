@@ -19,8 +19,8 @@ namespace BepInEx.IL2CPP.Allocator
 			{
 				int startIndex = line.IndexOf('-');
 				int endIndex = line.IndexOf(' ');
-				long startAddr = long.Parse(line.Substring(0, startIndex), NumberStyles.HexNumber);
-				long endAddr = long.Parse(line.Substring(startIndex + 1, endIndex - startIndex - 1), NumberStyles.HexNumber);
+				long startAddr = long.Parse(line[..startIndex], NumberStyles.HexNumber);
+				long endAddr = long.Parse(line[(startIndex+1)..endIndex], NumberStyles.HexNumber);
 				yield return (new IntPtr(startAddr), new IntPtr(endAddr));
 			}
 		}

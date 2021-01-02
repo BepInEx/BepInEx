@@ -129,14 +129,14 @@ namespace BepInEx
 		/// <exception cref="Exception">Thrown when a cyclic dependency occurs.</exception>
 		public static IEnumerable<TNode> TopologicalSort<TNode>(IEnumerable<TNode> nodes, Func<TNode, IEnumerable<TNode>> dependencySelector)
 		{
-			List<TNode> sorted_list = new List<TNode>();
+			var sorted_list = new List<TNode>();
 
-			HashSet<TNode> visited = new HashSet<TNode>();
-			HashSet<TNode> sorted = new HashSet<TNode>();
+			var visited = new HashSet<TNode>();
+			var sorted = new HashSet<TNode>();
 
 			foreach (TNode input in nodes)
 			{
-				Stack<TNode> currentStack = new Stack<TNode>();
+				var currentStack = new Stack<TNode>();
 				if (!Visit(input, currentStack))
 				{
 					throw new Exception("Cyclic Dependency:\r\n" + currentStack.Select(x => $" - {x}") //append dashes
@@ -159,13 +159,9 @@ namespace BepInEx
 				else
 				{
 					visited.Add(node);
-
 					stack.Push(node);
-
-					foreach (var dep in dependencySelector(node))
-						if (!Visit(dep, stack))
-							return false;
-
+					if (dependencySelector(node).Any(dep => !Visit(dep, stack)))
+						return false;
 
 					sorted.Add(node);
 					sorted_list.Add(node);
@@ -194,7 +190,7 @@ namespace BepInEx
 
 			foreach (string subDirectory in potentialDirectories)
 			{
-				string[] potentialPaths = new[]
+				var potentialPaths = new[]
 				{
 					$"{assemblyName.Name}.dll",
 					$"{assemblyName.Name}.exe"

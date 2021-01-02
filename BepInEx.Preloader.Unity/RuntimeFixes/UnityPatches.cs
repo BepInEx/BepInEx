@@ -7,9 +7,9 @@ namespace BepInEx.Preloader.RuntimeFixes
 {
 	internal static class UnityPatches
 	{
-		private static HarmonyLib.Harmony HarmonyInstance { get; set; }
+		private static Harmony HarmonyInstance { get; set; }
 
-		public static Dictionary<string, string> AssemblyLocations { get; } = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+		public static Dictionary<string, string> AssemblyLocations { get; } = new(StringComparer.InvariantCultureIgnoreCase);
 
 		public static void Apply()
 		{

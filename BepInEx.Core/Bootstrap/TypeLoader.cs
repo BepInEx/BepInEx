@@ -39,7 +39,6 @@ namespace BepInEx.Bootstrap
 		/// </summary>
 		public List<T> CacheItems { get; set; }
 
-
 		/// <summary>
 		/// Timestamp of the assembly. Used to check the age of the cache.
 		/// </summary>
@@ -61,7 +60,7 @@ namespace BepInEx.Bootstrap
 		/// </summary>
 		public static readonly ReaderParameters ReaderParameters;
 
-		public static HashSet<string> SearchDirectories = new HashSet<string>();
+		public static HashSet<string> SearchDirectories = new();
 
 		static TypeLoader()
 		{
@@ -81,13 +80,7 @@ namespace BepInEx.Bootstrap
 				Utility.TryResolveDllAssembly(name, Paths.ManagedPath, ReaderParameters, out assembly))
 				return assembly;
 
-			foreach (var dir in SearchDirectories)
-			{
-				if (Utility.TryResolveDllAssembly(name, dir, ReaderParameters, out assembly))
-					return assembly;
-			}
-
-			return AssemblyResolve?.Invoke(sender, reference);
+			return SearchDirectories.Any(dir => Utility.TryResolveDllAssembly(name, dir, ReaderParameters, out assembly)) ? assembly : AssemblyResolve?.Invoke(sender, reference);
 		}
 
 		/// <summary>

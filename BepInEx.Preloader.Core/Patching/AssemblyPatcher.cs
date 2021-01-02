@@ -29,7 +29,7 @@ namespace BepInEx.Preloader.Core
 		/// <summary>
 		/// A list of plugins that will be initialized and executed, in the order of the list.
 		/// </summary>
-		public List<PatcherPlugin> PatcherPlugins { get; } = new List<PatcherPlugin>();
+		public List<PatcherPlugin> PatcherPlugins { get; } = new();
 
 
 		/// <summary>
@@ -42,13 +42,13 @@ namespace BepInEx.Preloader.Core
 		/// <para>The dictionary has the name of the file, without any directories. These are used by the dumping functionality, and as such, these are also required to be unique. They do not have to be exactly the same as the real filename, however they have to be mapped deterministically.</para>
 		/// <para>Order is not respected, as it will be sorted by dependencies.</para>
 		/// </summary>
-		public Dictionary<string, AssemblyDefinition> AssembliesToPatch { get; } = new Dictionary<string, AssemblyDefinition>();
+		public Dictionary<string, AssemblyDefinition> AssembliesToPatch { get; } = new();
 
 		/// <summary>
 		/// <para>Contains a dictionary of assemblies that have been loaded as part of executing this assembly patcher..</para>
 		/// <para>The key is the same key as used in <see cref="LoadedAssemblies"/>, while the value is the actual assembly itself.</para>
 		/// </summary>
-		public Dictionary<string, Assembly> LoadedAssemblies { get; } = new Dictionary<string, Assembly>();
+		public Dictionary<string, Assembly> LoadedAssemblies { get; } = new();
 
 		/// <summary>
 		/// The directory location as to where patched assemblies will be saved to and loaded from disk, for debugging purposes. Defaults to BepInEx/DumpedAssemblies
@@ -366,11 +366,9 @@ namespace BepInEx.Preloader.Core
 						loadedAssembly = Assembly.LoadFile(Path.Combine(DumpedAssembliesPath, filename));
 					else
 					{
-						using (var assemblyStream = new MemoryStream())
-						{
-							assembly.Write(assemblyStream);
-							loadedAssembly =Assembly.Load(assemblyStream.ToArray());
-						}
+						using var assemblyStream = new MemoryStream();
+						assembly.Write(assemblyStream);
+						loadedAssembly =Assembly.Load(assemblyStream.ToArray());
 					}
 
 					LoadedAssemblies.Add(filename, loadedAssembly);

@@ -229,7 +229,7 @@ namespace BepInEx.IL2CPP
 
 		private sealed class CodeWriterImpl : CodeWriter
 		{
-			readonly List<byte> allBytes = new List<byte>();
+			readonly List<byte> allBytes = new();
 			public override void WriteByte(byte value) => allBytes.Add(value);
 			public byte[] ToArray() => allBytes.ToArray();
 		}

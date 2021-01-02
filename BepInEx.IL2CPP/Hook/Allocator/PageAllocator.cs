@@ -32,7 +32,7 @@ namespace BepInEx.IL2CPP.Allocator
 
 		private static PageAllocator instance;
 
-		private readonly List<PageChunk> allocatedChunks = new List<PageChunk>();
+		private readonly List<PageChunk> allocatedChunks = new();
 
 		/// <summary>
 		///     Platform-specific instance of page allocator.
@@ -125,7 +125,7 @@ namespace BepInEx.IL2CPP.Allocator
 				var v when v.Is(Platform.Windows) => new WindowsPageAllocator(),
 				var v when v.Is(Platform.Linux)   => new LinuxPageAllocator(),
 				var v when v.Is(Platform.MacOS)   => new MacOsPageAllocator(),
-				_                                 => throw new NotImplementedException()
+				_											 => throw new NotImplementedException()
 			};
 		}
 

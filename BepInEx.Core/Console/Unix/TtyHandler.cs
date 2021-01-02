@@ -32,8 +32,7 @@ namespace BepInEx.Unix
 
 	internal static class TtyHandler
 	{
-		private static readonly string[] ncursesLocations = new[]
-		{
+		private static readonly string[] ncursesLocations = {
 			"/usr/share/terminfo",
 			"/etc/terminfo",
 			"/usr/lib/terminfo",

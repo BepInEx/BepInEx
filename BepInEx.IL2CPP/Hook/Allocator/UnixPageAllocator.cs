@@ -90,7 +90,7 @@ namespace BepInEx.IL2CPP.Allocator
 
 		private static class Unix
 		{
-			public static readonly IntPtr MAP_FAILED = new IntPtr(-1);
+			public static readonly IntPtr MAP_FAILED = new(-1);
 
 			[DynDllImport("mmap")]
 			public static mmapDelegate mmap;

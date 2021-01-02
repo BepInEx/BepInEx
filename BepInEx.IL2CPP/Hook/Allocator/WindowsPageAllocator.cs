@@ -102,7 +102,7 @@ namespace BepInEx.IL2CPP.Allocator
 
 			[StructLayout(LayoutKind.Sequential)]
 			// ReSharper disable once InconsistentNaming
-			public struct MEMORY_BASIC_INFORMATION
+			public readonly struct MEMORY_BASIC_INFORMATION
 			{
 				public readonly IntPtr BaseAddress;
 				public readonly IntPtr AllocationBase;

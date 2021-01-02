@@ -10,8 +10,7 @@ namespace BepInEx.Core.Logging
 	{
 		public void LogEvent(object sender, LogEventArgs eventArgs)
 		{
-			string log = $"[{eventArgs.Level,-7}:{((ILogSource)sender).SourceName,10}] {eventArgs.Data}\r\n";
-
+			var log = $"[{eventArgs.Level,-7}:{((ILogSource)sender).SourceName,10}] {eventArgs.Data}\r\n";
 			ConsoleManager.StandardOutStream?.Write(log);
 		}
 

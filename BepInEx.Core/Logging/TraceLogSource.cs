@@ -11,7 +11,7 @@ namespace BepInEx.Logging
 		/// <summary>
 		/// Whether Trace logs are currently being rerouted.
 		/// </summary>
-		public static bool IsListening { get; protected set; } = false;
+		public static bool IsListening { get; private set; }
 
 		private static TraceLogSource traceListener;
 
@@ -69,28 +69,14 @@ namespace BepInEx.Logging
 		/// <inheritdoc />
 		public override void TraceEvent(TraceEventCache eventCache, string source, TraceEventType eventType, int id, string message)
 		{
-			LogLevel level;
-
-			switch (eventType)
+			var level = eventType switch
 			{
-				case TraceEventType.Critical:
-					level = LogLevel.Fatal;
-					break;
-				case TraceEventType.Error:
-					level = LogLevel.Error;
-					break;
-				case TraceEventType.Warning:
-					level = LogLevel.Warning;
-					break;
-				case TraceEventType.Information:
-					level = LogLevel.Info;
-					break;
-				case TraceEventType.Verbose:
-				default:
-					level = LogLevel.Debug;
-					break;
-			}
-
+				TraceEventType.Critical => LogLevel.Fatal,
+				TraceEventType.Error => LogLevel.Error,
+				TraceEventType.Warning => LogLevel.Warning,
+				TraceEventType.Information => LogLevel.Info,
+				_ => LogLevel.Debug
+			};
 			LogSource.Log(level, $"{message}".Trim());
 		}
 	}

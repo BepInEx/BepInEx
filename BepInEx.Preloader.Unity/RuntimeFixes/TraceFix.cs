@@ -40,7 +40,7 @@ namespace BepInEx.Preloader.RuntimeFixes
 
 			instance.Patch(
 				typeof(Trace).GetMethod("DoTrace", BindingFlags.Static | BindingFlags.NonPublic),
-				prefix: new HarmonyMethod(typeof(TraceFix).GetMethod(nameof(DoTraceReplacement), BindingFlags.Static | BindingFlags.NonPublic)));
+				new HarmonyMethod(typeof(TraceFix).GetMethod(nameof(DoTraceReplacement), BindingFlags.Static | BindingFlags.NonPublic)));
 		}
 
 

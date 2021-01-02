@@ -12,7 +12,7 @@ namespace BepInEx.Preloader.Core.Logging
 		/// <summary>
 		/// A list of all <see cref="LogEventArgs"/> objects that this listener has received.
 		/// </summary>
-		public static List<LogEventArgs> LogEvents { get; } = new List<LogEventArgs>();
+		public static List<LogEventArgs> LogEvents { get; } = new();
 
 		/// <inheritdoc />
 		public void LogEvent(object sender, LogEventArgs eventArgs)
