@@ -95,6 +95,7 @@ namespace BepInEx.IL2CPP.Hook.Allocator
 				if (index < 0 || index >= PAGES_PER_UNIT)
 					continue;
 				allocatedChunk.Pages[index] = false;
+				allocatedChunk.UsedPages--;
 				return;
 			}
 		}
