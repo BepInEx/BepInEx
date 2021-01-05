@@ -94,6 +94,8 @@ namespace BepInEx.IL2CPP.Hook.Allocator
 				long index = (page - allocatedChunk.BaseAddress) / PAGE_SIZE;
 				if (index < 0 || index >= PAGES_PER_UNIT)
 					continue;
+				if (!allocatedChunk.Pages[index])
+					return;
 				allocatedChunk.Pages[index] = false;
 				allocatedChunk.UsedPages--;
 				return;
