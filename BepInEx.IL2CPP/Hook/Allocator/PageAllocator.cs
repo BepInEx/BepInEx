@@ -45,7 +45,7 @@ namespace BepInEx.IL2CPP.Hook.Allocator
 		/// <param name="hint">Address near which to attempt allocate the chunk</param>
 		/// <returns>Allocated chunk</returns>
 		/// <exception cref="PageAllocatorException">Allocation failed</exception>
-		protected abstract IntPtr AllocateChunk(IntPtr hint);
+		protected abstract nint AllocateChunk(nint hint);
 
 		/// <summary>
 		///     Allocates a single page of size <see cref="PAGE_SIZE" /> near the provided address.
@@ -53,7 +53,7 @@ namespace BepInEx.IL2CPP.Hook.Allocator
 		/// </summary>
 		/// <param name="hint">Address near which to attempt to allocate the page.</param>
 		/// <returns>Address to the allocated page.</returns>
-		public virtual IntPtr Allocate(IntPtr hint)
+		public virtual nint Allocate(nint hint)
 		{
 			foreach (var allocatedChunk in allocatedChunks)
 			{
@@ -87,7 +87,7 @@ namespace BepInEx.IL2CPP.Hook.Allocator
 		///     Frees the page allocated with <see cref="Allocate" />
 		/// </summary>
 		/// <param name="page"></param>
-		public void Free(IntPtr page)
+		public void Free(nint page)
 		{
 			foreach (var allocatedChunk in allocatedChunks)
 			{

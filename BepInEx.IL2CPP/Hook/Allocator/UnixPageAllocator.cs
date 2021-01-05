@@ -58,7 +58,7 @@ namespace BepInEx.IL2CPP.Hook.Allocator
 			throw new PageAllocatorException($"Could not find free region near {(long)hint:X8}");
 		}
 
-		protected override IntPtr AllocateChunk(IntPtr hint)
+		protected override nint AllocateChunk(nint hint)
 		{
 			/* From https://github.com/kubo/funchook/blob/master/src/funchook_unix.c#L251-L254:
 			 * Loop three times just to avoid rare cases such as
@@ -120,7 +120,7 @@ namespace BepInEx.IL2CPP.Hook.Allocator
 			{
 				typeof(Unix).ResolveDynDllImports(new Dictionary<string, List<DynDllMapping>>
 				{
-					["libc"] = new List<DynDllMapping>
+					["libc"] = new()
 					{
 						"libc.so.6",               // Ubuntu glibc
 						"libc",                    // Linux glibc,

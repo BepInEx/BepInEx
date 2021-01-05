@@ -16,7 +16,7 @@ namespace BepInEx.IL2CPP.Hook.Allocator
 			return (num + unit - 1) & ~ (unit - 1);
 		}
 		
-		protected override IntPtr AllocateChunk(IntPtr hint)
+		protected override nint AllocateChunk(nint hint)
 		{
 			while (true)
 			{
@@ -52,7 +52,7 @@ namespace BepInEx.IL2CPP.Hook.Allocator
 			return chunk;
 		}
 
-		public override IntPtr Allocate(IntPtr hint)
+		public override nint Allocate(nint hint)
 		{
 			var pageAddress = base.Allocate(hint);
 			if (WinApi.VirtualAlloc(pageAddress, PAGE_SIZE, WinApi.AllocationType.MEM_COMMIT, WinApi.ProtectConstant.PAGE_READWRITE) == 0)
