@@ -5,10 +5,11 @@
     <AssemblyTitle>BepInEx</AssemblyTitle>
     <Product>BepInEx</Product>
     <LangVersion>9</LangVersion>
-    <OutputPath>..\bin\Core\$(TargetFramework)</OutputPath>
-    <DocumentationFile>$(OutputPath)\BepInEx.Core.xml</DocumentationFile>
+    <OutputPath>..\bin\Core\</OutputPath>
+    <DocumentationFile>$(OutputPath)\$(TargetFramework)\BepInEx.Core.xml</DocumentationFile>
     <Description>Unity plugin injection framework</Description>
-    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <!-- Force nuget assembly output on netstandard2.1 -->
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>none</DebugType>
@@ -26,4 +27,15 @@
     <Compile Remove="Contract\IPlugin.cs" />
   </ItemGroup>
   <Import Project="..\BepInEx.Shared\BepInEx.Shared.projitems" Label="Shared" />
+
+  <!-- CopyLocalLockFileAssemblies causes to also output shared assemblies: https://github.com/NuGet/Home/issues/4837#issuecomment-354536302 -->
+  <!-- Since all core assemblies usually follow naming of System.*, we just delete them for now -->
+  <!-- Also delete deps.json as they are not used by mono -->
+  <Target Name="DeleteSys" AfterTargets="Build">
+    <ItemGroup>
+      <FilesToDelete Include="$(OutputPath)System.*.dll"/>
+      <FilesToDelete Include="$(OutputPath)*.deps.json"/>
+    </ItemGroup>
+    <Delete Files="@(FilesToDelete)" />
+  </Target>
 </Project>
