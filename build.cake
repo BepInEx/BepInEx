@@ -54,7 +54,7 @@ Task("Build")
 
     var buildSettings = new DotNetCoreBuildSettings {
         Configuration = "Release",
-		MSBuildSettings = new DotNetCoreMSBuildSettings()
+		MSBuildSettings = new DotNetCoreMSBuildSettings() // Apparently needed in some versions of CakeBuild
     };
 
     if (isBleedingEdge) 
@@ -77,10 +77,6 @@ Task("Build")
     DotNetCoreBuild("./BepInEx.Unity/BepInEx.Unity.csproj", buildSettings);
     DotNetCoreBuild("./BepInEx.NetLauncher/BepInEx.NetLauncher.csproj", buildSettings);
     DotNetCoreBuild("./BepInEx.IL2CPP/BepInEx.IL2CPP.csproj", buildSettings);
-})
-.OnError(exception =>
-{
-    Information(exception.ToString());
 });
 
 const string DOORSTOP_VER_WIN = "3.1.0.0";
