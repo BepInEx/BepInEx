@@ -54,6 +54,7 @@ Task("Build")
 
     var buildSettings = new DotNetCoreBuildSettings {
         Configuration = "Release",
+		MSBuildSettings = new DotNetCoreMSBuildSettings()
     };
 
     if (isBleedingEdge) 
