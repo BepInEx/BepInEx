@@ -15,7 +15,7 @@ namespace BepInEx.IL2CPP.Hook.Allocator
 		{
 			return (num + unit - 1) & ~ (unit - 1);
 		}
-		
+
 		protected override nint AllocateChunk(nint hint)
 		{
 			while (true)

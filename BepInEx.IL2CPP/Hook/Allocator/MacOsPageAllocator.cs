@@ -33,7 +33,7 @@ namespace BepInEx.IL2CPP.Hook.Allocator
 			{
 				typeof(LibSystem).ResolveDynDllImports(new Dictionary<string, List<DynDllMapping>>
 				{
-					["libSystem"] = new List<DynDllMapping>
+					["libSystem"] = new()
 					{
 						"/usr/lib/libSystem.dylib" // OSX POSIX
 					}

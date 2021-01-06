@@ -121,7 +121,7 @@ namespace BepInEx.IL2CPP.Hook.Allocator
 				var v when v.Is(Platform.Windows) => new WindowsPageAllocator(),
 				var v when v.Is(Platform.Linux)   => new LinuxPageAllocator(),
 				var v when v.Is(Platform.MacOS)   => new MacOsPageAllocator(),
-				_											 => throw new NotImplementedException()
+				_                                 => throw new NotSupportedException()
 			};
 		}
 

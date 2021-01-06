@@ -71,7 +71,7 @@ namespace BepInEx.IL2CPP.Hook.Allocator
 			{
 				var (start, end) = GetFreeArea(hint);
 				// Try to allocate to end (after original method) first, then try before
-				var addrs = new [] { end, start };
+				var addrs = new[] { end, start };
 				foreach (var addr in addrs)
 				{
 					if (addr == 0)

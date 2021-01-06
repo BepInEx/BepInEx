@@ -19,7 +19,7 @@ namespace BepInEx.IL2CPP.Hook.Allocator
 				int startIndex = line.IndexOf('-');
 				int endIndex = line.IndexOf(' ');
 				long startAddr = long.Parse(line[..startIndex], NumberStyles.HexNumber);
-				long endAddr = long.Parse(line[(startIndex+1)..endIndex], NumberStyles.HexNumber);
+				long endAddr = long.Parse(line[(startIndex + 1)..endIndex], NumberStyles.HexNumber);
 				yield return ((nint)startAddr, (nint)endAddr);
 			}
 		}
