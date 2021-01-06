@@ -67,7 +67,7 @@ namespace BepInEx.Logging
 			InstantFlushing = !delayedFlushing;
 		}
 
-		public static HashSet<string> BlacklistedSources = new HashSet<string>();
+		public static HashSet<string> BlacklistedSources = new();
 
 		/// <inheritdoc />
 		public void LogEvent(object sender, LogEventArgs eventArgs)

@@ -13,27 +13,15 @@ namespace BepInEx.IL2CPP.Logging
 
 		public void UnityLogCallback(string logLine, string exception, LogType type)
 		{
-			LogLevel level = LogLevel.Message;
-
-			switch (type)
+			var level = type switch
 			{
-				case LogType.Error:
-					level = LogLevel.Error;
-					break;
-				case LogType.Assert:
-					level = LogLevel.Debug;
-					break;
-				case LogType.Warning:
-					level = LogLevel.Warning;
-					break;
-				case LogType.Log:
-					level = LogLevel.Message;
-					break;
-				case LogType.Exception:
-					level = LogLevel.Error;
-					break;
-			}
-
+				LogType.Error => LogLevel.Error,
+				LogType.Assert => LogLevel.Debug,
+				LogType.Warning => LogLevel.Warning,
+				LogType.Log => LogLevel.Message,
+				LogType.Exception => LogLevel.Error,
+				_ => LogLevel.Message
+			};
 			LogEvent?.Invoke(this, new LogEventArgs(logLine, level, this));
 		}
 

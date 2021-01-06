@@ -16,7 +16,7 @@ namespace BepInEx.Configuration
 		// Don't put anything from UnityEngine here or it will break preloader, use LazyTomlConverterLoader instead
 		private static Dictionary<Type, TypeConverter> TypeConverters { get; } = new Dictionary<Type, TypeConverter>
 		{
-			[typeof(string)] = new TypeConverter
+			[typeof(string)] = new()
 			{
 				ConvertToString = (obj, type) => Escape((string)obj),
 				ConvertToObject = (str, type) =>
@@ -27,12 +27,12 @@ namespace BepInEx.Configuration
 					return Unescape(str);
 				},
 			},
-			[typeof(bool)] = new TypeConverter
+			[typeof(bool)] = new()
 			{
 				ConvertToString = (obj, type) => obj.ToString().ToLowerInvariant(),
 				ConvertToObject = (str, type) => bool.Parse(str),
 			},
-			[typeof(byte)] = new TypeConverter
+			[typeof(byte)] = new()
 			{
 				ConvertToString = (obj, type) => obj.ToString(),
 				ConvertToObject = (str, type) => byte.Parse(str),
@@ -40,42 +40,42 @@ namespace BepInEx.Configuration
 
 			//integral types
 
-			[typeof(sbyte)] = new TypeConverter
+			[typeof(sbyte)] = new()
 			{
 				ConvertToString = (obj, type) => obj.ToString(),
 				ConvertToObject = (str, type) => sbyte.Parse(str),
 			},
-			[typeof(byte)] = new TypeConverter
+			[typeof(byte)] = new()
 			{
 				ConvertToString = (obj, type) => obj.ToString(),
 				ConvertToObject = (str, type) => byte.Parse(str),
 			},
-			[typeof(short)] = new TypeConverter
+			[typeof(short)] = new()
 			{
 				ConvertToString = (obj, type) => obj.ToString(),
 				ConvertToObject = (str, type) => short.Parse(str),
 			},
-			[typeof(ushort)] = new TypeConverter
+			[typeof(ushort)] = new()
 			{
 				ConvertToString = (obj, type) => obj.ToString(),
 				ConvertToObject = (str, type) => ushort.Parse(str),
 			},
-			[typeof(int)] = new TypeConverter
+			[typeof(int)] = new()
 			{
 				ConvertToString = (obj, type) => obj.ToString(),
 				ConvertToObject = (str, type) => int.Parse(str),
 			},
-			[typeof(uint)] = new TypeConverter
+			[typeof(uint)] = new()
 			{
 				ConvertToString = (obj, type) => obj.ToString(),
 				ConvertToObject = (str, type) => uint.Parse(str),
 			},
-			[typeof(long)] = new TypeConverter
+			[typeof(long)] = new()
 			{
 				ConvertToString = (obj, type) => obj.ToString(),
 				ConvertToObject = (str, type) => long.Parse(str),
 			},
-			[typeof(ulong)] = new TypeConverter
+			[typeof(ulong)] = new()
 			{
 				ConvertToString = (obj, type) => obj.ToString(),
 				ConvertToObject = (str, type) => ulong.Parse(str),
@@ -83,17 +83,17 @@ namespace BepInEx.Configuration
 
 			//floating point types
 
-			[typeof(float)] = new TypeConverter
+			[typeof(float)] = new()
 			{
 				ConvertToString = (obj, type) => ((float)obj).ToString(NumberFormatInfo.InvariantInfo),
 				ConvertToObject = (str, type) => float.Parse(str, NumberFormatInfo.InvariantInfo),
 			},
-			[typeof(double)] = new TypeConverter
+			[typeof(double)] = new()
 			{
 				ConvertToString = (obj, type) => ((double)obj).ToString(NumberFormatInfo.InvariantInfo),
 				ConvertToObject = (str, type) => double.Parse(str, NumberFormatInfo.InvariantInfo),
 			},
-			[typeof(decimal)] = new TypeConverter
+			[typeof(decimal)] = new()
 			{
 				ConvertToString = (obj, type) => ((decimal)obj).ToString(NumberFormatInfo.InvariantInfo),
 				ConvertToObject = (str, type) => decimal.Parse(str, NumberFormatInfo.InvariantInfo),
@@ -101,7 +101,7 @@ namespace BepInEx.Configuration
 
 			//enums are special
 
-			[typeof(Enum)] = new TypeConverter
+			[typeof(Enum)] = new()
 			{
 				ConvertToString = (obj, type) => obj.ToString(),
 				ConvertToObject = (str, type) => Enum.Parse(type, str, true),

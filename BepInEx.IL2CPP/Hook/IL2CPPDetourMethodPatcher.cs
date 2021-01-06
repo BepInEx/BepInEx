@@ -185,7 +185,7 @@ namespace BepInEx.IL2CPP.Hook
 			
 			if (!Original.IsStatic)
 				unmanagedParams[0] = typeof(IntPtr);
-			unmanagedParams[unmanagedParams.Length - 1] = typeof(Il2CppMethodInfo*);
+			unmanagedParams[^1] = typeof(Il2CppMethodInfo*);
 			Array.Copy(managedParams.Select(ConvertManagedTypeToIL2CPPType).ToArray(), 0,
 				unmanagedParams, paramStartIndex, managedParams.Length);
 

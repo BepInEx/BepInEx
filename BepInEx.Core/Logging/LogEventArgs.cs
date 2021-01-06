@@ -10,17 +10,17 @@ namespace BepInEx.Logging
 		/// <summary>
 		/// Logged data.
 		/// </summary>
-		public object Data { get; protected set; }
+		public object Data { get; }
 
 		/// <summary>
 		/// Log levels for the data.
 		/// </summary>
-		public LogLevel Level { get; protected set; }
+		public LogLevel Level { get; }
 
 		/// <summary>
 		/// Log source that emitted the log event.
 		/// </summary>
-		public ILogSource Source { get; protected set; }
+		public ILogSource Source { get; }
 
 		/// <summary>
 		/// Creates the log event args-

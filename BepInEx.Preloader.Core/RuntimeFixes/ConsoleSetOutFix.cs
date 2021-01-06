@@ -15,7 +15,7 @@ namespace BepInEx.Preloader.RuntimeFixes
 		{
 			loggedTextWriter = new LoggedTextWriter { Parent = Console.Out };
 			Console.SetOut(loggedTextWriter);
-			HarmonyLib.Harmony.CreateAndPatchAll(typeof(ConsoleSetOutFix));
+			Harmony.CreateAndPatchAll(typeof(ConsoleSetOutFix));
 		}
 
 		[HarmonyPatch(typeof(Console), nameof(Console.SetOut))]

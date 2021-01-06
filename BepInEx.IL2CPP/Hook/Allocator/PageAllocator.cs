@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using MonoMod.Utils;
 
-namespace BepInEx.IL2CPP.Allocator
+namespace BepInEx.IL2CPP.Hook.Allocator
 {
 	internal class PageAllocatorException : Exception
 	{
@@ -32,7 +32,7 @@ namespace BepInEx.IL2CPP.Allocator
 
 		private static PageAllocator instance;
 
-		private readonly List<PageChunk> allocatedChunks = new List<PageChunk>();
+		private readonly List<PageChunk> allocatedChunks = new();
 
 		/// <summary>
 		///     Platform-specific instance of page allocator.
@@ -45,7 +45,7 @@ namespace BepInEx.IL2CPP.Allocator
 		/// <param name="hint">Address near which to attempt allocate the chunk</param>
 		/// <returns>Allocated chunk</returns>
 		/// <exception cref="PageAllocatorException">Allocation failed</exception>
-		protected abstract IntPtr AllocateChunk(IntPtr hint);
+		protected abstract nint AllocateChunk(nint hint);
 
 		/// <summary>
 		///     Allocates a single page of size <see cref="PAGE_SIZE" /> near the provided address.
@@ -53,7 +53,7 @@ namespace BepInEx.IL2CPP.Allocator
 		/// </summary>
 		/// <param name="hint">Address near which to attempt to allocate the page.</param>
 		/// <returns>Address to the allocated page.</returns>
-		public virtual IntPtr Allocate(IntPtr hint)
+		public virtual nint Allocate(nint hint)
 		{
 			foreach (var allocatedChunk in allocatedChunks)
 			{
@@ -87,22 +87,19 @@ namespace BepInEx.IL2CPP.Allocator
 		///     Frees the page allocated with <see cref="Allocate" />
 		/// </summary>
 		/// <param name="page"></param>
-		public void Free(IntPtr page)
+		public void Free(nint page)
 		{
 			foreach (var allocatedChunk in allocatedChunks)
 			{
-				long index = (page.ToInt64() - allocatedChunk.BaseAddress.ToInt64()) / PAGE_SIZE;
-				if (index < 0 || index > PAGES_PER_UNIT)
+				long index = (page - allocatedChunk.BaseAddress) / PAGE_SIZE;
+				if (index < 0 || index >= PAGES_PER_UNIT)
 					continue;
+				if (!allocatedChunk.Pages[index])
+					return;
 				allocatedChunk.Pages[index] = false;
+				allocatedChunk.UsedPages--;
 				return;
 			}
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static long RoundUp(long num, long unit)
-		{
-			return (num + unit - 1) & ~ (unit - 1);
 		}
 
 		/// <summary>
@@ -112,10 +109,9 @@ namespace BepInEx.IL2CPP.Allocator
 		/// <param name="dst">Destination address to jump to.</param>
 		/// <returns>True, if the distance between the addresses is within the relative jump range (usually 1GB), otherwise false.</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsInRelJmpRange(IntPtr src, IntPtr dst)
+		public static bool IsInRelJmpRange(nint src, nint dst)
 		{
-			long diff = dst.ToInt64() - src.ToInt64();
-			return int.MinValue <= diff && diff <= int.MaxValue;
+			return dst - src is <= int.MaxValue and >= int.MinValue;
 		}
 
 		private static PageAllocator Init()
@@ -125,17 +121,17 @@ namespace BepInEx.IL2CPP.Allocator
 				var v when v.Is(Platform.Windows) => new WindowsPageAllocator(),
 				var v when v.Is(Platform.Linux)   => new LinuxPageAllocator(),
 				var v when v.Is(Platform.MacOS)   => new MacOsPageAllocator(),
-				_                                 => throw new NotImplementedException()
+				_                                 => throw new NotSupportedException()
 			};
 		}
 
 		private class PageChunk
 		{
 			public readonly bool[] Pages = new bool[PAGES_PER_UNIT];
-			public IntPtr BaseAddress;
+			public nint BaseAddress;
 			public int UsedPages;
 
-			public IntPtr GetPage(int index)
+			public nint GetPage(int index)
 			{
 				return BaseAddress + index * PAGE_SIZE;
 			}

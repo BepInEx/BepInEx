@@ -1,13 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 
-namespace BepInEx.IL2CPP.Allocator
+namespace BepInEx.IL2CPP.Hook.Allocator
 {
 	internal class LinuxPageAllocator : UnixPageAllocator
 	{
-		protected override IEnumerable<(IntPtr, IntPtr)> MapMemoryAreas()
+		protected override IEnumerable<(nint, nint)> MapMemoryAreas()
 		{
 			// Each row of /proc/self/maps is as follows:
 			// <start_address>-<end_address> <perms> <offset> <dev> <inode>		<owner_name>
@@ -19,9 +18,9 @@ namespace BepInEx.IL2CPP.Allocator
 			{
 				int startIndex = line.IndexOf('-');
 				int endIndex = line.IndexOf(' ');
-				long startAddr = long.Parse(line.Substring(0, startIndex), NumberStyles.HexNumber);
-				long endAddr = long.Parse(line.Substring(startIndex + 1, endIndex - startIndex - 1), NumberStyles.HexNumber);
-				yield return (new IntPtr(startAddr), new IntPtr(endAddr));
+				long startAddr = long.Parse(line[..startIndex], NumberStyles.HexNumber);
+				long endAddr = long.Parse(line[(startIndex + 1)..endIndex], NumberStyles.HexNumber);
+				yield return ((nint)startAddr, (nint)endAddr);
 			}
 		}
 	}

@@ -74,7 +74,7 @@ namespace BepInEx.Logging
 
 			void ICollection<ILogSource>.Clear()
 			{
-				foreach (var item in base.ToArray())
+				foreach (var item in ToArray())
 				{
 					((ICollection<ILogSource>)this).Remove(item);
 				}
@@ -85,7 +85,7 @@ namespace BepInEx.Logging
 				if (item == null)
 					return false;
 
-				if (!base.Contains(item))
+				if (!Contains(item))
 					return false;
 
 				item.LogEvent -= InternalLogEvent;

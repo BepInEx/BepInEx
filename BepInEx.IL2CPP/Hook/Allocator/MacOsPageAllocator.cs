@@ -1,24 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using MonoMod.Utils;
 
-namespace BepInEx.IL2CPP.Allocator
+namespace BepInEx.IL2CPP.Hook.Allocator
 {
 	internal class MacOsPageAllocator : UnixPageAllocator
 	{
-		protected override IEnumerable<(IntPtr, IntPtr)> MapMemoryAreas()
+		protected override IEnumerable<(nint, nint)> MapMemoryAreas()
 		{
-			var size = IntPtr.Zero;
 			var info = new LibSystem.vm_region_basic_info_64();
 			var infoCount = (uint)(Marshal.SizeOf<LibSystem.vm_region_basic_info_64>() / sizeof(int));
 			var objectName = 0u;
-			var address = IntPtr.Zero;
+			nint address = 0;
+			nint size = 0;
 
 			while (LibSystem.vm_region_64(LibSystem.TaskSelf, ref address, ref size, LibSystem.VM_REGION_BASIC_INFO_64, ref info, ref infoCount, ref objectName) == LibSystem.KERN_SUCCESS)
 			{
-				var start = new IntPtr(address.ToInt64());
-				var end = new IntPtr(address.ToInt64() + size.ToInt64());
+				var start = address;
+				var end = address + size;
 				address = end;
 				yield return (start, end);
 			}
@@ -28,13 +27,13 @@ namespace BepInEx.IL2CPP.Allocator
 		{
 			public const int VM_REGION_BASIC_INFO_64 = 9;
 			public const int KERN_SUCCESS = 0;
-			public static readonly IntPtr TaskSelf;
+			public static readonly nint TaskSelf;
 
 			static LibSystem()
 			{
 				typeof(LibSystem).ResolveDynDllImports(new Dictionary<string, List<DynDllMapping>>
 				{
-					["libSystem"] = new List<DynDllMapping>
+					["libSystem"] = new()
 					{
 						"/usr/lib/libSystem.dylib" // OSX POSIX
 					}
@@ -68,7 +67,7 @@ namespace BepInEx.IL2CPP.Allocator
 			[DynDllImport("libSystem")]
 			public static vm_region_64Delegate vm_region_64;
 
-			public delegate int vm_region_64Delegate(IntPtr target_task, ref IntPtr address, ref IntPtr size, int flavor, ref vm_region_basic_info_64 info, ref uint infoCnt, ref uint object_name);
+			public delegate int vm_region_64Delegate(nint target_task, ref nint address, ref nint size, int flavor, ref vm_region_basic_info_64 info, ref uint infoCnt, ref uint object_name);
 			// ReSharper restore InconsistentNaming
 		}
 	}

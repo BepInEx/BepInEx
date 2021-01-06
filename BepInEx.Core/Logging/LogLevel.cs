@@ -81,23 +81,16 @@ namespace BepInEx.Logging
 		public static ConsoleColor GetConsoleColor(this LogLevel level)
 		{
 			level = GetHighestLevel(level);
-
-			switch (level)
+			return level switch
 			{
-				case LogLevel.Fatal:
-					return ConsoleColor.Red;
-				case LogLevel.Error:
-					return ConsoleColor.DarkRed;
-				case LogLevel.Warning:
-					return ConsoleColor.Yellow;
-				case LogLevel.Message:
-					return ConsoleColor.White;
-				case LogLevel.Info:
-				default:
-					return ConsoleColor.Gray;
-				case LogLevel.Debug:
-					return ConsoleColor.DarkGray;
-			}
+				LogLevel.Fatal => ConsoleColor.Red,
+				LogLevel.Error => ConsoleColor.DarkRed,
+				LogLevel.Warning => ConsoleColor.Yellow,
+				LogLevel.Message => ConsoleColor.White,
+				LogLevel.Info => ConsoleColor.DarkGray,
+				LogLevel.Debug => ConsoleColor.DarkGray,
+				_ => ConsoleColor.Gray
+			};
 		}
 	}
 }

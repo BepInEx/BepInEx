@@ -23,13 +23,13 @@ namespace BepInEx.Bootstrap
 		/// <summary>
 		/// List of all <see cref="PluginInfo"/> instances loaded via the chainloader.
 		/// </summary>
-		public Dictionary<string, PluginInfo> Plugins { get; } = new Dictionary<string, PluginInfo>();
+		public Dictionary<string, PluginInfo> Plugins { get; } = new();
 
 		/// <summary>
 		/// Collection of error chainloader messages that occured during plugin loading.
 		/// Contains information about what certain plugins were not loaded.
 		/// </summary>
-		public List<string> DependencyErrors { get; } = new List<string>();
+		public List<string> DependencyErrors { get; } = new();
 
 		public virtual void Initialize(string gameExePath = null)
 		{
@@ -128,13 +128,13 @@ namespace BepInEx.Bootstrap
 					dependencyDict.Remove(pluginInfo.Metadata.GUID);
 
 					var incompatiblePlugins = pluginInfo.Incompatibilities.Select(x => x.IncompatibilityGUID).Where(x => pluginsByGuid.ContainsKey(x)).ToArray();
-					string message = $@"Could not load [{pluginInfo}] because it is incompatible with: {string.Join(", ", incompatiblePlugins)}";
+					var message = $@"Could not load [{pluginInfo}] because it is incompatible with: {string.Join(", ", incompatiblePlugins)}";
 					DependencyErrors.Add(message);
 					Logger.LogError(message);
 				}
 				else if (PluginTargetsWrongBepin(pluginInfo))
 				{
-					string message = $@"Plugin [{pluginInfo}] targets a wrong version of BepInEx ({pluginInfo.TargettedBepInExVersion}) and might not work until you update";
+					var message = $@"Plugin [{pluginInfo}] targets a wrong version of BepInEx ({pluginInfo.TargettedBepInExVersion}) and might not work until you update";
 					DependencyErrors.Add(message);
 					Logger.LogWarning(message);
 				}
@@ -169,7 +169,7 @@ namespace BepInEx.Bootstrap
 					var missingDependencies = new List<BepInDependency>();
 					foreach (var dependency in plugin.Dependencies)
 					{
-						bool IsHardDependency(BepInDependency dep)
+						static bool IsHardDependency(BepInDependency dep)
 							=> (dep.Flags & BepInDependency.DependencyFlags.HardDependency) != 0;
 
 						// If the dependency wasn't already processed, it's missing altogether
@@ -202,7 +202,7 @@ namespace BepInEx.Bootstrap
 
 					if (missingDependencies.Count != 0)
 					{
-						string message = $@"Could not load [{plugin}] because it has missing dependencies: {
+						var message = $@"Could not load [{plugin}] because it has missing dependencies: {
 								string.Join(", ", missingDependencies.Select(s => s.VersionRange == null ? s.DependencyGUID : $"{s.DependencyGUID} ({s.VersionRange})").ToArray())
 							}";
 						DependencyErrors.Add(message);
@@ -256,7 +256,7 @@ namespace BepInEx.Bootstrap
 
 		#endregion
 
-		private static Regex allowedGuidRegex { get; } = new Regex(@"^[a-zA-Z0-9\._\-]+$");
+		private static Regex allowedGuidRegex { get; } = new(@"^[a-zA-Z0-9\._\-]+$");
 
 		/// <summary>
 		/// Analyzes the given type definition and attempts to convert it to a valid <see cref="PluginInfo"/>

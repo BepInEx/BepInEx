@@ -6,7 +6,7 @@ You can build BepInEx two ways: by using MSBuild-compatible IDE or the CakeBuild
 
 You can use the included [cakebuild](https://cakebuild.net/) script that allows you to automatically get dependencies, build and package everything.
 
-**Make sure you have either [MSBuild (via Visual Studio Installer)](https://visualstudio.microsoft.com/downloads/) or [Mono](https://www.mono-project.com/) installed.**
+**CakeBuild requires [.NET 5.0](https://dotnet.microsoft.com/download) or newer to be installed**
 
 ### Windows (Command Line)
 

@@ -5,22 +5,22 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using MonoMod.Utils;
 
-namespace BepInEx.IL2CPP.Allocator
+namespace BepInEx.IL2CPP.Hook.Allocator
 {
 	/// <summary>
 	///     Based on https://github.com/kubo/funchook
 	/// </summary>
 	internal abstract class UnixPageAllocator : PageAllocator
 	{
-		protected abstract IEnumerable<(IntPtr, IntPtr)> MapMemoryAreas();
+		protected abstract IEnumerable<(nint, nint)> MapMemoryAreas();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static bool CheckFreeRegionBefore(IntPtr start, IntPtr hint, ref (IntPtr Start, IntPtr End) region)
+		private static bool CheckFreeRegionBefore(nint start, nint hint, ref (nint Start, nint End) region)
 		{
-			if (start.ToInt64() < hint.ToInt64())
+			if (start < hint)
 			{
 				var addr = start - PAGE_SIZE;
-				if (hint.ToInt64() - addr.ToInt64() < int.MaxValue)
+				if (hint - addr < int.MaxValue)
 					region.Start = addr;
 			}
 
@@ -28,11 +28,11 @@ namespace BepInEx.IL2CPP.Allocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static bool CheckFreeRegionAfter(IntPtr end, IntPtr hint, ref (IntPtr Start, IntPtr End) region)
+		private static bool CheckFreeRegionAfter(nint end, nint hint, ref (nint Start, nint End) region)
 		{
-			if (hint.ToInt64() < end.ToInt64())
+			if (hint < end)
 			{
-				if (end.ToInt64() - hint.ToInt64() < int.MaxValue)
+				if (end - hint < int.MaxValue)
 					region.End = end;
 				return true;
 			}
@@ -40,14 +40,14 @@ namespace BepInEx.IL2CPP.Allocator
 			return false;
 		}
 
-		private (IntPtr, IntPtr) GetFreeArea(IntPtr hint)
+		private (nint, nint) GetFreeArea(nint hint)
 		{
-			var result = (IntPtr.Zero, IntPtr.Zero);
-			var prevEnd = IntPtr.Zero;
+			(nint, nint) result = (0, 0);
+			nint prevEnd = 0;
 
 			foreach (var (start, end) in MapMemoryAreas())
 			{
-				if ((prevEnd + PAGE_SIZE).ToInt64() <= start.ToInt64())
+				if (prevEnd + PAGE_SIZE <= start)
 					if (CheckFreeRegionBefore(start, hint, ref result) || CheckFreeRegionAfter(prevEnd, hint, ref result))
 						return result;
 				prevEnd = end;
@@ -55,10 +55,10 @@ namespace BepInEx.IL2CPP.Allocator
 
 			if (CheckFreeRegionAfter(prevEnd, hint, ref result))
 				return result;
-			throw new PageAllocatorException($"Could not find free region near {hint.ToInt64():X8}");
+			throw new PageAllocatorException($"Could not find free region near {(long)hint:X8}");
 		}
 
-		protected override IntPtr AllocateChunk(IntPtr hint)
+		protected override nint AllocateChunk(nint hint)
 		{
 			/* From https://github.com/kubo/funchook/blob/master/src/funchook_unix.c#L251-L254:
 			 * Loop three times just to avoid rare cases such as
@@ -71,17 +71,17 @@ namespace BepInEx.IL2CPP.Allocator
 			{
 				var (start, end) = GetFreeArea(hint);
 				// Try to allocate to end (after original method) first, then try before
-				var addrs = new [] { end, start };
+				var addrs = new[] { end, start };
 				foreach (var addr in addrs)
 				{
-					if (addr == IntPtr.Zero)
+					if (addr == 0)
 						continue;
-					var result = Unix.mmap(addr, (UIntPtr)PAGE_SIZE, Unix.Protection.PROT_READ | Unix.Protection.PROT_WRITE, Unix.MapFlags.MAP_PRIVATE | Unix.MapFlags.MAP_ANONYMOUS, -1, 0);
+					var result = Unix.mmap(addr, PAGE_SIZE, Unix.Protection.PROT_READ | Unix.Protection.PROT_WRITE, Unix.MapFlags.MAP_PRIVATE | Unix.MapFlags.MAP_ANONYMOUS, -1, 0);
 					if (result == addr)
 						return result;
 					if (result == Unix.MAP_FAILED)
 						throw new Win32Exception(Marshal.GetLastWin32Error()); // Yes, this should work on unix too
-					Unix.munmap(result, (UIntPtr)PAGE_SIZE);
+					Unix.munmap(result, PAGE_SIZE);
 				}
 			}
 
@@ -90,7 +90,7 @@ namespace BepInEx.IL2CPP.Allocator
 
 		private static class Unix
 		{
-			public static readonly IntPtr MAP_FAILED = new IntPtr(-1);
+			public static readonly nint MAP_FAILED = -1;
 
 			[DynDllImport("mmap")]
 			public static mmapDelegate mmap;
@@ -98,9 +98,9 @@ namespace BepInEx.IL2CPP.Allocator
 			[DynDllImport("munmap")]
 			public static munmapDelegate munmap;
 
-			public delegate IntPtr mmapDelegate(IntPtr addr, UIntPtr length, Protection prot, MapFlags flags, int fd, int offset);
+			public delegate nint mmapDelegate(nint addr, nuint length, Protection prot, MapFlags flags, int fd, int offset);
 
-			public delegate int munmapDelegate(IntPtr addr, UIntPtr length);
+			public delegate int munmapDelegate(nint addr, nuint length);
 
 			[Flags]
 			public enum MapFlags
@@ -120,7 +120,7 @@ namespace BepInEx.IL2CPP.Allocator
 			{
 				typeof(Unix).ResolveDynDllImports(new Dictionary<string, List<DynDllMapping>>
 				{
-					["libc"] = new List<DynDllMapping>
+					["libc"] = new()
 					{
 						"libc.so.6",               // Ubuntu glibc
 						"libc",                    // Linux glibc,

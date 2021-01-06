@@ -38,6 +38,6 @@ namespace BepInEx.Configuration
 		/// <summary>
 		/// An empty description.
 		/// </summary>
-		public static ConfigDescription Empty { get; } = new ConfigDescription("");
+		public static ConfigDescription Empty { get; } = new("");
 	}
 }

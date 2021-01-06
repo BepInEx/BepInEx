@@ -6,7 +6,7 @@
     <Product>BepInEx.IL2CPP</Product>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputPath>..\bin\IL2CPP\</OutputPath>
-    <LangVersion>8</LangVersion>
+    <LangVersion>9</LangVersion>
     <Configurations>Debug;Release</Configurations>
     <Platforms>AnyCPU</Platforms>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
@@ -14,8 +14,8 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugType>portable</DebugType>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugType>none</DebugType>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="AssemblyUnhollower">
@@ -53,12 +53,14 @@
     <PackageReference Include="MonoMod.RuntimeDetour" Version="20.11.26.2" />
   </ItemGroup>
   <Import Project="..\BepInEx.Shared\BepInEx.Shared.projitems" Label="Shared" />
-  
+
   <!-- CopyLocalLockFileAssemblies causes to also output shared assemblies: https://github.com/NuGet/Home/issues/4837#issuecomment-354536302 -->
   <!-- Since all core assemblies usually follow naming of System.*, we just delete them for now -->
+  <!-- Also delete deps.json as they are not used by mono -->
   <Target Name="DeleteSys" AfterTargets="Build">
     <ItemGroup>
       <FilesToDelete Include="$(OutputPath)System.*.dll" />
+      <FilesToDelete Include="$(OutputPath)*.deps.json" />
     </ItemGroup>
     <Delete Files="@(FilesToDelete)" />
   </Target>

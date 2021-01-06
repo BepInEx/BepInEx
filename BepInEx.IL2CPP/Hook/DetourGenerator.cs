@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using BepInEx.IL2CPP.Allocator;
+using BepInEx.IL2CPP.Hook.Allocator;
 using BepInEx.Logging;
 using Iced.Intel;
 using MonoMod.RuntimeDetour;
@@ -229,7 +229,7 @@ namespace BepInEx.IL2CPP
 
 		private sealed class CodeWriterImpl : CodeWriter
 		{
-			readonly List<byte> allBytes = new List<byte>();
+			readonly List<byte> allBytes = new();
 			public override void WriteByte(byte value) => allBytes.Add(value);
 			public byte[] ToArray() => allBytes.ToArray();
 		}

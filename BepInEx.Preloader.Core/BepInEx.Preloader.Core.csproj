@@ -5,7 +5,7 @@
     <Product>BepInEx.Preloader.Core</Product>
     <OutputPath>..\bin\Core\$(TargetFramework)</OutputPath>
     <DocumentationFile>$(OutputPath)\BepInEx.Preloader.Core.xml</DocumentationFile>
-    <LangVersion>8</LangVersion>
+    <LangVersion>9</LangVersion>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -18,6 +18,7 @@
     <ProjectReference Include="..\BepInEx.Core\BepInEx.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="jnm2.ReferenceAssemblies.net35" Version="1.0.1" PrivateAssets="All" />
     <PackageReference Include="HarmonyX" Version="2.3.1" />
     <PackageReference Include="MonoMod.RuntimeDetour" Version="20.11.26.2" />
     <PackageReference Include="MonoMod.Utils" Version="20.11.26.2" />
