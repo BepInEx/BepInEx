@@ -93,6 +93,11 @@ namespace BepInEx.Configuration
 		#region Save/Load
 
 		private readonly object _ioLock = new();
+		
+		/// <summary>
+		/// Generate user-readable comments for each of the settings in the saved .cfg file.
+		/// </summary>
+		public bool GenerateSettingDescriptions { get; set; } = true;
 
 		/// <summary>
 		/// Reloads the config from disk. Unsaved changes are lost.
@@ -168,9 +173,11 @@ namespace BepInEx.Configuration
 
 						foreach (var configEntry in sectionKv)
 						{
-							writer.WriteLine();
-
-							configEntry.entry?.WriteDescription(writer);
+							if(GenerateSettingDescriptions)
+							{
+								writer.WriteLine();
+								configEntry.entry?.WriteDescription(writer);
+							}
 
 							writer.WriteLine($"{configEntry.Key.Key} = {configEntry.value}");
 						}
