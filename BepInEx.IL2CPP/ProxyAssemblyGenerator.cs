@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Security.Cryptography;
+using System.Text;
 using AssemblyUnhollower;
 using BepInEx.Logging;
 using HarmonyLib;
@@ -42,19 +43,34 @@ namespace BepInEx.IL2CPP
 
 		private static string HashPath => Path.Combine(Preloader.IL2CPPUnhollowedPath, "assembly-hash.txt");
 
+		private static string UnityBaseLibsDirectory => Path.Combine(Paths.BepInExRootPath, "unity-libs");
+
 		private static string tempDumperDirectory => Path.Combine(Preloader.IL2CPPUnhollowedPath, "temp");
 
 		private static ManualLogSource Il2cppDumperLogger = Logger.CreateLogSource("Il2CppDumper");
 
-
-		private static string ComputeGameAssemblyHash()
+		private static string ComputeHash()
 		{
 			using var md5 = MD5.Create();
-			using var assemblyStream = File.OpenRead(GameAssemblyPath);
 
-			var hash = md5.ComputeHash(assemblyStream);
+			var gameAssemblyBytes = File.ReadAllBytes(GameAssemblyPath);
+			md5.TransformBlock(gameAssemblyBytes, 0, gameAssemblyBytes.Length, gameAssemblyBytes, 0);
 
-			return Utility.ByteArrayToString(hash);
+			if (Directory.Exists(UnityBaseLibsDirectory))
+			{
+				foreach (var file in Directory.EnumerateFiles(UnityBaseLibsDirectory, "*.dll", SearchOption.TopDirectoryOnly))
+				{
+					var pathBytes = Encoding.UTF8.GetBytes(Path.GetFileName(file));
+					md5.TransformBlock(pathBytes, 0, pathBytes.Length, pathBytes, 0);
+
+					var contentBytes = File.ReadAllBytes(file);
+					md5.TransformBlock(contentBytes, 0, contentBytes.Length, contentBytes, 0);
+				}
+			}
+
+			md5.TransformFinalBlock(new byte[0], 0, 0);
+
+			return Utility.ByteArrayToString(md5.Hash);
 		}
 
 		public static bool CheckIfGenerationRequired()
@@ -65,7 +81,7 @@ namespace BepInEx.IL2CPP
 			if (!File.Exists(HashPath))
 				return true;
 
-			if (ComputeGameAssemblyHash() != File.ReadAllText(HashPath))
+			if (ComputeHash() != File.ReadAllText(HashPath))
 			{
 				Preloader.Log.LogInfo("Detected a game update, will regenerate proxy assemblies");
 				return true;
@@ -80,9 +96,9 @@ namespace BepInEx.IL2CPP
 			{
 				ApplicationBase = Paths.BepInExAssemblyDirectory
 			});
-			
+
 			var runner = (AppDomainRunner)AppDomainHelper.CreateInstanceAndUnwrap(domain, typeof(AppDomainRunner).Assembly.FullName, typeof(AppDomainRunner).FullName);
-			
+
 			runner.Setup(Paths.ExecutablePath, Preloader.IL2CPPUnhollowedPath);
 			runner.GenerateAssembliesInternal(new AppDomainListener());
 
@@ -90,7 +106,7 @@ namespace BepInEx.IL2CPP
 
 			Directory.Delete(tempDumperDirectory, true);
 
-			File.WriteAllText(HashPath, ComputeGameAssemblyHash());
+			File.WriteAllText(HashPath, ComputeHash());
 		}
 
 		[Serializable]
@@ -157,26 +173,13 @@ namespace BepInEx.IL2CPP
 				UnhollowerBaseLib.LogSupport.TraceHandler += s => listener.DoUnhollowerLog(s, LogLevel.Debug);
 				UnhollowerBaseLib.LogSupport.ErrorHandler += s => listener.DoUnhollowerLog(s, LogLevel.Error);
 
-
-				string unityBaseLibDir = Path.Combine(Preloader.IL2CPPUnhollowedPath, "base");
-
-				if (Directory.Exists(unityBaseLibDir))
-				{
-					listener.DoPreloaderLog("Found base unity libraries", LogLevel.Debug);
-				}
-				else
-				{
-					unityBaseLibDir = null;
-				}
-
-
 				var unhollowerOptions = new UnhollowerOptions
 				{
 					GameAssemblyPath = GameAssemblyPath,
 					MscorlibPath = Path.Combine(Paths.GameRootPath, "mono", "Managed", "mscorlib.dll"),
 					SourceDir = Path.Combine(tempDumperDirectory, "DummyDll"),
 					OutputDir = Preloader.IL2CPPUnhollowedPath,
-					UnityBaseLibsDir = unityBaseLibDir,
+					UnityBaseLibsDir = Directory.Exists(UnityBaseLibsDirectory) ? UnityBaseLibsDirectory : null,
 					NoCopyUnhollowerLibs = true
 				};
 
