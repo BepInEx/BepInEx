@@ -18,13 +18,6 @@
     <DebugType>none</DebugType>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="UnityEngine.CoreModule-IL2CPP">
-      <HintPath>..\lib\UnityEngine.CoreModule-IL2CPP.dll</HintPath>
-      <Private>False</Private>
-      <Aliases>il2cpp</Aliases>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\BepInEx.Core\BepInEx.Core.csproj" />
     <ProjectReference Include="..\BepInEx.Preloader.Core\BepInEx.Preloader.Core.csproj" />
   </ItemGroup>
@@ -36,6 +29,7 @@
     <PackageReference Include="Il2CppAssemblyUnhollower.BaseLib.Legacy" Version="0.4.10" />
     <PackageReference Include="Il2CppAssemblyUnhollower.Tool" Version="0.4.11" />
     <PackageReference Include="Il2CppDumper" Version="1.0.0" />
+    <PackageReference Include="Il2CppReferenceLibs.Core" Version="1.0.0" IncludeAssets="compile" />
     <PackageReference Include="MonoMod.RuntimeDetour" Version="20.11.26.2" />
   </ItemGroup>
   <Import Project="..\BepInEx.Shared\BepInEx.Shared.projitems" Label="Shared" />

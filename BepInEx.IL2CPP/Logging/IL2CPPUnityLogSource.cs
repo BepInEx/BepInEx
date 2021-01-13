@@ -1,7 +1,6 @@
-﻿extern alias il2cpp;
-using System;
+﻿using System;
 using BepInEx.Logging;
-using il2cpp::UnityEngine;
+using UnityEngine;
 
 namespace BepInEx.IL2CPP.Logging
 {

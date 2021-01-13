@@ -1,6 +1,4 @@
-﻿extern alias il2cpp;
-
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
@@ -16,7 +14,8 @@ using HarmonyLib.Public.Patching;
 using Il2Cpp.TlsAdapter;
 using UnhollowerBaseLib.Runtime;
 using UnhollowerRuntimeLib;
-using IL2CPPUnityEngine = il2cpp::UnityEngine;
+using UnityEngine;
+using Logger = BepInEx.Logging.Logger;
 
 namespace BepInEx.IL2CPP
 {
@@ -107,7 +106,7 @@ namespace BepInEx.IL2CPP
 					{
 						Logger.Sources.Add(new IL2CPPUnityLogSource());
 
-						IL2CPPUnityEngine.Application.CallLogCallback("Test call after applying unity logging hook", "", IL2CPPUnityEngine.LogType.Assert, true);
+						Application.CallLogCallback("Test call after applying unity logging hook", "", LogType.Assert, true);
 					}
 
 					unhook = true;
