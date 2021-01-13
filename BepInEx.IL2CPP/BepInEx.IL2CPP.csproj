@@ -32,10 +32,6 @@
       <HintPath>..\lib\UnhollowerBaseLib.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="UnityEngine-IL2CPP">
-      <HintPath>..\lib\UnityEngine-IL2CPP.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="UnityEngine.CoreModule-IL2CPP">
       <HintPath>..\lib\UnityEngine.CoreModule-IL2CPP.dll</HintPath>
       <Private>False</Private>
@@ -49,7 +45,10 @@
   <ItemGroup>
     <PackageReference Include="BepInEx.Il2Cpp.TlsAdapter" Version="1.0.1" />
     <PackageReference Include="HarmonyX" Version="2.3.1" />
-    <PackageReference Include="Iced" Version="1.6.0" />
+    <PackageReference Include="Iced" Version="1.10.0" />
+    <PackageReference Include="Il2CppAssemblyUnhollower.BaseLib" Version="0.4.11" />
+    <PackageReference Include="Il2CppAssemblyUnhollower.BaseLib.Legacy" Version="0.4.10" />
+    <PackageReference Include="Il2CppAssemblyUnhollower.Tool" Version="0.4.11" />
     <PackageReference Include="MonoMod.RuntimeDetour" Version="20.11.26.2" />
   </ItemGroup>
   <Import Project="..\BepInEx.Shared\BepInEx.Shared.projitems" Label="Shared" />
