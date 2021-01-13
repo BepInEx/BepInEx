@@ -18,20 +18,6 @@
     <DebugType>none</DebugType>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AssemblyUnhollower">
-      <HintPath>..\lib\AssemblyUnhollower.exe</HintPath>
-    </Reference>
-    <Reference Include="Il2CppDumper">
-      <HintPath>..\lib\Il2CppDumper.dll</HintPath>
-    </Reference>
-    <Reference Include="Il2Cppmscorlib">
-      <HintPath>..\lib\Il2Cppmscorlib.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="UnhollowerBaseLib">
-      <HintPath>..\lib\UnhollowerBaseLib.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="UnityEngine.CoreModule-IL2CPP">
       <HintPath>..\lib\UnityEngine.CoreModule-IL2CPP.dll</HintPath>
       <Private>False</Private>
@@ -49,6 +35,7 @@
     <PackageReference Include="Il2CppAssemblyUnhollower.BaseLib" Version="0.4.11" />
     <PackageReference Include="Il2CppAssemblyUnhollower.BaseLib.Legacy" Version="0.4.10" />
     <PackageReference Include="Il2CppAssemblyUnhollower.Tool" Version="0.4.11" />
+    <PackageReference Include="Il2CppDumper" Version="1.0.0" />
     <PackageReference Include="MonoMod.RuntimeDetour" Version="20.11.26.2" />
   </ItemGroup>
   <Import Project="..\BepInEx.Shared\BepInEx.Shared.projitems" Label="Shared" />
