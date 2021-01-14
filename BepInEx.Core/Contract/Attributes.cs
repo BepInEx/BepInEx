@@ -150,14 +150,16 @@ namespace BepInEx
 		{
 			bw.Write(DependencyGUID);
 			bw.Write((int)Flags);
-			bw.Write(VersionRange.ToString());
+			bw.Write(VersionRange?.ToString() ?? string.Empty);
 		}
 
 		void ICacheable.Load(BinaryReader br)
 		{
 			DependencyGUID = br.ReadString();
 			Flags = (DependencyFlags)br.ReadInt32();
-			VersionRange = SemVer.Range.Parse(br.ReadString());
+
+			var versionRange = br.ReadString();
+			VersionRange = versionRange == string.Empty ? null : SemVer.Range.Parse(versionRange);
 		}
 	}
 
