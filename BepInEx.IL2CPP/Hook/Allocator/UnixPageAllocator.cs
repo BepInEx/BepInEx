@@ -92,11 +92,13 @@ namespace BepInEx.IL2CPP.Hook.Allocator
 		{
 			public static readonly nint MAP_FAILED = -1;
 
+#pragma warning disable 649 // Set by MonoMod
 			[DynDllImport("mmap")]
 			public static mmapDelegate mmap;
 
 			[DynDllImport("munmap")]
 			public static munmapDelegate munmap;
+#pragma warning restore 649
 
 			public delegate nint mmapDelegate(nint addr, nuint length, Protection prot, MapFlags flags, int fd, int offset);
 
