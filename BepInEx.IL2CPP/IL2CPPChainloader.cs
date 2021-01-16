@@ -50,21 +50,7 @@ namespace BepInEx.IL2CPP
 				Version.Parse(Process.GetCurrentProcess().MainModule.FileVersionInfo.FileVersion);
 
 			UnityVersionHandler.Initialize(version.Major, version.Minor, version.Revision);
-
-			// One or the other here for Unhollower to work correctly
-
-			//ClassInjector.Detour = new DetourHandler();
-
-			ClassInjector.DoHook = (ptr, patchedFunctionPtr) =>
-			{
-				IntPtr originalFunc = new IntPtr(*(void**)ptr);
-
-				var detour = new FastNativeDetour(originalFunc, patchedFunctionPtr);
-				
-				detour.Apply();
-
-				*(void**)ptr = (void*)detour.TrampolinePtr;
-			};
+			ClassInjector.Detour = new UnhollowerDetourHandler();
 
 			var gameAssemblyModule = Process.GetCurrentProcess().Modules.Cast<ProcessModule>().First(x => x.ModuleName.Contains("GameAssembly"));
 
