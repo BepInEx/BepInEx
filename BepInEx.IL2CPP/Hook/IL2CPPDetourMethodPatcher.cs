@@ -12,6 +12,8 @@ using MonoMod.RuntimeDetour;
 using MonoMod.Utils;
 using UnhollowerBaseLib;
 using UnhollowerBaseLib.Runtime;
+using ValueType = Il2CppSystem.ValueType;
+using Void = Il2CppSystem.Void;
 
 namespace BepInEx.IL2CPP.Hook
 {
@@ -48,6 +50,10 @@ namespace BepInEx.IL2CPP.Hook
 			[typeof(float)] = OpCodes.Stind_R4,
 			[typeof(double)] = OpCodes.Stind_R8
 		};
+
+		private static AssemblyBuilder fixedStructAssembly;
+		private static ModuleBuilder fixedStructModuleBuilder;
+		private static readonly Dictionary<int, Type> FixedStructCache = new();
 
 		private bool isValid;
 		private Il2CppMethodInfo* modifiedNativeMethodInfo;
@@ -209,17 +215,9 @@ namespace BepInEx.IL2CPP.Hook
 			var indirectVariables = new LocalBuilder[managedParams.Length];
 
 			if (!Original.IsStatic)
-			{
-				// Load thisptr as arg0
-				il.Emit(OpCodes.Ldarg_0);
-				EmitConvertArgumentToManaged(il, Original.DeclaringType, out _);
-			}
-
+				EmitConvertArgumentToManaged(il, 0, Original.DeclaringType, out _);
 			for (var i = 0; i < managedParams.Length; ++i)
-			{
-				il.Emit(OpCodes.Ldarg_S, i + paramStartIndex);
-				EmitConvertArgumentToManaged(il, managedParams[i], out indirectVariables[i]);
-			}
+				EmitConvertArgumentToManaged(il, i + paramStartIndex, managedParams[i], out indirectVariables[i]);
 
 			// Run the managed method
 			il.Emit(OpCodes.Call, targetManagedMethodInfo);
@@ -279,7 +277,13 @@ namespace BepInEx.IL2CPP.Hook
 				if (directType == typeof(string) || directType.IsSubclassOf(typeof(Il2CppObjectBase)))
 					return typeof(IntPtr*);
 			}
-			else if (managedType == typeof(string) || managedType.IsSubclassOf(typeof(Il2CppObjectBase)))
+			else if (managedType.IsSubclassOf(typeof(ValueType))) // Struct that's passed on the stack => handle as general struct
+			{
+				uint align = 0;
+				int fixedSize = UnhollowerBaseLib.IL2CPP.il2cpp_class_value_size(Il2CppTypeToClassPointer(managedType), ref align);
+				return GetFixedSizeStructType(fixedSize);
+			}
+			else if (managedType == typeof(string) || managedType.IsSubclassOf(typeof(Il2CppObjectBase))) // General reference type
 			{
 				return typeof(IntPtr);
 			}
@@ -295,9 +299,30 @@ namespace BepInEx.IL2CPP.Hook
 				il.Emit(OpCodes.Call, ObjectBaseToPtrMethodInfo);
 		}
 
-		private static void EmitConvertArgumentToManaged(ILGenerator il, Type managedParamType, out LocalBuilder variable)
+		private static IntPtr Il2CppTypeToClassPointer(Type type)
+		{
+			if (type == typeof(void))
+				return Il2CppClassPointerStore<Void>.NativeClassPtr;
+			return (IntPtr)typeof(Il2CppClassPointerStore<>).MakeGenericType(type).GetField("NativeClassPtr").GetValue(null);
+		}
+
+		private static void EmitConvertArgumentToManaged(ILGenerator il, int argIndex, Type managedParamType, out LocalBuilder variable)
 		{
 			variable = null;
+
+			// Box struct into object first before conversion
+			// This will likely incur struct copying down the line, but it shouldn't be a massive loss
+			if (managedParamType.IsSubclassOf(typeof(ValueType)))
+			{
+				il.Emit(OpCodes.Ldc_I8, Il2CppTypeToClassPointer(managedParamType).ToInt64());
+				il.Emit(OpCodes.Conv_I);
+				il.Emit(OpCodes.Ldarga_S, argIndex);
+				il.Emit(OpCodes.Call, AccessTools.Method(typeof(UnhollowerBaseLib.IL2CPP), nameof(UnhollowerBaseLib.IL2CPP.il2cpp_value_box)));
+			}
+			else
+			{
+				il.Emit(OpCodes.Ldarg_S, argIndex);
+			}
 
 			if (managedParamType.IsValueType) // don't need to convert blittable types
 				return;
@@ -330,6 +355,7 @@ namespace BepInEx.IL2CPP.Hook
 
 			if (managedParamType.IsByRef)
 			{
+				// TODO: directType being ValueType is not handled yet (but it's not that common in games). Implement when needed.
 				var directType = managedParamType.GetElementType();
 
 				variable = il.DeclareLocal(directType);
@@ -345,6 +371,22 @@ namespace BepInEx.IL2CPP.Hook
 			{
 				HandleTypeConversion(managedParamType);
 			}
+		}
+
+		private static Type GetFixedSizeStructType(int size)
+		{
+			if (FixedStructCache.TryGetValue(size, out var result))
+				return result;
+
+			fixedStructAssembly ??= AssemblyBuilder.DefineDynamicAssembly(new AssemblyName("FixedSizeStructAssembly"), AssemblyBuilderAccess.RunAndCollect);
+			fixedStructModuleBuilder ??= fixedStructAssembly.DefineDynamicModule("FixedSizeStructAssembly");
+
+			var tb = fixedStructModuleBuilder.DefineType($"IL2CPPDetour_FixedSizeStruct_{size}b", TypeAttributes.SequentialLayout, typeof(System.ValueType));
+			var fb = tb.DefineField("buffer", typeof(IntPtr), FieldAttributes.Public);
+			fb.SetCustomAttribute(new CustomAttributeBuilder(AccessTools.Constructor(typeof(MarshalAsAttribute), new[] { typeof(UnmanagedType) }), new object[] { UnmanagedType.ByValArray }, new[] { AccessTools.Field(typeof(MarshalAsAttribute), nameof(MarshalAsAttribute.SizeConst)), AccessTools.Field(typeof(MarshalAsAttribute), nameof(MarshalAsAttribute.ArraySubType)) }, new object[] { size, UnmanagedType.U1 }));
+
+			var type = tb.CreateType();
+			return FixedStructCache[size] = type;
 		}
 	}
 }
