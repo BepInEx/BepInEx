@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -183,6 +184,23 @@ namespace BepInEx.IL2CPP.Hook
 			}
 		}
 
+		// Map each value type to correctly sized store opcode to prevent memory overwrite
+		// Special case: bool is byte in Il2Cpp
+		private static readonly Dictionary<Type, OpCode> StIndOpcodes = new()
+		{
+			[typeof(byte)] = OpCodes.Stind_I1,
+			[typeof(sbyte)] = OpCodes.Stind_I1,
+			[typeof(bool)] = OpCodes.Stind_I1,
+			[typeof(short)] = OpCodes.Stind_I2,
+			[typeof(ushort)] = OpCodes.Stind_I2,
+			[typeof(int)] = OpCodes.Stind_I4,
+			[typeof(uint)] = OpCodes.Stind_I4,
+			[typeof(long)] = OpCodes.Stind_I8,
+			[typeof(ulong)] = OpCodes.Stind_I8,
+			[typeof(float)] = OpCodes.Stind_R4,
+			[typeof(double)] = OpCodes.Stind_R8,
+		};
+
 		private DynamicMethodDefinition GenerateNativeToManagedTrampoline(MethodInfo targetManagedMethodInfo)
 		{
 			// managedParams are the unhollower types used on the managed side
@@ -256,10 +274,11 @@ namespace BepInEx.IL2CPP.Hook
 
 				il.Emit(OpCodes.Ldarg_S, i + paramStartIndex);
 				il.Emit(OpCodes.Ldloc, indirectVariables[i]);
+				var directType = managedParams[i].GetElementType();
 
-				EmitConvertManagedTypeToIL2CPP(il, managedParams[i].GetElementType());
+				EmitConvertManagedTypeToIL2CPP(il, directType);
 
-				il.Emit(OpCodes.Stind_I);
+				il.Emit(StIndOpcodes.TryGetValue(directType, out var stindOpCodde) ? stindOpCodde : OpCodes.Stind_I);
 			}
 
 			// Handle any lingering exceptions
@@ -293,6 +312,10 @@ namespace BepInEx.IL2CPP.Hook
 			if (managedType.IsByRef)
 			{
 				Type directType = managedType.GetElementType();
+
+				// bool is byte in Il2Cpp, but int in CLR => force size to be correct
+				if (directType == typeof(bool))
+					return typeof(byte).MakeByRefType();
 				if (directType == typeof(string) || directType.IsSubclassOf(typeof(Il2CppObjectBase)))
 				{
 					return typeof(IntPtr*);
