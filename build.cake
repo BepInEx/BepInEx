@@ -240,7 +240,7 @@ Task("Pack")
                 ["date"] = DateTime.Now.ToString("o"),
                 ["changelog"] = changelog,
                 ["hash"] = currentCommit,
-				["short_hash"] = currentCommitShort,
+                ["short_hash"] = currentCommitShort,
                 ["artifacts"] = new Dictionary<string, object>[] {
                     new Dictionary<string, object> {
                         ["file"] = $"BepInEx_UnityMono_x64{commitPrefix}{buildVersion}.zip",
@@ -251,7 +251,7 @@ Task("Pack")
                         ["description"] = "BepInEx Unity Mono for Windows x86 machines"
                     },
                     new Dictionary<string, object> {
-                        ["file"] = $"BepInEx_unix{commitPrefix}{buildVersion}.zip",
+                        ["file"] = $"BepInEx_UnityMono_unix{commitPrefix}{buildVersion}.zip",
                         ["description"] = "BepInEx Unity Mono for Unix machines with GCC (Linux, MacOS)"
                     },
                     new Dictionary<string, object> {
