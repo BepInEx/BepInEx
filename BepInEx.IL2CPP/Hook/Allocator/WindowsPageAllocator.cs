@@ -16,13 +16,19 @@ namespace BepInEx.IL2CPP.Hook.Allocator
 			return (num + unit - 1) & ~ (unit - 1);
 		}
 
+		private static Win32Exception Win32Error(string message = null, int code = -1)
+		{
+			var ex = code >= 0 ? new Win32Exception(code) : new Win32Exception(); // Generate error message
+			return new Win32Exception(ex.NativeErrorCode, !string.IsNullOrWhiteSpace(message) ? $"{message}: {ex.Message}" : ex.Message);
+		}
+
 		protected override nint AllocateChunk(nint hint)
 		{
 			while (true)
 			{
 				var mbi = new WinApi.MEMORY_BASIC_INFORMATION();
 				if (WinApi.VirtualQuery(hint, ref mbi, Marshal.SizeOf<WinApi.MEMORY_BASIC_INFORMATION>()) == 0)
-					throw new Win32Exception(Marshal.GetLastWin32Error());
+					throw Win32Error($"Failed to query memory information of 0x{(long)hint:X9}");
 
 				if (mbi.State == WinApi.PageState.MEM_FREE)
 				{
@@ -40,13 +46,13 @@ namespace BepInEx.IL2CPP.Hook.Allocator
 
 			var chunk = WinApi.VirtualAlloc(hint, ALLOCATION_UNIT, WinApi.AllocationType.MEM_RESERVE, WinApi.ProtectConstant.PAGE_NOACCESS);
 			if (chunk == 0)
-				throw new Win32Exception(Marshal.GetLastWin32Error());
+				throw Win32Error($"Failed to reserve address: 0x{(long)hint:X8}");
 			var addr = WinApi.VirtualAlloc(chunk, PAGE_SIZE, WinApi.AllocationType.MEM_COMMIT, WinApi.ProtectConstant.PAGE_READWRITE);
 			if (addr == 0)
 			{
 				int error = Marshal.GetLastWin32Error();
 				WinApi.VirtualFree(chunk, 0, WinApi.FreeType.MEM_RELEASE);
-				throw new Win32Exception(error);
+				throw Win32Error($"Failed to commit memory 0x{(long)addr:X8} for read-write access for 0x{(long)chunk:X8}", error);
 			}
 
 			return chunk;
