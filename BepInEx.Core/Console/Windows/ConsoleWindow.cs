@@ -6,125 +6,118 @@
 using System;
 using System.Runtime.InteropServices;
 using BepInEx;
+using BepInEx.ConsoleUtil;
 
 namespace UnityInjector.ConsoleUtil
 {
-	internal class ConsoleWindow
-	{
-		public static bool IsAttached { get; private set; }
-		public static IntPtr ConsoleOutHandle;
-		public static IntPtr OriginalStdoutHandle;
+    internal class ConsoleWindow
+    {
+        public static IntPtr ConsoleOutHandle;
+        public static IntPtr OriginalStdoutHandle;
+        public static bool IsAttached { get; private set; }
 
-		public static void Attach()
-		{
-			if (IsAttached)
-				return;
+        public static string Title
+        {
+            set
+            {
+                if (!IsAttached)
+                    return;
 
-			if (OriginalStdoutHandle == IntPtr.Zero)
-				OriginalStdoutHandle = GetStdHandle(-11);
+                if (value == null) throw new ArgumentNullException(nameof(value));
 
-			// Store Current Window
-			IntPtr currWnd = GetForegroundWindow();
+                if (value.Length > 24500) throw new InvalidOperationException("Console title too long");
 
-			//Check for existing console before allocating
-			if (GetConsoleWindow() == IntPtr.Zero)
-				if (!AllocConsole())
-					throw new Exception("AllocConsole() failed");
+                if (!SetConsoleTitle(value)) throw new InvalidOperationException("Console title invalid");
+            }
+        }
 
-			// Restore Foreground
-			SetForegroundWindow(currWnd);
+        public static void Attach()
+        {
+            if (IsAttached)
+                return;
 
-			ConsoleOutHandle = CreateFile("CONOUT$", 0x80000000 | 0x40000000, 2, IntPtr.Zero, 3, 0, IntPtr.Zero);
-			BepInEx.ConsoleUtil.Kon.conOut = ConsoleOutHandle;
+            if (OriginalStdoutHandle == IntPtr.Zero)
+                OriginalStdoutHandle = GetStdHandle(-11);
 
-			if (!SetStdHandle(-11, ConsoleOutHandle))
-				throw new Exception("SetStdHandle() failed");
+            // Store Current Window
+            var currWnd = GetForegroundWindow();
 
-			if (OriginalStdoutHandle != IntPtr.Zero && ConsoleManager.ConfigConsoleOutRedirectType.Value == ConsoleManager.ConsoleOutRedirectType.ConsoleOut)
-				CloseHandle(OriginalStdoutHandle);
+            //Check for existing console before allocating
+            if (GetConsoleWindow() == IntPtr.Zero)
+                if (!AllocConsole())
+                    throw new Exception("AllocConsole() failed");
 
-			IsAttached = true;
-		}
+            // Restore Foreground
+            SetForegroundWindow(currWnd);
 
-		public static string Title
-		{
-			set
-			{
-				if (!IsAttached)
-					return;
+            ConsoleOutHandle = CreateFile("CONOUT$", 0x80000000 | 0x40000000, 2, IntPtr.Zero, 3, 0, IntPtr.Zero);
+            Kon.conOut = ConsoleOutHandle;
 
-				if (value == null)
-				{
-					throw new ArgumentNullException(nameof(value));
-				}
+            if (!SetStdHandle(-11, ConsoleOutHandle))
+                throw new Exception("SetStdHandle() failed");
 
-				if (value.Length > 24500)
-				{
-					throw new InvalidOperationException("Console title too long");
-				}
+            if (OriginalStdoutHandle != IntPtr.Zero && ConsoleManager.ConfigConsoleOutRedirectType.Value ==
+                ConsoleManager.ConsoleOutRedirectType.ConsoleOut)
+                CloseHandle(OriginalStdoutHandle);
 
-				if (!SetConsoleTitle(value))
-				{
-					throw new InvalidOperationException("Console title invalid");
-				}
-			}
-		}
+            IsAttached = true;
+        }
 
-		public static void Detach()
-		{
-			if (!IsAttached)
-				return;
+        public static void Detach()
+        {
+            if (!IsAttached)
+                return;
 
-			if (!CloseHandle(ConsoleOutHandle))
-				throw new Exception("CloseHandle() failed");
+            if (!CloseHandle(ConsoleOutHandle))
+                throw new Exception("CloseHandle() failed");
 
-			ConsoleOutHandle = IntPtr.Zero;
+            ConsoleOutHandle = IntPtr.Zero;
 
-			if (!FreeConsole())
-				throw new Exception("FreeConsole() failed");
+            if (!FreeConsole())
+                throw new Exception("FreeConsole() failed");
 
-			if (!SetStdHandle(-11, OriginalStdoutHandle))
-				throw new Exception("SetStdHandle() failed");
+            if (!SetStdHandle(-11, OriginalStdoutHandle))
+                throw new Exception("SetStdHandle() failed");
 
-			IsAttached = false;
-		}
+            IsAttached = false;
+        }
 
-		[DllImport("user32.dll")]
-		private static extern IntPtr GetForegroundWindow();
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetForegroundWindow();
 
-		[DllImport("user32.dll")]
-		[return: MarshalAs(UnmanagedType.Bool)]
-		private static extern bool SetForegroundWindow(IntPtr hWnd);
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool SetForegroundWindow(IntPtr hWnd);
 
-		[DllImport("kernel32.dll", SetLastError = true)]
-		private static extern bool AllocConsole();
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool AllocConsole();
 
-		[DllImport("kernel32.dll")]
-		private static extern IntPtr GetConsoleWindow();
+        [DllImport("kernel32.dll")]
+        private static extern IntPtr GetConsoleWindow();
 
-		[DllImport("kernel32.dll", ExactSpelling = true, SetLastError = true)]
-		private static extern bool CloseHandle(IntPtr handle);
+        [DllImport("kernel32.dll", ExactSpelling = true, SetLastError = true)]
+        private static extern bool CloseHandle(IntPtr handle);
 
-		[DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-		private static extern IntPtr CreateFile(
-			string fileName,
-			uint desiredAccess,
-			int shareMode,
-			IntPtr securityAttributes,
-			int creationDisposition,
-			int flagsAndAttributes,
-			IntPtr templateFile);
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern IntPtr CreateFile(
+            string fileName,
+            uint desiredAccess,
+            int shareMode,
+            IntPtr securityAttributes,
+            int creationDisposition,
+            int flagsAndAttributes,
+            IntPtr templateFile);
 
-		[DllImport("kernel32.dll", SetLastError = false)]
-		private static extern bool FreeConsole();
+        [DllImport("kernel32.dll", SetLastError = false)]
+        private static extern bool FreeConsole();
 
-		[DllImport("kernel32.dll", SetLastError = true)]
-		private static extern IntPtr GetStdHandle(int nStdHandle);
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern IntPtr GetStdHandle(int nStdHandle);
 
-		[DllImport("kernel32.dll", SetLastError = true)]
-		private static extern bool SetStdHandle(int nStdHandle, IntPtr hConsoleOutput);
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool SetStdHandle(int nStdHandle, IntPtr hConsoleOutput);
 
-		[DllImport("kernel32.dll", BestFitMapping = true, CharSet = CharSet.Auto, SetLastError = true)]
-		private static extern bool SetConsoleTitle(string title);
-	}
+        [DllImport("kernel32.dll", BestFitMapping = true, CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern bool SetConsoleTitle(string title);
+    }
 }

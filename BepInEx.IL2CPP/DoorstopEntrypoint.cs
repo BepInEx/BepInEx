@@ -6,98 +6,102 @@ using BepInEx.Preloader.Core;
 
 namespace BepInEx.IL2CPP
 {
-	internal static class UnityPreloaderRunner
-	{
-		private const string TRUSTED_PLATFORM_ASSEMBLIES = "TRUSTED_PLATFORM_ASSEMBLIES";
-		
-		public static void PreloaderMain(string[] args)
-		{
-			
-			string bepinPath = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetFullPath(EnvVars.DOORSTOP_INVOKE_DLL_PATH)));
+    internal static class UnityPreloaderRunner
+    {
+        private const string TRUSTED_PLATFORM_ASSEMBLIES = "TRUSTED_PLATFORM_ASSEMBLIES";
 
-			PlatformUtils.SetPlatform();
-			
-			Paths.SetExecutablePath(EnvVars.DOORSTOP_PROCESS_PATH, bepinPath, EnvVars.DOORSTOP_MANAGED_FOLDER_DIR);
-			
-			// Cecil 0.11 requires one to manually set up list of trusted assemblies for assembly resolving
-			AppDomain.CurrentDomain.SetData(TRUSTED_PLATFORM_ASSEMBLIES, string.Join(Path.PathSeparator, Directory.GetFiles(Paths.ManagedPath, "*.dll", SearchOption.TopDirectoryOnly)));
+        public static void PreloaderMain(string[] args)
+        {
+            var bepinPath =
+                Path.GetDirectoryName(Path.GetDirectoryName(Path.GetFullPath(EnvVars.DOORSTOP_INVOKE_DLL_PATH)));
 
-			Preloader.IL2CPPUnhollowedPath = Path.Combine(Paths.BepInExRootPath, "unhollowed");
+            PlatformUtils.SetPlatform();
 
-			AppDomain.CurrentDomain.AssemblyResolve += LocalResolve;
-			AppDomain.CurrentDomain.AssemblyResolve -= DoorstopEntrypoint.ResolveCurrentDirectory;
+            Paths.SetExecutablePath(EnvVars.DOORSTOP_PROCESS_PATH, bepinPath, EnvVars.DOORSTOP_MANAGED_FOLDER_DIR);
+
+            // Cecil 0.11 requires one to manually set up list of trusted assemblies for assembly resolving
+            AppDomain.CurrentDomain.SetData(TRUSTED_PLATFORM_ASSEMBLIES,
+                                            string.Join(Path.PathSeparator,
+                                                        Directory.GetFiles(Paths.ManagedPath, "*.dll",
+                                                                           SearchOption.TopDirectoryOnly)));
+
+            Preloader.IL2CPPUnhollowedPath = Path.Combine(Paths.BepInExRootPath, "unhollowed");
+
+            AppDomain.CurrentDomain.AssemblyResolve += LocalResolve;
+            AppDomain.CurrentDomain.AssemblyResolve -= DoorstopEntrypoint.ResolveCurrentDirectory;
 
 
-			Preloader.Run();
-		}
+            Preloader.Run();
+        }
 
-		internal static Assembly LocalResolve(object sender, ResolveEventArgs args)
-		{
-			var assemblyName = new AssemblyName(args.Name);
+        internal static Assembly LocalResolve(object sender, ResolveEventArgs args)
+        {
+            var assemblyName = new AssemblyName(args.Name);
 
-			var foundAssembly = AppDomain.CurrentDomain.GetAssemblies()
-										 .FirstOrDefault(x => x.GetName().Name == assemblyName.Name);
+            var foundAssembly = AppDomain.CurrentDomain.GetAssemblies()
+                                         .FirstOrDefault(x => x.GetName().Name == assemblyName.Name);
 
-			if (foundAssembly != null)
-				return foundAssembly;
+            if (foundAssembly != null)
+                return foundAssembly;
 
-			if (Utility.TryResolveDllAssembly(assemblyName, Paths.BepInExAssemblyDirectory, out foundAssembly)
-				|| Utility.TryResolveDllAssembly(assemblyName, Paths.PatcherPluginPath, out foundAssembly)
-				|| Utility.TryResolveDllAssembly(assemblyName, Paths.PluginPath, out foundAssembly)
-				|| Utility.TryResolveDllAssembly(assemblyName, Preloader.IL2CPPUnhollowedPath, out foundAssembly))
-				return foundAssembly;
+            if (Utility.TryResolveDllAssembly(assemblyName, Paths.BepInExAssemblyDirectory, out foundAssembly)
+                || Utility.TryResolveDllAssembly(assemblyName, Paths.PatcherPluginPath, out foundAssembly)
+                || Utility.TryResolveDllAssembly(assemblyName, Paths.PluginPath, out foundAssembly)
+                || Utility.TryResolveDllAssembly(assemblyName, Preloader.IL2CPPUnhollowedPath, out foundAssembly))
+                return foundAssembly;
 
-			return null;
-		}
-	}
+            return null;
+        }
+    }
 
-	internal static class DoorstopEntrypoint
-	{
-		private static string preloaderPath;
+    internal static class DoorstopEntrypoint
+    {
+        private static string preloaderPath;
 
-		/// <summary>
-		///     The main entrypoint of BepInEx, called from Doorstop.
-		/// </summary>
-		/// <param name="args">
-		///     The arguments passed in from Doorstop. First argument is the path of the currently executing
-		///     process.
-		/// </param>
-		public static void Main(string[] args)
-		{
-			// We set it to the current directory first as a fallback, but try to use the same location as the .exe file.
-			string silentExceptionLog = $"preloader_{DateTime.Now:yyyyMMdd_HHmmss_fff}.log";
+        /// <summary>
+        ///     The main entrypoint of BepInEx, called from Doorstop.
+        /// </summary>
+        /// <param name="args">
+        ///     The arguments passed in from Doorstop. First argument is the path of the currently executing
+        ///     process.
+        /// </param>
+        public static void Main(string[] args)
+        {
+            // We set it to the current directory first as a fallback, but try to use the same location as the .exe file.
+            var silentExceptionLog = $"preloader_{DateTime.Now:yyyyMMdd_HHmmss_fff}.log";
 
-			try
-			{
-				EnvVars.LoadVars();
+            try
+            {
+                EnvVars.LoadVars();
 
-				silentExceptionLog = Path.Combine(Path.GetDirectoryName(EnvVars.DOORSTOP_PROCESS_PATH), silentExceptionLog);
+                silentExceptionLog =
+                    Path.Combine(Path.GetDirectoryName(EnvVars.DOORSTOP_PROCESS_PATH), silentExceptionLog);
 
-				// Get the path of this DLL via Doorstop env var because Assembly.Location mangles non-ASCII characters on some versions of Mono for unknown reasons
-				preloaderPath = Path.GetDirectoryName(Path.GetFullPath(EnvVars.DOORSTOP_INVOKE_DLL_PATH));
+                // Get the path of this DLL via Doorstop env var because Assembly.Location mangles non-ASCII characters on some versions of Mono for unknown reasons
+                preloaderPath = Path.GetDirectoryName(Path.GetFullPath(EnvVars.DOORSTOP_INVOKE_DLL_PATH));
 
-				AppDomain.CurrentDomain.AssemblyResolve += ResolveCurrentDirectory;
+                AppDomain.CurrentDomain.AssemblyResolve += ResolveCurrentDirectory;
 
-				UnityPreloaderRunner.PreloaderMain(args);
-			}
-			catch (Exception ex)
-			{
-				File.WriteAllText(silentExceptionLog, ex.ToString());
-			}
-		}
+                UnityPreloaderRunner.PreloaderMain(args);
+            }
+            catch (Exception ex)
+            {
+                File.WriteAllText(silentExceptionLog, ex.ToString());
+            }
+        }
 
-		public static Assembly ResolveCurrentDirectory(object sender, ResolveEventArgs args)
-		{
-			var name = new AssemblyName(args.Name);
+        public static Assembly ResolveCurrentDirectory(object sender, ResolveEventArgs args)
+        {
+            var name = new AssemblyName(args.Name);
 
-			try
-			{
-				return Assembly.LoadFile(Path.Combine(preloaderPath, $"{name.Name}.dll"));
-			}
-			catch (Exception)
-			{
-				return null;
-			}
-		}
-	}
+            try
+            {
+                return Assembly.LoadFile(Path.Combine(preloaderPath, $"{name.Name}.dll"));
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+    }
 }

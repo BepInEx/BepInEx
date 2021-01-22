@@ -6,70 +6,67 @@ using HarmonyLib;
 
 namespace BepInEx.Preloader.RuntimeFixes
 {
-	/// <summary>
-	/// This exists because the Mono implementation of <see cref="Trace"/> is/was broken, and would call Write directly instead of calling TraceEvent.
-	/// </summary>
-	internal static class TraceFix
-	{
-		private static Type TraceImplType;
+    /// <summary>
+    ///     This exists because the Mono implementation of <see cref="Trace" /> is/was broken, and would call Write directly
+    ///     instead of calling TraceEvent.
+    /// </summary>
+    internal static class TraceFix
+    {
+        private static Type TraceImplType;
 
-		private static object ListenersSyncRoot;
-		private static TraceListenerCollection Listeners;
-		private static PropertyInfo prop_AutoFlush;
+        private static object ListenersSyncRoot;
+        private static TraceListenerCollection Listeners;
+        private static PropertyInfo prop_AutoFlush;
 
-		private static bool AutoFlush => (bool)prop_AutoFlush.GetValue(null, null);
-
-
-		public static void ApplyFix()
-		{
-			TraceImplType = AppDomain.CurrentDomain.GetAssemblies()
-									 .First(x => x.GetName().Name == "System")
-									 .GetTypes()
-									 .FirstOrDefault(x => x.Name == "TraceImpl");
-			// assembly that has already fixed this
-			if (TraceImplType == null) return;
-
-			ListenersSyncRoot = AccessTools.Property(TraceImplType, "ListenersSyncRoot").GetValue(null, null);
-
-			Listeners = (TraceListenerCollection)AccessTools.Property(TraceImplType, "Listeners").GetValue(null, null);
-
-			prop_AutoFlush = AccessTools.Property(TraceImplType, "AutoFlush");
+        private static bool AutoFlush => (bool) prop_AutoFlush.GetValue(null, null);
 
 
-			HarmonyLib.Harmony instance = new HarmonyLib.Harmony("com.bepis.bepinex.tracefix");
+        public static void ApplyFix()
+        {
+            TraceImplType = AppDomain.CurrentDomain.GetAssemblies()
+                                     .First(x => x.GetName().Name == "System")
+                                     .GetTypes()
+                                     .FirstOrDefault(x => x.Name == "TraceImpl");
+            // assembly that has already fixed this
+            if (TraceImplType == null) return;
 
-			instance.Patch(
-				typeof(Trace).GetMethod("DoTrace", BindingFlags.Static | BindingFlags.NonPublic),
-				new HarmonyMethod(typeof(TraceFix).GetMethod(nameof(DoTraceReplacement), BindingFlags.Static | BindingFlags.NonPublic)));
-		}
+            ListenersSyncRoot = AccessTools.Property(TraceImplType, "ListenersSyncRoot").GetValue(null, null);
+
+            Listeners = (TraceListenerCollection) AccessTools.Property(TraceImplType, "Listeners").GetValue(null, null);
+
+            prop_AutoFlush = AccessTools.Property(TraceImplType, "AutoFlush");
 
 
-		private static bool DoTraceReplacement(string kind, Assembly report, string message)
-		{
-			string arg = string.Empty;
-			try
-			{
-				arg = report.GetName().Name;
-			}
-			catch (MethodAccessException) { }
+            var instance = new Harmony("com.bepis.bepinex.tracefix");
 
-			TraceEventType type = (TraceEventType)Enum.Parse(typeof(TraceEventType), kind);
+            instance.Patch(
+                           typeof(Trace).GetMethod("DoTrace", BindingFlags.Static | BindingFlags.NonPublic),
+                           new HarmonyMethod(typeof(TraceFix).GetMethod(nameof(DoTraceReplacement),
+                                                                        BindingFlags.Static | BindingFlags.NonPublic)));
+        }
 
-			lock (ListenersSyncRoot)
-			{
-				foreach (object obj in Listeners)
-				{
-					TraceListener traceListener = (TraceListener)obj;
-					traceListener.TraceEvent(new TraceEventCache(), arg, type, 0, message);
 
-					if (AutoFlush)
-					{
-						traceListener.Flush();
-					}
-				}
-			}
+        private static bool DoTraceReplacement(string kind, Assembly report, string message)
+        {
+            var arg = string.Empty;
+            try
+            {
+                arg = report.GetName().Name;
+            }
+            catch (MethodAccessException) { }
 
-			return false;
-		}
-	}
+            var type = (TraceEventType) Enum.Parse(typeof(TraceEventType), kind);
+
+            lock (ListenersSyncRoot)
+                foreach (var obj in Listeners)
+                {
+                    var traceListener = (TraceListener) obj;
+                    traceListener.TraceEvent(new TraceEventCache(), arg, type, 0, message);
+
+                    if (AutoFlush) traceListener.Flush();
+                }
+
+            return false;
+        }
+    }
 }

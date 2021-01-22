@@ -12,6 +12,7 @@ using BepInEx.Preloader.Core;
 using BepInEx.Preloader.Core.Logging;
 using HarmonyLib.Public.Patching;
 using Il2Cpp.TlsAdapter;
+using UnhollowerBaseLib;
 using UnhollowerBaseLib.Runtime;
 using UnhollowerRuntimeLib;
 using UnityEngine;
@@ -19,138 +20,142 @@ using Logger = BepInEx.Logging.Logger;
 
 namespace BepInEx.IL2CPP
 {
-	public class IL2CPPChainloader : BaseChainloader<BasePlugin>
-	{
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		private delegate IntPtr RuntimeInvokeDetourDelegate(IntPtr method, IntPtr obj, IntPtr parameters, IntPtr exc);
+    public class IL2CPPChainloader : BaseChainloader<BasePlugin>
+    {
+        private static RuntimeInvokeDetourDelegate originalInvoke;
+        private static InstallUnityTlsInterfaceDelegate originalInstallUnityTlsInterface;
 
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		private delegate void InstallUnityTlsInterfaceDelegate(IntPtr unityTlsInterfaceStruct);
+        private static readonly ConfigEntry<bool> ConfigUnityLogging = ConfigFile.CoreConfig.Bind(
+         "Logging", "UnityLogListening",
+         true,
+         "Enables showing unity log messages in the BepInEx logging system.");
 
-		[DllImport("kernel32", CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]
-		private static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
+        private static readonly ConfigEntry<bool> ConfigDiskWriteUnityLog = ConfigFile.CoreConfig.Bind(
+         "Logging.Disk", "WriteUnityLog",
+         false,
+         "Include unity log messages in log file output.");
 
-		private static RuntimeInvokeDetourDelegate originalInvoke;
-		private static InstallUnityTlsInterfaceDelegate originalInstallUnityTlsInterface;
+        private static FastNativeDetour RuntimeInvokeDetour { get; set; }
+        private static FastNativeDetour InstallUnityTlsInterfaceDetour { get; set; }
 
-		private static FastNativeDetour RuntimeInvokeDetour { get; set; }
-		private static FastNativeDetour InstallUnityTlsInterfaceDetour { get; set; }
+        public static IL2CPPChainloader Instance { get; set; }
 
-		public static IL2CPPChainloader Instance { get; set; }
+        [DllImport("kernel32", CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]
+        private static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
 
-		public override unsafe void Initialize(string gameExePath = null)
-		{
-			UnhollowerBaseLib.GeneratedDatabasesUtil.DatabasesLocationOverride = Preloader.IL2CPPUnhollowedPath;
-			PatchManager.ResolvePatcher += IL2CPPDetourMethodPatcher.TryResolve;
+        public override void Initialize(string gameExePath = null)
+        {
+            GeneratedDatabasesUtil.DatabasesLocationOverride = Preloader.IL2CPPUnhollowedPath;
+            PatchManager.ResolvePatcher += IL2CPPDetourMethodPatcher.TryResolve;
 
-			base.Initialize(gameExePath);
-			Instance = this;
+            base.Initialize(gameExePath);
+            Instance = this;
 
-			var version = //Version.Parse(Application.unityVersion);
-				Version.Parse(Process.GetCurrentProcess().MainModule.FileVersionInfo.FileVersion);
+            var version = //Version.Parse(Application.unityVersion);
+                Version.Parse(Process.GetCurrentProcess().MainModule.FileVersionInfo.FileVersion);
 
-			UnityVersionHandler.Initialize(version.Major, version.Minor, version.Revision);
-			ClassInjector.Detour = new UnhollowerDetourHandler();
+            UnityVersionHandler.Initialize(version.Major, version.Minor, version.Revision);
+            ClassInjector.Detour = new UnhollowerDetourHandler();
 
-			var gameAssemblyModule = Process.GetCurrentProcess().Modules.Cast<ProcessModule>().First(x => x.ModuleName.Contains("GameAssembly"));
+            var gameAssemblyModule = Process.GetCurrentProcess().Modules.Cast<ProcessModule>()
+                                            .First(x => x.ModuleName.Contains("GameAssembly"));
 
-			// TODO: Check that DynDll.GetFunction works fine now
-			var runtimeInvokePtr = GetProcAddress(gameAssemblyModule.BaseAddress, "il2cpp_runtime_invoke"); //DynDll.GetFunction(gameAssemblyModule.BaseAddress, "il2cpp_runtime_invoke");
-			PreloaderLogger.Log.LogDebug($"Runtime invoke pointer: 0x{runtimeInvokePtr.ToInt64():X}");
-			RuntimeInvokeDetour = FastNativeDetour.CreateAndApply(runtimeInvokePtr, OnInvokeMethod, out originalInvoke, CallingConvention.Cdecl);
+            // TODO: Check that DynDll.GetFunction works fine now
+            var runtimeInvokePtr =
+                GetProcAddress(gameAssemblyModule.BaseAddress,
+                               "il2cpp_runtime_invoke"); //DynDll.GetFunction(gameAssemblyModule.BaseAddress, "il2cpp_runtime_invoke");
+            PreloaderLogger.Log.LogDebug($"Runtime invoke pointer: 0x{runtimeInvokePtr.ToInt64():X}");
+            RuntimeInvokeDetour =
+                FastNativeDetour.CreateAndApply(runtimeInvokePtr, OnInvokeMethod, out originalInvoke,
+                                                CallingConvention.Cdecl);
 
-			var installTlsPtr = GetProcAddress(gameAssemblyModule.BaseAddress, "il2cpp_unity_install_unitytls_interface");
-			if (installTlsPtr != IntPtr.Zero)
-				InstallUnityTlsInterfaceDetour = FastNativeDetour.CreateAndApply(installTlsPtr, OnInstallUnityTlsInterface, out originalInstallUnityTlsInterface, CallingConvention.Cdecl);
-			
-			Logger.LogDebug("Initializing TLS adapters");
-			Il2CppTlsAdapter.Initialize();
-			
-			PreloaderLogger.Log.LogDebug("Runtime invoke patched");
-		}
+            var installTlsPtr =
+                GetProcAddress(gameAssemblyModule.BaseAddress, "il2cpp_unity_install_unitytls_interface");
+            if (installTlsPtr != IntPtr.Zero)
+                InstallUnityTlsInterfaceDetour =
+                    FastNativeDetour.CreateAndApply(installTlsPtr, OnInstallUnityTlsInterface,
+                                                    out originalInstallUnityTlsInterface, CallingConvention.Cdecl);
 
-		private void OnInstallUnityTlsInterface(IntPtr unityTlsInterfaceStruct)
-		{
-			Logger.LogDebug($"Captured UnityTls interface at {unityTlsInterfaceStruct.ToInt64():x8}");
-			Il2CppTlsAdapter.Options.UnityTlsInterface = unityTlsInterfaceStruct;
-			originalInstallUnityTlsInterface(unityTlsInterfaceStruct);
-			InstallUnityTlsInterfaceDetour.Dispose();
-			InstallUnityTlsInterfaceDetour = null;
-		}
+            Logger.LogDebug("Initializing TLS adapters");
+            Il2CppTlsAdapter.Initialize();
 
-		private static IntPtr OnInvokeMethod(IntPtr method, IntPtr obj, IntPtr parameters, IntPtr exc)
-		{
-			string methodName = Marshal.PtrToStringAnsi(UnhollowerBaseLib.IL2CPP.il2cpp_method_get_name(method));
+            PreloaderLogger.Log.LogDebug("Runtime invoke patched");
+        }
 
-			bool unhook = false;
+        private void OnInstallUnityTlsInterface(IntPtr unityTlsInterfaceStruct)
+        {
+            Logger.LogDebug($"Captured UnityTls interface at {unityTlsInterfaceStruct.ToInt64():x8}");
+            Il2CppTlsAdapter.Options.UnityTlsInterface = unityTlsInterfaceStruct;
+            originalInstallUnityTlsInterface(unityTlsInterfaceStruct);
+            InstallUnityTlsInterfaceDetour.Dispose();
+            InstallUnityTlsInterfaceDetour = null;
+        }
 
-			if (methodName == "Internal_ActiveSceneChanged")
-			{
-				try
-				{
-					if (ConfigUnityLogging.Value)
-					{
-						Logger.Sources.Add(new IL2CPPUnityLogSource());
+        private static IntPtr OnInvokeMethod(IntPtr method, IntPtr obj, IntPtr parameters, IntPtr exc)
+        {
+            var methodName = Marshal.PtrToStringAnsi(UnhollowerBaseLib.IL2CPP.il2cpp_method_get_name(method));
 
-						Application.CallLogCallback("Test call after applying unity logging hook", "", LogType.Assert, true);
-					}
+            var unhook = false;
 
-					unhook = true;
+            if (methodName == "Internal_ActiveSceneChanged")
+                try
+                {
+                    if (ConfigUnityLogging.Value)
+                    {
+                        Logger.Sources.Add(new IL2CPPUnityLogSource());
 
-					Instance.Execute();
-				}
-				catch (Exception ex)
-				{
-					Logger.LogFatal("Unable to execute IL2CPP chainloader");
-					Logger.LogError(ex);
-				}
-			}
+                        Application.CallLogCallback("Test call after applying unity logging hook", "", LogType.Assert,
+                                                    true);
+                    }
 
-			var result = originalInvoke(method, obj, parameters, exc);
+                    unhook = true;
 
-			if (unhook)
-			{
-				RuntimeInvokeDetour.Dispose();
+                    Instance.Execute();
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogFatal("Unable to execute IL2CPP chainloader");
+                    Logger.LogError(ex);
+                }
 
-				PreloaderLogger.Log.LogDebug("Runtime invoke unpatched");
-			}
+            var result = originalInvoke(method, obj, parameters, exc);
 
-			return result;
-		}
+            if (unhook)
+            {
+                RuntimeInvokeDetour.Dispose();
 
-		protected override void InitializeLoggers()
-		{
-			base.InitializeLoggers();
+                PreloaderLogger.Log.LogDebug("Runtime invoke unpatched");
+            }
 
-			if (!ConfigDiskWriteUnityLog.Value)
-			{
-				DiskLogListener.BlacklistedSources.Add("Unity");
-			}
+            return result;
+        }
 
-			ChainloaderLogHelper.RewritePreloaderLogs();
+        protected override void InitializeLoggers()
+        {
+            base.InitializeLoggers();
 
-			Logger.Sources.Add(new IL2CPPLogSource());
-		}
+            if (!ConfigDiskWriteUnityLog.Value) DiskLogListener.BlacklistedSources.Add("Unity");
 
-		public override BasePlugin LoadPlugin(PluginInfo pluginInfo, Assembly pluginAssembly)
-		{
-			var type = pluginAssembly.GetType(pluginInfo.TypeName);
+            ChainloaderLogHelper.RewritePreloaderLogs();
 
-			var pluginInstance = (BasePlugin)Activator.CreateInstance(type);
+            Logger.Sources.Add(new IL2CPPLogSource());
+        }
 
-			pluginInstance.Load();
+        public override BasePlugin LoadPlugin(PluginInfo pluginInfo, Assembly pluginAssembly)
+        {
+            var type = pluginAssembly.GetType(pluginInfo.TypeName);
 
-			return pluginInstance;
-		}
+            var pluginInstance = (BasePlugin) Activator.CreateInstance(type);
 
-		private static readonly ConfigEntry<bool> ConfigUnityLogging = ConfigFile.CoreConfig.Bind(
-			"Logging", "UnityLogListening",
-			true,
-			"Enables showing unity log messages in the BepInEx logging system.");
+            pluginInstance.Load();
 
-		private static readonly ConfigEntry<bool> ConfigDiskWriteUnityLog = ConfigFile.CoreConfig.Bind(
-			"Logging.Disk", "WriteUnityLog",
-			false,
-			"Include unity log messages in log file output.");
-	}
+            return pluginInstance;
+        }
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate IntPtr RuntimeInvokeDetourDelegate(IntPtr method, IntPtr obj, IntPtr parameters, IntPtr exc);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate void InstallUnityTlsInterfaceDelegate(IntPtr unityTlsInterfaceStruct);
+    }
 }

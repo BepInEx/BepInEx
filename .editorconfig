@@ -1,6 +1,6 @@
 [*]
 charset = utf-8
-insert_final_newline = false
+insert_final_newline = true
 trim_trailing_whitespace = false
 ij_continuation_indent_size = 8
 ij_formatter_off_tag = @formatter:off
@@ -13,9 +13,9 @@ ij_wrap_on_typing = false
 [*.{appxmanifest,asax,ascx,aspx,axaml,build,cg,cginc,compute,cs,cshtml,dtd,fs,fsi,fsscript,fsx,hlsl,hlsli,hlslinc,master,ml,mli,nuspec,paml,razor,resw,resx,shader,skin,usf,ush,vb,xaml,xamlx,xoml,xsd}]
 max_line_length = 120
 end_of_line = lf
-indent_style = tab
-indent_size = tab
 tab_width = 4
+indent_style = space
+indent_size = 4
 
 # Microsoft .NET properties
 csharp_new_line_before_members_in_object_initializers = false
@@ -68,6 +68,7 @@ dotnet_style_qualification_for_property = false:suggestion
 dotnet_style_require_accessibility_modifiers = for_non_interface_members:suggestion
 
 # ReSharper properties
+resharper_alignment_tab_fill_style = use_spaces
 resharper_align_linq_query = true
 resharper_align_multiline_argument = true
 resharper_align_multiline_calls_chain = true
@@ -80,8 +81,9 @@ resharper_align_multline_type_parameter_constrains = true
 resharper_align_multline_type_parameter_list = true
 resharper_align_tuple_components = true
 resharper_autodetect_indent_settings = true
-resharper_csharp_alignment_tab_fill_style = optimal_fill
+resharper_csharp_alignment_tab_fill_style = use_spaces
 resharper_csharp_align_first_arg_by_paren = true
+resharper_csharp_indent_style = space
 resharper_csharp_int_align_comments = true
 resharper_csharp_naming_rule.private_constants = AA_BB
 resharper_csharp_naming_rule.private_static_fields = aaBb

@@ -6,146 +6,131 @@ using MonoMod.Utils;
 
 namespace BepInEx.Preloader.Core
 {
-	internal static class PlatformUtils
-	{
-		[StructLayout(LayoutKind.Sequential, Pack = 1)]
-		public struct utsname_osx
-		{
-			private const int osx_utslen = 256;
+    internal static class PlatformUtils
+    {
+        [DllImport("libc.so.6", EntryPoint = "uname", CallingConvention = CallingConvention.Cdecl,
+                   CharSet = CharSet.Ansi)]
+        private static extern IntPtr uname_linux(ref utsname_linux utsname);
 
-			[MarshalAs(UnmanagedType.ByValTStr, SizeConst = osx_utslen)]
-			public string sysname;
+        [DllImport("/usr/lib/libSystem.dylib", EntryPoint = "uname", CallingConvention = CallingConvention.Cdecl,
+                   CharSet = CharSet.Ansi)]
+        private static extern IntPtr uname_osx(ref utsname_osx utsname);
 
-			[MarshalAs(UnmanagedType.ByValTStr, SizeConst = osx_utslen)]
-			public string nodename;
+        /// <summary>
+        ///     Recreation of MonoMod's PlatformHelper.DeterminePlatform method, but with libc calls instead of creating processes.
+        /// </summary>
+        public static void SetPlatform()
+        {
+            var current = Platform.Unknown;
 
-			[MarshalAs(UnmanagedType.ByValTStr, SizeConst = osx_utslen)]
-			public string release;
+            // For old Mono, get from a private property to accurately get the platform.
+            // static extern PlatformID Platform
+            var p_Platform = typeof(Environment).GetProperty("Platform", BindingFlags.NonPublic | BindingFlags.Static);
+            string platID;
+            if (p_Platform != null)
+                platID = p_Platform.GetValue(null, new object[0]).ToString();
+            else
+                // For .NET and newer Mono, use the usual value.
+                platID = Environment.OSVersion.Platform.ToString();
+            platID = platID.ToLowerInvariant();
 
-			[MarshalAs(UnmanagedType.ByValTStr, SizeConst = osx_utslen)]
-			public string version;
+            if (platID.Contains("win"))
+                current = Platform.Windows;
+            else if (platID.Contains("mac") || platID.Contains("osx"))
+                current = Platform.MacOS;
+            else if (platID.Contains("lin") || platID.Contains("unix")) current = Platform.Linux;
 
-			[MarshalAs(UnmanagedType.ByValTStr, SizeConst = osx_utslen)]
-			public string machine;
-		}
+            if (Is(current, Platform.Linux) && Directory.Exists("/data") && File.Exists("/system/build.prop"))
+                current = Platform.Android;
+            else if (Is(current, Platform.Unix) && Directory.Exists("/System/Library/AccessibilityBundles"))
+                current = Platform.iOS;
 
-		[StructLayout(LayoutKind.Sequential, Pack = 1)]
-		public struct utsname_linux
-		{
-			private const int linux_utslen = 65;
+            // Is64BitOperatingSystem has been added in .NET Framework 4.0
+            var m_get_Is64BitOperatingSystem =
+                typeof(Environment).GetProperty("Is64BitOperatingSystem")?.GetGetMethod();
+            if (m_get_Is64BitOperatingSystem != null)
+                current |= (bool) m_get_Is64BitOperatingSystem.Invoke(null, new object[0]) ? Platform.Bits64 : 0;
+            else
+                current |= IntPtr.Size >= 8 ? Platform.Bits64 : 0;
 
-			[MarshalAs(UnmanagedType.ByValTStr, SizeConst = linux_utslen)]
-			public string sysname;
+            if ((Is(current, Platform.MacOS) || Is(current, Platform.Linux)) && Type.GetType("Mono.Runtime") != null)
+            {
+                string arch;
+                IntPtr result;
 
-			[MarshalAs(UnmanagedType.ByValTStr, SizeConst = linux_utslen)]
-			public string nodename;
+                if (Is(current, Platform.MacOS))
+                {
+                    var utsname_osx = new utsname_osx();
+                    result = uname_osx(ref utsname_osx);
+                    arch = utsname_osx.machine;
+                }
+                else
+                {
+                    // Linux
+                    var utsname_linux = new utsname_linux();
+                    result = uname_linux(ref utsname_linux);
+                    arch = utsname_linux.machine;
+                }
 
-			[MarshalAs(UnmanagedType.ByValTStr, SizeConst = linux_utslen)]
-			public string release;
+                if (result == IntPtr.Zero && (arch.StartsWith("aarch") || arch.StartsWith("arm")))
+                    current |= Platform.ARM;
+            }
+            else
+            {
+                // Detect ARM based on PE info or uname.
+                typeof(object).Module.GetPEKind(out var peKind, out var machine);
+                if (machine == (ImageFileMachine) 0x01C4 /* ARM, .NET Framework 4.5 */)
+                    current |= Platform.ARM;
+            }
 
-			[MarshalAs(UnmanagedType.ByValTStr, SizeConst = linux_utslen)]
-			public string version;
+            PlatformHelper.Current = current;
+        }
 
-			[MarshalAs(UnmanagedType.ByValTStr, SizeConst = linux_utslen)]
-			public string machine;
+        private static bool Is(Platform current, Platform expected) => (current & expected) == expected;
 
-			[MarshalAs(UnmanagedType.ByValTStr, SizeConst = linux_utslen)]
-			public string domainname;
-		}
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        public struct utsname_osx
+        {
+            private const int osx_utslen = 256;
 
-		[DllImport("libc.so.6", EntryPoint = "uname", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-		private static extern IntPtr uname_linux(ref utsname_linux utsname);
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = osx_utslen)]
+            public string sysname;
 
-		[DllImport("/usr/lib/libSystem.dylib", EntryPoint = "uname", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-		private static extern IntPtr uname_osx(ref utsname_osx utsname);
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = osx_utslen)]
+            public string nodename;
 
-		/// <summary>
-		/// Recreation of MonoMod's PlatformHelper.DeterminePlatform method, but with libc calls instead of creating processes.
-		/// </summary>
-		public static void SetPlatform()
-		{
-			var current = Platform.Unknown;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = osx_utslen)]
+            public string release;
 
-			// For old Mono, get from a private property to accurately get the platform.
-			// static extern PlatformID Platform
-			PropertyInfo p_Platform = typeof(Environment).GetProperty("Platform", BindingFlags.NonPublic | BindingFlags.Static);
-			string platID;
-			if (p_Platform != null)
-			{
-				platID = p_Platform.GetValue(null, new object[0]).ToString();
-			}
-			else
-			{
-				// For .NET and newer Mono, use the usual value.
-				platID = Environment.OSVersion.Platform.ToString();
-			}
-			platID = platID.ToLowerInvariant();
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = osx_utslen)]
+            public string version;
 
-			if (platID.Contains("win"))
-			{
-				current = Platform.Windows;
-			}
-			else if (platID.Contains("mac") || platID.Contains("osx"))
-			{
-				current = Platform.MacOS;
-			}
-			else if (platID.Contains("lin") || platID.Contains("unix"))
-			{
-				current = Platform.Linux;
-			}
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = osx_utslen)]
+            public string machine;
+        }
 
-			if (Is(current, Platform.Linux) && Directory.Exists("/data") && File.Exists("/system/build.prop"))
-			{
-				current = Platform.Android;
-			}
-			else if (Is(current, Platform.Unix) && Directory.Exists("/System/Library/AccessibilityBundles"))
-			{
-				current = Platform.iOS;
-			}
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        public struct utsname_linux
+        {
+            private const int linux_utslen = 65;
 
-			// Is64BitOperatingSystem has been added in .NET Framework 4.0
-			MethodInfo m_get_Is64BitOperatingSystem = typeof(Environment).GetProperty("Is64BitOperatingSystem")?.GetGetMethod();
-			if (m_get_Is64BitOperatingSystem != null)
-				current |= (((bool)m_get_Is64BitOperatingSystem.Invoke(null, new object[0])) ? Platform.Bits64 : 0);
-			else
-				current |= (IntPtr.Size >= 8 ? Platform.Bits64 : 0);
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = linux_utslen)]
+            public string sysname;
 
-			if ((Is(current, Platform.MacOS) || Is(current, Platform.Linux)) && Type.GetType("Mono.Runtime") != null)
-			{
-				string arch;
-				IntPtr result;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = linux_utslen)]
+            public string nodename;
 
-				if (Is(current, Platform.MacOS))
-				{
-					utsname_osx utsname_osx = new utsname_osx();
-					result = uname_osx(ref utsname_osx);
-					arch = utsname_osx.machine;
-				}
-				else
-				{
-					// Linux
-					utsname_linux utsname_linux = new utsname_linux();
-					result = uname_linux(ref utsname_linux);
-					arch = utsname_linux.machine;
-				}
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = linux_utslen)]
+            public string release;
 
-				if (result == IntPtr.Zero && (arch.StartsWith("aarch") || arch.StartsWith("arm")))
-					current |= Platform.ARM;
-			}
-			else
-			{
-				// Detect ARM based on PE info or uname.
-				typeof(object).Module.GetPEKind(out PortableExecutableKinds peKind, out ImageFileMachine machine);
-				if (machine == (ImageFileMachine)0x01C4 /* ARM, .NET Framework 4.5 */)
-					current |= Platform.ARM;
-			}
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = linux_utslen)]
+            public string version;
 
-			PlatformHelper.Current = current;
-		}
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = linux_utslen)]
+            public string machine;
 
-		private static bool Is(Platform current, Platform expected)
-		{
-			return (current & expected) == expected;
-		}
-	}
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = linux_utslen)]
+            public string domainname;
+        }
+    }
 }
