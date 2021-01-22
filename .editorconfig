@@ -1,11 +1,6 @@
 [*]
 charset = utf-8
-end_of_line = lf
-indent_size = 4
-indent_style = space
 insert_final_newline = false
-max_line_length = 120
-tab_width = 4
 trim_trailing_whitespace = false
 ij_continuation_indent_size = 8
 ij_formatter_off_tag = @formatter:off
@@ -15,10 +10,12 @@ ij_smart_tabs = false
 ij_visual_guides = none
 ij_wrap_on_typing = false
 
-
-[*.cs]
+[*.{appxmanifest,asax,ascx,aspx,axaml,build,cg,cginc,compute,cs,cshtml,dtd,fs,fsi,fsscript,fsx,hlsl,hlsli,hlslinc,master,ml,mli,nuspec,paml,razor,resw,resx,shader,skin,usf,ush,vb,xaml,xamlx,xoml,xsd}]
+max_line_length = 120
+end_of_line = lf
 indent_style = tab
 indent_size = tab
+tab_width = 4
 
 # Microsoft .NET properties
 csharp_new_line_before_members_in_object_initializers = false
@@ -92,9 +89,22 @@ resharper_csharp_naming_rule.private_static_readonly = AaBb
 resharper_csharp_stick_comment = false
 resharper_enforce_line_ending_style = true
 resharper_indent_preprocessor_directives = normal
+resharper_keep_existing_expr_member_arrangement = false
+resharper_keep_existing_switch_expression_arrangement = false
+resharper_max_attribute_length_for_same_line = 80
+resharper_place_accessorholder_attribute_on_same_line = false
+resharper_place_field_attribute_on_same_line = false
 resharper_show_autodetect_configure_formatting_tip = false
 resharper_use_indent_from_vs = false
 resharper_wrap_lines = true
+resharper_braces_for_fixed = not_required
+resharper_braces_for_lock = not_required
+resharper_braces_for_using = not_required
+resharper_constructor_or_destructor_body = expression_body
+resharper_csharp_empty_block_style = together_same_line
+resharper_local_function_body = expression_body
+resharper_method_or_operator_body = expression_body
+resharper_object_creation_when_type_not_evident = explicitly_typed # Omitting currently broken with Rider 2020.3.2
 
 # ReSharper inspection severities
 resharper_arrange_redundant_parentheses_highlighting = hint
