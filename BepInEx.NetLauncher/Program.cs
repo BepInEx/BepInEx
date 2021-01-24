@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -85,7 +85,7 @@ namespace BepInEx.NetLauncher
                 ResolveDirectories.Add(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName));
 #else
                 filename = Process.GetCurrentProcess().MainModule.FileName;
-                ResolveDirectories.Add(Path.Combine(Path.GetDirectoryName(filename), "BepInEx", "Core"));
+                ResolveDirectories.Add(Path.Combine(Path.GetDirectoryName(filename), "BepInEx", "core"));
 #endif
 
 
