@@ -78,14 +78,16 @@ namespace BepInEx.NetLauncher
                 string filename;
 
 #if DEBUG
-				filename =
- Path.Combine(Directory.GetCurrentDirectory(), Path.GetFileName(Process.GetCurrentProcess().MainModule.FileName));
+                filename = Path.Combine(Directory.GetCurrentDirectory(), Path.GetFileName(Process.GetCurrentProcess().MainModule.FileName));
+                ResolveDirectories.Add(Path.GetDirectoryName(filename));
 
+                // for debugging within VS
+                ResolveDirectories.Add(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName));
 #else
                 filename = Process.GetCurrentProcess().MainModule.FileName;
+                ResolveDirectories.Add(Path.Combine(Path.GetDirectoryName(filename), "BepInEx", "Core"));
 #endif
 
-                ResolveDirectories.Add(Path.Combine(Path.GetDirectoryName(filename), "BepInEx", "Core"));
 
                 AppDomain.CurrentDomain.AssemblyResolve += RemoteResolve;
 
@@ -105,7 +107,10 @@ namespace BepInEx.NetLauncher
 
             foreach (var directory in ResolveDirectories)
             {
-                var potentialDirectories = new List<string> {directory};
+                if (!Directory.Exists(directory))
+                    continue;
+
+                var potentialDirectories = new List<string> { directory };
 
                 potentialDirectories.AddRange(Directory.GetDirectories(directory, "*", SearchOption.AllDirectories));
 
@@ -120,7 +125,16 @@ namespace BepInEx.NetLauncher
                     if (!File.Exists(path))
                         continue;
 
-                    var assembly = Assembly.LoadFrom(path);
+                    Assembly assembly;
+
+                    try
+                    {
+                        assembly = Assembly.LoadFrom(path);
+                    }
+                    catch (Exception ex)
+                    {
+                        continue;
+                    }
 
                     if (assembly.GetName().Name == assemblyName.Name)
                         return assembly;

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -91,10 +91,19 @@ namespace BepInEx.Bootstrap
                 Utility.TryResolveDllAssembly(name, Paths.ManagedPath, ReaderParameters, out assembly))
                 return assembly;
 
-            return
-                SearchDirectories.Any(dir => Utility.TryResolveDllAssembly(name, dir, ReaderParameters, out assembly))
-                    ? assembly
-                    : AssemblyResolve?.Invoke(sender, reference);
+            foreach (var dir in SearchDirectories)
+            {
+                if (!Directory.Exists(dir))
+                {
+                    Logger.LogDebug($"Unable to resolve cecil search directory '{dir}'");
+                    continue;
+                }
+
+                if (Utility.TryResolveDllAssembly(name, dir, ReaderParameters, out assembly))
+                    return assembly;
+            }
+
+            return AssemblyResolve?.Invoke(sender, reference);
         }
 
         /// <summary>

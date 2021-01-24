@@ -22,7 +22,10 @@ namespace BepInEx.NetLauncher
         {
             assembly = null;
 
-            var potentialDirectories = new List<string> {directory};
+            if (!Directory.Exists(directory))
+                return false;
+
+            var potentialDirectories = new List<string> { directory };
 
             potentialDirectories.AddRange(Directory.GetDirectories(directory, "*", SearchOption.AllDirectories));
 

@@ -270,7 +270,7 @@ namespace BepInEx.Preloader.Core
         {
             try
             {
-                assembly = AssemblyDefinition.ReadAssembly(path);
+				assembly = AssemblyDefinition.ReadAssembly(path, TypeLoader.ReaderParameters);
                 return true;
             }
             catch (BadImageFormatException)

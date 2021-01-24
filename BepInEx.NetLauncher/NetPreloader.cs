@@ -2,12 +2,14 @@
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using BepInEx.Bootstrap;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using BepInEx.NetLauncher.RuntimeFixes;
 using BepInEx.Preloader.Core;
 using BepInEx.Preloader.Core.Logging;
+using MonoMod.Utils;
 
 namespace BepInEx.NetLauncher
 {
@@ -15,21 +17,15 @@ namespace BepInEx.NetLauncher
     {
         private static readonly ManualLogSource Log = PreloaderLogger.Log;
 
-        #region Config
-
-        private static readonly ConfigEntry<string> ConfigEntrypointExecutable = ConfigFile.CoreConfig.Bind<string>(
-         "Preloader.Entrypoint", "Assembly",
-         null,
-         "The local filename of the .NET executable to target.");
-
-        #endregion
+        [DllImport("Kernel32.dll")]
+        private static extern bool SetDllDirectory([MarshalAs(UnmanagedType.LPTStr)] string lpPathName);
 
 
         public static void Start(string[] args)
         {
             if (string.IsNullOrEmpty(ConfigEntrypointExecutable.Value))
             {
-                Log.LogFatal("Entry executable was not set. Please set this in your config before launching the application");
+                Log.LogFatal($"Entry executable was not set. Please set this in your config before launching the application");
                 Program.ReadExit();
                 return;
             }
@@ -43,9 +39,18 @@ namespace BepInEx.NetLauncher
                 return;
             }
 
+
             Paths.SetExecutablePath(executablePath);
             Program.ResolveDirectories.Add(Paths.GameRootPath);
-            TypeLoader.SearchDirectories.Add(Paths.GameRootPath);
+
+            foreach (var searchDir in Program.ResolveDirectories)
+                TypeLoader.SearchDirectories.Add(searchDir);
+
+            if (PlatformHelper.Is(Platform.Windows))
+            {
+                SetDllDirectory(Paths.GameRootPath);
+            }
+
 
             Logger.Sources.Add(TraceLogSource.CreateSource());
 
@@ -81,7 +86,7 @@ namespace BepInEx.NetLauncher
                 }
                 else
                 {
-                    Log.LogDebug("Using entrypoint assembly from disk");
+                    Log.LogDebug("Using entrypoint assembly from disk"); 
                     entrypointAssembly = Assembly.LoadFrom(executablePath);
                 }
             }
@@ -95,7 +100,16 @@ namespace BepInEx.NetLauncher
 
             AssemblyFix.Execute(entrypointAssembly);
 
-            entrypointAssembly.EntryPoint.Invoke(null, new[] {args});
+            entrypointAssembly.EntryPoint.Invoke(null, new [] { args });
         }
+
+        #region Config
+
+        private static readonly ConfigEntry<string> ConfigEntrypointExecutable = ConfigFile.CoreConfig.Bind<string>(
+            "Preloader.Entrypoint", "Assembly",
+            null,
+            "The local filename of the .NET executable to target.");
+
+        #endregion
     }
 }

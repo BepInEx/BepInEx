@@ -176,6 +176,9 @@ namespace BepInEx
 
             var potentialDirectories = new List<string> {directory};
 
+			if (!Directory.Exists(directory))
+				return false;
+
             potentialDirectories.AddRange(Directory.GetDirectories(directory, "*", SearchOption.AllDirectories));
 
             foreach (var subDirectory in potentialDirectories)
