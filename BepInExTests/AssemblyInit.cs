@@ -3,27 +3,27 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace BepInEx.Tests
 {
-	[TestClass]
-	public class AssemblyInit
-	{
-		private static string _testPath;
+    [TestClass]
+    public class AssemblyInit
+    {
+        private static string _testPath;
 
-		[AssemblyInitialize]
-		public static void InitAss(TestContext context)
-		{
-			_testPath = Path.Combine(Path.GetTempPath(), "BepinexTestDir");
-			Directory.CreateDirectory(_testPath);
-			
-			string exePath = Path.Combine(_testPath, "Text.exe");
-			File.WriteAllBytes(exePath, new byte[] { });
+        [AssemblyInitialize]
+        public static void InitAss(TestContext context)
+        {
+            _testPath = Path.Combine(Path.GetTempPath(), "BepinexTestDir");
+            Directory.CreateDirectory(_testPath);
 
-			Paths.SetExecutablePath(_testPath);
-		}
+            var exePath = Path.Combine(_testPath, "Text.exe");
+            File.WriteAllBytes(exePath, new byte[] { });
 
-		[AssemblyCleanup]
-		public static void CleanupAss()
-		{
-			Directory.Delete(_testPath, true);
-		}
-	}
+            Paths.SetExecutablePath(_testPath);
+        }
+
+        [AssemblyCleanup]
+        public static void CleanupAss()
+        {
+            Directory.Delete(_testPath, true);
+        }
+    }
 }

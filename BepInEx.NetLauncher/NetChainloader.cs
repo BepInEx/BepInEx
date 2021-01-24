@@ -4,17 +4,17 @@ using BepInEx.Bootstrap;
 
 namespace BepInEx.NetLauncher
 {
-	public class NetChainloader : BaseChainloader<BasePlugin>
-	{
-		public override BasePlugin LoadPlugin(PluginInfo pluginInfo, Assembly pluginAssembly)
-		{
-			var type = pluginAssembly.GetType(pluginInfo.TypeName);
+    public class NetChainloader : BaseChainloader<BasePlugin>
+    {
+        public override BasePlugin LoadPlugin(PluginInfo pluginInfo, Assembly pluginAssembly)
+        {
+            var type = pluginAssembly.GetType(pluginInfo.TypeName);
 
-			var pluginInstance = (BasePlugin)Activator.CreateInstance(type);
+            var pluginInstance = (BasePlugin) Activator.CreateInstance(type);
 
-			pluginInstance.Load();
+            pluginInstance.Load();
 
-			return pluginInstance;
-		}
-	}
+            return pluginInstance;
+        }
+    }
 }

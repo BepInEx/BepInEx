@@ -1,32 +1,30 @@
 ﻿using BepInEx.Configuration;
 using BepInEx.Logging;
+using HarmonyLib;
 
 namespace BepInEx.NetLauncher
 {
-	public abstract class BasePlugin
-	{
-		public ManualLogSource Log { get; }
+    public abstract class BasePlugin
+    {
+        protected BasePlugin()
+        {
+            var metadata = MetadataHelper.GetMetadata(this);
 
-		public ConfigFile Config { get; }
+            HarmonyInstance = new Harmony("BepInEx.Plugin." + metadata.GUID);
 
-		public HarmonyLib.Harmony HarmonyInstance { get; set; }
+            Log = Logger.CreateLogSource(metadata.Name);
 
-		protected BasePlugin()
-		{
-			var metadata = MetadataHelper.GetMetadata(this);
+            Config = new ConfigFile(Utility.CombinePaths(Paths.ConfigPath, metadata.GUID + ".cfg"), false, metadata);
+        }
 
-			HarmonyInstance = new HarmonyLib.Harmony("BepInEx.Plugin." + metadata.GUID);
+        public ManualLogSource Log { get; }
 
-			Log = Logger.CreateLogSource(metadata.Name);
+        public ConfigFile Config { get; }
 
-			Config = new ConfigFile(Utility.CombinePaths(Paths.ConfigPath, metadata.GUID + ".cfg"), false, metadata);
-		}
+        public Harmony HarmonyInstance { get; set; }
 
-		public abstract void Load();
+        public abstract void Load();
 
-		public virtual bool Unload()
-		{
-			return false;
-		}
-	}
+        public virtual bool Unload() => false;
+    }
 }

@@ -6,185 +6,196 @@ using AssemblyUnhollower;
 using BepInEx.Logging;
 using HarmonyLib;
 using Il2CppDumper;
+using UnhollowerBaseLib;
 
 namespace BepInEx.IL2CPP
 {
-	internal static class ProxyAssemblyGenerator
-	{
-		static class AppDomainHelper
-		{
-			public class AppDomainSetup
-			{
-				public string ApplicationBase { get; set; }
-			}
-			
-			public static Func<AppDomain, string, string, object> CreateInstanceAndUnwrap { get; }
-			private static FastInvokeHandler CreateDomainInternal { get; }
-			private static Type AppDomainSetupType { get; }
+    internal static class ProxyAssemblyGenerator
+    {
+        private static readonly ManualLogSource Il2cppDumperLogger = Logger.CreateLogSource("Il2CppDumper");
 
-			static AppDomainHelper()
-			{
-				var appDomain = typeof(AppDomain);
-				var evidenceType = typeof(AppDomain).Assembly.GetType("System.Security.Policy.Evidence");
-				AppDomainSetupType = typeof(AppDomain).Assembly.GetType("System.AppDomainSetup");
-				CreateDomainInternal = MethodInvoker.GetHandler(AccessTools.Method(appDomain, "CreateDomain", new[] { typeof(string), evidenceType, AppDomainSetupType }));
-				CreateInstanceAndUnwrap = AccessTools.MethodDelegate<Func<AppDomain, string, string, object>>(AccessTools.Method(appDomain, nameof(CreateInstanceAndUnwrap), new[] { typeof(string), typeof(string) }));
-			}
+        public static string GameAssemblyPath => Path.Combine(Paths.GameRootPath, "GameAssembly.dll");
 
-			public static AppDomain CreateDomain(string name, AppDomainSetup setup)
-			{
-				var realSetup = AccessTools.CreateInstance(AppDomainSetupType);
-				Traverse.IterateProperties(setup, realSetup, (pSrc, pTgt) => pTgt.SetValue(pSrc.GetValue()));
-				return CreateDomainInternal(null, name, null, realSetup) as AppDomain;
-			}
-		}
-		
-		public static string GameAssemblyPath => Path.Combine(Paths.GameRootPath, "GameAssembly.dll");
+        private static string HashPath => Path.Combine(Preloader.IL2CPPUnhollowedPath, "assembly-hash.txt");
 
-		private static string HashPath => Path.Combine(Preloader.IL2CPPUnhollowedPath, "assembly-hash.txt");
+        private static string UnityBaseLibsDirectory => Path.Combine(Paths.BepInExRootPath, "unity-libs");
 
-		private static string UnityBaseLibsDirectory => Path.Combine(Paths.BepInExRootPath, "unity-libs");
+        private static string tempDumperDirectory => Path.Combine(Preloader.IL2CPPUnhollowedPath, "temp");
 
-		private static string tempDumperDirectory => Path.Combine(Preloader.IL2CPPUnhollowedPath, "temp");
+        private static string ComputeHash()
+        {
+            using var md5 = MD5.Create();
 
-		private static ManualLogSource Il2cppDumperLogger = Logger.CreateLogSource("Il2CppDumper");
+            var gameAssemblyBytes = File.ReadAllBytes(GameAssemblyPath);
+            md5.TransformBlock(gameAssemblyBytes, 0, gameAssemblyBytes.Length, gameAssemblyBytes, 0);
 
-		private static string ComputeHash()
-		{
-			using var md5 = MD5.Create();
+            if (Directory.Exists(UnityBaseLibsDirectory))
+                foreach (var file in Directory.EnumerateFiles(UnityBaseLibsDirectory, "*.dll",
+                                                              SearchOption.TopDirectoryOnly))
+                {
+                    var pathBytes = Encoding.UTF8.GetBytes(Path.GetFileName(file));
+                    md5.TransformBlock(pathBytes, 0, pathBytes.Length, pathBytes, 0);
 
-			var gameAssemblyBytes = File.ReadAllBytes(GameAssemblyPath);
-			md5.TransformBlock(gameAssemblyBytes, 0, gameAssemblyBytes.Length, gameAssemblyBytes, 0);
+                    var contentBytes = File.ReadAllBytes(file);
+                    md5.TransformBlock(contentBytes, 0, contentBytes.Length, contentBytes, 0);
+                }
 
-			if (Directory.Exists(UnityBaseLibsDirectory))
-			{
-				foreach (var file in Directory.EnumerateFiles(UnityBaseLibsDirectory, "*.dll", SearchOption.TopDirectoryOnly))
-				{
-					var pathBytes = Encoding.UTF8.GetBytes(Path.GetFileName(file));
-					md5.TransformBlock(pathBytes, 0, pathBytes.Length, pathBytes, 0);
+            md5.TransformFinalBlock(new byte[0], 0, 0);
 
-					var contentBytes = File.ReadAllBytes(file);
-					md5.TransformBlock(contentBytes, 0, contentBytes.Length, contentBytes, 0);
-				}
-			}
+            return Utility.ByteArrayToString(md5.Hash);
+        }
 
-			md5.TransformFinalBlock(new byte[0], 0, 0);
+        public static bool CheckIfGenerationRequired()
+        {
+            if (!Directory.Exists(Preloader.IL2CPPUnhollowedPath))
+                return true;
 
-			return Utility.ByteArrayToString(md5.Hash);
-		}
+            if (!File.Exists(HashPath))
+                return true;
 
-		public static bool CheckIfGenerationRequired()
-		{
-			if (!Directory.Exists(Preloader.IL2CPPUnhollowedPath))
-				return true;
+            if (ComputeHash() != File.ReadAllText(HashPath))
+            {
+                Preloader.Log.LogInfo("Detected a game update, will regenerate proxy assemblies");
+                return true;
+            }
 
-			if (!File.Exists(HashPath))
-				return true;
+            return false;
+        }
 
-			if (ComputeHash() != File.ReadAllText(HashPath))
-			{
-				Preloader.Log.LogInfo("Detected a game update, will regenerate proxy assemblies");
-				return true;
-			}
+        public static void GenerateAssemblies()
+        {
+            var domain = AppDomainHelper.CreateDomain("GeneratorDomain", new AppDomainHelper.AppDomainSetup
+            {
+                ApplicationBase = Paths.BepInExAssemblyDirectory
+            });
 
-			return false;
-		}
+            var runner =
+                (AppDomainRunner) AppDomainHelper.CreateInstanceAndUnwrap(domain,
+                                                                          typeof(AppDomainRunner).Assembly.FullName,
+                                                                          typeof(AppDomainRunner).FullName);
 
-		public static void GenerateAssemblies()
-		{
-			var domain = AppDomainHelper.CreateDomain("GeneratorDomain", new AppDomainHelper.AppDomainSetup
-			{
-				ApplicationBase = Paths.BepInExAssemblyDirectory
-			});
+            runner.Setup(Paths.ExecutablePath, Preloader.IL2CPPUnhollowedPath);
+            runner.GenerateAssembliesInternal(new AppDomainListener());
 
-			var runner = (AppDomainRunner)AppDomainHelper.CreateInstanceAndUnwrap(domain, typeof(AppDomainRunner).Assembly.FullName, typeof(AppDomainRunner).FullName);
+            AppDomain.Unload(domain);
 
-			runner.Setup(Paths.ExecutablePath, Preloader.IL2CPPUnhollowedPath);
-			runner.GenerateAssembliesInternal(new AppDomainListener());
+            Directory.Delete(tempDumperDirectory, true);
 
-			AppDomain.Unload(domain);
+            File.WriteAllText(HashPath, ComputeHash());
+        }
 
-			Directory.Delete(tempDumperDirectory, true);
+        private static class AppDomainHelper
+        {
+            static AppDomainHelper()
+            {
+                var appDomain = typeof(AppDomain);
+                var evidenceType = typeof(AppDomain).Assembly.GetType("System.Security.Policy.Evidence");
+                AppDomainSetupType = typeof(AppDomain).Assembly.GetType("System.AppDomainSetup");
+                CreateDomainInternal =
+                    MethodInvoker.GetHandler(AccessTools.Method(appDomain, "CreateDomain",
+                                                                new[]
+                                                                {
+                                                                    typeof(string), evidenceType, AppDomainSetupType
+                                                                }));
+                CreateInstanceAndUnwrap =
+                    AccessTools.MethodDelegate<Func<AppDomain, string, string, object>>(AccessTools.Method(appDomain,
+                        nameof(CreateInstanceAndUnwrap), new[] {typeof(string), typeof(string)}));
+            }
 
-			File.WriteAllText(HashPath, ComputeHash());
-		}
+            public static Func<AppDomain, string, string, object> CreateInstanceAndUnwrap { get; }
+            private static FastInvokeHandler CreateDomainInternal { get; }
+            private static Type AppDomainSetupType { get; }
 
-		[Serializable]
-		private class AppDomainListener : MarshalByRefObject
-		{
-			public void DoPreloaderLog(object data, LogLevel level)
-			{
-				Preloader.Log.Log(level, data);
-			}
+            public static AppDomain CreateDomain(string name, AppDomainSetup setup)
+            {
+                var realSetup = AccessTools.CreateInstance(AppDomainSetupType);
+                Traverse.IterateProperties(setup, realSetup, (pSrc, pTgt) => pTgt.SetValue(pSrc.GetValue()));
+                return CreateDomainInternal(null, name, null, realSetup) as AppDomain;
+            }
 
-			public void DoDumperLog(object data, LogLevel level)
-			{
-				Il2cppDumperLogger.Log(level, data);
-			}
+            public class AppDomainSetup
+            {
+                public string ApplicationBase { get; set; }
+            }
+        }
 
-			public void DoUnhollowerLog(object data, LogLevel level)
-			{
-				Preloader.UnhollowerLog.Log(level, data);
-			}
-		}
+        [Serializable]
+        private class AppDomainListener : MarshalByRefObject
+        {
+            public void DoPreloaderLog(object data, LogLevel level)
+            {
+                Preloader.Log.Log(level, data);
+            }
 
-		[Serializable]
-		private class AppDomainRunner : MarshalByRefObject
-		{
-			public void Setup(string executablePath, string unhollowedPath)
-			{
-				Paths.SetExecutablePath(executablePath);
-				Preloader.IL2CPPUnhollowedPath = unhollowedPath;
-			}
+            public void DoDumperLog(object data, LogLevel level)
+            {
+                Il2cppDumperLogger.Log(level, data);
+            }
 
-			public void GenerateAssembliesInternal(AppDomainListener listener)
-			{
-				listener.DoPreloaderLog("Generating Il2CppUnhollower assemblies", LogLevel.Message);
+            public void DoUnhollowerLog(object data, LogLevel level)
+            {
+                Preloader.UnhollowerLog.Log(level, data);
+            }
+        }
 
-				Directory.CreateDirectory(Preloader.IL2CPPUnhollowedPath);
+        [Serializable]
+        private class AppDomainRunner : MarshalByRefObject
+        {
+            public void Setup(string executablePath, string unhollowedPath)
+            {
+                Paths.SetExecutablePath(executablePath);
+                Preloader.IL2CPPUnhollowedPath = unhollowedPath;
+            }
 
-				foreach (var dllFile in Directory.EnumerateFiles(Preloader.IL2CPPUnhollowedPath, "*.dll", SearchOption.TopDirectoryOnly))
-					File.Delete(dllFile);
+            public void GenerateAssembliesInternal(AppDomainListener listener)
+            {
+                listener.DoPreloaderLog("Generating Il2CppUnhollower assemblies", LogLevel.Message);
 
-				string tempDumperDirectory = Path.Combine(Preloader.IL2CPPUnhollowedPath, "temp");
-				Directory.CreateDirectory(tempDumperDirectory);
+                Directory.CreateDirectory(Preloader.IL2CPPUnhollowedPath);
 
+                foreach (var dllFile in Directory.EnumerateFiles(Preloader.IL2CPPUnhollowedPath, "*.dll",
+                                                                 SearchOption.TopDirectoryOnly))
+                    File.Delete(dllFile);
 
-				var dumperConfig = new Config
-				{
-					GenerateScript = false,
-					GenerateDummyDll = true
-				};
-
-				listener.DoPreloaderLog("Generating Il2CppDumper intermediate assemblies", LogLevel.Info);
-
-				Il2CppDumper.Il2CppDumper.PerformDump(GameAssemblyPath,
-					Path.Combine(Paths.GameRootPath, $"{Paths.ProcessName}_Data", "il2cpp_data", "Metadata", "global-metadata.dat"),
-					tempDumperDirectory,
-					dumperConfig,
-					s => listener.DoDumperLog(s, LogLevel.Debug));
+                var tempDumperDirectory = Path.Combine(Preloader.IL2CPPUnhollowedPath, "temp");
+                Directory.CreateDirectory(tempDumperDirectory);
 
 
+                var dumperConfig = new Config
+                {
+                    GenerateScript = false,
+                    GenerateDummyDll = true
+                };
 
-				listener.DoPreloaderLog("Executing Il2CppUnhollower generator", LogLevel.Info);
+                listener.DoPreloaderLog("Generating Il2CppDumper intermediate assemblies", LogLevel.Info);
 
-				UnhollowerBaseLib.LogSupport.InfoHandler += s => listener.DoUnhollowerLog(s, LogLevel.Info);
-				UnhollowerBaseLib.LogSupport.WarningHandler += s => listener.DoUnhollowerLog(s, LogLevel.Warning);
-				UnhollowerBaseLib.LogSupport.TraceHandler += s => listener.DoUnhollowerLog(s, LogLevel.Debug);
-				UnhollowerBaseLib.LogSupport.ErrorHandler += s => listener.DoUnhollowerLog(s, LogLevel.Error);
+                Il2CppDumper.Il2CppDumper.PerformDump(GameAssemblyPath,
+                                                      Path.Combine(Paths.GameRootPath, $"{Paths.ProcessName}_Data",
+                                                                   "il2cpp_data", "Metadata", "global-metadata.dat"),
+                                                      tempDumperDirectory,
+                                                      dumperConfig,
+                                                      s => listener.DoDumperLog(s, LogLevel.Debug));
 
-				var unhollowerOptions = new UnhollowerOptions
-				{
-					GameAssemblyPath = GameAssemblyPath,
-					MscorlibPath = Path.Combine(Paths.GameRootPath, "mono", "Managed", "mscorlib.dll"),
-					SourceDir = Path.Combine(tempDumperDirectory, "DummyDll"),
-					OutputDir = Preloader.IL2CPPUnhollowedPath,
-					UnityBaseLibsDir = Directory.Exists(UnityBaseLibsDirectory) ? UnityBaseLibsDirectory : null,
-					NoCopyUnhollowerLibs = true
-				};
 
-				AssemblyUnhollower.Program.Main(unhollowerOptions);
-			}
-		}
-	}
+                listener.DoPreloaderLog("Executing Il2CppUnhollower generator", LogLevel.Info);
+
+                LogSupport.InfoHandler += s => listener.DoUnhollowerLog(s, LogLevel.Info);
+                LogSupport.WarningHandler += s => listener.DoUnhollowerLog(s, LogLevel.Warning);
+                LogSupport.TraceHandler += s => listener.DoUnhollowerLog(s, LogLevel.Debug);
+                LogSupport.ErrorHandler += s => listener.DoUnhollowerLog(s, LogLevel.Error);
+
+                var unhollowerOptions = new UnhollowerOptions
+                {
+                    GameAssemblyPath = GameAssemblyPath,
+                    MscorlibPath = Path.Combine(Paths.GameRootPath, "mono", "Managed", "mscorlib.dll"),
+                    SourceDir = Path.Combine(tempDumperDirectory, "DummyDll"),
+                    OutputDir = Preloader.IL2CPPUnhollowedPath,
+                    UnityBaseLibsDir = Directory.Exists(UnityBaseLibsDirectory) ? UnityBaseLibsDirectory : null,
+                    NoCopyUnhollowerLibs = true
+                };
+
+                Program.Main(unhollowerOptions);
+            }
+        }
+    }
 }

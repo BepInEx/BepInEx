@@ -3,28 +3,28 @@ using BepInEx.Configuration;
 
 namespace BepInEx.Logging
 {
-	/// <summary>
-	/// Logs entries using a console spawned by BepInEx.
-	/// </summary>
-	public class ConsoleLogListener : ILogListener
-	{
-		/// <inheritdoc />
-		public void LogEvent(object sender, LogEventArgs eventArgs)
-		{
-			if ((eventArgs.Level & ConfigConsoleDisplayedLevel.Value) == 0)
-				return;
+    /// <summary>
+    ///     Logs entries using a console spawned by BepInEx.
+    /// </summary>
+    public class ConsoleLogListener : ILogListener
+    {
+        protected static readonly ConfigEntry<LogLevel> ConfigConsoleDisplayedLevel = ConfigFile.CoreConfig.Bind(
+         "Logging.Console", "LogLevels",
+         LogLevel.Fatal | LogLevel.Error | LogLevel.Warning | LogLevel.Message | LogLevel.Info,
+         "Only displays the specified log levels in the console output.");
 
-			ConsoleManager.SetConsoleColor(eventArgs.Level.GetConsoleColor());
-			Console.Write(eventArgs.ToStringLine());
-			ConsoleManager.SetConsoleColor(ConsoleColor.Gray);
-		}
+        /// <inheritdoc />
+        public void LogEvent(object sender, LogEventArgs eventArgs)
+        {
+            if ((eventArgs.Level & ConfigConsoleDisplayedLevel.Value) == 0)
+                return;
 
-		/// <inheritdoc />
-		public void Dispose() { }
+            ConsoleManager.SetConsoleColor(eventArgs.Level.GetConsoleColor());
+            Console.Write(eventArgs.ToStringLine());
+            ConsoleManager.SetConsoleColor(ConsoleColor.Gray);
+        }
 
-		protected static readonly ConfigEntry<LogLevel> ConfigConsoleDisplayedLevel = ConfigFile.CoreConfig.Bind(
-			"Logging.Console", "LogLevels",
-			LogLevel.Fatal | LogLevel.Error | LogLevel.Warning | LogLevel.Message | LogLevel.Info,
-			"Only displays the specified log levels in the console output.");
-	}
+        /// <inheritdoc />
+        public void Dispose() { }
+    }
 }

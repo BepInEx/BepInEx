@@ -3,26 +3,23 @@ using BepInEx.Logging;
 
 namespace BepInEx.IL2CPP
 {
-	public abstract class BasePlugin
-	{
-		public ManualLogSource Log { get; }
+    public abstract class BasePlugin
+    {
+        protected BasePlugin()
+        {
+            var metadata = MetadataHelper.GetMetadata(this);
 
-		public ConfigFile Config { get; }
+            Log = Logger.CreateLogSource(metadata.Name);
 
-		protected BasePlugin()
-		{
-			var metadata = MetadataHelper.GetMetadata(this);
+            Config = new ConfigFile(Utility.CombinePaths(Paths.ConfigPath, metadata.GUID + ".cfg"), false, metadata);
+        }
 
-			Log = Logger.CreateLogSource(metadata.Name);
+        public ManualLogSource Log { get; }
 
-			Config = new ConfigFile(Utility.CombinePaths(Paths.ConfigPath, metadata.GUID + ".cfg"), false, metadata);
-		}
+        public ConfigFile Config { get; }
 
-		public abstract void Load();
+        public abstract void Load();
 
-		public virtual bool Unload()
-		{
-			return false;
-		}
-	}
+        public virtual bool Unload() => false;
+    }
 }
