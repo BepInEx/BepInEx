@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace BepInEx.Logging
@@ -8,17 +8,25 @@ namespace BepInEx.Logging
     /// </summary>
     public static class Logger
     {
-        private static readonly ManualLogSource InternalLogSource = CreateLogSource("BepInEx");
+        private static readonly ManualLogSource InternalLogSource;
 
         /// <summary>
         ///     Collection of all log listeners that receive log events.
         /// </summary>
-        public static ICollection<ILogListener> Listeners { get; } = new List<ILogListener>();
+        public static ICollection<ILogListener> Listeners { get; }
 
         /// <summary>
         ///     Collection of all log source that output log events.
         /// </summary>
-        public static ICollection<ILogSource> Sources { get; } = new LogSourceCollection();
+        public static ICollection<ILogSource> Sources { get; }
+
+        static Logger()
+        {
+            Sources = new LogSourceCollection();
+            Listeners = new List<ILogListener>();
+
+            InternalLogSource = CreateLogSource("BepInEx");
+        }
 
         internal static void InternalLogEvent(object sender, LogEventArgs eventArgs)
         {
