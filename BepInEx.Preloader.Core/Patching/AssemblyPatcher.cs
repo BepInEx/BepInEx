@@ -270,7 +270,7 @@ namespace BepInEx.Preloader.Core
         {
             try
             {
-				assembly = AssemblyDefinition.ReadAssembly(path, TypeLoader.ReaderParameters);
+                assembly = AssemblyDefinition.ReadAssembly(path, TypeLoader.ReaderParameters);
                 return true;
             }
             catch (BadImageFormatException)
@@ -402,13 +402,15 @@ namespace BepInEx.Preloader.Core
 
                     if (ConfigLoadDumpedAssemblies.Value)
                     {
-                        loadedAssembly = Assembly.LoadFile(Path.Combine(DumpedAssembliesPath, filename));
+                        loadedAssembly = Assembly.LoadFrom(Path.Combine(DumpedAssembliesPath, filename));
                     }
                     else
                     {
-                        using var assemblyStream = new MemoryStream();
-                        assembly.Write(assemblyStream);
-                        loadedAssembly = Assembly.Load(assemblyStream.ToArray());
+                        using (var assemblyStream = new MemoryStream())
+                        {
+                            assembly.Write(assemblyStream);
+                            loadedAssembly = Assembly.Load(assemblyStream.ToArray());
+                        }
                     }
 
                     LoadedAssemblies.Add(filename, loadedAssembly);
