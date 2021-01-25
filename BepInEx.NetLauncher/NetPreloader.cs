@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -17,8 +17,11 @@ namespace BepInEx.NetLauncher
     {
         private static readonly ManualLogSource Log = PreloaderLogger.Log;
 
-        [DllImport("Kernel32.dll")]
-        private static extern bool SetDllDirectory([MarshalAs(UnmanagedType.LPTStr)] string lpPathName);
+        [DllImport("Kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        private static extern bool SetDllDirectory(string lpPathName);
+
+        [DllImport("Kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        private static extern bool AddDllDirectory(string lpPathName);
 
 
         public static void Start(string[] args)
@@ -48,6 +51,7 @@ namespace BepInEx.NetLauncher
 
             if (PlatformHelper.Is(Platform.Windows))
             {
+                AddDllDirectory(Paths.GameRootPath);
                 SetDllDirectory(Paths.GameRootPath);
             }
 
