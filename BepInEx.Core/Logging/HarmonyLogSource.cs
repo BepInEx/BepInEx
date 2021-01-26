@@ -27,10 +27,7 @@ namespace BepInEx.Logging
             HarmonyLogger.MessageReceived += HandleHarmonyMessage;
         }
 
-        public void Dispose()
-        {
-            HarmonyLogger.MessageReceived -= HandleHarmonyMessage;
-        }
+        public void Dispose() => HarmonyLogger.MessageReceived -= HandleHarmonyMessage;
 
         public string SourceName { get; } = "HarmonyX";
         public event EventHandler<LogEventArgs> LogEvent;

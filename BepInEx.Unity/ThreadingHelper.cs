@@ -192,7 +192,8 @@ namespace BepInEx
     public static class ThreadingExtensions
     {
         /// <inheritdoc cref="RunParallel{TIn,TOut}(IList{TIn},Func{TIn,TOut},int)" />
-        public static IEnumerable<TOut> RunParallel<TIn, TOut>(this IEnumerable<TIn> data, Func<TIn, TOut> work,
+        public static IEnumerable<TOut> RunParallel<TIn, TOut>(this IEnumerable<TIn> data,
+                                                               Func<TIn, TOut> work,
                                                                int workerCount = -1)
         {
             foreach (var result in RunParallel(data.ToList(), work))
@@ -213,7 +214,8 @@ namespace BepInEx
         ///     aborted.
         /// </exception>
         /// <exception cref="ArgumentException">Need at least 1 workerCount.</exception>
-        public static IEnumerable<TOut> RunParallel<TIn, TOut>(this IList<TIn> data, Func<TIn, TOut> work,
+        public static IEnumerable<TOut> RunParallel<TIn, TOut>(this IList<TIn> data,
+                                                               Func<TIn, TOut> work,
                                                                int workerCount = -1)
         {
             if (workerCount < 0)

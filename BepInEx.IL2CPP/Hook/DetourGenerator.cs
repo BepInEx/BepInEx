@@ -54,7 +54,9 @@ namespace BepInEx.IL2CPP
         ///     The minimum amount of length that the detour should consume. If the generated redirect is
         ///     smaller than this, the remaining space is padded with NOPs.
         /// </param>
-        public static void ApplyDetour(IntPtr functionPtr, IntPtr detourPtr, Architecture architecture,
+        public static void ApplyDetour(IntPtr functionPtr,
+                                       IntPtr detourPtr,
+                                       Architecture architecture,
                                        int minimumLength = 0)
         {
             var jmp = GenerateAbsoluteJump(detourPtr, functionPtr, architecture);
@@ -66,7 +68,8 @@ namespace BepInEx.IL2CPP
                 Marshal.WriteByte(functionPtr + i, 0x90);
         }
 
-        public static IntPtr CreateTrampolineFromFunction(IntPtr originalFuncPointer, out int trampolineLength,
+        public static IntPtr CreateTrampolineFromFunction(IntPtr originalFuncPointer,
+                                                          out int trampolineLength,
                                                           out int jmpLength)
         {
             var instructionBuffer = new byte[32];
@@ -100,9 +103,13 @@ namespace BepInEx.IL2CPP
         /// <param name="minimumTrampolineLength">Copies at least this many bytes of assembly from <see cref="functionPtr" />.</param>
         /// <param name="trampolineLength">Returns the total length of the trampoline, in bytes.</param>
         /// <param name="jmpLength">Returns the length of the jmp at the end of the trampoline, in bytes.</param>
-        public static void CreateTrampolineFromFunction(byte[] instructionBuffer, IntPtr functionPtr,
-                                                        IntPtr trampolinePtr, int minimumTrampolineLength,
-                                                        Architecture arch, out int trampolineLength, out int jmpLength)
+        public static void CreateTrampolineFromFunction(byte[] instructionBuffer,
+                                                        IntPtr functionPtr,
+                                                        IntPtr trampolinePtr,
+                                                        int minimumTrampolineLength,
+                                                        Architecture arch,
+                                                        out int trampolineLength,
+                                                        out int jmpLength)
         {
             // Decode original function up until we go past the needed bytes to write the jump to patchedFunctionPtr
 

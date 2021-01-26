@@ -49,8 +49,8 @@ namespace BepInEx.NetLauncher
                 return foundAssembly;
 
             if (LocalUtility.TryResolveDllAssembly(assemblyName, Paths.BepInExAssemblyDirectory, out foundAssembly)
-                || LocalUtility.TryResolveDllAssembly(assemblyName, Paths.PatcherPluginPath, out foundAssembly)
-                || LocalUtility.TryResolveDllAssembly(assemblyName, Paths.PluginPath, out foundAssembly))
+             || LocalUtility.TryResolveDllAssembly(assemblyName, Paths.PatcherPluginPath, out foundAssembly)
+             || LocalUtility.TryResolveDllAssembly(assemblyName, Paths.PluginPath, out foundAssembly))
                 return foundAssembly;
 
             return null;
@@ -78,7 +78,8 @@ namespace BepInEx.NetLauncher
                 string filename;
 
 #if DEBUG
-                filename = Path.Combine(Directory.GetCurrentDirectory(), Path.GetFileName(Process.GetCurrentProcess().MainModule.FileName));
+                filename =
+ Path.Combine(Directory.GetCurrentDirectory(), Path.GetFileName(Process.GetCurrentProcess().MainModule.FileName));
                 ResolveDirectories.Add(Path.GetDirectoryName(filename));
 
                 // for debugging within VS

@@ -21,9 +21,6 @@ namespace BepInEx.Tests
         }
 
         [AssemblyCleanup]
-        public static void CleanupAss()
-        {
-            Directory.Delete(_testPath, true);
-        }
+        public static void CleanupAss() => Directory.Delete(_testPath, true);
     }
 }

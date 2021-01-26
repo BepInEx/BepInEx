@@ -25,8 +25,11 @@ namespace BepInEx.Logging
         ///     when debugging crashes.
         /// </param>
         /// <param name="fileLimit">Maximum amount of concurrently opened log files. Can help with infinite game boot loops.</param>
-        public DiskLogListener(string localPath, LogLevel displayedLogLevel = LogLevel.Info, bool appendLog = false,
-                               bool delayedFlushing = true, int fileLimit = 5)
+        public DiskLogListener(string localPath,
+                               LogLevel displayedLogLevel = LogLevel.Info,
+                               bool appendLog = false,
+                               bool delayedFlushing = true,
+                               int fileLimit = 5)
         {
             DisplayedLogLevel = displayedLogLevel;
 
@@ -97,17 +100,14 @@ namespace BepInEx.Logging
         {
             FlushTimer?.Dispose();
 
-			try
-			{
-            LogWriter?.Flush();
-            LogWriter?.Dispose();
+            try
+            {
+                LogWriter?.Flush();
+                LogWriter?.Dispose();
+            }
+            catch (ObjectDisposedException) { }
         }
-			catch (ObjectDisposedException) {}
-		}
 
-        ~DiskLogListener()
-        {
-            Dispose();
-        }
+        ~DiskLogListener() => Dispose();
     }
 }

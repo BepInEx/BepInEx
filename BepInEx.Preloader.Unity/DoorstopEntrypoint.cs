@@ -95,8 +95,8 @@ namespace BepInEx.Preloader.Unity
                 return foundAssembly;
 
             if (Utility.TryResolveDllAssembly(assemblyName, Paths.BepInExAssemblyDirectory, out foundAssembly)
-                || Utility.TryResolveDllAssembly(assemblyName, Paths.PatcherPluginPath, out foundAssembly)
-                || Utility.TryResolveDllAssembly(assemblyName, Paths.PluginPath, out foundAssembly))
+             || Utility.TryResolveDllAssembly(assemblyName, Paths.PatcherPluginPath, out foundAssembly)
+             || Utility.TryResolveDllAssembly(assemblyName, Paths.PluginPath, out foundAssembly))
                 return foundAssembly;
 
             return null;

@@ -13,15 +13,15 @@ namespace BepInEx.Configuration
     {
         private T _typedValue;
 
-        internal ConfigEntry(ConfigFile configFile, ConfigDefinition definition, T defaultValue,
+        internal ConfigEntry(ConfigFile configFile,
+                             ConfigDefinition definition,
+                             T defaultValue,
                              ConfigDescription configDescription) : base(configFile, definition, typeof(T),
-                                                                         defaultValue, configDescription)
-        {
+                                                                         defaultValue, configDescription) =>
             configFile.SettingChanged += (sender, args) =>
             {
                 if (args.ChangedSetting == this) SettingChanged?.Invoke(sender, args);
             };
-        }
 
         /// <summary>
         ///     Value of this setting.
@@ -62,8 +62,11 @@ namespace BepInEx.Configuration
         /// <summary>
         ///     Types of defaultValue and definition.AcceptableValues have to be the same as settingType.
         /// </summary>
-        internal ConfigEntryBase(ConfigFile configFile, ConfigDefinition definition, Type settingType,
-                                 object defaultValue, ConfigDescription configDescription)
+        internal ConfigEntryBase(ConfigFile configFile,
+                                 ConfigDefinition definition,
+                                 Type settingType,
+                                 object defaultValue,
+                                 ConfigDescription configDescription)
         {
             ConfigFile = configFile ?? throw new ArgumentNullException(nameof(configFile));
             Definition = definition ?? throw new ArgumentNullException(nameof(definition));
@@ -147,10 +150,7 @@ namespace BepInEx.Configuration
         /// <summary>
         ///     Trigger setting changed event.
         /// </summary>
-        protected void OnSettingChanged(object sender)
-        {
-            ConfigFile.OnSettingChanged(sender, this);
-        }
+        protected void OnSettingChanged(object sender) => ConfigFile.OnSettingChanged(sender, this);
 
         /// <summary>
         ///     Write a description of this setting using all available metadata.

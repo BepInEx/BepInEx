@@ -14,10 +14,7 @@ namespace BepInEx.Configuration.Tests
         private static ConcurrentBag<ConfigFile> _toRemove;
 
         [ClassInitialize]
-        public static void Init(TestContext context)
-        {
-            _toRemove = new ConcurrentBag<ConfigFile>();
-        }
+        public static void Init(TestContext context) => _toRemove = new ConcurrentBag<ConfigFile>();
 
         [ClassCleanup]
         public static void Cleanup()
@@ -36,10 +33,7 @@ namespace BepInEx.Configuration.Tests
         }
 
         [TestMethod]
-        public void SaveTest()
-        {
-            MakeConfig().Save();
-        }
+        public void SaveTest() => MakeConfig().Save();
 
         [TestMethod]
         public void SaveTestValueChange()
@@ -303,7 +297,7 @@ namespace BepInEx.Configuration.Tests
             var w = c.Bind("Cat", "Key", "", new ConfigDescription("Test"));
 
             var unescaped = @"D:\test\p ath";
-            foreach (var testVal in new[] {unescaped, @"D:\\test\\p ath"})
+            foreach (var testVal in new[] { unescaped, @"D:\\test\\p ath" })
             {
                 File.WriteAllText(c.ConfigFilePath, $"[Cat]\n# Test\nKey={testVal}\n");
                 c.Reload();

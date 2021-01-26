@@ -29,7 +29,7 @@ namespace BepInEx.Unity.Logging
             {
                 try
                 {
-                    methodInfo.Invoke(null, new object[] {""});
+                    methodInfo.Invoke(null, new object[] { "" });
                 }
                 catch
                 {

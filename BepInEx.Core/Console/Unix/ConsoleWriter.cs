@@ -22,12 +22,12 @@ namespace BepInEx.Unix
 
                 Func<Stream, Encoding, bool, StreamWriter> GetCtor(int[] perm)
                 {
-                    var parameters = new[] {typeof(Stream), typeof(Encoding), typeof(bool)};
+                    var parameters = new[] { typeof(Stream), typeof(Encoding), typeof(bool) };
                     var ctor = AccessTools.Constructor(cStreamWriter, perm.Select(i => parameters[i]).ToArray());
                     if (ctor != null)
                         return (stream, encoding, l) =>
                         {
-                            var vals = new object[] {stream, encoding, l};
+                            var vals = new object[] { stream, encoding, l };
                             return (StreamWriter) ctor.Invoke(perm.Select(i => vals[i]).ToArray());
                         };
                     return null;
@@ -35,8 +35,8 @@ namespace BepInEx.Unix
 
                 var ctorParams = new[]
                 {
-                    new[] {0, 1, 2}, // Unity 5.x and up
-                    new[] {0, 1}     // Unity 4.7 and older
+                    new[] { 0, 1, 2 }, // Unity 5.x and up
+                    new[] { 0, 1 }     // Unity 4.7 and older
                 };
 
                 cStreamWriterConstructor = ctorParams.Select(GetCtor).FirstOrDefault(f => f != null);

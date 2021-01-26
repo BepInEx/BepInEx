@@ -45,9 +45,9 @@ namespace BepInEx.IL2CPP
                 return foundAssembly;
 
             if (Utility.TryResolveDllAssembly(assemblyName, Paths.BepInExAssemblyDirectory, out foundAssembly)
-                || Utility.TryResolveDllAssembly(assemblyName, Paths.PatcherPluginPath, out foundAssembly)
-                || Utility.TryResolveDllAssembly(assemblyName, Paths.PluginPath, out foundAssembly)
-                || Utility.TryResolveDllAssembly(assemblyName, Preloader.IL2CPPUnhollowedPath, out foundAssembly))
+             || Utility.TryResolveDllAssembly(assemblyName, Paths.PatcherPluginPath, out foundAssembly)
+             || Utility.TryResolveDllAssembly(assemblyName, Paths.PluginPath, out foundAssembly)
+             || Utility.TryResolveDllAssembly(assemblyName, Preloader.IL2CPPUnhollowedPath, out foundAssembly))
                 return foundAssembly;
 
             return null;

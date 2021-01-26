@@ -90,7 +90,7 @@ namespace BepInEx.NetLauncher
                 }
                 else
                 {
-                    Log.LogDebug("Using entrypoint assembly from disk"); 
+                    Log.LogDebug("Using entrypoint assembly from disk");
                     entrypointAssembly = Assembly.LoadFrom(executablePath);
                 }
             }
@@ -104,15 +104,15 @@ namespace BepInEx.NetLauncher
 
             AssemblyFix.Execute(entrypointAssembly);
 
-            entrypointAssembly.EntryPoint.Invoke(null, new [] { args });
+            entrypointAssembly.EntryPoint.Invoke(null, new[] { args });
         }
 
         #region Config
 
         private static readonly ConfigEntry<string> ConfigEntrypointExecutable = ConfigFile.CoreConfig.Bind<string>(
-            "Preloader.Entrypoint", "Assembly",
-            null,
-            "The local filename of the .NET executable to target.");
+         "Preloader.Entrypoint", "Assembly",
+         null,
+         "The local filename of the .NET executable to target.");
 
         #endregion
     }

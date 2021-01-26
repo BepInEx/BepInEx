@@ -69,10 +69,7 @@ namespace BepInEx.IL2CPP.Hook
         ///     Constructs a new instance of <see cref="NativeDetour" /> method patcher.
         /// </summary>
         /// <param name="original"></param>
-        public IL2CPPDetourMethodPatcher(MethodBase original) : base(original)
-        {
-            Init();
-        }
+        public IL2CPPDetourMethodPatcher(MethodBase original) : base(original) => Init();
 
         private void Init()
         {
@@ -272,10 +269,7 @@ namespace BepInEx.IL2CPP.Hook
             return dmd;
         }
 
-        private static void ReportException(Exception ex)
-        {
-            DetourLogger.LogError(ex.ToString());
-        }
+        private static void ReportException(Exception ex) => DetourLogger.LogError(ex.ToString());
 
         private static Type ConvertManagedTypeToIL2CPPType(Type managedType)
         {
@@ -322,7 +316,9 @@ namespace BepInEx.IL2CPP.Hook
                                                              .GetValue(null);
         }
 
-        private static void EmitConvertArgumentToManaged(ILGenerator il, int argIndex, Type managedParamType,
+        private static void EmitConvertArgumentToManaged(ILGenerator il,
+                                                         int argIndex,
+                                                         Type managedParamType,
                                                          out LocalBuilder variable)
         {
             variable = null;
@@ -359,7 +355,7 @@ namespace BepInEx.IL2CPP.Hook
                 il.Emit(OpCodes.Br_S, endLabel);
 
                 il.MarkLabel(notNullLabel);
-                il.Emit(OpCodes.Newobj, AccessTools.DeclaredConstructor(originalType, new[] {typeof(IntPtr)}));
+                il.Emit(OpCodes.Newobj, AccessTools.DeclaredConstructor(originalType, new[] { typeof(IntPtr) }));
 
                 il.MarkLabel(endLabel);
             }
@@ -406,15 +402,15 @@ namespace BepInEx.IL2CPP.Hook
                                                          TypeAttributes.SequentialLayout, typeof(System.ValueType));
             var fb = tb.DefineField("buffer", typeof(IntPtr), FieldAttributes.Public);
             fb.SetCustomAttribute(new
-                                      CustomAttributeBuilder(AccessTools.Constructor(typeof(MarshalAsAttribute), new[] {typeof(UnmanagedType)}),
-                                                             new object[] {UnmanagedType.ByValArray},
+                                      CustomAttributeBuilder(AccessTools.Constructor(typeof(MarshalAsAttribute), new[] { typeof(UnmanagedType) }),
+                                                             new object[] { UnmanagedType.ByValArray },
                                                              new[]
                                                              {
                                                                  AccessTools.Field(typeof(MarshalAsAttribute),
                                                                      nameof(MarshalAsAttribute.SizeConst)),
                                                                  AccessTools.Field(typeof(MarshalAsAttribute),
                                                                      nameof(MarshalAsAttribute.ArraySubType))
-                                                             }, new object[] {size, UnmanagedType.U1}));
+                                                             }, new object[] { size, UnmanagedType.U1 }));
 
             var type = tb.CreateType();
             return FixedStructCache[size] = type;

@@ -58,7 +58,7 @@ namespace BepInEx.Unity.Logging
             {
                 var registerLogCallback =
                     typeof(Application).GetMethod("RegisterLogCallback", BindingFlags.Public | BindingFlags.Static);
-                registerLogCallback.Invoke(null, new object[] {callback});
+                registerLogCallback.Invoke(null, new object[] { callback });
                 //UnsubscribeAction = () => registerLogCallback.Invoke(null, new object[] { null });
             }
         }

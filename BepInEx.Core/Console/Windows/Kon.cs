@@ -103,7 +103,7 @@ namespace BepInEx.ConsoleUtil
             if (!flag)
                 return;
             var num = bufferInfo.wAttributes;
-            num &= isBackground ? (short)-241 : (short)-16;
+            num &= isBackground ? (short) -241 : (short) -16;
             num = (short) ((ushort) num | (ushort) color);
             SetConsoleTextAttribute(conOut, num);
         }

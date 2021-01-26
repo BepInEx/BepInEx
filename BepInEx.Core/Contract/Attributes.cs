@@ -186,15 +186,9 @@ namespace BepInEx
         /// </summary>
         public string IncompatibilityGUID { get; protected set; }
 
-        void ICacheable.Save(BinaryWriter bw)
-        {
-            bw.Write(IncompatibilityGUID);
-        }
+        void ICacheable.Save(BinaryWriter bw) => bw.Write(IncompatibilityGUID);
 
-        void ICacheable.Load(BinaryReader br)
-        {
-            IncompatibilityGUID = br.ReadString();
-        }
+        void ICacheable.Load(BinaryReader br) => IncompatibilityGUID = br.ReadString();
 
         internal static IEnumerable<BepInIncompatibility> FromCecilType(TypeDefinition td)
         {

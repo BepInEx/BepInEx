@@ -11,7 +11,7 @@ namespace BepInEx.Configuration
     /// <inheritdoc />
     public class ConfigDefinition : IEquatable<ConfigDefinition>
     {
-        private static readonly char[] _invalidConfigChars = {'=', '\n', '\t', '\\', '"', '\'', '[', ']'};
+        private static readonly char[] _invalidConfigChars = { '=', '\n', '\t', '\\', '"', '\'', '[', ']' };
 
         /// <summary>
         ///     Create a new definition. Definitions with same section and key are equal.
@@ -52,7 +52,7 @@ namespace BepInEx.Configuration
         {
             if (other == null) return false;
             return string.Equals(Key, other.Key)
-                   && string.Equals(Section, other.Section);
+                && string.Equals(Section, other.Section);
         }
 
         private static void CheckInvalidConfigChars(string val, string name)

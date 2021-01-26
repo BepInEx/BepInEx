@@ -45,36 +45,37 @@ namespace BepInEx.Logging
         ///     Writes a message to the underlying <see cref="ManualLogSource" /> instance.
         /// </summary>
         /// <param name="message">The message to write.</param>
-        public override void Write(string message)
-        {
-            LogSource.LogInfo(message);
-        }
+        public override void Write(string message) => LogSource.LogInfo(message);
 
         /// <summary>
         ///     Writes a message and a newline to the underlying <see cref="ManualLogSource" /> instance.
         /// </summary>
         /// <param name="message">The message to write.</param>
-        public override void WriteLine(string message)
-        {
-            LogSource.LogInfo(message);
-        }
+        public override void WriteLine(string message) => LogSource.LogInfo(message);
 
         /// <inheritdoc />
-        public override void TraceEvent(TraceEventCache eventCache, string source, TraceEventType eventType, int id,
-                                        string format, params object[] args) =>
+        public override void TraceEvent(TraceEventCache eventCache,
+                                        string source,
+                                        TraceEventType eventType,
+                                        int id,
+                                        string format,
+                                        params object[] args) =>
             TraceEvent(eventCache, source, eventType, id, string.Format(format, args));
 
         /// <inheritdoc />
-        public override void TraceEvent(TraceEventCache eventCache, string source, TraceEventType eventType, int id,
+        public override void TraceEvent(TraceEventCache eventCache,
+                                        string source,
+                                        TraceEventType eventType,
+                                        int id,
                                         string message)
         {
             var level = eventType switch
             {
-                TraceEventType.Critical => LogLevel.Fatal,
-                TraceEventType.Error => LogLevel.Error,
-                TraceEventType.Warning => LogLevel.Warning,
+                TraceEventType.Critical    => LogLevel.Fatal,
+                TraceEventType.Error       => LogLevel.Error,
+                TraceEventType.Warning     => LogLevel.Warning,
                 TraceEventType.Information => LogLevel.Info,
-                _ => LogLevel.Debug
+                _                          => LogLevel.Debug
             };
             LogSource.Log(level, $"{message}".Trim());
         }

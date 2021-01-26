@@ -71,8 +71,12 @@ namespace BepInEx.IL2CPP.Hook.Allocator
             public static vm_region_64Delegate vm_region_64;
 #pragma warning restore 649
 
-            public delegate int vm_region_64Delegate(nint target_task, ref nint address, ref nint size, int flavor,
-                                                     ref vm_region_basic_info_64 info, ref uint infoCnt,
+            public delegate int vm_region_64Delegate(nint target_task,
+                                                     ref nint address,
+                                                     ref nint size,
+                                                     int flavor,
+                                                     ref vm_region_basic_info_64 info,
+                                                     ref uint infoCnt,
                                                      ref uint object_name);
             // ReSharper restore InconsistentNaming
         }

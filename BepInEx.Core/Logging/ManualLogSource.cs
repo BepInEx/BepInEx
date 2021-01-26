@@ -27,10 +27,7 @@ namespace BepInEx.Logging
         /// </summary>
         /// <param name="level">Log levels to attach to the message. Multiple can be used with bitwise ORing.</param>
         /// <param name="data">Data to log.</param>
-        public void Log(LogLevel level, object data)
-        {
-            LogEvent?.Invoke(this, new LogEventArgs(data, level, this));
-        }
+        public void Log(LogLevel level, object data) => LogEvent?.Invoke(this, new LogEventArgs(data, level, this));
 
         /// <summary>
         ///     Logs a message with <see cref="LogLevel.Fatal" /> level.

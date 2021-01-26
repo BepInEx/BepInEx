@@ -111,16 +111,14 @@ namespace BepInEx.IL2CPP.Hook.Allocator
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsInRelJmpRange(nint src, nint dst) => dst - src is <= int.MaxValue and >= int.MinValue;
 
-        private static PageAllocator Init()
-        {
-            return PlatformHelper.Current switch
+        private static PageAllocator Init() =>
+            PlatformHelper.Current switch
             {
                 var v when v.Is(Platform.Windows) => new WindowsPageAllocator(),
-                var v when v.Is(Platform.Linux) => new LinuxPageAllocator(),
-                var v when v.Is(Platform.MacOS) => new MacOsPageAllocator(),
-                _ => throw new NotSupportedException()
+                var v when v.Is(Platform.Linux)   => new LinuxPageAllocator(),
+                var v when v.Is(Platform.MacOS)   => new MacOsPageAllocator(),
+                _                                 => throw new NotSupportedException()
             };
-        }
 
         private class PageChunk
         {

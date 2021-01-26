@@ -99,7 +99,7 @@ namespace BepInEx.IL2CPP
                                                                 }));
                 CreateInstanceAndUnwrap =
                     AccessTools.MethodDelegate<Func<AppDomain, string, string, object>>(AccessTools.Method(appDomain,
-                        nameof(CreateInstanceAndUnwrap), new[] {typeof(string), typeof(string)}));
+                        nameof(CreateInstanceAndUnwrap), new[] { typeof(string), typeof(string) }));
             }
 
             public static Func<AppDomain, string, string, object> CreateInstanceAndUnwrap { get; }
@@ -122,20 +122,11 @@ namespace BepInEx.IL2CPP
         [Serializable]
         private class AppDomainListener : MarshalByRefObject
         {
-            public void DoPreloaderLog(object data, LogLevel level)
-            {
-                Preloader.Log.Log(level, data);
-            }
+            public void DoPreloaderLog(object data, LogLevel level) => Preloader.Log.Log(level, data);
 
-            public void DoDumperLog(object data, LogLevel level)
-            {
-                Il2cppDumperLogger.Log(level, data);
-            }
+            public void DoDumperLog(object data, LogLevel level) => Il2cppDumperLogger.Log(level, data);
 
-            public void DoUnhollowerLog(object data, LogLevel level)
-            {
-                Preloader.UnhollowerLog.Log(level, data);
-            }
+            public void DoUnhollowerLog(object data, LogLevel level) => Preloader.UnhollowerLog.Log(level, data);
         }
 
         [Serializable]

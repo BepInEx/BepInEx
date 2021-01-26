@@ -19,12 +19,12 @@ namespace BepInEx.IL2CPP.Logging
         {
             var level = type switch
             {
-                LogType.Error => LogLevel.Error,
-                LogType.Assert => LogLevel.Debug,
-                LogType.Warning => LogLevel.Warning,
-                LogType.Log => LogLevel.Message,
+                LogType.Error     => LogLevel.Error,
+                LogType.Assert    => LogLevel.Debug,
+                LogType.Warning   => LogLevel.Warning,
+                LogType.Log       => LogLevel.Message,
                 LogType.Exception => LogLevel.Error,
-                _ => LogLevel.Message
+                _                 => LogLevel.Message
             };
             LogEvent?.Invoke(this, new LogEventArgs(logLine, level, this));
         }

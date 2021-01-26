@@ -111,7 +111,9 @@ namespace BepInEx.IL2CPP.Hook.Allocator
             public static extern int VirtualQuery(nint lpAddress, ref MEMORY_BASIC_INFORMATION lpBuffer, int dwLength);
 
             [DllImport("kernel32", SetLastError = true)]
-            public static extern nint VirtualAlloc(nint lpAddress, nuint dwSize, AllocationType flAllocationType,
+            public static extern nint VirtualAlloc(nint lpAddress,
+                                                   nuint dwSize,
+                                                   AllocationType flAllocationType,
                                                    ProtectConstant flProtect);
 
             [DllImport("kernel32", SetLastError = true)]

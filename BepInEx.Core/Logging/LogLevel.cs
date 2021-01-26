@@ -81,13 +81,13 @@ namespace BepInEx.Logging
             level = GetHighestLevel(level);
             return level switch
             {
-                LogLevel.Fatal => ConsoleColor.Red,
-                LogLevel.Error => ConsoleColor.DarkRed,
+                LogLevel.Fatal   => ConsoleColor.Red,
+                LogLevel.Error   => ConsoleColor.DarkRed,
                 LogLevel.Warning => ConsoleColor.Yellow,
                 LogLevel.Message => ConsoleColor.White,
-                LogLevel.Info => ConsoleColor.DarkGray,
-                LogLevel.Debug => ConsoleColor.DarkGray,
-                _ => ConsoleColor.Gray
+                LogLevel.Info    => ConsoleColor.DarkGray,
+                LogLevel.Debug   => ConsoleColor.DarkGray,
+                _                => ConsoleColor.Gray
             };
         }
     }

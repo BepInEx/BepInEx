@@ -39,10 +39,7 @@ namespace BepInEx.IL2CPP.Hook
         public bool IsValid { get; protected set; } = true;
         public bool IsApplied { get; protected set; }
 
-        public void Apply()
-        {
-            Apply(null);
-        }
+        public void Apply() => Apply(null);
 
 
         public void Undo()
@@ -60,10 +57,7 @@ namespace BepInEx.IL2CPP.Hook
             IsApplied = false;
         }
 
-        public void Free()
-        {
-            IsValid = false;
-        }
+        public void Free() => IsValid = false;
 
         public MethodBase GenerateTrampoline(MethodBase signature = null)
         {
@@ -166,7 +160,9 @@ namespace BepInEx.IL2CPP.Hook
             TrampolineJmpSize = jmpLength;
         }
 
-        public static FastNativeDetour CreateAndApply<T>(IntPtr from, T to, out T original,
+        public static FastNativeDetour CreateAndApply<T>(IntPtr from,
+                                                         T to,
+                                                         out T original,
                                                          CallingConvention? callingConvention = null) where T : Delegate
         {
             var toPtr = callingConvention != null

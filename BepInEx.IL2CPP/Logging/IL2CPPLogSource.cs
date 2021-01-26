@@ -17,10 +17,8 @@ namespace BepInEx.IL2CPP.Logging
 
         public void Dispose() { }
 
-        private void IL2CPPLogCallback(string message)
-        {
+        private void IL2CPPLogCallback(string message) =>
             LogEvent?.Invoke(this, new LogEventArgs(message.Trim(), LogLevel.Message, this));
-        }
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void IL2CPPLogCallbackDelegate([In] [MarshalAs(UnmanagedType.LPStr)] string message);

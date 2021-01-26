@@ -141,7 +141,7 @@ namespace BepInEx.Unix
 
             var colorOffset =
                 baseOffset
-                + intSize * (int) TermInfoNumbers.MaxColors; // Finally the offset for the max color integer
+              + intSize * (int) TermInfoNumbers.MaxColors; // Finally the offset for the max color integer
 
             //int stringOffset = baseOffset + (intSize * intFieldLength);
 
@@ -168,13 +168,13 @@ namespace BepInEx.Unix
 
         private static int GetInt32(byte[] buffer, int offset) =>
             buffer[offset]
-            | (buffer[offset + 1] << 8)
-            | (buffer[offset + 2] << 16)
-            | (buffer[offset + 3] << 24);
+          | (buffer[offset + 1] << 8)
+          | (buffer[offset + 2] << 16)
+          | (buffer[offset + 3] << 24);
 
         private static short GetInt16(byte[] buffer, int offset) =>
             (short) (buffer[offset]
-                     | (buffer[offset + 1] << 8));
+                   | (buffer[offset + 1] << 8));
 
         private static int GetInteger(int intSize, byte[] buffer, int offset) =>
             intSize == 2

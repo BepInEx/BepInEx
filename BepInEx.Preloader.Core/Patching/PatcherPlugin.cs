@@ -36,15 +36,9 @@ namespace BepInEx.Preloader.Core
         public string TypeName { get; set; } = string.Empty;
 
         /// <inheritdoc />
-        public void Save(BinaryWriter bw)
-        {
-            bw.Write(TypeName);
-        }
+        public void Save(BinaryWriter bw) => bw.Write(TypeName);
 
         /// <inheritdoc />
-        public void Load(BinaryReader br)
-        {
-            TypeName = br.ReadString();
-        }
+        public void Load(BinaryReader br) => TypeName = br.ReadString();
     }
 }

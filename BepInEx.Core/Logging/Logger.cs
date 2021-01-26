@@ -38,10 +38,7 @@ namespace BepInEx.Logging
         /// </summary>
         /// <param name="level">The level of the entry.</param>
         /// <param name="data">The data of the entry.</param>
-        internal static void Log(LogLevel level, object data)
-        {
-            InternalLogSource.Log(level, data);
-        }
+        internal static void Log(LogLevel level, object data) => InternalLogSource.Log(level, data);
 
         internal static void LogFatal(object data) => Log(LogLevel.Fatal, data);
         internal static void LogError(object data) => Log(LogLevel.Error, data);

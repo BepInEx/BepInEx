@@ -75,7 +75,7 @@ namespace BepInEx.Bootstrap
         static TypeLoader()
         {
             CecilResolver = new DefaultAssemblyResolver();
-            ReaderParameters = new ReaderParameters {AssemblyResolver = CecilResolver};
+            ReaderParameters = new ReaderParameters { AssemblyResolver = CecilResolver };
 
             CecilResolver.ResolveFailure += CecilResolveOnFailure;
         }
@@ -126,7 +126,8 @@ namespace BepInEx.Bootstrap
         public static Dictionary<string, List<T>> FindPluginTypes<T>(string directory,
                                                                      Func<TypeDefinition, string, T> typeSelector,
                                                                      Func<AssemblyDefinition, bool> assemblyFilter =
-                                                                         null, string cacheName = null)
+                                                                         null,
+                                                                     string cacheName = null)
             where T : ICacheable, new()
         {
             var result = new Dictionary<string, List<T>>();
@@ -220,7 +221,7 @@ namespace BepInEx.Bootstrap
                             items.Add(entry);
                         }
 
-                        result[entryIdentifier] = new CachedAssembly<T> {Timestamp = entryDate, CacheItems = items};
+                        result[entryIdentifier] = new CachedAssembly<T> { Timestamp = entryDate, CacheItems = items };
                     }
                 }
             }

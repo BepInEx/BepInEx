@@ -31,17 +31,11 @@ namespace BepInEx.Unix
         public IntPtr FileHandle { get; }
 
 
-        public override void Flush()
-        {
-            UnixStreamHelper.fflush(FileHandle);
-        }
+        public override void Flush() => UnixStreamHelper.fflush(FileHandle);
 
         public override long Seek(long offset, SeekOrigin origin) => throw new InvalidOperationException();
 
-        public override void SetLength(long value)
-        {
-            throw new InvalidOperationException();
-        }
+        public override void SetLength(long value) => throw new InvalidOperationException();
 
         public override int Read(byte[] buffer, int offset, int count)
         {
@@ -65,10 +59,7 @@ namespace BepInEx.Unix
             gcHandle.Free();
         }
 
-        private void ReleaseUnmanagedResources()
-        {
-            UnixStreamHelper.fclose(FileHandle);
-        }
+        private void ReleaseUnmanagedResources() => UnixStreamHelper.fclose(FileHandle);
 
         protected override void Dispose(bool disposing)
         {
@@ -76,9 +67,6 @@ namespace BepInEx.Unix
             base.Dispose(disposing);
         }
 
-        ~UnixStream()
-        {
-            Dispose(false);
-        }
+        ~UnixStream() => Dispose(false);
     }
 }

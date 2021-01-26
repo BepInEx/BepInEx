@@ -17,8 +17,10 @@ namespace BepInEx.NetLauncher
         /// <param name="directory">Directory to search the assembly from.</param>
         /// <param name="assembly">The loaded assembly.</param>
         /// <returns>True, if the assembly was found and loaded. Otherwise, false.</returns>
-        private static bool TryResolveDllAssembly<T>(AssemblyName assemblyName, string directory,
-                                                     Func<string, T> loader, out T assembly) where T : class
+        private static bool TryResolveDllAssembly<T>(AssemblyName assemblyName,
+                                                     string directory,
+                                                     Func<string, T> loader,
+                                                     out T assembly) where T : class
         {
             assembly = null;
 

@@ -82,7 +82,7 @@ namespace BepInEx.Preloader.Unity
                 {
                     assemblyPatcher.PatcherPlugins.Add(new PatcherPlugin
                     {
-                        TargetDLLs = () => new[] {ConfigEntrypointAssembly.Value},
+                        TargetDLLs = () => new[] { ConfigEntrypointAssembly.Value },
                         Patcher = PatchEntrypoint,
                         TypeName = "BepInEx.Chainloader"
                     });
@@ -192,7 +192,7 @@ namespace BepInEx.Preloader.Unity
                         cctor = new MethodDefinition(".cctor",
                                                      MethodAttributes.Static | MethodAttributes.Private |
                                                      MethodAttributes.HideBySig
-                                                     | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
+                                                   | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
                                                      assembly.MainModule.ImportReference(typeof(void)));
 
                         entryType.Methods.Add(cctor);

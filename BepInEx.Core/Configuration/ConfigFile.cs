@@ -109,7 +109,8 @@ namespace BepInEx.Configuration
         }
 
         void ICollection<KeyValuePair<ConfigDefinition, ConfigEntryBase>>.CopyTo(
-            KeyValuePair<ConfigDefinition, ConfigEntryBase>[] array, int arrayIndex)
+            KeyValuePair<ConfigDefinition, ConfigEntryBase>[] array,
+            int arrayIndex)
         {
             lock (_ioLock)
                 ((ICollection<KeyValuePair<ConfigDefinition, ConfigEntryBase>>) Entries).CopyTo(array, arrayIndex);
@@ -143,10 +144,8 @@ namespace BepInEx.Configuration
         }
 
         /// <inheritdoc />
-        public void Add(ConfigDefinition key, ConfigEntryBase value)
-        {
+        public void Add(ConfigDefinition key, ConfigEntryBase value) =>
             throw new InvalidOperationException("Directly adding a config entry is not supported");
-        }
 
         /// <inheritdoc />
         public bool Remove(ConfigDefinition key)
@@ -251,7 +250,7 @@ namespace BepInEx.Configuration
                         continue;
                     }
 
-                    var split = line.Split(new[] {'='}, 2); //actual config line
+                    var split = line.Split(new[] { '=' }, 2); //actual config line
                     if (split.Length != 2)
                         continue; //empty/invalid line
 
@@ -399,7 +398,8 @@ namespace BepInEx.Configuration
         /// <param name="configDefinition">Section and Key of the setting.</param>
         /// <param name="defaultValue">Value of the setting if the setting was not created yet.</param>
         /// <param name="configDescription">Description of the setting shown to the user and other metadata.</param>
-        public ConfigEntry<T> Bind<T>(ConfigDefinition configDefinition, T defaultValue,
+        public ConfigEntry<T> Bind<T>(ConfigDefinition configDefinition,
+                                      T defaultValue,
                                       ConfigDescription configDescription = null)
         {
             if (!TomlTypeConverter.CanConvert(typeof(T)))
@@ -438,7 +438,9 @@ namespace BepInEx.Configuration
         /// <param name="key">Name of the setting.</param>
         /// <param name="defaultValue">Value of the setting if the setting was not created yet.</param>
         /// <param name="configDescription">Description of the setting shown to the user and other metadata.</param>
-        public ConfigEntry<T> Bind<T>(string section, string key, T defaultValue,
+        public ConfigEntry<T> Bind<T>(string section,
+                                      string key,
+                                      T defaultValue,
                                       ConfigDescription configDescription = null) =>
             Bind(new ConfigDefinition(section, key), defaultValue, configDescription);
 
@@ -464,7 +466,8 @@ namespace BepInEx.Configuration
         /// <param name="defaultValue">Value of the setting if the setting was not created yet.</param>
         /// <param name="configDescription">Description of the setting shown to the user and other metadata.</param>
         [Obsolete("Use Bind instead")]
-        public ConfigEntry<T> AddSetting<T>(ConfigDefinition configDefinition, T defaultValue,
+        public ConfigEntry<T> AddSetting<T>(ConfigDefinition configDefinition,
+                                            T defaultValue,
                                             ConfigDescription configDescription = null) =>
             Bind(configDefinition, defaultValue, configDescription);
 
@@ -479,7 +482,9 @@ namespace BepInEx.Configuration
         /// <param name="defaultValue">Value of the setting if the setting was not created yet.</param>
         /// <param name="configDescription">Description of the setting shown to the user and other metadata.</param>
         [Obsolete("Use Bind instead")]
-        public ConfigEntry<T> AddSetting<T>(string section, string key, T defaultValue,
+        public ConfigEntry<T> AddSetting<T>(string section,
+                                            string key,
+                                            T defaultValue,
                                             ConfigDescription configDescription = null) =>
             Bind(new ConfigDefinition(section, key), defaultValue, configDescription);
 

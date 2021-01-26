@@ -18,8 +18,8 @@ namespace BepInEx
         // As such, we're trying to use SafeFileHandle when it's available and go back to IntPtr overload if not available
         private static readonly ConstructorInfo FileStreamCtor = new[]
         {
-            AccessTools.Constructor(typeof(FileStream), new[] {typeof(SafeFileHandle), typeof(FileAccess)}),
-            AccessTools.Constructor(typeof(FileStream), new[] {typeof(IntPtr), typeof(FileAccess)})
+            AccessTools.Constructor(typeof(FileStream), new[] { typeof(SafeFileHandle), typeof(FileAccess) }),
+            AccessTools.Constructor(typeof(FileStream), new[] { typeof(IntPtr), typeof(FileAccess) })
         }.FirstOrDefault(m => m != null);
 
         public TextWriter StandardOut { get; private set; }
@@ -85,10 +85,7 @@ namespace BepInEx
             Kon.ForegroundColor = color;
         }
 
-        public void SetConsoleTitle(string title)
-        {
-            ConsoleWindow.Title = title;
-        }
+        public void SetConsoleTitle(string title) => ConsoleWindow.Title = title;
 
         private static FileStream OpenFileStream(IntPtr handle)
         {

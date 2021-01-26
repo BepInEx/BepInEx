@@ -78,7 +78,8 @@ namespace BepInEx
         /// </summary>
         public static string ProcessName { get; private set; }
 
-        public static void SetExecutablePath(string executablePath, string bepinRootPath = null,
+        public static void SetExecutablePath(string executablePath,
+                                             string bepinRootPath = null,
                                              string managedPath = null)
         {
             ExecutablePath = executablePath;
@@ -100,9 +101,7 @@ namespace BepInEx
             CachePath = Path.Combine(BepInExRootPath, "cache");
         }
 
-        internal static void SetPluginPath(string pluginPath)
-        {
+        internal static void SetPluginPath(string pluginPath) =>
             PluginPath = Utility.CombinePaths(BepInExRootPath, pluginPath);
-        }
     }
 }

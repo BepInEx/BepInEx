@@ -99,14 +99,13 @@ namespace UnityInjector.ConsoleUtil
         private static extern bool CloseHandle(IntPtr handle);
 
         [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern IntPtr CreateFile(
-            string fileName,
-            uint desiredAccess,
-            int shareMode,
-            IntPtr securityAttributes,
-            int creationDisposition,
-            int flagsAndAttributes,
-            IntPtr templateFile);
+        private static extern IntPtr CreateFile(string fileName,
+                                                uint desiredAccess,
+                                                int shareMode,
+                                                IntPtr securityAttributes,
+                                                int creationDisposition,
+                                                int flagsAndAttributes,
+                                                IntPtr templateFile);
 
         [DllImport("kernel32.dll", SetLastError = false)]
         private static extern bool FreeConsole();

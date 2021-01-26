@@ -66,15 +66,11 @@ namespace BepInEx.Unix
             ConsoleOut = StandardOut;
         }
 
-        public void CreateConsole(uint codepage)
-        {
+        public void CreateConsole(uint codepage) =>
             Logger.LogWarning("An external console currently cannot be spawned on a Unix platform.");
-        }
 
-        public void DetachConsole()
-        {
+        public void DetachConsole() =>
             throw new PlatformNotSupportedException("Cannot detach console on a Unix platform");
-        }
 
         public void SetConsoleColor(ConsoleColor color)
         {

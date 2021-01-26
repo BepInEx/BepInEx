@@ -36,15 +36,10 @@ namespace BepInEx.Configuration
         }
 
         /// <inheritdoc />
-        public override bool IsValid(object value)
-        {
-            return value is T v && AcceptableValues.Any(x => x.Equals(v));
-        }
+        public override bool IsValid(object value) => value is T v && AcceptableValues.Any(x => x.Equals(v));
 
         /// <inheritdoc />
-        public override string ToDescriptionString()
-        {
-            return "# Acceptable values: " + string.Join(", ", AcceptableValues.Select(x => x.ToString()).ToArray());
-        }
+        public override string ToDescriptionString() =>
+            "# Acceptable values: " + string.Join(", ", AcceptableValues.Select(x => x.ToString()).ToArray());
     }
 }

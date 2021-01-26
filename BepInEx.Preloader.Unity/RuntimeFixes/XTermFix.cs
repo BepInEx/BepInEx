@@ -38,13 +38,13 @@ namespace BepInEx.Preloader.RuntimeFixes
             harmony.Patch(AccessTools.Method("System.TermInfoReader:ReadHeader"),
                           new HarmonyMethod(typeof(XTermFix), nameof(ReadHeaderPrefix)));
 
-            harmony.Patch(AccessTools.Method("System.TermInfoReader:Get", new[] {AccessTools.TypeByName("System.TermInfoNumbers")}),
+            harmony.Patch(AccessTools.Method("System.TermInfoReader:Get", new[] { AccessTools.TypeByName("System.TermInfoNumbers") }),
                           transpiler: new HarmonyMethod(typeof(XTermFix), nameof(GetTermInfoNumbersTranspiler)));
 
-            harmony.Patch(AccessTools.Method("System.TermInfoReader:Get", new[] {AccessTools.TypeByName("System.TermInfoStrings")}),
+            harmony.Patch(AccessTools.Method("System.TermInfoReader:Get", new[] { AccessTools.TypeByName("System.TermInfoStrings") }),
                           transpiler: new HarmonyMethod(typeof(XTermFix), nameof(GetTermInfoStringsTranspiler)));
 
-            harmony.Patch(AccessTools.Method("System.TermInfoReader:GetStringBytes", new[] {AccessTools.TypeByName("System.TermInfoStrings")}),
+            harmony.Patch(AccessTools.Method("System.TermInfoReader:GetStringBytes", new[] { AccessTools.TypeByName("System.TermInfoStrings") }),
                           transpiler: new HarmonyMethod(typeof(XTermFix), nameof(GetTermInfoStringsTranspiler)));
 
             DetourHelper.Native = null;
@@ -83,8 +83,11 @@ namespace BepInEx.Preloader.RuntimeFixes
                 throw new Exception($"Unknown xterm header format: {magic}");
         }
 
-        public static bool ReadHeaderPrefix(byte[] buffer, ref int position, ref short ___boolSize,
-                                            ref short ___numSize, ref short ___strOffsets)
+        public static bool ReadHeaderPrefix(byte[] buffer,
+                                            ref int position,
+                                            ref short ___boolSize,
+                                            ref short ___numSize,
+                                            ref short ___strOffsets)
         {
             var magic = GetInt16(buffer, position);
             position += 2;

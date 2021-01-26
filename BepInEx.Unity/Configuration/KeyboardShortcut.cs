@@ -18,8 +18,7 @@ namespace BepInEx.Configuration
     /// </summary>
     public struct KeyboardShortcut
     {
-        static KeyboardShortcut()
-        {
+        static KeyboardShortcut() =>
             TomlTypeConverter.AddConverter(
                                            typeof(KeyboardShortcut),
                                            new TypeConverter
@@ -27,7 +26,6 @@ namespace BepInEx.Configuration
                                                ConvertToString = (o, type) => ((KeyboardShortcut) o).Serialize(),
                                                ConvertToObject = (s, type) => Deserialize(s)
                                            });
-        }
 
         /// <summary>
         ///     Shortcut that never triggers.
@@ -53,7 +51,7 @@ namespace BepInEx.Configuration
         /// </summary>
         /// <param name="mainKey">Main key to press</param>
         /// <param name="modifiers">Keys that should be held down before main key is registered</param>
-        public KeyboardShortcut(KeyCode mainKey, params KeyCode[] modifiers) : this(new[] {mainKey}.Concat(modifiers)
+        public KeyboardShortcut(KeyCode mainKey, params KeyCode[] modifiers) : this(new[] { mainKey }.Concat(modifiers)
             .ToArray())
         {
             if (mainKey == KeyCode.None && modifiers.Any())
@@ -66,10 +64,10 @@ namespace BepInEx.Configuration
         private static KeyCode[] SanitizeKeys(params KeyCode[] keys)
         {
             if (keys.Length == 0 || keys[0] == KeyCode.None)
-                return new[] {KeyCode.None};
+                return new[] { KeyCode.None };
 
-            return new[] {keys[0]}.Concat(keys.Skip(1).Distinct().Where(x => x != keys[0]).OrderBy(x => (int) x))
-                                  .ToArray();
+            return new[] { keys[0] }.Concat(keys.Skip(1).Distinct().Where(x => x != keys[0]).OrderBy(x => (int) x))
+                                    .ToArray();
         }
 
         /// <summary>
@@ -90,7 +88,7 @@ namespace BepInEx.Configuration
         {
             try
             {
-                var parts = str.Split(new[] {' ', '+', ',', ';', '|'}, StringSplitOptions.RemoveEmptyEntries)
+                var parts = str.Split(new[] { ' ', '+', ',', ';', '|' }, StringSplitOptions.RemoveEmptyEntries)
                                .Select(x => (KeyCode) Enum.Parse(typeof(KeyCode), x)).ToArray();
                 return new KeyboardShortcut(parts);
             }

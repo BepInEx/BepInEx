@@ -169,15 +169,17 @@ namespace BepInEx
         /// <param name="directory">Directory to search the assembly from.</param>
         /// <param name="assembly">The loaded assembly.</param>
         /// <returns>True, if the assembly was found and loaded. Otherwise, false.</returns>
-        private static bool TryResolveDllAssembly<T>(AssemblyName assemblyName, string directory,
-                                                     Func<string, T> loader, out T assembly) where T : class
+        private static bool TryResolveDllAssembly<T>(AssemblyName assemblyName,
+                                                     string directory,
+                                                     Func<string, T> loader,
+                                                     out T assembly) where T : class
         {
             assembly = null;
 
-            var potentialDirectories = new List<string> {directory};
+            var potentialDirectories = new List<string> { directory };
 
-			if (!Directory.Exists(directory))
-				return false;
+            if (!Directory.Exists(directory))
+                return false;
 
             potentialDirectories.AddRange(Directory.GetDirectories(directory, "*", SearchOption.AllDirectories));
 
@@ -243,12 +245,12 @@ namespace BepInEx
         /// <param name="readerParameters">Reader parameters that contain possible custom assembly resolver.</param>
         /// <param name="assembly">The loaded assembly.</param>
         /// <returns>True, if the assembly was found and loaded. Otherwise, false.</returns>
-        public static bool TryResolveDllAssembly(AssemblyName assemblyName, string directory,
-                                                 ReaderParameters readerParameters, out AssemblyDefinition assembly)
-        {
-            return TryResolveDllAssembly(assemblyName, directory,
-                                         s => AssemblyDefinition.ReadAssembly(s, readerParameters), out assembly);
-        }
+        public static bool TryResolveDllAssembly(AssemblyName assemblyName,
+                                                 string directory,
+                                                 ReaderParameters readerParameters,
+                                                 out AssemblyDefinition assembly) =>
+            TryResolveDllAssembly(assemblyName, directory,
+                                  s => AssemblyDefinition.ReadAssembly(s, readerParameters), out assembly);
 
         /// <summary>
         ///     Tries to create a file with the given name
@@ -259,8 +261,11 @@ namespace BepInEx
         /// <param name="access">File access options</param>
         /// <param name="share">File share options</param>
         /// <returns></returns>
-        public static bool TryOpenFileStream(string path, FileMode mode, out FileStream fileStream,
-                                             FileAccess access = FileAccess.ReadWrite, FileShare share = FileShare.Read)
+        public static bool TryOpenFileStream(string path,
+                                             FileMode mode,
+                                             out FileStream fileStream,
+                                             FileAccess access = FileAccess.ReadWrite,
+                                             FileShare share = FileShare.Read)
         {
             try
             {

@@ -13,7 +13,7 @@ namespace BepInEx.Preloader.RuntimeFixes
 
         public static void Apply()
         {
-            loggedTextWriter = new LoggedTextWriter {Parent = Console.Out};
+            loggedTextWriter = new LoggedTextWriter { Parent = Console.Out };
             Console.SetOut(loggedTextWriter);
             Harmony.CreateAndPatchAll(typeof(ConsoleSetOutFix));
         }

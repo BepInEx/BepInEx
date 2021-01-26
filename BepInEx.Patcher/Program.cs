@@ -175,10 +175,10 @@ namespace BepInEx.Patcher
             var voidType = unity.MainModule.ImportReference(typeof(void));
             var cctor = new MethodDefinition(".cctor",
                                              MethodAttributes.Static
-                                             | MethodAttributes.Private
-                                             | MethodAttributes.HideBySig
-                                             | MethodAttributes.SpecialName
-                                             | MethodAttributes.RTSpecialName,
+                                           | MethodAttributes.Private
+                                           | MethodAttributes.HideBySig
+                                           | MethodAttributes.SpecialName
+                                           | MethodAttributes.RTSpecialName,
                                              voidType);
 
             var ilp = cctor.Body.GetILProcessor();

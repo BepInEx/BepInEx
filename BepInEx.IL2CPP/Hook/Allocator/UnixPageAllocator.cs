@@ -72,7 +72,7 @@ namespace BepInEx.IL2CPP.Hook.Allocator
             {
                 var (start, end) = GetFreeArea(hint);
                 // Try to allocate to end (after original method) first, then try before
-                var addrs = new[] {end, start};
+                var addrs = new[] { end, start };
                 foreach (var addr in addrs)
                 {
                     if (addr == 0)
@@ -92,7 +92,11 @@ namespace BepInEx.IL2CPP.Hook.Allocator
 
         private static class Unix
         {
-            public delegate nint mmapDelegate(nint addr, nuint length, Protection prot, MapFlags flags, int fd,
+            public delegate nint mmapDelegate(nint addr,
+                                              nuint length,
+                                              Protection prot,
+                                              MapFlags flags,
+                                              int fd,
                                               int offset);
 
             public delegate int munmapDelegate(nint addr, nuint length);
@@ -113,8 +117,7 @@ namespace BepInEx.IL2CPP.Hook.Allocator
 
             public static readonly nint MAP_FAILED = -1;
 
-            static Unix()
-            {
+            static Unix() =>
                 typeof(Unix).ResolveDynDllImports(new Dictionary<string, List<DynDllMapping>>
                 {
                     ["libc"] = new()
@@ -124,7 +127,6 @@ namespace BepInEx.IL2CPP.Hook.Allocator
                         "/usr/lib/libSystem.dylib" // OSX POSIX
                     }
                 });
-            }
 
 #pragma warning disable 649 // Set by MonoMod
             [DynDllImport("mmap")]

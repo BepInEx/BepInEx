@@ -181,7 +181,7 @@ namespace BepInEx.Preloader.Core
                         patcherPlugin.Patcher = (ref AssemblyDefinition pAss) =>
                         {
                             //we do the array fuckery here to get the ref result out
-                            object[] args = {pAss};
+                            object[] args = { pAss };
 
                             patcher.Invoke(null, args);
 
@@ -214,10 +214,7 @@ namespace BepInEx.Preloader.Core
         ///     are skipped.
         /// </summary>
         /// <param name="directory">The directory to search.</param>
-        public void LoadAssemblyDirectory(string directory)
-        {
-            LoadAssemblyDirectory(directory, "dll");
-        }
+        public void LoadAssemblyDirectory(string directory) => LoadAssemblyDirectory(directory, "dll");
 
         /// <summary>
         ///     Adds all assemblies in a directory to be patched and loaded by this patcher instance. Non-managed assemblies are
@@ -401,17 +398,13 @@ namespace BepInEx.Preloader.Core
                     Assembly loadedAssembly;
 
                     if (ConfigLoadDumpedAssemblies.Value)
-                    {
                         loadedAssembly = Assembly.LoadFrom(Path.Combine(DumpedAssembliesPath, filename));
-                    }
                     else
-                    {
                         using (var assemblyStream = new MemoryStream())
                         {
                             assembly.Write(assemblyStream);
                             loadedAssembly = Assembly.Load(assemblyStream.ToArray());
                         }
-                    }
 
                     LoadedAssemblies.Add(filename, loadedAssembly);
 
