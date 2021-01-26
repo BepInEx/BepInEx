@@ -134,7 +134,7 @@ namespace BepInEx.IL2CPP
 
                 if (readOverflowArea)
                 {
-                    if (instr.Mnemonic != Mnemonic.Int && instr.Mnemonic != Mnemonic.Nop)
+                    if (instr.Mnemonic != Mnemonic.Int3 && instr.Mnemonic != Mnemonic.Nop)
                         throw new Exception("Function is too short to hook");
                     continue;
                 }
