@@ -74,7 +74,8 @@ namespace BepInEx.IL2CPP
                                                                           typeof(AppDomainRunner).Assembly.FullName,
                                                                           typeof(AppDomainRunner).FullName);
 
-            runner.Setup(Paths.ExecutablePath, Preloader.IL2CPPUnhollowedPath);
+            runner.Setup(Paths.ExecutablePath, Preloader.IL2CPPUnhollowedPath, Paths.BepInExRootPath,
+                         Paths.ManagedPath);
             runner.GenerateAssembliesInternal(new AppDomainListener());
 
             AppDomain.Unload(domain);
@@ -132,10 +133,11 @@ namespace BepInEx.IL2CPP
         [Serializable]
         private class AppDomainRunner : MarshalByRefObject
         {
-            public void Setup(string executablePath, string unhollowedPath)
+            public void Setup(string executablePath, string unhollowedPath, string bepinPath, string managedPath)
             {
-                Paths.SetExecutablePath(executablePath);
+                Paths.SetExecutablePath(executablePath, bepinPath, managedPath);
                 Preloader.IL2CPPUnhollowedPath = unhollowedPath;
+                AppDomain.CurrentDomain.AddCecilPlatformAssemblies(Paths.ManagedPath);
             }
 
             public void GenerateAssembliesInternal(AppDomainListener listener)
@@ -150,7 +152,6 @@ namespace BepInEx.IL2CPP
 
                 var tempDumperDirectory = Path.Combine(Preloader.IL2CPPUnhollowedPath, "temp");
                 Directory.CreateDirectory(tempDumperDirectory);
-
 
                 var dumperConfig = new Config
                 {
@@ -178,14 +179,21 @@ namespace BepInEx.IL2CPP
                 var unhollowerOptions = new UnhollowerOptions
                 {
                     GameAssemblyPath = GameAssemblyPath,
-                    MscorlibPath = Path.Combine(Paths.GameRootPath, "mono", "Managed", "mscorlib.dll"),
+                    MscorlibPath = Path.Combine(Paths.ManagedPath, "mscorlib.dll"),
                     SourceDir = Path.Combine(tempDumperDirectory, "DummyDll"),
                     OutputDir = Preloader.IL2CPPUnhollowedPath,
                     UnityBaseLibsDir = Directory.Exists(UnityBaseLibsDirectory) ? UnityBaseLibsDirectory : null,
                     NoCopyUnhollowerLibs = true
                 };
 
-                Program.Main(unhollowerOptions);
+                try
+                {
+                    Program.Main(unhollowerOptions);
+                }
+                catch (Exception e)
+                {
+                    listener.DoUnhollowerLog($"Exception while unhollowing: {e}", LogLevel.Error);
+                }
             }
         }
     }
