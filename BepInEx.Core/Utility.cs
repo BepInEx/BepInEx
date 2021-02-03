@@ -14,6 +14,7 @@ namespace BepInEx
     /// </summary>
     public static class Utility
     {
+        private const string TRUSTED_PLATFORM_ASSEMBLIES = "TRUSTED_PLATFORM_ASSEMBLIES";
         private static bool? sreEnabled;
 
         /// <summary>
@@ -327,6 +328,17 @@ namespace BepInEx
                 assemblyName = null;
                 return false;
             }
+        }
+
+        internal static void AddCecilPlatformAssemblies(this AppDomain appDomain, string assemblyDir)
+        {
+            // Cecil 0.11 requires one to manually set up list of trusted assemblies for assembly resolving
+            var curTrusted = appDomain.GetData(TRUSTED_PLATFORM_ASSEMBLIES) as string;
+            var addTrusted = string.Join(Path.PathSeparator.ToString(),
+                                         Directory.GetFiles(assemblyDir, "*.dll",
+                                                            SearchOption.TopDirectoryOnly));
+            var newTrusted = curTrusted == null ? addTrusted : $"{curTrusted}{Path.PathSeparator}{addTrusted}";
+            appDomain.SetData(TRUSTED_PLATFORM_ASSEMBLIES, newTrusted);
         }
     }
 }
