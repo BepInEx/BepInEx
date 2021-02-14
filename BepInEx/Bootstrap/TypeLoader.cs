@@ -70,10 +70,13 @@ namespace BepInEx.Bootstrap
 			{
 				if (Utility.TryParseAssemblyName(reference.FullName, out var name) && 
 					(Utility.TryResolveDllAssembly(name, Paths.BepInExAssemblyDirectory, ReaderParameters, out var assembly) ||
-					 Utility.TryResolveDllAssembly(name, Paths.PluginPath, ReaderParameters, out assembly) ||
-					 Utility.TryResolveDllAssembly(name, Paths.ManagedPath, ReaderParameters, out assembly)))
+					 Utility.TryResolveDllAssembly(name, Paths.PluginPath, ReaderParameters, out assembly)))
 					return assembly;
 
+				foreach (string dllSearchPath in Paths.DllSearchPaths)
+					if (Utility.TryResolveDllAssembly(name, dllSearchPath, ReaderParameters, out assembly))
+						return assembly;
+				
 				return AssemblyResolve?.Invoke(sender, reference);
 			};
 		}

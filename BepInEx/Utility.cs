@@ -293,5 +293,25 @@ namespace BepInEx
 				return false;
 			}
 		}
+
+		/// <summary>
+		/// Gets unique files in all given directories. If the file with the same name exists in multiple directories,
+		/// only the first occurrence is returned.
+		/// </summary>
+		/// <param name="directories">Directories to search from.</param>
+		/// <param name="pattern">File pattern to search.</param>
+		/// <returns>Collection of all files in the directories.</returns>
+		public static IEnumerable<string> GetUniqueFilesInDirectories(IEnumerable<string> directories, string pattern = "*")
+		{
+			var result = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+			foreach (string directory in directories)
+				foreach (string file in Directory.GetFiles(directory, pattern))
+				{
+					string fileName = Path.GetFileName(file);
+					if (!result.ContainsKey(fileName))
+						result[fileName] = file;
+				}
+			return result.Values;
+		}
 	}
 }

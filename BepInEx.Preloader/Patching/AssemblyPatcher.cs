@@ -203,14 +203,14 @@ namespace BepInEx.Preloader.Patching
 		/// <summary>
 		///     Applies patchers to all assemblies in the given directory and loads patched assemblies into memory.
 		/// </summary>
-		/// <param name="directory">Directory to load CLR assemblies from.</param>
-		public static void PatchAndLoad(string directory)
+		/// <param name="directories">Directories to load CLR assemblies from in their search order.</param>
+		public static void PatchAndLoad(params string[] directories)
 		{
 			// First, load patchable assemblies into Cecil
 			// Ignore case for keys (dll filenames) to account for running on *nix
 			var assemblies = new Dictionary<string, AssemblyDefinition>(StringComparer.InvariantCultureIgnoreCase);
 
-			foreach (string assemblyPath in Directory.GetFiles(directory, "*.dll"))
+			foreach (string assemblyPath in Utility.GetUniqueFilesInDirectories(directories, "*.dll"))
 			{
 				AssemblyDefinition assembly;
 

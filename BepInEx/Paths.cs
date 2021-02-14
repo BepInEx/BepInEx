@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Linq;
 using System.Reflection;
 using MonoMod.Utils;
 
@@ -9,7 +10,7 @@ namespace BepInEx
 	/// </summary>
 	public static class Paths
 	{
-		internal static void SetExecutablePath(string executablePath, string bepinRootPath = null, string managedPath = null)
+		internal static void SetExecutablePath(string executablePath, string bepinRootPath = null, string managedPath = null, string[] dllSearchPath = null)
 		{
 			ExecutablePath = executablePath;
 			ProcessName = Path.GetFileNameWithoutExtension(executablePath);
@@ -27,6 +28,7 @@ namespace BepInEx
 			BepInExAssemblyDirectory = Path.Combine(BepInExRootPath, "core");
 			BepInExAssemblyPath = Path.Combine(BepInExAssemblyDirectory, $"{Assembly.GetExecutingAssembly().GetName().Name}.dll");
 			CachePath = Path.Combine(BepInExRootPath, "cache");
+			DllSearchPaths = (dllSearchPath ?? new string[0]).Concat(new[] { ManagedPath }).Distinct().ToArray();
 		}
 
 		internal static void SetManagedPath(string managedPath)
@@ -40,6 +42,11 @@ namespace BepInEx
 		{
 			PluginPath = Utility.CombinePaths(BepInExRootPath, pluginPath);
 		}
+
+		/// <summary>
+		///		List of directories from where Mono will search assemblies before assembly resolving is invoked.
+		/// </summary>
+		public static string[] DllSearchPaths { get; private set; }
 
 		/// <summary>
 		///     The directory that the core BepInEx DLLs reside in.
