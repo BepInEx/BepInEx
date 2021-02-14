@@ -76,7 +76,6 @@ Task("Build")
         Configuration = "Release",
         Restore = true
     };
-    buildSettings.Properties["TargetFrameworks"] = new []{ "net35" };
     MSBuild("./BepInEx.sln", buildSettings);
 })
 .Finally(() => 
