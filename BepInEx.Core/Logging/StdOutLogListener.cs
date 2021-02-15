@@ -9,8 +9,7 @@ namespace BepInEx.Core.Logging
     {
         public void LogEvent(object sender, LogEventArgs eventArgs)
         {
-            var log = $"[{eventArgs.Level,-7}:{((ILogSource) sender).SourceName,10}] {eventArgs.Data}\r\n";
-            ConsoleManager.StandardOutStream?.Write(log);
+            ConsoleManager.StandardOutStream?.Write(eventArgs.ToStringLine());
         }
 
         public void Dispose() { }
