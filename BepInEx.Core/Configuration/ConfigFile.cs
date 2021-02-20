@@ -549,7 +549,7 @@ namespace BepInEx.Configuration
             if (settingChanged == null) return;
 
             var args = new SettingChangedEventArgs(changedEntryBase);
-            foreach (var callback in settingChanged.GetInvocationList().Cast<EventHandler<SettingChangedEventArgs>>())
+            foreach (EventHandler<SettingChangedEventArgs> callback in settingChanged.GetInvocationList())
                 try
                 {
                     callback(sender, args);
@@ -565,7 +565,7 @@ namespace BepInEx.Configuration
             var configReloaded = ConfigReloaded;
             if (configReloaded == null) return;
 
-            foreach (var callback in configReloaded.GetInvocationList().Cast<EventHandler>())
+            foreach (EventHandler callback in configReloaded.GetInvocationList())
                 try
                 {
                     callback(this, EventArgs.Empty);
