@@ -98,15 +98,7 @@ namespace BepInEx.Unix
 		{
 			if (StdoutRedirected)
 				return;
-
-			if (UseMonoTtyDriver && SafeConsole.TitleExists)
-			{
-				SafeConsole.Title = title;
-			}
-			else
-			{
-				ConsoleOut.Write($"\u001B]2;{title.Replace("\\", "\\\\")}\u0007");
-			}
+			ConsoleOut.Write($"\u001B]2;{title.Replace("\\", "\\\\")}\u0007");
 		}
 	}
 }
