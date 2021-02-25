@@ -88,7 +88,7 @@ namespace BepInEx.Bootstrap
 			}
 
 			// Start logging
-			if (ConsoleManager.ConfigConsoleEnabled.Value && startConsole)
+			if (ConsoleManager.ConsoleEnabled  && startConsole)
 			{
 				ConsoleManager.CreateConsole();
 				Logger.Listeners.Add(new ConsoleLogListener());

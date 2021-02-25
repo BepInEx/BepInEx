@@ -221,7 +221,7 @@ namespace BepInEx.Preloader
 		/// </summary>
 		public static void AllocateConsole()
 		{
-			if (!ConsoleManager.ConfigConsoleEnabled.Value)
+			if (!ConsoleManager.ConsoleEnabled)
 				return;
 
 			try
