@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -45,7 +45,19 @@ namespace BepInEx.Configuration
         /// </summary>
         protected Dictionary<ConfigDefinition, ConfigEntryBase> Entries { get; } = new();
 
-        private Dictionary<ConfigDefinition, string> OrphanedEntries { get; } = new();
+        /// <summary>
+        /// Readonly collection of all orphaned config entries in this config file.
+        /// </summary>
+        public ReadOnlyCollection<ConfigDefinition> OrphanedEntries
+        {
+            get
+            {
+                lock (_ioLock)
+                    return _orphanedEntries.Keys.ToList().AsReadOnly();
+            }
+        }
+
+        private Dictionary<ConfigDefinition, string> _orphanedEntries = new();
 
         /// <summary>
         ///     Create a list with all config entries inside of this config file.
@@ -217,6 +229,63 @@ namespace BepInEx.Configuration
                 return Entries.Values.ToArray();
         }
 
+        /// <summary>
+        /// Get the value of an orphaned entry.
+        /// </summary>
+        /// <param name="entry">The entry to try and retrieve.</param>
+        /// <param name="val">Out value of this entry (if it exists).</param>
+        /// <returns>True if the entry exists in the dictionary.</returns>
+        public bool TryGetOrphanedEntry(ConfigDefinition entry, out string val)
+        {
+            lock (_ioLock)
+                return _orphanedEntries.TryGetValue(entry, out val);
+        }
+
+        /// <summary>
+        /// Get the value of an orphaned entry.
+        /// </summary>
+        /// <param name="section">Section of the orphaned entry.</param>
+        /// <param name="key">Key of the orphaned entry.</param>
+        /// <param name="val">Out value of this entry (if it exists).</param>
+        /// <returns>True if the entry exists in the dictionary.</returns>
+        public bool TryGetOrphanedEntry(string section, string key, out string val)
+        {
+            lock (_ioLock)
+                return _orphanedEntries.TryGetValue(new ConfigDefinition(section, key), out val);
+        }
+
+        /// <summary>
+        /// Removes an orphaned config entry from the file.
+        /// </summary>
+        /// <param name="entry">Orphaned config entry to remove.</param>
+        /// <returns>True on success.</returns>
+        public bool TryRemoveOrphanedEntry(ConfigDefinition entry)
+        {
+            lock (_ioLock)
+                return _orphanedEntries.Remove(entry);
+        }
+
+        /// <summary>
+        /// Removes an orphaned config entry from the file.
+        /// </summary>
+        /// <param name="section">Section of orphaned entry to remove.</param>
+        /// <param name="key">Key of orphaned entry to remove.</param>
+        /// <returns>True on success.</returns>
+        public bool TryRemoveOrphanedEntry(string section, string key)
+        {
+            lock (_ioLock)
+                return _orphanedEntries.Remove(new ConfigDefinition(section, key));
+        }
+
+        /// <summary>
+        /// Removes all orphaned config entries from this file.
+        /// </summary>
+        public void RemoveAllOrphanedEntries()
+        {
+            lock (_ioLock)
+                _orphanedEntries.Clear();
+        }
+
         #region Save/Load
 
         private readonly object _ioLock = new();
@@ -233,7 +302,7 @@ namespace BepInEx.Configuration
         {
             lock (_ioLock)
             {
-                OrphanedEntries.Clear();
+                _orphanedEntries.Clear();
 
                 var currentSection = string.Empty;
 
@@ -264,7 +333,7 @@ namespace BepInEx.Configuration
                     if (entry != null)
                         entry.SetSerializedValue(currentValue);
                     else
-                        OrphanedEntries[definition] = currentValue;
+                        _orphanedEntries[definition] = currentValue;
                 }
             }
 
@@ -295,7 +364,7 @@ namespace BepInEx.Configuration
                                            {
                                                x.Key, entry = x.Value, value = x.Value.GetSerializedValue()
                                            })
-                                           .Concat(OrphanedEntries.Select(x => new
+                                           .Concat(_orphanedEntries.Select(x => new
                                            {
                                                x.Key, entry = (ConfigEntryBase) null, value = x.Value
                                            }));
@@ -415,10 +484,10 @@ namespace BepInEx.Configuration
 
                 Entries[configDefinition] = entry;
 
-                if (OrphanedEntries.TryGetValue(configDefinition, out var homelessValue))
+                if (_orphanedEntries.TryGetValue(configDefinition, out var homelessValue))
                 {
                     entry.SetSerializedValue(homelessValue);
-                    OrphanedEntries.Remove(configDefinition);
+                    _orphanedEntries.Remove(configDefinition);
                 }
 
                 if (SaveOnConfigSet)
