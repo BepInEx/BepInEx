@@ -22,7 +22,7 @@ Unity plugin framework
 **[User and developer guides](https://bepinex.github.io/bepinex_docs/master/articles/index.html)**
 
 ## Used libraries
-- [NeighTools/UnityDoorstop](https://github.com/NeighTools/UnityDoorstop) - 3.3.0.0 ([9b5d538](https://github.com/NeighTools/UnityDoorstop/commit/9b5d53868e0bdee21f944ec412bd1461751170a2))
+- [NeighTools/UnityDoorstop](https://github.com/NeighTools/UnityDoorstop) - 3.3.1.0 ([bc71fa1](https://github.com/NeighTools/UnityDoorstop/commit/bc71fa145f1400867d1ed950d095b8d5c559bc3e))
 - [NeighTools/UnityDoorstop.Unix](https://github.com/NeighTools/UnityDoorstop.Unix) - 1.5.0.0 ([aa4a6e2](https://github.com/NeighTools/UnityDoorstop.Unix/commit/aa4a6e2f22ce69e9f079d98c7799ca90bd8a207d))
 - [BepInEx/HarmonyX](https://github.com/BepInEx/HarmonyX) - 2.3.2 ([1606fcb](https://github.com/BepInEx/HarmonyX/commit/1606fcb27b81e0f0cc869ecb0eeff503bc10fa54))
 - [MonoMod/MonoMod](https://github.com/MonoMod/MonoMod) - v21.01.11.01 ([35d6357](https://github.com/MonoMod/MonoMod/commit/35d635771e2a422641d9a388950d1e0cf311c656))

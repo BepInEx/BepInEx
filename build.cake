@@ -4,7 +4,7 @@
 #addin nuget:?package=Cake.Json&version=4.0.0
 #addin nuget:?package=Newtonsoft.Json&version=11.0.2
 
-const string DOORSTOP_VER_WIN = "3.3.0.0";
+const string DOORSTOP_VER_WIN = "3.3.1.0";
 const string DOORSTOP_VER_NIX = "1.5.0.0";
 const string DOORSTOP_DLL = "winhttp.dll";
 
