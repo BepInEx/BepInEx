@@ -8,9 +8,13 @@ namespace BepInEx.Logging
 	/// </summary>
 	public class ConsoleLogListener : ILogListener
 	{
+		public bool WriteUnityLogs { get; set; } = true;
+		
 		/// <inheritdoc />
 		public void LogEvent(object sender, LogEventArgs eventArgs)
 		{
+			if (!WriteUnityLogs && sender is UnityLogSource)
+				return;
 			if ((eventArgs.Level & ConfigConsoleDisplayedLevel.Value) == 0)
 				return;
 			

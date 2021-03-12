@@ -10,6 +10,7 @@ using System.Text.RegularExpressions;
 using Mono.Cecil;
 using MonoMod.Utils;
 using UnityEngine;
+using UnityEngine.Rendering;
 using Logger = BepInEx.Logging.Logger;
 
 namespace BepInEx.Bootstrap
@@ -36,6 +37,13 @@ namespace BepInEx.Bootstrap
 		{
 			[MethodImpl(MethodImplOptions.NoInlining)]
 			get => Application.unityVersion;
+		}
+
+		// Check above for NoInlining reasoning
+		private static bool IsHeadless
+		{
+			[MethodImpl(MethodImplOptions.NoInlining)]
+			get => SystemInfo.graphicsDeviceType == GraphicsDeviceType.Null;
 		}
 		
 		/// <summary>
@@ -88,7 +96,7 @@ namespace BepInEx.Bootstrap
 			}
 
 			// Start logging
-			if (ConsoleManager.ConsoleEnabled  && startConsole)
+			if (ConsoleManager.ConsoleEnabled && startConsole)
 			{
 				ConsoleManager.CreateConsole();
 				Logger.Listeners.Add(new ConsoleLogListener());
@@ -101,13 +109,21 @@ namespace BepInEx.Bootstrap
 
 			if (!TraceLogSource.IsListening)
 				Logger.Sources.Add(TraceLogSource.CreateSource());
-			
+
 			ReplayPreloaderLogs(preloaderLogEvents);
-			
+
 			// Add Unity log source only after replaying to prevent duplication in console
 			if (ConfigUnityLogging.Value)
 				Logger.Sources.Add(new UnityLogSource());
-			Logger.Listeners.Add(new UnityLogListener());
+
+			// Don't write to Unity logs in headless mode since Unity logs are already shown in console
+			if (!IsHeadless)
+				Logger.Listeners.Add(new UnityLogListener());
+			else
+			{
+				if (Logger.Listeners.FirstOrDefault(l => l is ConsoleLogListener) is ConsoleLogListener consoleLogListener)
+					consoleLogListener.WriteUnityLogs = false;
+			}
 
 			if (PlatformHelper.Is(Platform.Unix))
 			{
