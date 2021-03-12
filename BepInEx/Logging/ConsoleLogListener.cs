@@ -8,7 +8,7 @@ namespace BepInEx.Logging
 	/// </summary>
 	public class ConsoleLogListener : ILogListener
 	{
-		public bool WriteUnityLogs { get; set; } = true;
+		internal bool WriteUnityLogs { get; set; } = true;
 		
 		/// <inheritdoc />
 		public void LogEvent(object sender, LogEventArgs eventArgs)
