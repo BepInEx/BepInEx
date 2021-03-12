@@ -232,26 +232,45 @@ namespace BepInEx.Configuration
         /// <summary>
         /// Get the value of an orphaned entry.
         /// </summary>
+        /// <typeparam name="T">Expected type of the orphaned entry.</typeparam>
         /// <param name="entry">The entry to try and retrieve.</param>
         /// <param name="val">Out value of this entry (if it exists).</param>
         /// <returns>True if the entry exists in the dictionary.</returns>
-        public bool TryGetOrphanedEntry(ConfigDefinition entry, out string val)
+        public bool TryGetOrphanedEntry<T>(ConfigDefinition entry, out T val)
         {
             lock (_ioLock)
-                return _orphanedEntries.TryGetValue(entry, out val);
+            {
+                try
+                {
+                    if (!_orphanedEntries.TryGetValue(entry, out string serializedVal))
+                    {
+                        val = default(T);
+                        return false;
+                    }
+                    val = TomlTypeConverter.ConvertToValue<T>(serializedVal);
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    Logger.Log(LogLevel.Warning,
+                        $"Orphaned config value of setting {entry} could not be parsed and will be ignored. Reason: {e.Message}");
+                    val = default(T);
+                    return false;
+                }
+            }
         }
 
         /// <summary>
         /// Get the value of an orphaned entry.
         /// </summary>
+        /// <typeparam name="T">Expected type of the orphaned entry.</typeparam>
         /// <param name="section">Section of the orphaned entry.</param>
         /// <param name="key">Key of the orphaned entry.</param>
         /// <param name="val">Out value of this entry (if it exists).</param>
         /// <returns>True if the entry exists in the dictionary.</returns>
-        public bool TryGetOrphanedEntry(string section, string key, out string val)
+        public bool TryGetOrphanedEntry<T>(string section, string key, out T val)
         {
-            lock (_ioLock)
-                return _orphanedEntries.TryGetValue(new ConfigDefinition(section, key), out val);
+            return TryGetOrphanedEntry<T>(new ConfigDefinition(section, key), out val);
         }
 
         /// <summary>
