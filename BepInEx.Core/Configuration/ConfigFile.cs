@@ -297,6 +297,37 @@ namespace BepInEx.Configuration
         }
 
         /// <summary>
+        /// Pops an orphaned config entry from the file.
+        /// </summary>
+        /// <typeparam name="T">Expected type of the orphaned entry.</typeparam>
+        /// <param name="entry">Orphaned entry to pop.</param>
+        /// <param name="val">Out value of this entry (if it exists).</param>
+        /// <returns>True on successful get and remove.</returns>
+        public bool TryPopOrphanedEntry<T>(ConfigDefinition entry, out T val)
+        {
+            // Locking here does not deadlock, locks in .NET are reentrant https://stackoverflow.com/questions/391913/re-entrant-locks-in-c-sharp
+            lock (_ioLock)
+            {
+                if (!TryGetOrphanedEntry<T>(entry, out val))
+                    return false;
+                return _orphanedEntries.Remove(entry);
+            }
+        }
+
+        /// <summary>
+        /// Pops an orphaned config entry from the file.
+        /// </summary>
+        /// <typeparam name="T">Expected type of the orphaned entry.</typeparam>
+        /// <param name="section">Section of the orphaned entry to remove.</param>
+        /// <param name="key">Key of the orphaned entry to remove.</param>
+        /// <param name="val">Out value of this entry (if it exists).</param>
+        /// <returns>True on successful get and remove.</returns>
+        public bool TryPopOrphanedEntry<T>(string section, string key, out T val)
+        {
+            return TryPopOrphanedEntry<T>(new ConfigDefinition(section, key), out val);
+        }
+
+        /// <summary>
         /// Removes all orphaned config entries from this file.
         /// </summary>
         public void RemoveAllOrphanedEntries()
