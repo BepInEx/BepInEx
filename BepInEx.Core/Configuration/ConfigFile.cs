@@ -287,8 +287,8 @@ namespace BepInEx.Configuration
         /// <summary>
         /// Removes an orphaned config entry from the file.
         /// </summary>
-        /// <param name="section">Section of orphaned entry to remove.</param>
-        /// <param name="key">Key of orphaned entry to remove.</param>
+        /// <param name="section">Section of the orphaned entry to remove.</param>
+        /// <param name="key">Key of the orphaned entry to remove.</param>
         /// <returns>True on success.</returns>
         public bool TryRemoveOrphanedEntry(string section, string key)
         {
