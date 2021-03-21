@@ -41,6 +41,11 @@ namespace BepInEx.Unix
 
 		public TtyInfo TtyInfo { get; private set; }
 
+		public void PreventClose()
+		{
+			// Not supported by all distros
+		}
+
 		public void Initialize(bool alreadyActive)
 		{
 			// Console is always considered active on Unix

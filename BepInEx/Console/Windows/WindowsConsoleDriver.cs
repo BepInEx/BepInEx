@@ -18,6 +18,11 @@ namespace BepInEx
 		public bool ConsoleActive { get; private set; }
 		public bool ConsoleIsExternal => true;
 
+		public void PreventClose()
+		{
+			ConsoleWindow.PreventClose();
+		}
+
 		public void Initialize(bool alreadyActive)
 		{
 			ConsoleActive = alreadyActive;

@@ -46,6 +46,17 @@ namespace UnityInjector.ConsoleUtil
 			IsAttached = true;
 		}
 
+		public static void PreventClose()
+		{
+			if (!IsAttached)
+				return;
+
+			var hwnd = GetConsoleWindow();
+			var hmenu = GetSystemMenu(hwnd, false);
+			if (hmenu != IntPtr.Zero)
+				DeleteMenu(hmenu, SC_CLOSE, MF_BYCOMMAND);
+		}
+		
 		public static string Title
 		{
 			set
@@ -126,5 +137,14 @@ namespace UnityInjector.ConsoleUtil
 
 		[DllImport("kernel32.dll", BestFitMapping = true, CharSet = CharSet.Auto, SetLastError = true)]
 		private static extern bool SetConsoleTitle(string title);
+
+		[DllImport("user32.dll")]
+		private static extern IntPtr GetSystemMenu(IntPtr hwnd, bool bRevert);
+		
+		const UInt32 SC_CLOSE = 0xF060;
+		const UInt32 MF_BYCOMMAND = 0x00000000;
+		
+		[DllImport("user32.dll")]
+		static extern bool DeleteMenu(IntPtr hMenu, uint uPosition, uint uFlags);
 	}
 }

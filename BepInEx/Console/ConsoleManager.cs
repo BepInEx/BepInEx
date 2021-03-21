@@ -81,6 +81,9 @@ namespace BepInEx
 			uint codepage = ConfigConsoleShiftJis.Value ? SHIFT_JIS_CP : (uint)Encoding.UTF8.CodePage;
 
 			Driver.CreateConsole(codepage);
+			
+			if (ConfigPreventClose.Value)
+				Driver.PreventClose();
 		}
 
 		public static void DetachConsole()
@@ -113,6 +116,11 @@ namespace BepInEx
 			"Logging.Console", "Enabled",
 			false,
 			"Enables showing a console for log output.");
+		
+		public static readonly ConfigEntry<bool> ConfigPreventClose = ConfigFile.CoreConfig.Bind(
+			"Logging.Console", "PreventClose",
+			false,
+			"If enabled, will prevent closing the console (either by deleting the close button or in other platform-specific way).");
 
 		public static readonly ConfigEntry<bool> ConfigConsoleShiftJis = ConfigFile.CoreConfig.Bind(
 			"Logging.Console", "ShiftJisEncoding",

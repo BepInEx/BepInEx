@@ -12,6 +12,8 @@ namespace BepInEx
 		bool ConsoleActive { get; }
 		bool ConsoleIsExternal { get; }
 
+		void PreventClose();
+		
 		void Initialize(bool alreadyActive);
 		
 		// Apparently Windows code-pages work in Mono.
@@ -22,5 +24,7 @@ namespace BepInEx
 		void SetConsoleColor(ConsoleColor color);
 		
 		void SetConsoleTitle(string title);
+		
+		
 	}
 }
