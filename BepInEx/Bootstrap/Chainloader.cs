@@ -45,6 +45,14 @@ namespace BepInEx.Bootstrap
 			[MethodImpl(MethodImplOptions.NoInlining)]
 			get => SystemInfo.graphicsDeviceType == GraphicsDeviceType.Null;
 		}
+
+		// Check above for NoInlining reasoning
+		private static bool? isEditor;
+		internal static bool IsEditor
+		{
+			[MethodImpl(MethodImplOptions.NoInlining)]
+			get => isEditor ?? (isEditor = Application.isEditor) ?? false;
+		}
 		
 		/// <summary>
 		/// List of all <see cref="BepInPlugin"/> loaded via the chainloader.

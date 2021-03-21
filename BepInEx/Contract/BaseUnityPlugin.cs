@@ -36,7 +36,7 @@ namespace BepInEx
 			if(metadata == null)
 				throw new InvalidOperationException("Can't create an instance of " + GetType().FullName + " because it inherits from BaseUnityPlugin and the BepInPlugin attribute is missing.");
 
-			if (!Application.isEditor && Chainloader.PluginInfos.TryGetValue(metadata.GUID, out var info))
+			if (!Chainloader.IsEditor && Chainloader.PluginInfos.TryGetValue(metadata.GUID, out var info))
 				Info = info;
 			else
 			{
@@ -52,7 +52,7 @@ namespace BepInEx
 
 			Logger = Logging.Logger.CreateLogSource(metadata.Name);
 
-			string configRoot = Application.isEditor ? "." : Paths.ConfigPath;
+			string configRoot = Chainloader.IsEditor ? "." : Paths.ConfigPath;
 			Config = new ConfigFile(Utility.CombinePaths(configRoot, metadata.GUID + ".cfg"), false, metadata);
 		}
 	}
