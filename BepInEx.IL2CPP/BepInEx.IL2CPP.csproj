@@ -28,7 +28,7 @@
     <PackageReference Include="Il2CppAssemblyUnhollower.BaseLib" Version="0.4.13" />
     <PackageReference Include="Il2CppAssemblyUnhollower.BaseLib.Legacy" Version="0.4.11.1" />
     <PackageReference Include="Il2CppAssemblyUnhollower.Tool" Version="0.4.13" />
-    <PackageReference Include="Il2CppDumper" Version="1.0.0" />
+    <PackageReference Include="Il2CppDumper" Version="6.5.3" />
     <PackageReference Include="Il2CppReferenceLibs.Core" Version="1.0.0" IncludeAssets="compile" />
     <PackageReference Include="MonoMod.RuntimeDetour" Version="20.11.26.2" />
   </ItemGroup>
