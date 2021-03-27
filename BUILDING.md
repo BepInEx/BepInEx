@@ -14,7 +14,7 @@ Clone this repository via `git clone https://github.com/BepInEx/BepInEx.git`.
 After that, run in the repository directory
 
 ```bat
-build.bat -target=Build
+build.bat --target=Build
 ```
 
 ### Windows (PowerShell)
@@ -23,7 +23,7 @@ Clone this repository via `git clone https://github.com/BepInEx/BepInEx.git`.
 After that, run in the repository directory
 
 ```ps
-./build.ps1 -target=Build
+./build.ps1 --target=Build
 ```
 
 Make sure you have the execution policy set to enable running scripts.
