@@ -155,7 +155,7 @@ namespace BepInEx.IL2CPP
 
                 var dumperConfig = new Config
                 {
-                    GenerateScript = false,
+                    GenerateStruct = false,
                     GenerateDummyDll = true
                 };
 
