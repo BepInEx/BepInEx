@@ -19,8 +19,8 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="jnm2.ReferenceAssemblies.net35" Version="1.0.1" PrivateAssets="All" />
-    <PackageReference Include="HarmonyX" Version="2.3.1" />
-    <PackageReference Include="MonoMod.Utils" Version="20.11.26.2" />
+    <PackageReference Include="HarmonyX" Version="2.4.0" />
+    <PackageReference Include="MonoMod.Utils" Version="21.3.1.1" />
     <PackageReference Include="SemanticVersioning" Version="1.3.0" />
   </ItemGroup>
   <ItemGroup>
@@ -33,8 +33,8 @@
   <!-- Also delete deps.json as they are not used by mono -->
   <Target Name="DeleteSys" AfterTargets="Build">
     <ItemGroup>
-      <FilesToDelete Include="$(OutputPath)System.*.dll"/>
-      <FilesToDelete Include="$(OutputPath)*.deps.json"/>
+      <FilesToDelete Include="$(OutputPath)System.*.dll" />
+      <FilesToDelete Include="$(OutputPath)*.deps.json" />
     </ItemGroup>
     <Delete Files="@(FilesToDelete)" />
   </Target>

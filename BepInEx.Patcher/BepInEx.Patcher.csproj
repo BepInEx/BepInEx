@@ -19,7 +19,7 @@
   <ItemGroup>
     <PackageReference Include="jnm2.ReferenceAssemblies.net35" Version="1.0.1" PrivateAssets="All" />
     <PackageReference Include="ILRepack" Version="2.0.16" />
-    <PackageReference Include="ILRepack.Lib.MSBuild.Task" Version="2.0.16.1" />
+    <PackageReference Include="ILRepack.Lib.MSBuild.Task" Version="2.0.18.2" />
     <PackageReference Include="Mono.Cecil" Version="0.10.4" />
   </ItemGroup>
   <ItemGroup>

@@ -20,7 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="jnm2.ReferenceAssemblies.net35" Version="1.0.1" PrivateAssets="All" />
-    <PackageReference Include="HarmonyX" Version="2.3.1" />
+    <PackageReference Include="HarmonyX" Version="2.4.0" />
   </ItemGroup>
   <Import Project="..\BepInEx.Shared\BepInEx.Shared.projitems" Label="Shared" />
 </Project>
