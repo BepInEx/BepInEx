@@ -1,8 +1,8 @@
-#addin nuget:?package=Cake.FileHelpers&version=3.3.0
-#addin nuget:?package=SharpZipLib&version=1.3.0
-#addin nuget:?package=Cake.Compression&version=0.2.4
-#addin nuget:?package=Cake.Json&version=5.2.0
-#addin nuget:?package=Newtonsoft.Json&version=12.0.3
+#addin nuget:?package=Cake.FileHelpers&version=4.0.1
+#addin nuget:?package=SharpZipLib&version=1.3.1
+#addin nuget:?package=Cake.Compression&version=0.2.6
+#addin nuget:?package=Cake.Json&version=6.0.1
+#addin nuget:?package=Newtonsoft.Json&version=13.0.1
 
 var target = Argument("target", "Build");
 var isBleedingEdge = Argument("bleeding_edge", false);
@@ -193,7 +193,7 @@ Task("MakeDist")
         if (platform == "NetLauncher")
         {
             DeleteFile(Directory(bepinDir) + Directory("core") + File("BepInEx.NetLauncher.exe.config"));
-            MoveFiles(Directory(bepinDir) + Directory("core") + File("BepInEx.NetLauncher.*"), Directory(distArchDir));
+            MoveFiles((string)(Directory(bepinDir) + Directory("core") + File("BepInEx.NetLauncher.*")), Directory(distArchDir));
         }
     }
 
