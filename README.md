@@ -52,14 +52,14 @@ A more comprehensive comparison list of features and compatibility is available 
 | Unity Mod Manager | [Yan.UMMLoader](https://github.com/hacknet-bar/Yan.UMMLoader)                             |
 
 ## Used libraries
-- [NeighTools/UnityDoorstop](https://github.com/NeighTools/UnityDoorstop) - 3.1 ([1646a74](https://github.com/NeighTools/UnityDoorstop/commit/1646a74fd58c287533b67ac576ef974908d24346))
-- [NeighTools/UnityDoorstop.Unix](https://github.com/NeighTools/UnityDoorstop.Unix) - 1.2.0.0 ([94c882f](https://github.com/NeighTools/UnityDoorstop.Unix/commit/94c882f9c42b53685571b2d160ccf6e2e9492434))
-- [BepInEx/HarmonyX](https://github.com/BepInEx/HarmonyX) - 2.3.1 ([bbc07d](https://github.com/BepInEx/HarmonyX/commit/bbc07dd1a6537cb1397c490f93a5619ad1d1fe3e))
-- [0x0ade/MonoMod](https://github.com/0x0ade/MonoMod) - v20.11.26.02 ([1775ec9](https://github.com/MonoMod/MonoMod/commit/1775ec98e76d3420b2365d6103b4f1b69761a197))
+- [NeighTools/UnityDoorstop](https://github.com/NeighTools/UnityDoorstop) - 3.3.1.0 ([fad307f](https://github.com/NeighTools/UnityDoorstop/commit/fad307fda5c968d05675f17a49af7e790966fec3))
+- [NeighTools/UnityDoorstop.Unix](https://github.com/NeighTools/UnityDoorstop.Unix) - 1.5.0.0 ([06e9790](https://github.com/NeighTools/UnityDoorstop.Unix/commit/06e979008730cf89c6bcf8806f2c18c80b0a7b21))
+- [BepInEx/HarmonyX](https://github.com/BepInEx/HarmonyX) - 2.4.0 ([2aab488](https://github.com/BepInEx/HarmonyX/commit/2aab4887ebb4882f8946f96d49402b748e0bcb48))
+- [0x0ade/MonoMod](https://github.com/0x0ade/MonoMod) - v21.3.1.1 ([a526467](https://github.com/MonoMod/MonoMod/commit/a526467b18707b0282a7a434517d9fdee19f1cf9))
 - [jbevain/cecil](https://github.com/jbevain/cecil) - 0.10.4 ([98ec890](https://github.com/jbevain/cecil/commit/98ec890d44643ad88d573e97be0e120435eda732))
 
 #### IL2CPP libraries
-- [Perfare/Il2CppDumper](https://github.com/Perfare/Il2CppDumper) - v6.4.12 fork ([585cc52](https://github.com/BepInEx/Il2CppDumper/commit/585cc5209955a776e0e583c56b85bcfb4f0833e6))
+- [Perfare/Il2CppDumper](https://github.com/Perfare/Il2CppDumper) - v6.5.3 fork ([112e2e8](https://github.com/BepInEx/Il2CppDumper/commit/112e2e8c369dfcb6d5718fd4ad7e3838d7ddabbf))
 - [knah/Il2CppAssemblyUnhollower](https://github.com/knah/Il2CppAssemblyUnhollower) - v0.4.13.0 ([8957b7a](https://github.com/knah/Il2CppAssemblyUnhollower/commit/8957b7a6d7996467956f8354a0f6cdaf63c7adef))
 - [mono/mono](https://github.com/mono/mono) - 6.12.0.93 fork ([7328415](https://github.com/BepInEx/mono/commit/7328415ac575399a71f32487e97bce9d5fe7f6ca))
 
