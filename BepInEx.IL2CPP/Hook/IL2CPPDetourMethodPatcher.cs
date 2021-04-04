@@ -59,11 +59,11 @@ namespace BepInEx.IL2CPP.Hook
         private static readonly Dictionary<int, Type> FixedStructCache = new();
 
         private bool isValid;
-        private Il2CppMethodInfo* modifiedNativeMethodInfo;
+        private INativeMethodStruct modifiedNativeMethodInfo;
 
         private FastNativeDetour nativeDetour;
 
-        private Il2CppMethodInfo* originalNativeMethodInfo;
+        private INativeMethodStruct originalNativeMethodInfo;
 
         /// <summary>
         ///     Constructs a new instance of <see cref="NativeDetour" /> method patcher.
@@ -91,17 +91,16 @@ namespace BepInEx.IL2CPP.Hook
                 }
 
                 // Get the native MethodInfo struct for the target method
-                originalNativeMethodInfo = (Il2CppMethodInfo*) (IntPtr) methodField.GetValue(null);
+                originalNativeMethodInfo = UnityVersionHandler.Wrap((Il2CppMethodInfo*) (IntPtr) methodField.GetValue(null));
 
                 // Create a trampoline from the original target method
                 var trampolinePtr =
-                    DetourGenerator.CreateTrampolineFromFunction(originalNativeMethodInfo->methodPointer, out _, out _);
+                    DetourGenerator.CreateTrampolineFromFunction(originalNativeMethodInfo.MethodPointer, out _, out _);
 
                 // Create a modified native MethodInfo struct to point towards the trampoline
-                modifiedNativeMethodInfo = (Il2CppMethodInfo*) Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppMethodInfo>());
-                Marshal.StructureToPtr(*originalNativeMethodInfo, (IntPtr) modifiedNativeMethodInfo, false);
-
-                modifiedNativeMethodInfo->methodPointer = trampolinePtr;
+                modifiedNativeMethodInfo = UnityVersionHandler.NewMethod(); //(Il2CppMethodInfo*) Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppMethodInfo>());
+                Buffer.MemoryCopy(originalNativeMethodInfo.Pointer.ToPointer(), modifiedNativeMethodInfo.Pointer.ToPointer(), modifiedNativeMethodInfo.StructSize, originalNativeMethodInfo.StructSize);
+                modifiedNativeMethodInfo.MethodPointer = trampolinePtr;
                 isValid = true;
             }
             catch (Exception e)
@@ -136,7 +135,7 @@ namespace BepInEx.IL2CPP.Hook
 
             var detourPtr =
                 Marshal.GetFunctionPointerForDelegate(unmanagedTrampolineMethod.CreateDelegate(unmanagedDelegateType));
-            nativeDetour = new FastNativeDetour(originalNativeMethodInfo->methodPointer, detourPtr);
+            nativeDetour = new FastNativeDetour(originalNativeMethodInfo.MethodPointer, detourPtr);
             nativeDetour.Apply();
 
             // TODO: Add an ILHook for the original unhollowed method to go directly to managedHookedMethod
@@ -169,7 +168,7 @@ namespace BepInEx.IL2CPP.Hook
 
             // Replace original IL2CPPMethodInfo pointer with a modified one that points to the trampoline
             cursor
-                .Emit(Mono.Cecil.Cil.OpCodes.Ldc_I8, ((IntPtr) modifiedNativeMethodInfo).ToInt64())
+                .Emit(Mono.Cecil.Cil.OpCodes.Ldc_I8, modifiedNativeMethodInfo.Pointer.ToInt64())
                 .Emit(Mono.Cecil.Cil.OpCodes.Conv_I);
 
             return dmd;
