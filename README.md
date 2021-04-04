@@ -60,7 +60,7 @@ A more comprehensive comparison list of features and compatibility is available 
 
 #### IL2CPP libraries
 - [Perfare/Il2CppDumper](https://github.com/Perfare/Il2CppDumper) - v6.5.3 fork ([112e2e8](https://github.com/BepInEx/Il2CppDumper/commit/112e2e8c369dfcb6d5718fd4ad7e3838d7ddabbf))
-- [knah/Il2CppAssemblyUnhollower](https://github.com/knah/Il2CppAssemblyUnhollower) - v0.4.13.0 ([8957b7a](https://github.com/knah/Il2CppAssemblyUnhollower/commit/8957b7a6d7996467956f8354a0f6cdaf63c7adef))
+- [knah/Il2CppAssemblyUnhollower](https://github.com/knah/Il2CppAssemblyUnhollower) - v0.4.14.0 fork ([b154a79](https://github.com/BepInEx/Il2CppAssemblyUnhollower/commit/b154a79cd0ba582c562e8e01890ce5c3a58a755d))
 - [mono/mono](https://github.com/mono/mono) - 6.12.0.93 fork ([7328415](https://github.com/BepInEx/mono/commit/7328415ac575399a71f32487e97bce9d5fe7f6ca))
 
 ## Credits
