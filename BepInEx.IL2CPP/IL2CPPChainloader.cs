@@ -54,7 +54,7 @@ namespace BepInEx.IL2CPP
             var version = //Version.Parse(Application.unityVersion);
                 Version.Parse(Process.GetCurrentProcess().MainModule.FileVersionInfo.FileVersion);
 
-            UnityVersionHandler.Initialize(version.Major, version.Minor, version.Revision);
+            UnityVersionHandler.Initialize(version.Major, version.Minor, version.Build);
             ClassInjector.Detour = new UnhollowerDetourHandler();
 
             var gameAssemblyModule = Process.GetCurrentProcess().Modules.Cast<ProcessModule>()
