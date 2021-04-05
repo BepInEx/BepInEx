@@ -1,10 +1,11 @@
-﻿using System;
+extern alias UEC;
+using System;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using UnityEngine;
+using UEC::UnityEngine;
 
 namespace BepInEx.Configuration.Tests
 {

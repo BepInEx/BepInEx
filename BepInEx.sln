@@ -3,38 +3,38 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.28922.388
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BepInEx.Patcher", "BepInEx.Patcher\BepInEx.Patcher.csproj", "{DC89F18B-235B-4C01-AB31-AF40DCE5C4C7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BepInEx.Patcher", "BepInEx.Patcher\BepInEx.Patcher.csproj", "{DC89F18B-235B-4C01-AB31-AF40DCE5C4C7}"
 	ProjectSection(ProjectDependencies) = postProject
 		{4FFBA620-F5ED-47F9-B90C-DAD1316FD9B9} = {4FFBA620-F5ED-47F9-B90C-DAD1316FD9B9}
 		{6E6BC1E5-5BE8-4566-B3AE-52C4CB218AEB} = {6E6BC1E5-5BE8-4566-B3AE-52C4CB218AEB}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BepInEx.Bootstrap", "BepInEx.Bootstrap\BepInEx.Bootstrap.csproj", "{6E6BC1E5-5BE8-4566-B3AE-52C4CB218AEB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BepInEx.Bootstrap", "BepInEx.Bootstrap\BepInEx.Bootstrap.csproj", "{6E6BC1E5-5BE8-4566-B3AE-52C4CB218AEB}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Patcher", "Patcher", "{A9071994-3533-4C1B-89DC-D817B676AB41}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BepInExTests", "BepInExTests\BepInExTests.csproj", "{E7CD429A-D057-48E3-8C51-E5C934E8E07B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BepInExTests", "BepInExTests\BepInExTests.csproj", "{E7CD429A-D057-48E3-8C51-E5C934E8E07B}"
 	ProjectSection(ProjectDependencies) = postProject
 		{4FFBA620-F5ED-47F9-B90C-DAD1316FD9B9} = {4FFBA620-F5ED-47F9-B90C-DAD1316FD9B9}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BepInEx.Preloader.Core", "BepInEx.Preloader.Core\BepInEx.Preloader.Core.csproj", "{15F8BC38-A761-4F93-8903-1B531AC5D9F9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BepInEx.Preloader.Core", "BepInEx.Preloader.Core\BepInEx.Preloader.Core.csproj", "{15F8BC38-A761-4F93-8903-1B531AC5D9F9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BepInEx.Unity", "BepInEx.Unity\BepInEx.Unity.csproj", "{EAE9FAE6-8011-45A3-8B6E-0C7F14210533}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BepInEx.Unity", "BepInEx.Unity\BepInEx.Unity.csproj", "{EAE9FAE6-8011-45A3-8B6E-0C7F14210533}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BepInEx.Preloader.Unity", "BepInEx.Preloader.Unity\BepInEx.Preloader.Unity.csproj", "{D404C973-441D-48ED-B266-C21320BA0D87}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BepInEx.Preloader.Unity", "BepInEx.Preloader.Unity\BepInEx.Preloader.Unity.csproj", "{D404C973-441D-48ED-B266-C21320BA0D87}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BepInEx.Core", "BepInEx.Core\BepInEx.Core.csproj", "{4FFBA620-F5ED-47F9-B90C-DAD1316FD9B9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BepInEx.Core", "BepInEx.Core\BepInEx.Core.csproj", "{4FFBA620-F5ED-47F9-B90C-DAD1316FD9B9}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unity", "Unity", "{6E2DD21E-0854-4F4A-B925-D90E0016D03D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BepInEx.NetLauncher", "BepInEx.NetLauncher\BepInEx.NetLauncher.csproj", "{490B052B-7F23-4052-AD04-613856618901}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BepInEx.NetLauncher", "BepInEx.NetLauncher\BepInEx.NetLauncher.csproj", "{490B052B-7F23-4052-AD04-613856618901}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NetFramework", "NetFramework", "{6EC98884-A3DC-4828-85EF-5F10F7519429}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "IL2CPP", "IL2CPP", "{D5F47CFC-E4F3-46EE-B4F3-2474CF7D9E2C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BepInEx.IL2CPP", "BepInEx.IL2CPP\BepInEx.IL2CPP.csproj", "{429D5F83-7FEC-4D09-AB82-E868EB61AF59}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BepInEx.IL2CPP", "BepInEx.IL2CPP\BepInEx.IL2CPP.csproj", "{429D5F83-7FEC-4D09-AB82-E868EB61AF59}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Markdown", "Markdown", "{68C57430-3E92-4B50-A9A5-208FE9CCD914}"
 	ProjectSection(SolutionItems) = preProject
@@ -44,6 +44,16 @@ EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "BepInEx.Shared", "BepInEx.Shared\BepInEx.Shared.shproj", "{5C7847FB-C16D-47BD-BB17-1045669F9AA7}"
 EndProject
 Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		BepInEx.Shared\BepInEx.Shared.projitems*{429d5f83-7fec-4d09-ab82-e868eb61af59}*SharedItemsImports = 5
+		BepInEx.Shared\BepInEx.Shared.projitems*{490b052b-7f23-4052-ad04-613856618901}*SharedItemsImports = 5
+		BepInEx.Shared\BepInEx.Shared.projitems*{4ffba620-f5ed-47f9-b90c-dad1316fd9b9}*SharedItemsImports = 5
+		BepInEx.Shared\BepInEx.Shared.projitems*{5c7847fb-c16d-47bd-bb17-1045669f9aa7}*SharedItemsImports = 13
+		BepInEx.Shared\BepInEx.Shared.projitems*{6e6bc1e5-5be8-4566-b3ae-52c4cb218aeb}*SharedItemsImports = 5
+		BepInEx.Shared\BepInEx.Shared.projitems*{d404c973-441d-48ed-b266-c21320ba0d87}*SharedItemsImports = 5
+		BepInEx.Shared\BepInEx.Shared.projitems*{dc89f18b-235b-4c01-ab31-af40dce5c4c7}*SharedItemsImports = 5
+		BepInEx.Shared\BepInEx.Shared.projitems*{eae9fae6-8011-45a3-8b6e-0c7f14210533}*SharedItemsImports = 5
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release_NetFramework|Any CPU = Release_NetFramework|Any CPU
@@ -51,23 +61,23 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{DC89F18B-235B-4C01-AB31-AF40DCE5C4C7}.Debug|Any CPU.ActiveCfg = Release|Any CPU
-		{DC89F18B-235B-4C01-AB31-AF40DCE5C4C7}.Debug|Any CPU.Build.0 = Release|Any CPU
+		{DC89F18B-235B-4C01-AB31-AF40DCE5C4C7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DC89F18B-235B-4C01-AB31-AF40DCE5C4C7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DC89F18B-235B-4C01-AB31-AF40DCE5C4C7}.Release_NetFramework|Any CPU.ActiveCfg = Release|Any CPU
 		{DC89F18B-235B-4C01-AB31-AF40DCE5C4C7}.Release_Unity|Any CPU.ActiveCfg = Release|Any CPU
 		{DC89F18B-235B-4C01-AB31-AF40DCE5C4C7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DC89F18B-235B-4C01-AB31-AF40DCE5C4C7}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6E6BC1E5-5BE8-4566-B3AE-52C4CB218AEB}.Debug|Any CPU.ActiveCfg = Release|Any CPU
-		{6E6BC1E5-5BE8-4566-B3AE-52C4CB218AEB}.Debug|Any CPU.Build.0 = Release|Any CPU
+		{6E6BC1E5-5BE8-4566-B3AE-52C4CB218AEB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6E6BC1E5-5BE8-4566-B3AE-52C4CB218AEB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6E6BC1E5-5BE8-4566-B3AE-52C4CB218AEB}.Release_NetFramework|Any CPU.ActiveCfg = Release|Any CPU
 		{6E6BC1E5-5BE8-4566-B3AE-52C4CB218AEB}.Release_Unity|Any CPU.ActiveCfg = Release|Any CPU
 		{6E6BC1E5-5BE8-4566-B3AE-52C4CB218AEB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6E6BC1E5-5BE8-4566-B3AE-52C4CB218AEB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E7CD429A-D057-48E3-8C51-E5C934E8E07B}.Debug|Any CPU.ActiveCfg = Debug|x86
-		{E7CD429A-D057-48E3-8C51-E5C934E8E07B}.Debug|Any CPU.Build.0 = Debug|x86
-		{E7CD429A-D057-48E3-8C51-E5C934E8E07B}.Release_NetFramework|Any CPU.ActiveCfg = Release|x86
-		{E7CD429A-D057-48E3-8C51-E5C934E8E07B}.Release_Unity|Any CPU.ActiveCfg = Release|x86
-		{E7CD429A-D057-48E3-8C51-E5C934E8E07B}.Release|Any CPU.ActiveCfg = Release|x86
+		{E7CD429A-D057-48E3-8C51-E5C934E8E07B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E7CD429A-D057-48E3-8C51-E5C934E8E07B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E7CD429A-D057-48E3-8C51-E5C934E8E07B}.Release_NetFramework|Any CPU.ActiveCfg = Release|Any CPU
+		{E7CD429A-D057-48E3-8C51-E5C934E8E07B}.Release_Unity|Any CPU.ActiveCfg = Release|Any CPU
+		{E7CD429A-D057-48E3-8C51-E5C934E8E07B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{15F8BC38-A761-4F93-8903-1B531AC5D9F9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{15F8BC38-A761-4F93-8903-1B531AC5D9F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{15F8BC38-A761-4F93-8903-1B531AC5D9F9}.Release_NetFramework|Any CPU.ActiveCfg = Release|Any CPU
