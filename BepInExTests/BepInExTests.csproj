@@ -31,6 +31,7 @@
   <ItemGroup>
     <ProjectReference Include="..\BepInEx.Core\BepInEx.Core.csproj" />
     <ProjectReference Include="..\BepInEx.IL2CPP\BepInEx.IL2CPP.csproj" />
+<!--  BepInEx.Unity only targets net35 because that's supported by all mono variants. -->
     <ProjectReference Include="..\BepInEx.Unity\BepInEx.Unity.csproj" />
   </ItemGroup>
 </Project>
