@@ -7,10 +7,10 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
+using HarmonyLib;
 using Mono.Cecil;
 using MonoMod.Utils;
 using UnityEngine;
-using UnityEngine.Rendering;
 using Logger = BepInEx.Logging.Logger;
 
 namespace BepInEx.Bootstrap
@@ -42,8 +42,13 @@ namespace BepInEx.Bootstrap
 		// Check above for NoInlining reasoning
 		private static bool IsHeadless
 		{
-			[MethodImpl(MethodImplOptions.NoInlining)]
-			get => SystemInfo.graphicsDeviceType == GraphicsDeviceType.Null;
+			get
+			{
+				var prop = AccessTools.PropertyGetter(typeof(Application), "isBatchMode");
+				if (prop != null)
+					return (bool) prop.Invoke(null, null);
+				return SystemInfo.graphicsDeviceID == 0;
+			}
 		}
 
 		// Check above for NoInlining reasoning
