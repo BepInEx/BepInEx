@@ -288,6 +288,7 @@ namespace BepInEx.Bootstrap
 				Logger.LogMessage("Chainloader started");
 
 				ManagerObject = new GameObject("BepInEx_Manager");
+				ManagerObject.hideFlags = HideFlags.HideAndDontSave;
 
 				UnityEngine.Object.DontDestroyOnLoad(ManagerObject);
 
