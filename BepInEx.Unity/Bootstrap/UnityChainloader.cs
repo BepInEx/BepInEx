@@ -63,7 +63,7 @@ namespace BepInEx.Unity.Bootstrap
 
             ThreadingHelper.Initialize();
 
-            ManagerObject = new GameObject("BepInEx_Manager");
+            ManagerObject = new GameObject("BepInEx_Manager") { hideFlags = HideFlags.HideAndDontSave };
             Object.DontDestroyOnLoad(ManagerObject);
 
             var productNameProp =

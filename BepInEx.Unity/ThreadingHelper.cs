@@ -63,7 +63,7 @@ namespace BepInEx
 
         internal static void Initialize()
         {
-            var go = new GameObject("BepInEx_ThreadingHelper");
+            var go = new GameObject("BepInEx_ThreadingHelper") { hideFlags = HideFlags.HideAndDontSave };
             DontDestroyOnLoad(go);
             Instance = go.AddComponent<ThreadingHelper>();
         }
