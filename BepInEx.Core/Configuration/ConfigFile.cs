@@ -281,7 +281,7 @@ namespace BepInEx.Configuration
                 var directoryName = Path.GetDirectoryName(ConfigFilePath);
                 if (directoryName != null) Directory.CreateDirectory(directoryName);
 
-                using (var writer = new StreamWriter(ConfigFilePath, false, Encoding.UTF8))
+                using (var writer = new StreamWriter(ConfigFilePath, false, Utility.UTF8NoBom))
                 {
                     if (_ownerMetadata != null)
                     {
