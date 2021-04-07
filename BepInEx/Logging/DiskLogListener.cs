@@ -59,7 +59,7 @@ namespace BepInEx.Logging
 				localPath = $"LogOutput.log.{counter++}";
 			}
 
-			LogWriter = TextWriter.Synchronized(new StreamWriter(fileStream, Encoding.UTF8));
+			LogWriter = TextWriter.Synchronized(new StreamWriter(fileStream, Utility.UTF8NoBom));
 
 
 			FlushTimer = new Timer(o => { LogWriter?.Flush(); }, null, 2000, 2000);
