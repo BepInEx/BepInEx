@@ -55,7 +55,7 @@ namespace BepInEx
             }
 
             var originalOutStream = OpenFileStream(stdout);
-            StandardOut = new StreamWriter(originalOutStream, new UTF8Encoding(false))
+            StandardOut = new StreamWriter(originalOutStream, Utility.UTF8NoBom)
             {
                 AutoFlush = true
             };

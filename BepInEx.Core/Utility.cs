@@ -22,6 +22,11 @@ namespace BepInEx
         ///     <see cref="System.Reflection.Emit" /> namespace.
         /// </summary>
         public static bool CLRSupportsDynamicAssemblies => CheckSRE();
+        
+        /// <summary>
+        ///	An encoding for UTF-8 which does not emit a byte order mark (BOM). 
+        /// </summary>
+        public static Encoding UTF8NoBom { get; } = new UTF8Encoding(false);
 
         private static bool CheckSRE()
         {
