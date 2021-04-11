@@ -39,9 +39,9 @@ namespace BepInEx.Preloader.Unity
 
         public static void PreloaderPreMain()
         {
-            var bepinPath = Utility.ParentDirectory(Path.GetFullPath(EnvVars.DOORSTOP_INVOKE_DLL_PATH), 2);
-
             PlatformUtils.SetPlatform();
+
+            var bepinPath = Utility.ParentDirectory(Path.GetFullPath(EnvVars.DOORSTOP_INVOKE_DLL_PATH), 2);
             
             Paths.SetExecutablePath(EnvVars.DOORSTOP_MANAGED_FOLDER_DIR, bepinPath,
                                     EnvVars.DOORSTOP_MANAGED_FOLDER_DIR);
