@@ -32,7 +32,7 @@ namespace BepInEx.Preloader.Core.Logging
             if (PreloaderConsoleListener.LogEvents == null || PreloaderConsoleListener.LogEvents.Count == 0)
                 return;
 
-            // Temporarily disable the console log listener as we replay the preloader logs
+            // Temporarily disable the console log listener (if there is one from preloader) as we replay the preloader logs
             var logListener = Logger.Listeners.FirstOrDefault(logger => logger is ConsoleLogListener);
 
             if (logListener != null)

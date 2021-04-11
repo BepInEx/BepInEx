@@ -6,7 +6,6 @@ using System.IO;
 using System.Linq;
 using BepInEx.Bootstrap;
 using BepInEx.Configuration;
-using BepInEx.Core.Logging;
 using BepInEx.Logging;
 using BepInEx.Preloader.Core;
 using BepInEx.Preloader.Core.Logging;
@@ -97,8 +96,6 @@ namespace BepInEx.Preloader.Unity
                 Logger.Listeners.Remove(PreloaderLog);
 
                 PreloaderLog.Dispose();
-
-                Logger.Listeners.Add(new StdOutLogListener());
             }
             catch (Exception ex)
             {
