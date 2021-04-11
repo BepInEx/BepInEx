@@ -301,6 +301,11 @@ namespace BepInEx
             }
         }
 
+        /// <summary>
+        /// Compute a MD5 hash of the given stream.
+        /// </summary>
+        /// <param name="stream">Stream to hash</param>
+        /// <returns>MD5 hash as a hex string</returns>
         public static string HashStream(Stream stream)
         {
             using var md5 = MD5.Create();
@@ -315,6 +320,11 @@ namespace BepInEx
             return ByteArrayToString(md5.Hash);
         }
 
+        /// <summary>
+        /// Convert the given array to a hex string.
+        /// </summary>
+        /// <param name="data">Bytes to convert.</param>
+        /// <returns>Bytes reinterpreted as a hex number.</returns>
         public static string ByteArrayToString(byte[] data)
         {
             var builder = new StringBuilder(data.Length * 2);
