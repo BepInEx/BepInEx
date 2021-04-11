@@ -18,9 +18,9 @@
     <ProjectReference Include="..\BepInEx.Core\BepInEx.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="jnm2.ReferenceAssemblies.net35" Version="1.0.1" PrivateAssets="All" />
-    <PackageReference Include="HarmonyX" Version="2.4.0" />
-    <PackageReference Include="MonoMod.RuntimeDetour" Version="21.3.1.1" />
-    <PackageReference Include="MonoMod.Utils" Version="21.3.1.1" />
+      <PackageReference Include="jnm2.ReferenceAssemblies.net35" Version="1.0.1" PrivateAssets="All"/>
+      <PackageReference Include="HarmonyX" Version="2.4.1"/>
+      <PackageReference Include="MonoMod.RuntimeDetour" Version="21.4.2.3"/>
+      <PackageReference Include="MonoMod.Utils" Version="21.4.2.3"/>
   </ItemGroup>
 </Project>

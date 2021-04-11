@@ -52,11 +52,16 @@ A more comprehensive comparison list of features and compatibility is available 
 | Unity Mod Manager | [Yan.UMMLoader](https://github.com/hacknet-bar/Yan.UMMLoader)                             |
 
 ## Used libraries
-- [NeighTools/UnityDoorstop](https://github.com/NeighTools/UnityDoorstop) - 3.3.1.0 ([fad307f](https://github.com/NeighTools/UnityDoorstop/commit/fad307fda5c968d05675f17a49af7e790966fec3))
-- [NeighTools/UnityDoorstop.Unix](https://github.com/NeighTools/UnityDoorstop.Unix) - 1.5.0.0 ([06e9790](https://github.com/NeighTools/UnityDoorstop.Unix/commit/06e979008730cf89c6bcf8806f2c18c80b0a7b21))
-- [BepInEx/HarmonyX](https://github.com/BepInEx/HarmonyX) - 2.4.0 ([2aab488](https://github.com/BepInEx/HarmonyX/commit/2aab4887ebb4882f8946f96d49402b748e0bcb48))
-- [0x0ade/MonoMod](https://github.com/0x0ade/MonoMod) - v21.3.1.1 ([a526467](https://github.com/MonoMod/MonoMod/commit/a526467b18707b0282a7a434517d9fdee19f1cf9))
-- [jbevain/cecil](https://github.com/jbevain/cecil) - 0.10.4 ([98ec890](https://github.com/jbevain/cecil/commit/98ec890d44643ad88d573e97be0e120435eda732))
+- [NeighTools/UnityDoorstop](https://github.com/NeighTools/UnityDoorstop) -
+  3.3.1.0 ([fad307f](https://github.com/NeighTools/UnityDoorstop/commit/fad307fda5c968d05675f17a49af7e790966fec3))
+- [NeighTools/UnityDoorstop.Unix](https://github.com/NeighTools/UnityDoorstop.Unix) -
+  1.5.0.0 ([06e9790](https://github.com/NeighTools/UnityDoorstop.Unix/commit/06e979008730cf89c6bcf8806f2c18c80b0a7b21))
+- [BepInEx/HarmonyX](https://github.com/BepInEx/HarmonyX) -
+  2.4.1 ([f837708](https://github.com/BepInEx/HarmonyX/commit/f837708b0a5d65ce82fbe2de4c74a5c23e4dbbcf))
+- [0x0ade/MonoMod](https://github.com/0x0ade/MonoMod) -
+  v21.4.2.3 ([9e99320](https://github.com/MonoMod/MonoMod/commit/9e99320cec3b276b55d204bd73697e26497d9275))
+- [jbevain/cecil](https://github.com/jbevain/cecil) -
+  0.10.4 ([98ec890](https://github.com/jbevain/cecil/commit/98ec890d44643ad88d573e97be0e120435eda732))
 
 #### IL2CPP libraries
 - [Perfare/Il2CppDumper](https://github.com/Perfare/Il2CppDumper) - v6.5.3 fork ([112e2e8](https://github.com/BepInEx/Il2CppDumper/commit/112e2e8c369dfcb6d5718fd4ad7e3838d7ddabbf))

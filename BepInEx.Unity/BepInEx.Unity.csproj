@@ -21,7 +21,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="jnm2.ReferenceAssemblies.net35" Version="1.0.1" PrivateAssets="All" />
-    <PackageReference Include="HarmonyX" Version="2.4.0" />
+    <PackageReference Include="HarmonyX" Version="2.4.1"/>
     <PackageReference Include="UnityEngine.Core" Version="5.6.1" IncludeAssets="compile" />
   </ItemGroup>
   <Import Project="..\BepInEx.Shared\BepInEx.Shared.projitems" Label="Shared" />
