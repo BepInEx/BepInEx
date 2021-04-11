@@ -41,6 +41,8 @@ namespace BepInEx.Preloader.Unity
         {
             var bepinPath = Utility.ParentDirectory(Path.GetFullPath(EnvVars.DOORSTOP_INVOKE_DLL_PATH), 2);
 
+            PlatformUtils.SetPlatform();
+            
             Paths.SetExecutablePath(EnvVars.DOORSTOP_MANAGED_FOLDER_DIR, bepinPath,
                                     EnvVars.DOORSTOP_MANAGED_FOLDER_DIR);
             AppDomain.CurrentDomain.AssemblyResolve += LocalResolve;
@@ -53,8 +55,6 @@ namespace BepInEx.Preloader.Unity
 
         private static void PreloaderMain()
         {
-            PlatformUtils.SetPlatform();
-
             if (UnityPreloader.ConfigApplyRuntimePatches.Value)
             {
                 XTermFix.Apply();
