@@ -210,22 +210,22 @@ namespace BepInEx.Preloader.Core
 
 
         /// <summary>
-        ///     Adds all .dll assemblies in a directory to be patched and loaded by this patcher instance. Non-managed assemblies
+        ///     Adds all .dll assemblies in given directories to be patched and loaded by this patcher instance. Non-managed assemblies
         ///     are skipped.
         /// </summary>
-        /// <param name="directory">The directory to search.</param>
-        public void LoadAssemblyDirectory(string directory) => LoadAssemblyDirectory(directory, "dll");
+        /// <param name="directories">The directories to search.</param>
+        public void LoadAssemblyDirectories(params string[] directories) => LoadAssemblyDirectories(directories, new []{ "dll" });
 
         /// <summary>
-        ///     Adds all assemblies in a directory to be patched and loaded by this patcher instance. Non-managed assemblies are
+        ///     Adds all assemblies in given directories to be patched and loaded by this patcher instance. Non-managed assemblies are
         ///     skipped.
         /// </summary>
-        /// <param name="directory">The directory to search.</param>
+        /// <param name="directories">The directory to search.</param>
         /// <param name="assemblyExtensions">The file extensions to attempt to load.</param>
-        public void LoadAssemblyDirectory(string directory, params string[] assemblyExtensions)
+        public void LoadAssemblyDirectories(IEnumerable<string> directories, IEnumerable<string> assemblyExtensions)
         {
             var filesToSearch = assemblyExtensions
-                .SelectMany(ext => Directory.GetFiles(directory, "*." + ext, SearchOption.TopDirectoryOnly));
+                .SelectMany(ext => Utility.GetUniqueFilesInDirectories(directories, $"*.{ext}"));
 
             foreach (var assemblyPath in filesToSearch)
             {

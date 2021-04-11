@@ -61,7 +61,7 @@ namespace BepInEx.IL2CPP
 
                     Log.LogInfo($"{assemblyPatcher.PatcherPlugins.Count} patcher plugin{(assemblyPatcher.PatcherPlugins.Count == 1 ? "" : "s")} loaded");
 
-                    assemblyPatcher.LoadAssemblyDirectory(IL2CPPUnhollowedPath);
+                    assemblyPatcher.LoadAssemblyDirectories(IL2CPPUnhollowedPath);
 
                     Log.LogInfo($"{assemblyPatcher.PatcherPlugins.Count} assemblies discovered");
 

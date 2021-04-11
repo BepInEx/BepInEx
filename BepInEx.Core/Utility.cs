@@ -345,5 +345,25 @@ namespace BepInEx
             var newTrusted = curTrusted == null ? addTrusted : $"{curTrusted}{Path.PathSeparator}{addTrusted}";
             appDomain.SetData(TRUSTED_PLATFORM_ASSEMBLIES, newTrusted);
         }
+        
+        /// <summary>
+        /// Gets unique files in all given directories. If the file with the same name exists in multiple directories,
+        /// only the first occurrence is returned.
+        /// </summary>
+        /// <param name="directories">Directories to search from.</param>
+        /// <param name="pattern">File pattern to search.</param>
+        /// <returns>Collection of all files in the directories.</returns>
+        public static IEnumerable<string> GetUniqueFilesInDirectories(IEnumerable<string> directories, string pattern = "*")
+        {
+            var result = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+            foreach (var directory in directories)
+            foreach (var file in Directory.GetFiles(directory, pattern))
+            {
+                var fileName = Path.GetFileName(file);
+                if (!result.ContainsKey(fileName))
+                    result[fileName] = file;
+            }
+            return result.Values;
+        }
     }
 }

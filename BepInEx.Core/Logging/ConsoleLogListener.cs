@@ -20,7 +20,7 @@ namespace BepInEx.Logging
                 return;
 
             ConsoleManager.SetConsoleColor(eventArgs.Level.GetConsoleColor());
-            Console.Write(eventArgs.ToStringLine());
+            ConsoleManager.ConsoleStream?.Write(eventArgs.ToStringLine());
             ConsoleManager.SetConsoleColor(ConsoleColor.Gray);
         }
 

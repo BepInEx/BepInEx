@@ -23,11 +23,18 @@ namespace BepInEx
         }
 
         private const uint SHIFT_JIS_CP = 932;
+        
+        public static bool ConsoleEnabled => EnableConsoleArgOverride ?? ConfigConsoleEnabled.Value;
 
         public static readonly ConfigEntry<bool> ConfigConsoleEnabled = ConfigFile.CoreConfig.Bind(
          "Logging.Console", "Enabled",
          false,
          "Enables showing a console for log output.");
+        
+        public static readonly ConfigEntry<bool> ConfigPreventClose = ConfigFile.CoreConfig.Bind(
+         "Logging.Console", "PreventClose",
+         false,
+         "If enabled, will prevent closing the console (either by deleting the close button or in other platform-specific way).");
 
         public static readonly ConfigEntry<bool> ConfigConsoleShiftJis = ConfigFile.CoreConfig.Bind(
          "Logging.Console", "ShiftJisEncoding",
@@ -62,11 +69,34 @@ namespace BepInEx
         ///     The stream that writes to an external console. Null if no such console exists
         /// </summary>
         public static TextWriter ConsoleStream => Driver?.ConsoleOut;
+        
+        private static readonly bool? EnableConsoleArgOverride;
+
+        private const string ENABLE_CONSOLE_ARG = "--enable-console";
+        
+        static ConsoleManager()
+        {
+            // Ensure GetCommandLineArgs failing (e.g. on unix) does not kill bepin
+            try
+            {
+                var args = Environment.GetCommandLineArgs();
+                for (var i = 0; i < args.Length; i++)
+                {
+                    var res = args[i];
+                    if (res == ENABLE_CONSOLE_ARG && i + 1 < args.Length && bool.TryParse(args[i + 1], out var enable))
+                        EnableConsoleArgOverride = enable;
+                }
+            }
+            catch (Exception)
+            {
+                // Skip
+            }
+        }
 
 
         public static void Initialize(bool alreadyActive)
         {
-            if (PlatformHelper.Is(Platform.MacOS) || PlatformHelper.Is(Platform.Linux))
+            if (PlatformHelper.Is(Platform.Unix))
                 Driver = new LinuxConsoleDriver();
             else if (PlatformHelper.Is(Platform.Windows))
                 Driver = new WindowsConsoleDriver();
@@ -96,7 +126,10 @@ namespace BepInEx
             var codepage = ConfigConsoleShiftJis.Value ? SHIFT_JIS_CP : (uint) Encoding.UTF8.CodePage;
 
             Driver.CreateConsole(codepage);
-            Console.SetOut(ConsoleStream);
+            // Console.SetOut(ConsoleStream);
+            
+            if (ConfigPreventClose.Value)
+                Driver.PreventClose();
         }
 
         public static void DetachConsole()

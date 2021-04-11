@@ -29,13 +29,10 @@ namespace BepInEx.Preloader.Unity
 
         private static ManualLogSource Log => PreloaderLogger.Log;
 
-        public static string ManagedPath { get; private set; } =
-            Utility.CombinePaths(Paths.GameRootPath, $"{Paths.ProcessName}_Data", "Managed");
-
         public static bool IsPostUnity2017 { get; } =
-            File.Exists(Path.Combine(ManagedPath, "UnityEngine.CoreModule.dll"));
+            File.Exists(Path.Combine(Paths.ManagedPath, "UnityEngine.CoreModule.dll"));
 
-        public static void Run(string managedDirectory)
+        public static void Run()
         {
             try
             {
@@ -44,18 +41,14 @@ namespace BepInEx.Preloader.Unity
                 ConsoleManager.Initialize(false);
                 AllocateConsole();
 
-                if (managedDirectory != null)
-                    ManagedPath = managedDirectory;
-
-
                 Utility.TryDo(() =>
                 {
                     if (ConfigApplyRuntimePatches.Value)
                         UnityPatches.Apply();
                 }, out var runtimePatchException);
 
-                Logger.Sources.Add(TraceLogSource.CreateSource());
                 Logger.Sources.Add(new HarmonyLogSource());
+                Logger.Sources.Add(TraceLogSource.CreateSource());
 
                 Logger.Listeners.Add(new ConsoleLogListener());
                 PreloaderLog = new PreloaderConsoleListener();
@@ -68,7 +61,7 @@ namespace BepInEx.Preloader.Unity
                 Log.LogInfo($"Supports SRE: {Utility.CLRSupportsDynamicAssemblies}");
 
                 Log.LogDebug($"Game executable path: {Paths.ExecutablePath}");
-                Log.LogDebug($"Unity Managed directory: {ManagedPath}");
+                Log.LogDebug($"Unity Managed directory: {Paths.ManagedPath}");
                 Log.LogDebug($"BepInEx root path: {Paths.BepInExRootPath}");
 
                 if (runtimePatchException != null)
@@ -76,7 +69,7 @@ namespace BepInEx.Preloader.Unity
 
                 Log.LogMessage("Preloader started");
 
-                TypeLoader.SearchDirectories.Add(ManagedPath);
+                TypeLoader.SearchDirectories.UnionWith(Paths.DllSearchPaths);
 
                 using (var assemblyPatcher = new AssemblyPatcher())
                 {
@@ -91,7 +84,7 @@ namespace BepInEx.Preloader.Unity
 
                     Log.LogInfo($"{assemblyPatcher.PatcherPlugins.Count} patcher plugin{(assemblyPatcher.PatcherPlugins.Count == 1 ? "" : "s")} loaded");
 
-                    assemblyPatcher.LoadAssemblyDirectory(ManagedPath);
+                    assemblyPatcher.LoadAssemblyDirectories(Paths.DllSearchPaths);
 
                     Log.LogInfo($"{assemblyPatcher.PatcherPlugins.Count} assemblies discovered");
 
@@ -233,7 +226,7 @@ namespace BepInEx.Preloader.Unity
         /// </summary>
         public static void AllocateConsole()
         {
-            if (!ConsoleManager.ConfigConsoleEnabled.Value)
+            if (!ConsoleManager.ConsoleEnabled)
                 return;
 
             try

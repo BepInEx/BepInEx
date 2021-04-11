@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Linq;
 using System.Reflection;
 using MonoMod.Utils;
 using SemVer;
@@ -77,10 +78,16 @@ namespace BepInEx
         ///     The name of the currently executing process.
         /// </summary>
         public static string ProcessName { get; private set; }
+        
+        /// <summary>
+        ///	    List of directories from where Mono will search assemblies before assembly resolving is invoked.
+        /// </summary>
+        public static string[] DllSearchPaths { get; private set; }
 
         public static void SetExecutablePath(string executablePath,
                                              string bepinRootPath = null,
-                                             string managedPath = null)
+                                             string managedPath = null,
+                                             string[] dllSearchPath = null)
         {
             ExecutablePath = executablePath;
             ProcessName = Path.GetFileNameWithoutExtension(executablePath);
@@ -99,6 +106,7 @@ namespace BepInEx
             BepInExAssemblyPath = Path.Combine(BepInExAssemblyDirectory,
                                                $"{Assembly.GetExecutingAssembly().GetName().Name}.dll");
             CachePath = Path.Combine(BepInExRootPath, "cache");
+            DllSearchPaths = (dllSearchPath ?? new string[0]).Concat(new[] { ManagedPath }).Distinct().ToArray();
         }
 
         internal static void SetPluginPath(string pluginPath) =>

@@ -10,6 +10,8 @@ namespace BepInEx
 
         bool ConsoleActive { get; }
         bool ConsoleIsExternal { get; }
+        
+        void PreventClose();
 
         void Initialize(bool alreadyActive);
 

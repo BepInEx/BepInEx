@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
 using UnityInjector.ConsoleUtil;
@@ -8,9 +9,19 @@ namespace BepInEx.Unix
 {
     internal class LinuxConsoleDriver : IConsoleDriver
     {
+        private static readonly ConfigEntry<bool> ForceCustomTtyDriverConfig =
+            ConfigFile.CoreConfig.Bind(
+                                       "Logging.Console",
+                                       "ForceBepInExTTYDriver",
+                                       false,
+                                       "If enabled, forces to use custom BepInEx TTY driver for handling terminal output on unix.");
+        
         static LinuxConsoleDriver()
         {
             UseMonoTtyDriver = false;
+            
+            if (ForceCustomTtyDriverConfig.Value)
+                return;
 
             var consoleDriverType = typeof(Console).Assembly.GetType("System.ConsoleDriver");
 
@@ -29,6 +40,11 @@ namespace BepInEx.Unix
 
         public bool ConsoleActive { get; private set; }
         public bool ConsoleIsExternal => false;
+
+        public void PreventClose()
+        {
+            // Not supported by all distros
+        }
 
         public void Initialize(bool alreadyActive)
         {
