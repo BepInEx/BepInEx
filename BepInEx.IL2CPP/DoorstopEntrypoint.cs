@@ -15,7 +15,7 @@ namespace BepInEx.IL2CPP
 
             PlatformUtils.SetPlatform();
 
-            Paths.SetExecutablePath(EnvVars.DOORSTOP_PROCESS_PATH, bepinPath, EnvVars.DOORSTOP_MANAGED_FOLDER_DIR);
+            Paths.SetExecutablePath(EnvVars.DOORSTOP_PROCESS_PATH, bepinPath, EnvVars.DOORSTOP_MANAGED_FOLDER_DIR, EnvVars.DOORSTOP_DLL_SEARCH_DIRS);
 
             // Cecil 0.11 requires one to manually set up list of trusted assemblies for assembly resolving
             AppDomain.CurrentDomain.AddCecilPlatformAssemblies(Paths.ManagedPath);
