@@ -23,14 +23,14 @@ namespace BepInEx
         }
 
         private const uint SHIFT_JIS_CP = 932;
-        
+
         public static bool ConsoleEnabled => EnableConsoleArgOverride ?? ConfigConsoleEnabled.Value;
 
         public static readonly ConfigEntry<bool> ConfigConsoleEnabled = ConfigFile.CoreConfig.Bind(
          "Logging.Console", "Enabled",
          false,
          "Enables showing a console for log output.");
-        
+
         public static readonly ConfigEntry<bool> ConfigPreventClose = ConfigFile.CoreConfig.Bind(
          "Logging.Console", "PreventClose",
          false,
@@ -69,11 +69,11 @@ namespace BepInEx
         ///     The stream that writes to an external console. Null if no such console exists
         /// </summary>
         public static TextWriter ConsoleStream => Driver?.ConsoleOut;
-        
+
         private static readonly bool? EnableConsoleArgOverride;
 
         private const string ENABLE_CONSOLE_ARG = "--enable-console";
-        
+
         static ConsoleManager()
         {
             // Ensure GetCommandLineArgs failing (e.g. on unix) does not kill bepin
@@ -127,7 +127,7 @@ namespace BepInEx
 
             Driver.CreateConsole(codepage);
             // Console.SetOut(ConsoleStream);
-            
+
             if (ConfigPreventClose.Value)
                 Driver.PreventClose();
         }

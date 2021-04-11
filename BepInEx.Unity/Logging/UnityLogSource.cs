@@ -15,7 +15,10 @@ namespace BepInEx.Unity.Logging
         /// <summary>
         ///     Creates a new Unity log source.
         /// </summary>
-        public UnityLogSource() => InternalUnityLogMessage += UnityLogMessageHandler;
+        public UnityLogSource()
+        {
+            InternalUnityLogMessage += UnityLogMessageHandler;
+        }
 
         /// <inheritdoc />
         public string SourceName { get; } = "Unity Log";

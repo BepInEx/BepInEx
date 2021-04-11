@@ -13,7 +13,10 @@ namespace BepInEx.Logging
         /// <summary>
         ///     Creates a new trace log source.
         /// </summary>
-        protected TraceLogSource() => LogSource = new ManualLogSource("Trace");
+        protected TraceLogSource()
+        {
+            LogSource = new ManualLogSource("Trace");
+        }
 
         /// <summary>
         ///     Whether Trace logs are currently being rerouted.

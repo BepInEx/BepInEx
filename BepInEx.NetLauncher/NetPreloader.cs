@@ -72,7 +72,7 @@ namespace BepInEx.NetLauncher
 
                 Log.LogInfo($"{assemblyPatcher.PatcherPlugins.Count} patcher plugin(s) loaded");
 
-                assemblyPatcher.LoadAssemblyDirectories(new []{ Paths.GameRootPath }, new []{ "dll", "exe" });
+                assemblyPatcher.LoadAssemblyDirectories(new[] { Paths.GameRootPath }, new[] { "dll", "exe" });
 
                 Log.LogInfo($"{assemblyPatcher.AssembliesToPatch.Count} assemblies discovered");
 

@@ -26,9 +26,11 @@ namespace UnityInjector.ConsoleUtil
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern int MultiByteToWideChar(uint codePage,
                                                       uint dwFlags,
-                                                      [In] [MarshalAs(UnmanagedType.LPArray)] byte[] lpMultiByteStr,
+                                                      [In] [MarshalAs(UnmanagedType.LPArray)]
+                                                      byte[] lpMultiByteStr,
                                                       int cbMultiByte,
-                                                      [Out] [MarshalAs(UnmanagedType.LPWStr)] char[] lpWideCharStr,
+                                                      [Out] [MarshalAs(UnmanagedType.LPWStr)]
+                                                      char[] lpWideCharStr,
                                                       int cchWideChar);
 
         [DllImport("kernel32.dll")]
@@ -39,7 +41,8 @@ namespace UnityInjector.ConsoleUtil
                                                       uint dwFlags,
                                                       [In] [MarshalAs(UnmanagedType.LPWStr)] char[] lpWideCharStr,
                                                       int cchWideChar,
-                                                      [Out] [MarshalAs(UnmanagedType.LPArray)] byte[] lpMultiByteStr,
+                                                      [Out] [MarshalAs(UnmanagedType.LPArray)]
+                                                      byte[] lpMultiByteStr,
                                                       int cbMultiByte,
                                                       IntPtr lpDefaultChar,
                                                       IntPtr lpUsedDefaultChar);

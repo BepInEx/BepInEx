@@ -67,6 +67,9 @@ namespace BepInEx.Unix
             base.Dispose(disposing);
         }
 
-        ~UnixStream() => Dispose(false);
+        ~UnixStream()
+        {
+            Dispose(false);
+        }
     }
 }

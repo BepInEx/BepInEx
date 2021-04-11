@@ -24,7 +24,7 @@ namespace BepInEx.Preloader.Core
         ///     Full path to the game executable currently running.
         /// </summary>
         public static string DOORSTOP_PROCESS_PATH { get; private set; }
-        
+
         /// <summary>
         /// Array of paths where Mono searches DLLs from before assembly resolvers are invoked.
         /// </summary>
@@ -35,7 +35,9 @@ namespace BepInEx.Preloader.Core
             DOORSTOP_INVOKE_DLL_PATH = Environment.GetEnvironmentVariable("DOORSTOP_INVOKE_DLL_PATH");
             DOORSTOP_MANAGED_FOLDER_DIR = Environment.GetEnvironmentVariable("DOORSTOP_MANAGED_FOLDER_DIR");
             DOORSTOP_PROCESS_PATH = Environment.GetEnvironmentVariable("DOORSTOP_PROCESS_PATH");
-            DOORSTOP_DLL_SEARCH_DIRS = Environment.GetEnvironmentVariable("DOORSTOP_DLL_SEARCH_DIRS")?.Split(Path.PathSeparator) ?? new string[0];
+            DOORSTOP_DLL_SEARCH_DIRS =
+                Environment.GetEnvironmentVariable("DOORSTOP_DLL_SEARCH_DIRS")?.Split(Path.PathSeparator) ??
+                new string[0];
         }
     }
 }

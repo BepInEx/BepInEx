@@ -69,7 +69,10 @@ namespace BepInEx.IL2CPP.Hook
         ///     Constructs a new instance of <see cref="NativeDetour" /> method patcher.
         /// </summary>
         /// <param name="original"></param>
-        public IL2CPPDetourMethodPatcher(MethodBase original) : base(original) => Init();
+        public IL2CPPDetourMethodPatcher(MethodBase original) : base(original)
+        {
+            Init();
+        }
 
         private void Init()
         {
@@ -91,15 +94,20 @@ namespace BepInEx.IL2CPP.Hook
                 }
 
                 // Get the native MethodInfo struct for the target method
-                originalNativeMethodInfo = UnityVersionHandler.Wrap((Il2CppMethodInfo*) (IntPtr) methodField.GetValue(null));
+                originalNativeMethodInfo =
+                    UnityVersionHandler.Wrap((Il2CppMethodInfo*) (IntPtr) methodField.GetValue(null));
 
                 // Create a trampoline from the original target method
                 var trampolinePtr =
                     DetourGenerator.CreateTrampolineFromFunction(originalNativeMethodInfo.MethodPointer, out _, out _);
 
                 // Create a modified native MethodInfo struct to point towards the trampoline
-                modifiedNativeMethodInfo = UnityVersionHandler.NewMethod(); //(Il2CppMethodInfo*) Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppMethodInfo>());
-                Buffer.MemoryCopy(originalNativeMethodInfo.Pointer.ToPointer(), modifiedNativeMethodInfo.Pointer.ToPointer(), modifiedNativeMethodInfo.StructSize, originalNativeMethodInfo.StructSize);
+                modifiedNativeMethodInfo =
+                    UnityVersionHandler
+                        .NewMethod(); //(Il2CppMethodInfo*) Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppMethodInfo>());
+                Buffer.MemoryCopy(originalNativeMethodInfo.Pointer.ToPointer(),
+                                  modifiedNativeMethodInfo.Pointer.ToPointer(), modifiedNativeMethodInfo.StructSize,
+                                  originalNativeMethodInfo.StructSize);
                 modifiedNativeMethodInfo.MethodPointer = trampolinePtr;
                 isValid = true;
             }

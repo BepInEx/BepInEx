@@ -18,7 +18,8 @@ namespace BepInEx.Configuration
     /// </summary>
     public struct KeyboardShortcut
     {
-        static KeyboardShortcut() =>
+        static KeyboardShortcut()
+        {
             TomlTypeConverter.AddConverter(
                                            typeof(KeyboardShortcut),
                                            new TypeConverter
@@ -26,6 +27,7 @@ namespace BepInEx.Configuration
                                                ConvertToString = (o, type) => ((KeyboardShortcut) o).Serialize(),
                                                ConvertToObject = (s, type) => Deserialize(s)
                                            });
+        }
 
         /// <summary>
         ///     Shortcut that never triggers.
@@ -59,7 +61,10 @@ namespace BepInEx.Configuration
                     ArgumentException($"Can't set {nameof(mainKey)} to KeyCode.None if there are any {nameof(modifiers)}");
         }
 
-        private KeyboardShortcut(KeyCode[] keys) => _allKeys = SanitizeKeys(keys);
+        private KeyboardShortcut(KeyCode[] keys)
+        {
+            _allKeys = SanitizeKeys(keys);
+        }
 
         private static KeyCode[] SanitizeKeys(params KeyCode[] keys)
         {

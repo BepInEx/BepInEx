@@ -122,7 +122,10 @@ namespace BepInEx
         /// <param name="guid">The GUID of the referenced plugin.</param>
         /// <param name="version">The version range of the referenced plugin.</param>
         /// <remarks>When version is supplied the dependency is always treated as HardDependency</remarks>
-        public BepInDependency(string guid, string version) : this(guid) => VersionRange = Range.Parse(version);
+        public BepInDependency(string guid, string version) : this(guid)
+        {
+            VersionRange = Range.Parse(version);
+        }
 
         /// <summary>
         ///     The GUID of the referenced plugin.
@@ -179,7 +182,10 @@ namespace BepInEx
         ///     If the other plugin exists, this plugin will not be loaded and a warning will be shown.
         /// </summary>
         /// <param name="IncompatibilityGUID">The GUID of the referenced plugin.</param>
-        public BepInIncompatibility(string IncompatibilityGUID) => this.IncompatibilityGUID = IncompatibilityGUID;
+        public BepInIncompatibility(string IncompatibilityGUID)
+        {
+            this.IncompatibilityGUID = IncompatibilityGUID;
+        }
 
         /// <summary>
         ///     The GUID of the referenced plugin.
@@ -209,7 +215,10 @@ namespace BepInEx
     public class BepInProcess : Attribute
     {
         /// <param name="ProcessName">The name of the process that this plugin will run under.</param>
-        public BepInProcess(string ProcessName) => this.ProcessName = ProcessName;
+        public BepInProcess(string ProcessName)
+        {
+            this.ProcessName = ProcessName;
+        }
 
         /// <summary>
         ///     The name of the process that this plugin will run under.

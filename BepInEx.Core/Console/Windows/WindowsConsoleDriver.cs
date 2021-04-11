@@ -68,11 +68,8 @@ namespace BepInEx
             };
             ConsoleActive = true;
         }
-        
-        public void PreventClose()
-        {
-            ConsoleWindow.PreventClose();
-        }
+
+        public void PreventClose() => ConsoleWindow.PreventClose();
 
         public void DetachConsole()
         {

@@ -17,11 +17,13 @@ namespace BepInEx.Configuration
                              ConfigDefinition definition,
                              T defaultValue,
                              ConfigDescription configDescription) : base(configFile, definition, typeof(T),
-                                                                         defaultValue, configDescription) =>
+                                                                         defaultValue, configDescription)
+        {
             configFile.SettingChanged += (sender, args) =>
             {
                 if (args.ChangedSetting == this) SettingChanged?.Invoke(sender, args);
             };
+        }
 
         /// <summary>
         ///     Value of this setting.

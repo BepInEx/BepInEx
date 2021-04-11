@@ -6,8 +6,10 @@ namespace BepInEx.IL2CPP.Logging
 {
     public class IL2CPPUnityLogSource : ILogSource
     {
-        public IL2CPPUnityLogSource() =>
+        public IL2CPPUnityLogSource()
+        {
             Application.s_LogCallbackHandler = new Action<string, string, LogType>(UnityLogCallback);
+        }
 
         public string SourceName { get; } = "Unity";
 

@@ -30,7 +30,7 @@ namespace UnityInjector.ConsoleUtil
                 if (!SetConsoleTitle(value)) throw new InvalidOperationException("Console title invalid");
             }
         }
-        
+
         public static void PreventClose()
         {
             if (!IsAttached)
@@ -129,14 +129,14 @@ namespace UnityInjector.ConsoleUtil
 
         [DllImport("kernel32.dll", BestFitMapping = true, CharSet = CharSet.Auto, SetLastError = true)]
         private static extern bool SetConsoleTitle(string title);
-        
+
         [DllImport("user32.dll")]
         private static extern IntPtr GetSystemMenu(IntPtr hwnd, bool bRevert);
 
-        const uint SC_CLOSE = 0xF060;
-        const uint MF_BYCOMMAND = 0x00000000;
+        private const uint SC_CLOSE = 0xF060;
+        private const uint MF_BYCOMMAND = 0x00000000;
 
         [DllImport("user32.dll")]
-        static extern bool DeleteMenu(IntPtr hMenu, uint uPosition, uint uFlags);
+        private static extern bool DeleteMenu(IntPtr hMenu, uint uPosition, uint uFlags);
     }
 }

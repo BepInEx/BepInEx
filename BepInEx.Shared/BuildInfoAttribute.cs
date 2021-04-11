@@ -10,7 +10,10 @@ namespace BepInEx.Shared
     [AttributeUsage(AttributeTargets.Assembly)]
     public class BuildInfoAttribute : Attribute
     {
-        public BuildInfoAttribute(string info) => Info = info;
+        public BuildInfoAttribute(string info)
+        {
+            Info = info;
+        }
 
         public string Info { get; }
     }

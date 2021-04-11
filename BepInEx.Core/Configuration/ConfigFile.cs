@@ -55,7 +55,10 @@ namespace BepInEx.Configuration
         {
             get
             {
-                lock (_ioLock) return Entries.Keys.ToList().AsReadOnly();
+                lock (_ioLock)
+                {
+                    return Entries.Keys.ToList().AsReadOnly();
+                }
             }
         }
 
@@ -77,7 +80,9 @@ namespace BepInEx.Configuration
             get
             {
                 lock (_ioLock)
+                {
                     return Entries[key];
+                }
             }
         }
 
@@ -98,14 +103,18 @@ namespace BepInEx.Configuration
             KeyValuePair<ConfigDefinition, ConfigEntryBase> item)
         {
             lock (_ioLock)
+            {
                 Entries.Add(item.Key, item.Value);
+            }
         }
 
         /// <inheritdoc />
         public bool Contains(KeyValuePair<ConfigDefinition, ConfigEntryBase> item)
         {
             lock (_ioLock)
+            {
                 return ((ICollection<KeyValuePair<ConfigDefinition, ConfigEntryBase>>) Entries).Contains(item);
+            }
         }
 
         void ICollection<KeyValuePair<ConfigDefinition, ConfigEntryBase>>.CopyTo(
@@ -113,14 +122,18 @@ namespace BepInEx.Configuration
             int arrayIndex)
         {
             lock (_ioLock)
+            {
                 ((ICollection<KeyValuePair<ConfigDefinition, ConfigEntryBase>>) Entries).CopyTo(array, arrayIndex);
+            }
         }
 
         bool ICollection<KeyValuePair<ConfigDefinition, ConfigEntryBase>>.Remove(
             KeyValuePair<ConfigDefinition, ConfigEntryBase> item)
         {
             lock (_ioLock)
+            {
                 return Entries.Remove(item.Key);
+            }
         }
 
         /// <inheritdoc />
@@ -129,7 +142,9 @@ namespace BepInEx.Configuration
             get
             {
                 lock (_ioLock)
+                {
                     return Entries.Count;
+                }
             }
         }
 
@@ -140,7 +155,9 @@ namespace BepInEx.Configuration
         public bool ContainsKey(ConfigDefinition key)
         {
             lock (_ioLock)
+            {
                 return Entries.ContainsKey(key);
+            }
         }
 
         /// <inheritdoc />
@@ -151,20 +168,26 @@ namespace BepInEx.Configuration
         public bool Remove(ConfigDefinition key)
         {
             lock (_ioLock)
+            {
                 return Entries.Remove(key);
+            }
         }
 
         /// <inheritdoc />
         public void Clear()
         {
             lock (_ioLock)
+            {
                 Entries.Clear();
+            }
         }
 
         bool IDictionary<ConfigDefinition, ConfigEntryBase>.TryGetValue(ConfigDefinition key, out ConfigEntryBase value)
         {
             lock (_ioLock)
+            {
                 return Entries.TryGetValue(key, out value);
+            }
         }
 
         /// <inheritdoc />
@@ -173,7 +196,9 @@ namespace BepInEx.Configuration
             get
             {
                 lock (_ioLock)
+                {
                     return Entries[key];
+                }
             }
             set => throw new InvalidOperationException("Directly setting a config entry is not supported");
         }
@@ -187,7 +212,9 @@ namespace BepInEx.Configuration
             get
             {
                 lock (_ioLock)
+                {
                     return Entries.Keys.ToArray();
+                }
             }
         }
 
@@ -200,7 +227,9 @@ namespace BepInEx.Configuration
             get
             {
                 lock (_ioLock)
+                {
                     return Entries.Values.ToArray();
+                }
             }
         }
 
@@ -214,7 +243,9 @@ namespace BepInEx.Configuration
         public ConfigEntryBase[] GetConfigEntries()
         {
             lock (_ioLock)
+            {
                 return Entries.Values.ToArray();
+            }
         }
 
         #region Save/Load

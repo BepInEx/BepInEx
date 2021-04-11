@@ -75,7 +75,10 @@ namespace BepInEx
         {
             if (action == null) throw new ArgumentNullException(nameof(action));
 
-            lock (_invokeLock) _invokeList += action;
+            lock (_invokeLock)
+            {
+                _invokeList += action;
+            }
         }
 
         /// <summary>
@@ -167,7 +170,10 @@ namespace BepInEx
         {
             internal bool ExceptionThrown;
 
-            public InvokeResult() => AsyncWaitHandle = new EventWaitHandle(false, EventResetMode.ManualReset);
+            public InvokeResult()
+            {
+                AsyncWaitHandle = new EventWaitHandle(false, EventResetMode.ManualReset);
+            }
 
             public bool IsCompleted { get; private set; }
             public WaitHandle AsyncWaitHandle { get; }

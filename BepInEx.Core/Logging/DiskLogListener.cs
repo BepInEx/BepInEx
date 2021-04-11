@@ -108,6 +108,9 @@ namespace BepInEx.Logging
             catch (ObjectDisposedException) { }
         }
 
-        ~DiskLogListener() => Dispose();
+        ~DiskLogListener()
+        {
+            Dispose();
+        }
     }
 }

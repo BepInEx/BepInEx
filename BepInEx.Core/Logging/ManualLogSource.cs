@@ -11,7 +11,10 @@ namespace BepInEx.Logging
         ///     Creates a manual log source.
         /// </summary>
         /// <param name="sourceName">Name of the log source.</param>
-        public ManualLogSource(string sourceName) => SourceName = sourceName;
+        public ManualLogSource(string sourceName)
+        {
+            SourceName = sourceName;
+        }
 
         /// <inheritdoc />
         public string SourceName { get; }

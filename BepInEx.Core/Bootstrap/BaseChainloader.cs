@@ -312,8 +312,8 @@ namespace BepInEx.Bootstrap
                     if (missingDependencies.Count != 0)
                     {
                         var message = $@"Could not load [{plugin}] because it has missing dependencies: {
-                                string.Join(", ", missingDependencies.Select(s => s.VersionRange == null ? s.DependencyGUID : $"{s.DependencyGUID} ({s.VersionRange})").ToArray())
-                            }";
+                            string.Join(", ", missingDependencies.Select(s => s.VersionRange == null ? s.DependencyGUID : $"{s.DependencyGUID} ({s.VersionRange})").ToArray())
+                        }";
                         DependencyErrors.Add(message);
                         Logger.LogError(message);
 

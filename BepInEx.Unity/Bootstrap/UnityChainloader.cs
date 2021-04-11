@@ -46,7 +46,8 @@ namespace BepInEx.Unity.Bootstrap
         // TODO: Figure out better version obtaining mechanism (e.g. from globalmanagers)
         private static string UnityVersion
         {
-            [MethodImpl(MethodImplOptions.NoInlining)] get => Application.unityVersion;
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            get => Application.unityVersion;
         }
 
         private static void StaticStart(string gameExePath = null)

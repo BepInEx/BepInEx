@@ -117,7 +117,8 @@ namespace BepInEx.IL2CPP.Hook.Allocator
 
             public static readonly nint MAP_FAILED = -1;
 
-            static Unix() =>
+            static Unix()
+            {
                 typeof(Unix).ResolveDynDllImports(new Dictionary<string, List<DynDllMapping>>
                 {
                     ["libc"] = new()
@@ -127,6 +128,7 @@ namespace BepInEx.IL2CPP.Hook.Allocator
                         "/usr/lib/libSystem.dylib" // OSX POSIX
                     }
                 });
+            }
 
 #pragma warning disable 649 // Set by MonoMod
             [DynDllImport("mmap")]

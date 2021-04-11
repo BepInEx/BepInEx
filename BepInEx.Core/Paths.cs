@@ -78,7 +78,7 @@ namespace BepInEx
         ///     The name of the currently executing process.
         /// </summary>
         public static string ProcessName { get; private set; }
-        
+
         /// <summary>
         ///	    List of directories from where Mono will search assemblies before assembly resolving is invoked.
         /// </summary>

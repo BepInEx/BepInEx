@@ -58,6 +58,7 @@ namespace BepInEx.Preloader.RuntimeFixes
             var type = (TraceEventType) Enum.Parse(typeof(TraceEventType), kind);
 
             lock (ListenersSyncRoot)
+            {
                 foreach (var obj in Listeners)
                 {
                     var traceListener = (TraceListener) obj;
@@ -65,6 +66,7 @@ namespace BepInEx.Preloader.RuntimeFixes
 
                     if (AutoFlush) traceListener.Flush();
                 }
+            }
 
             return false;
         }

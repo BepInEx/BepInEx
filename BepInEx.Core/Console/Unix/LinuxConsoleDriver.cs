@@ -15,11 +15,11 @@ namespace BepInEx.Unix
                                        "ForceBepInExTTYDriver",
                                        false,
                                        "If enabled, forces to use custom BepInEx TTY driver for handling terminal output on unix.");
-        
+
         static LinuxConsoleDriver()
         {
             UseMonoTtyDriver = false;
-            
+
             if (ForceCustomTtyDriverConfig.Value)
                 return;
 

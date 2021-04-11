@@ -214,7 +214,8 @@ namespace BepInEx.Preloader.Core
         ///     are skipped.
         /// </summary>
         /// <param name="directories">The directories to search.</param>
-        public void LoadAssemblyDirectories(params string[] directories) => LoadAssemblyDirectories(directories, new []{ "dll" });
+        public void LoadAssemblyDirectories(params string[] directories) =>
+            LoadAssemblyDirectories(directories, new[] { "dll" });
 
         /// <summary>
         ///     Adds all assemblies in given directories to be patched and loaded by this patcher instance. Non-managed assemblies are

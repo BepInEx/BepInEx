@@ -79,7 +79,8 @@ namespace BepInEx.NetLauncher
 
 #if DEBUG
                 filename =
- Path.Combine(Directory.GetCurrentDirectory(), Path.GetFileName(Process.GetCurrentProcess().MainModule.FileName));
+                    Path.Combine(Directory.GetCurrentDirectory(),
+                                 Path.GetFileName(Process.GetCurrentProcess().MainModule.FileName));
                 ResolveDirectories.Add(Path.GetDirectoryName(filename));
 
                 // for debugging within VS
