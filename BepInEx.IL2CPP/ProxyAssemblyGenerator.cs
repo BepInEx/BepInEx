@@ -138,6 +138,7 @@ namespace BepInEx.IL2CPP
                 Paths.SetExecutablePath(executablePath, bepinPath, managedPath);
                 Preloader.IL2CPPUnhollowedPath = unhollowedPath;
                 AppDomain.CurrentDomain.AddCecilPlatformAssemblies(Paths.ManagedPath);
+                AppDomain.CurrentDomain.AddCecilPlatformAssemblies(UnityBaseLibsDirectory);
             }
 
             public void GenerateAssembliesInternal(AppDomainListener listener)
