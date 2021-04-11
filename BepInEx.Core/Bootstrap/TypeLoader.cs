@@ -41,9 +41,9 @@ namespace BepInEx.Bootstrap
         public List<T> CacheItems { get; set; }
 
         /// <summary>
-        ///     Timestamp of the assembly. Used to check the age of the cache.
+        ///     Hash of the assembly. Used to verify that the assembly hasn't been changed.
         /// </summary>
-        public long Timestamp { get; set; }
+        public string Hash { get; set; }
     }
 
     /// <summary>
@@ -131,6 +131,7 @@ namespace BepInEx.Bootstrap
             where T : ICacheable, new()
         {
             var result = new Dictionary<string, List<T>>();
+            var hashes = new Dictionary<string, string>();
             Dictionary<string, CachedAssembly<T>> cache = null;
 
             if (cacheName != null)
@@ -139,24 +140,23 @@ namespace BepInEx.Bootstrap
             foreach (var dll in Directory.GetFiles(Path.GetFullPath(directory), "*.dll", SearchOption.AllDirectories))
                 try
                 {
+                    using var dllMs = new MemoryStream(File.ReadAllBytes(dll));
+                    var hash = Utility.HashStream(dllMs);
+                    hashes[dll] = hash;
+                    dllMs.Position = 0;
                     if (cache != null && cache.TryGetValue(dll, out var cacheEntry))
-                    {
-                        var lastWrite = File.GetLastWriteTimeUtc(dll).Ticks;
-                        if (lastWrite == cacheEntry.Timestamp)
+                        if (hash == cacheEntry.Hash)
                         {
                             result[dll] = cacheEntry.CacheItems;
                             continue;
                         }
-                    }
 
-                    var ass = AssemblyDefinition.ReadAssembly(dll, ReaderParameters);
-
+                    using var ass = AssemblyDefinition.ReadAssembly(dllMs, ReaderParameters);
                     Logger.LogDebug($"Examining '{dll}'");
 
                     if (!assemblyFilter?.Invoke(ass) ?? false)
                     {
                         result[dll] = new List<T>();
-                        ass.Dispose();
                         continue;
                     }
 
@@ -164,7 +164,6 @@ namespace BepInEx.Bootstrap
                                      .Select(t => typeSelector(t, dll))
                                      .Where(t => t != null).ToList();
                     result[dll] = matches;
-                    ass.Dispose();
                 }
                 catch (BadImageFormatException e)
                 {
@@ -176,7 +175,7 @@ namespace BepInEx.Bootstrap
                 }
 
             if (cacheName != null)
-                SaveAssemblyCache(cacheName, result);
+                SaveAssemblyCache(cacheName, result, hashes);
 
             return result;
         }
@@ -210,7 +209,7 @@ namespace BepInEx.Bootstrap
                     for (var i = 0; i < entriesCount; i++)
                     {
                         var entryIdentifier = br.ReadString();
-                        var entryDate = br.ReadInt64();
+                        var hash = br.ReadString();
                         var itemsCount = br.ReadInt32();
                         var items = new List<T>();
 
@@ -221,7 +220,7 @@ namespace BepInEx.Bootstrap
                             items.Add(entry);
                         }
 
-                        result[entryIdentifier] = new CachedAssembly<T> { Timestamp = entryDate, CacheItems = items };
+                        result[entryIdentifier] = new CachedAssembly<T> { Hash = hash, CacheItems = items };
                     }
                 }
             }
@@ -238,8 +237,11 @@ namespace BepInEx.Bootstrap
         /// </summary>
         /// <param name="cacheName">Name of the cache</param>
         /// <param name="entries">List of plugin metadatas indexed by the path to the assembly that contains the types</param>
+        /// <param name="hashes">Hash values that can be used for checking similarity between cached and live assembly</param>
         /// <typeparam name="T">Cacheable item</typeparam>
-        public static void SaveAssemblyCache<T>(string cacheName, Dictionary<string, List<T>> entries)
+        public static void SaveAssemblyCache<T>(string cacheName,
+                                                Dictionary<string, List<T>> entries,
+                                                Dictionary<string, string> hashes)
             where T : ICacheable
         {
             if (!EnableAssemblyCache.Value)
@@ -252,19 +254,17 @@ namespace BepInEx.Bootstrap
 
                 var path = Path.Combine(Paths.CachePath, $"{cacheName}_typeloader.dat");
 
-                using (var bw = new BinaryWriter(File.OpenWrite(path)))
+                using var bw = new BinaryWriter(File.OpenWrite(path));
+                bw.Write(entries.Count);
+
+                foreach (var kv in entries)
                 {
-                    bw.Write(entries.Count);
+                    bw.Write(kv.Key);
+                    bw.Write(hashes.TryGetValue(kv.Key, out var hash) ? hash : "");
+                    bw.Write(kv.Value.Count);
 
-                    foreach (var kv in entries)
-                    {
-                        bw.Write(kv.Key);
-                        bw.Write(File.GetLastWriteTimeUtc(kv.Key).Ticks);
-                        bw.Write(kv.Value.Count);
-
-                        foreach (var item in kv.Value)
-                            item.Save(bw);
-                    }
+                    foreach (var item in kv.Value)
+                        item.Save(bw);
                 }
             }
             catch (Exception e)

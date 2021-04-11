@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Security.Cryptography;
 using System.Text;
 using Mono.Cecil;
 
@@ -298,6 +299,20 @@ namespace BepInEx
 
                 currentType = currentType.BaseType?.Resolve();
             }
+        }
+
+        public static string HashStream(Stream stream)
+        {
+            using var md5 = MD5.Create();
+
+            var buf = new byte[4096];
+            int read;
+            while ((read = stream.Read(buf, 0, buf.Length)) > 0)
+                md5.TransformBlock(buf, 0, read, buf, 0);
+
+            md5.TransformFinalBlock(new byte[0], 0, 0);
+
+            return ByteArrayToString(md5.Hash);
         }
 
         public static string ByteArrayToString(byte[] data)
