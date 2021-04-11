@@ -43,13 +43,14 @@ namespace BepInEx.Preloader.Unity
 
             var bepinPath = Utility.ParentDirectory(Path.GetFullPath(EnvVars.DOORSTOP_INVOKE_DLL_PATH), 2);
             
-            Paths.SetExecutablePath(EnvVars.DOORSTOP_MANAGED_FOLDER_DIR, bepinPath,
-                                    EnvVars.DOORSTOP_MANAGED_FOLDER_DIR);
+            Paths.SetExecutablePath(EnvVars.DOORSTOP_PROCESS_PATH, bepinPath,
+                                    EnvVars.DOORSTOP_MANAGED_FOLDER_DIR,
+                                    EnvVars.DOORSTOP_DLL_SEARCH_DIRS);
+            
+            LoadCriticalAssemblies();
             AppDomain.CurrentDomain.AssemblyResolve += LocalResolve;
             // Remove temporary resolver early so it won't override local resolver
             AppDomain.CurrentDomain.AssemblyResolve -= DoorstopEntrypoint.ResolveCurrentDirectory;
-
-            LoadCriticalAssemblies();
             PreloaderMain();
         }
 
@@ -61,7 +62,7 @@ namespace BepInEx.Preloader.Unity
                 ConsoleSetOutFix.Apply();
             }
 
-            UnityPreloader.Run(EnvVars.DOORSTOP_MANAGED_FOLDER_DIR);
+            UnityPreloader.Run();
         }
 
         private static Assembly LocalResolve(object sender, ResolveEventArgs args)
