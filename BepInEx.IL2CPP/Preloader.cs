@@ -90,20 +90,20 @@ namespace BepInEx.IL2CPP
 
         private static void InitializeUnityVersion()
         {
+            if (TryInitializeUnityVersion(ConfigUnityVersion.Value))
+                Log.LogDebug($"Unity version obtained from the config.");
+            else if (TryInitializeUnityVersion(Process.GetCurrentProcess().MainModule.FileVersionInfo.FileVersion))
+                Log.LogDebug($"Unity version obtained from main application module.");
+            else
+                Log.LogWarning($"Running under default Unity version. UnityVersionHandler is not initialized.");
+        }
+
+        private static bool TryInitializeUnityVersion(string version)
+        {
             try
             {
-                var version = ConfigUnityVersion.Value;
                 if (string.IsNullOrWhiteSpace(version))
-                {
-                    version = //Version.Parse(Application.unityVersion);
-                        Process.GetCurrentProcess().MainModule.FileVersionInfo.FileVersion;
-
-                    PreloaderLogger.Log.LogDebug($"Unity version obtained from main application module: [{version}]");
-                }
-                else
-                {
-                    PreloaderLogger.Log.LogDebug($"Unity version obtained from the config: [{version}]");
-                }
+                    return false;
 
                 var parts = version.Split('.');
                 var major = 0;
@@ -117,15 +117,22 @@ namespace BepInEx.IL2CPP
                 if (success && parts.Length > 2)
                     success = int.TryParse(parts[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out build);
 
-                if (!success)
-                    throw new InvalidDataException($"Failed to parse Unity version: {version}");
-
-                UnityVersionHandler.Initialize(major, minor, build);
-                Log.LogInfo($"Running under Unity v{major}.{minor}.{build}");
+                if (success)
+                {
+                    UnityVersionHandler.Initialize(major, minor, build);
+                    Log.LogInfo($"Running under Unity v{major}.{minor}.{build}");
+                    return true;
+                }
+                else
+                {
+                    Log.LogWarning($"Failed to parse Unity version: {version}");
+                    return false;
+                }
             }
             catch (Exception ex)
             {
-                throw new InvalidDataException("Failed to parse Unity version.", ex);
+                Log.LogWarning($"Failed to parse Unity version: {ex}");
+                return false;
             }
         }
         
