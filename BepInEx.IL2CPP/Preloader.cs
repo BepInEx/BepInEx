@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Globalization;
+using System.IO;
+using BepInEx.Configuration;
 using BepInEx.Logging;
 using BepInEx.Preloader.Core;
 using BepInEx.Preloader.Core.Logging;
 using UnhollowerBaseLib;
+using UnhollowerBaseLib.Runtime;
 
 namespace BepInEx.IL2CPP
 {
@@ -36,8 +40,7 @@ namespace BepInEx.IL2CPP
                 }
 
                 ChainloaderLogHelper.PrintLogInfo(Log);
-
-                Log.LogInfo($"Running under Unity v{FileVersionInfo.GetVersionInfo(Paths.ExecutablePath).FileVersion}");
+                InitializeUnityVersion();
 
                 Log.LogDebug($"Game executable path: {Paths.ExecutablePath}");
                 Log.LogDebug($"Unhollowed assembly directory: {IL2CPPUnhollowedPath}");
@@ -81,6 +84,49 @@ namespace BepInEx.IL2CPP
                 Log.LogFatal(ex);
 
                 throw;
+            }
+        }
+
+        private static void InitializeUnityVersion()
+        {
+            try
+            {
+                ConfigEntry<String> config = ConfigFile.CoreConfig.Bind(
+                    "Unity", "Version",
+                    String.Empty,
+                    "Allows you to manually set the Unity version .");
+
+                String version = config.Value;
+                if (String.IsNullOrWhiteSpace(version))
+                {
+                    version = //Version.Parse(Application.unityVersion);
+                        Process.GetCurrentProcess().MainModule.FileVersionInfo.FileVersion;
+
+                    PreloaderLogger.Log.LogDebug($"Unity version obtained from main application module: [{version}]");
+                }
+                else
+                {
+                    PreloaderLogger.Log.LogDebug($"Unity version obtained from the config: [{version}]");
+                }
+
+                String[] parts = version.Split('.');
+                Int32 major = 0;
+                Int32 minor = 0;
+                Int32 build = 0;
+
+                // Issue #229 - Don't use Version.Parse("2019.4.16.14703470L&ProductVersion")
+                major = Int32.Parse(parts[0], NumberStyles.Integer, CultureInfo.InvariantCulture);
+                if (parts.Length > 1)
+                    minor = Int32.Parse(parts[1], NumberStyles.Integer, CultureInfo.InvariantCulture);
+                if (parts.Length > 2)
+                    build = Int32.Parse(parts[2], NumberStyles.Integer, CultureInfo.InvariantCulture);
+
+                UnityVersionHandler.Initialize(major, minor, build);
+                Log.LogInfo($"Running under Unity v{major}.{minor}.{build}");
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidDataException("Failed to parse Unity version.", ex);
             }
         }
     }
