@@ -91,11 +91,11 @@ namespace BepInEx.IL2CPP
         private static void InitializeUnityVersion()
         {
             if (TryInitializeUnityVersion(ConfigUnityVersion.Value))
-                Log.LogDebug($"Unity version obtained from the config.");
+                Log.LogWarning($"Unity version obtained from the config.");
             else if (TryInitializeUnityVersion(Process.GetCurrentProcess().MainModule.FileVersionInfo.FileVersion))
                 Log.LogDebug($"Unity version obtained from main application module.");
             else
-                Log.LogWarning($"Running under default Unity version. UnityVersionHandler is not initialized.");
+                Log.LogError($"Running under default Unity version. UnityVersionHandler is not initialized.");
         }
 
         private static bool TryInitializeUnityVersion(string version)
@@ -117,21 +117,19 @@ namespace BepInEx.IL2CPP
                 if (success && parts.Length > 2)
                     success = int.TryParse(parts[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out build);
 
-                if (success)
+                if (!success)
                 {
-                    UnityVersionHandler.Initialize(major, minor, build);
-                    Log.LogInfo($"Running under Unity v{major}.{minor}.{build}");
-                    return true;
-                }
-                else
-                {
-                    Log.LogWarning($"Failed to parse Unity version: {version}");
+                    Log.LogError($"Failed to parse Unity version: {version}");
                     return false;
                 }
+
+                UnityVersionHandler.Initialize(major, minor, build);
+                Log.LogInfo($"Running under Unity v{major}.{minor}.{build}");
+                return true;
             }
             catch (Exception ex)
             {
-                Log.LogWarning($"Failed to parse Unity version: {ex}");
+                Log.LogError($"Failed to parse Unity version: {ex}");
                 return false;
             }
         }
