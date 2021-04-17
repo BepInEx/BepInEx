@@ -40,12 +40,10 @@ namespace BepInEx.IL2CPP
                 }
 
                 ChainloaderLogHelper.PrintLogInfo(Log);
-                InitializeUnityVersion();
 
                 Log.LogDebug($"Game executable path: {Paths.ExecutablePath}");
                 Log.LogDebug($"Unhollowed assembly directory: {IL2CPPUnhollowedPath}");
                 Log.LogDebug($"BepInEx root path: {Paths.BepInExRootPath}");
-
 
                 UnhollowerLog = Logger.CreateLogSource("Unhollower");
                 LogSupport.InfoHandler += UnhollowerLog.LogInfo;
@@ -56,6 +54,9 @@ namespace BepInEx.IL2CPP
 
                 if (ProxyAssemblyGenerator.CheckIfGenerationRequired())
                     ProxyAssemblyGenerator.GenerateAssemblies();
+                
+                
+                InitializeUnityVersion();
 
 
                 using (var assemblyPatcher = new AssemblyPatcher())
@@ -91,13 +92,8 @@ namespace BepInEx.IL2CPP
         {
             try
             {
-                ConfigEntry<String> config = ConfigFile.CoreConfig.Bind(
-                    "Unity", "Version",
-                    String.Empty,
-                    "Allows you to manually set the Unity version .");
-
-                String version = config.Value;
-                if (String.IsNullOrWhiteSpace(version))
+                var version = ConfigUnityVersion.Value;
+                if (string.IsNullOrWhiteSpace(version))
                 {
                     version = //Version.Parse(Application.unityVersion);
                         Process.GetCurrentProcess().MainModule.FileVersionInfo.FileVersion;
@@ -109,17 +105,20 @@ namespace BepInEx.IL2CPP
                     PreloaderLogger.Log.LogDebug($"Unity version obtained from the config: [{version}]");
                 }
 
-                String[] parts = version.Split('.');
-                Int32 major = 0;
-                Int32 minor = 0;
-                Int32 build = 0;
+                var parts = version.Split('.');
+                var major = 0;
+                var minor = 0;
+                var build = 0;
 
                 // Issue #229 - Don't use Version.Parse("2019.4.16.14703470L&ProductVersion")
-                major = Int32.Parse(parts[0], NumberStyles.Integer, CultureInfo.InvariantCulture);
-                if (parts.Length > 1)
-                    minor = Int32.Parse(parts[1], NumberStyles.Integer, CultureInfo.InvariantCulture);
-                if (parts.Length > 2)
-                    build = Int32.Parse(parts[2], NumberStyles.Integer, CultureInfo.InvariantCulture);
+                bool success = int.TryParse(parts[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out major);
+                if (success && parts.Length > 1)
+                    success = int.TryParse(parts[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out minor);
+                if (success && parts.Length > 2)
+                    success = int.TryParse(parts[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out build);
+
+                if (!success)
+                    throw new InvalidDataException($"Failed to parse Unity version: {version}");
 
                 UnityVersionHandler.Initialize(major, minor, build);
                 Log.LogInfo($"Running under Unity v{major}.{minor}.{build}");
@@ -129,5 +128,14 @@ namespace BepInEx.IL2CPP
                 throw new InvalidDataException("Failed to parse Unity version.", ex);
             }
         }
+        
+        #region Config
+
+        private static readonly ConfigEntry<string> ConfigUnityVersion = ConfigFile.CoreConfig.Bind(
+            "IL2CPP", "UnityVersion",
+            string.Empty,
+            "Unity version to report to Il2CppUnhollower. If empty, version is automatically determined from the game process.");
+        
+        #endregion
     }
 }
