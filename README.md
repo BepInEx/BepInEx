@@ -55,7 +55,7 @@ A more comprehensive comparison list of features and compatibility is available 
 - [NeighTools/UnityDoorstop](https://github.com/NeighTools/UnityDoorstop) -
   3.3.1.0 ([fad307f](https://github.com/NeighTools/UnityDoorstop/commit/fad307fda5c968d05675f17a49af7e790966fec3))
 - [NeighTools/UnityDoorstop.Unix](https://github.com/NeighTools/UnityDoorstop.Unix) -
-  1.5.0.0 ([06e9790](https://github.com/NeighTools/UnityDoorstop.Unix/commit/06e979008730cf89c6bcf8806f2c18c80b0a7b21))
+  1.5.1.0 ([06e9790](https://github.com/NeighTools/UnityDoorstop.Unix/commit/06e979008730cf89c6bcf8806f2c18c80b0a7b21))
 - [BepInEx/HarmonyX](https://github.com/BepInEx/HarmonyX) -
   2.4.1 ([f837708](https://github.com/BepInEx/HarmonyX/commit/f837708b0a5d65ce82fbe2de4c74a5c23e4dbbcf))
 - [0x0ade/MonoMod](https://github.com/0x0ade/MonoMod) -
