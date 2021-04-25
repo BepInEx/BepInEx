@@ -19,8 +19,8 @@
   </ItemGroup>
   <ItemGroup>
       <PackageReference Include="jnm2.ReferenceAssemblies.net35" Version="1.0.1" PrivateAssets="All"/>
-      <PackageReference Include="HarmonyX" Version="2.4.1"/>
-      <PackageReference Include="MonoMod.RuntimeDetour" Version="21.4.2.3"/>
-      <PackageReference Include="MonoMod.Utils" Version="21.4.2.3"/>
+      <PackageReference Include="HarmonyX" Version="2.4.2"/>
+      <PackageReference Include="MonoMod.RuntimeDetour" Version="21.4.21.3"/>
+      <PackageReference Include="MonoMod.Utils" Version="21.4.21.3"/>
   </ItemGroup>
 </Project>
