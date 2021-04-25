@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using BepInEx.Configuration;
@@ -329,6 +330,7 @@ namespace BepInEx.Bootstrap
                             loadedAssemblies[plugin.Location] = ass = Assembly.LoadFile(plugin.Location);
 
                         Plugins[plugin.Metadata.GUID] = plugin;
+                        TryRunModuleCtor(plugin, ass);
                         plugin.Instance = LoadPlugin(plugin, ass);
 
                         //_plugins.Add((TPlugin)plugin.Instance);
@@ -359,6 +361,19 @@ namespace BepInEx.Bootstrap
             }
 
             Logger.LogMessage("Chainloader startup complete");
+        }
+
+        private static void TryRunModuleCtor(PluginInfo plugin, Assembly assembly)
+        {
+            try
+            {
+                RuntimeHelpers.RunModuleConstructor(assembly.GetType(plugin.TypeName).Module.ModuleHandle);
+            }
+            catch (Exception e)
+            {
+                Logger.LogWarning($"Couldn't run Module constructor for {assembly.FullName}::{plugin.TypeName}: {e.Message}");
+                Logger.LogDebug(e);
+            }
         }
 
         public abstract TPlugin LoadPlugin(PluginInfo pluginInfo, Assembly pluginAssembly);
