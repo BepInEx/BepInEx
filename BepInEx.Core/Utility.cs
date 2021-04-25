@@ -362,6 +362,8 @@ namespace BepInEx
 
         internal static void AddCecilPlatformAssemblies(this AppDomain appDomain, string assemblyDir)
         {
+            if (!Directory.Exists(assemblyDir))
+                return;
             // Cecil 0.11 requires one to manually set up list of trusted assemblies for assembly resolving
             var curTrusted = appDomain.GetData(TRUSTED_PLATFORM_ASSEMBLIES) as string;
             var addTrusted = string.Join(Path.PathSeparator.ToString(),
