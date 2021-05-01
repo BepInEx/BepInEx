@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using BepInEx.Bootstrap;
+using BepInEx.Configuration;
 using Mono.Cecil;
 using Version = SemVer.Version;
 using Range = SemVer.Range;
@@ -230,6 +231,42 @@ namespace BepInEx
             var attrs = MetadataHelper.GetCustomAttributes<BepInProcess>(td, true);
             return attrs.Select(customAttribute =>
                                     new BepInProcess((string) customAttribute.ConstructorArguments[0].Value)).ToList();
+        }
+    }
+
+    /// <summary>
+    /// This attribute specifies which <see cref="ConfigFile">ConfigFile</see> implementation to use for the plugin's configuration.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
+    public class BepInConfigType : Attribute
+    {
+        /// <summary>
+        /// Type of the ConfigFile implementation
+        /// </summary>
+        public Type ConfigFileType { get; set; }
+
+        /// <param name="configFileType">Type of the <see cref="ConfigFile">ConfigFile</see> child class to use</param>
+        public BepInConfigType(Type configFileType)
+        {
+            Type temp = configFileType;
+            bool isDescendant = false;
+
+            // Walk the base types to check if it is a child class of ConfigFile
+            while (temp != null && !isDescendant)
+            {
+                isDescendant |= temp.BaseType == typeof(ConfigFile);
+                if (!isDescendant)
+                {
+                    temp = temp.BaseType;
+                }
+            }
+
+            if (!isDescendant)
+            {
+                throw new Exception($"Type {configFileType.Name} is not a child class of ConfigFile.");
+            }
+
+            ConfigFileType = configFileType;
         }
     }
 

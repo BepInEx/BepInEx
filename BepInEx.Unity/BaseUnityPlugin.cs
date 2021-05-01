@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using UnityEngine;
@@ -32,7 +33,14 @@ namespace BepInEx
 
             Logger = Logging.Logger.CreateLogSource(metadata.Name);
 
-            Config = new ConfigFile(Utility.CombinePaths(Paths.ConfigPath, metadata.GUID + ".cfg"), false, metadata);
+            if (this.GetType().GetCustomAttributes(typeof(BepInConfigType), true).FirstOrDefault() is BepInConfigType configTypeAttribute)
+            {
+                Config = (ConfigFile)Activator.CreateInstance(configTypeAttribute.ConfigFileType, new object[] { Utility.CombinePaths(Paths.ConfigPath, metadata.GUID + ".cfg"), false, metadata });
+            }
+            else
+            {
+                Config = new ConfigFile(Utility.CombinePaths(Paths.ConfigPath, metadata.GUID + ".cfg"), false, metadata);
+            }
         }
 
         /// <summary>

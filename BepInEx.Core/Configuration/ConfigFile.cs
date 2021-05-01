@@ -264,42 +264,50 @@ namespace BepInEx.Configuration
         {
             lock (_ioLock)
             {
-                OrphanedEntries.Clear();
-
-                var currentSection = string.Empty;
-
-                foreach (var rawLine in File.ReadAllLines(ConfigFilePath))
-                {
-                    var line = rawLine.Trim();
-
-                    if (line.StartsWith("#")) //comment
-                        continue;
-
-                    if (line.StartsWith("[") && line.EndsWith("]")) //section
-                    {
-                        currentSection = line.Substring(1, line.Length - 2);
-                        continue;
-                    }
-
-                    var split = line.Split(new[] { '=' }, 2); //actual config line
-                    if (split.Length != 2)
-                        continue; //empty/invalid line
-
-                    var currentKey = split[0].Trim();
-                    var currentValue = split[1].Trim();
-
-                    var definition = new ConfigDefinition(currentSection, currentKey);
-
-                    Entries.TryGetValue(definition, out var entry);
-
-                    if (entry != null)
-                        entry.SetSerializedValue(currentValue);
-                    else
-                        OrphanedEntries[definition] = currentValue;
-                }
+                ReloadImplementation();
             }
 
             OnConfigReloaded();
+        }
+
+        /// <summary>
+        /// Overridable reload implementation
+        /// </summary>
+        public virtual void ReloadImplementation()
+        {
+            OrphanedEntries.Clear();
+
+            var currentSection = string.Empty;
+
+            foreach (var rawLine in File.ReadAllLines(ConfigFilePath))
+            {
+                var line = rawLine.Trim();
+
+                if (line.StartsWith("#")) //comment
+                    continue;
+
+                if (line.StartsWith("[") && line.EndsWith("]")) //section
+                {
+                    currentSection = line.Substring(1, line.Length - 2);
+                    continue;
+                }
+
+                var split = line.Split(new[] { '=' }, 2); //actual config line
+                if (split.Length != 2)
+                    continue; //empty/invalid line
+
+                var currentKey = split[0].Trim();
+                var currentValue = split[1].Trim();
+
+                var definition = new ConfigDefinition(currentSection, currentKey);
+
+                Entries.TryGetValue(definition, out var entry);
+
+                if (entry != null)
+                    entry.SetSerializedValue(currentValue);
+                else
+                    OrphanedEntries[definition] = currentValue;
+            }
         }
 
         /// <summary>
@@ -309,46 +317,58 @@ namespace BepInEx.Configuration
         {
             lock (_ioLock)
             {
-                var directoryName = Path.GetDirectoryName(ConfigFilePath);
-                if (directoryName != null) Directory.CreateDirectory(directoryName);
+                SaveImplementation();
+            }
+        }
 
-                using (var writer = new StreamWriter(ConfigFilePath, false, Utility.UTF8NoBom))
+        /// <summary>
+        /// Overridable save implementation
+        /// </summary>
+        public virtual void SaveImplementation()
+        {
+            var directoryName = Path.GetDirectoryName(ConfigFilePath);
+            if (directoryName != null) Directory.CreateDirectory(directoryName);
+
+            using (var writer = new StreamWriter(ConfigFilePath, false, Utility.UTF8NoBom))
+            {
+                if (_ownerMetadata != null)
                 {
-                    if (_ownerMetadata != null)
+                    writer.WriteLine($"## Settings file was created by plugin {_ownerMetadata.Name} v{_ownerMetadata.Version}");
+                    writer.WriteLine($"## Plugin GUID: {_ownerMetadata.GUID}");
+                    writer.WriteLine();
+                }
+
+                var allConfigEntries = Entries
+                                       .Select(x => new
+                                       {
+                                           x.Key,
+                                           entry = x.Value,
+                                           value = x.Value.GetSerializedValue()
+                                       })
+                                       .Concat(OrphanedEntries.Select(x => new
+                                       {
+                                           x.Key,
+                                           entry = (ConfigEntryBase)null,
+                                           value = x.Value
+                                       }));
+
+                foreach (var sectionKv in allConfigEntries.GroupBy(x => x.Key.Section).OrderBy(x => x.Key))
+                {
+                    // Section heading
+                    writer.WriteLine($"[{sectionKv.Key}]");
+
+                    foreach (var configEntry in sectionKv)
                     {
-                        writer.WriteLine($"## Settings file was created by plugin {_ownerMetadata.Name} v{_ownerMetadata.Version}");
-                        writer.WriteLine($"## Plugin GUID: {_ownerMetadata.GUID}");
-                        writer.WriteLine();
-                    }
-
-                    var allConfigEntries = Entries
-                                           .Select(x => new
-                                           {
-                                               x.Key, entry = x.Value, value = x.Value.GetSerializedValue()
-                                           })
-                                           .Concat(OrphanedEntries.Select(x => new
-                                           {
-                                               x.Key, entry = (ConfigEntryBase) null, value = x.Value
-                                           }));
-
-                    foreach (var sectionKv in allConfigEntries.GroupBy(x => x.Key.Section).OrderBy(x => x.Key))
-                    {
-                        // Section heading
-                        writer.WriteLine($"[{sectionKv.Key}]");
-
-                        foreach (var configEntry in sectionKv)
+                        if (GenerateSettingDescriptions)
                         {
-                            if (GenerateSettingDescriptions)
-                            {
-                                writer.WriteLine();
-                                configEntry.entry?.WriteDescription(writer);
-                            }
-
-                            writer.WriteLine($"{configEntry.Key.Key} = {configEntry.value}");
+                            writer.WriteLine();
+                            configEntry.entry?.WriteDescription(writer);
                         }
 
-                        writer.WriteLine();
+                        writer.WriteLine($"{configEntry.Key.Key} = {configEntry.value}");
                     }
+
+                    writer.WriteLine();
                 }
             }
         }
