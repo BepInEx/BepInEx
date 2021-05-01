@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using BepInEx.Bootstrap;
 using BepInEx.Configuration;
 using BepInEx.Logging;
@@ -53,7 +54,15 @@ namespace BepInEx
 			Logger = Logging.Logger.CreateLogSource(metadata.Name);
 
 			string configRoot = Chainloader.IsEditor ? "." : Paths.ConfigPath;
-			Config = new ConfigFile(Utility.CombinePaths(configRoot, metadata.GUID + ".cfg"), false, metadata);
+
+			if (this.GetType().GetCustomAttributes(typeof(BepInConfigType), true).FirstOrDefault() is BepInConfigType configTypeAttribute)
+			{
+				Config = (ConfigFile)Activator.CreateInstance(configTypeAttribute.ConfigFileType, new object[] { Utility.CombinePaths(configRoot, metadata.GUID + ".cfg"), false, metadata });
+			}
+			else
+			{
+				Config = new ConfigFile(Utility.CombinePaths(configRoot, metadata.GUID + ".cfg"), false, metadata);
+			}
 		}
 	}
 }

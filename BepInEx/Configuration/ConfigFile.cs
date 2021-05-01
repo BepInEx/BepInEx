@@ -97,7 +97,7 @@ namespace BepInEx.Configuration
 		/// <summary>
 		/// Reloads the config from disk. Unsaved changes are lost.
 		/// </summary>
-		public void Reload()
+		public virtual void Reload()
 		{
 			lock (_ioLock)
 			{
@@ -142,7 +142,7 @@ namespace BepInEx.Configuration
 		/// <summary>
 		/// Writes the config to disk.
 		/// </summary>
-		public void Save()
+		public virtual void Save()
 		{
 			lock (_ioLock)
 			{
