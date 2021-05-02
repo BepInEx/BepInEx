@@ -92,7 +92,7 @@ namespace BepInEx.Bootstrap
         {
             if (ass.MainModule.AssemblyReferences.All(r => r.Name != CurrentAssemblyName))
                 return false;
-            if (ass.MainModule.GetTypeReferences().All(r => r.FullName != typeof(TPlugin).FullName))
+            if (ass.MainModule.GetTypeReferences().All(r => r.FullName != typeof(BepInPlugin).FullName))
                 return false;
 
             return true;
