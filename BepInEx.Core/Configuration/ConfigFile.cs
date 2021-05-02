@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -273,7 +273,7 @@ namespace BepInEx.Configuration
         /// <summary>
         /// Overridable reload implementation
         /// </summary>
-        public virtual void ReloadImplementation()
+        protected virtual void ReloadImplementation()
         {
             OrphanedEntries.Clear();
 
@@ -324,7 +324,7 @@ namespace BepInEx.Configuration
         /// <summary>
         /// Overridable save implementation
         /// </summary>
-        public virtual void SaveImplementation()
+        protected virtual void SaveImplementation()
         {
             var directoryName = Path.GetDirectoryName(ConfigFilePath);
             if (directoryName != null) Directory.CreateDirectory(directoryName);
