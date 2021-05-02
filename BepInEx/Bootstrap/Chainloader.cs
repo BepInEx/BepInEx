@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Text.RegularExpressions;
 using HarmonyLib;
 using Mono.Cecil;
@@ -293,7 +294,8 @@ namespace BepInEx.Bootstrap
 				Logger.LogMessage("Chainloader started");
 
 				ManagerObject = new GameObject("BepInEx_Manager");
-				ManagerObject.hideFlags = HideFlags.HideAndDontSave;
+				if (ConfigHideBepInExGOs.Value)
+					ManagerObject.hideFlags = HideFlags.HideAndDontSave;
 
 				UnityEngine.Object.DontDestroyOnLoad(ManagerObject);
 
@@ -463,7 +465,15 @@ namespace BepInEx.Bootstrap
 		}
 
 		#region Config
-
+		
+		internal static readonly ConfigEntry<bool> ConfigHideBepInExGOs = ConfigFile.CoreConfig.Bind(
+			"Chainloader", "HideManagerGameObject",
+			false,
+			new StringBuilder()
+				.AppendLine("If enabled, hides BepInEx Manager GameObject from Unity.")
+				.AppendLine("This can fix loading issues in some games that attempt to prevent BepInEx from being loaded.")
+				.AppendLine("Use this only if you know what this option means, as it can affect functionality of some older plugins.")
+				.ToString());
 
 		private static readonly ConfigEntry<bool> ConfigUnityLogging = ConfigFile.CoreConfig.Bind(
 			"Logging", "UnityLogListening",

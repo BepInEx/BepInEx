@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
+using BepInEx.Bootstrap;
 using BepInEx.Logging;
 using UnityEngine;
 
@@ -33,7 +34,8 @@ namespace BepInEx
 		internal static void Initialize()
 		{
 			var go = new GameObject("BepInEx_ThreadingHelper");
-			go.hideFlags = HideFlags.HideAndDontSave;
+			if (Chainloader.ConfigHideBepInExGOs.Value)
+				go.hideFlags = HideFlags.HideAndDontSave;
 			DontDestroyOnLoad(go);
 			Instance = go.AddComponent<ThreadingHelper>();
 		}
