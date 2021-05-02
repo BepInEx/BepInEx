@@ -110,7 +110,7 @@ namespace BepInEx.Configuration
 		/// <summary>
 		/// Overridable reload implementation
 		/// </summary>
-		public virtual void ReloadImplementation()
+		protected virtual void ReloadImplementation()
 		{
 			OrphanedEntries.Clear();
 
@@ -161,7 +161,7 @@ namespace BepInEx.Configuration
 		/// <summary>
 		/// Overridable Save implementation
 		/// </summary>
-		public virtual void SaveImplementation()
+		protected virtual void SaveImplementation()
 		{
 			string directoryName = Path.GetDirectoryName(ConfigFilePath);
 			if (directoryName != null) Directory.CreateDirectory(directoryName);
