@@ -81,7 +81,7 @@ Task("Build")
 
 const string DOORSTOP_VER_WIN = "3.3.1.0";
 const string DOORSTOP_VER_UNIX = "1.5.1.0";
-const string MONO_VER = "2020.1.26";
+const string MONO_VER = "2021.5.4";
 const string DOORSTOP_DLL = "winhttp.dll";
 Task("DownloadDependencies")
     .Does(() =>
