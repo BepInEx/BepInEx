@@ -1,14 +1,14 @@
 ---
-name: Bug report
+name: Issue report
 about: Create a report to help us improve
 
 ---
 
-**Describe the bug**
-<!--- A clear and concise description of what the bug is. -->
+**Describe the issue**
+<!--- A clear and concise description of what the issue is. -->
 
 **To Reproduce**
-<!--- A short description of what you did for the bug to happen. -->
+<!--- A short description of what you did for the issue to happen. -->
 
 **Expected behavior**
 <!--- A clear and concise description of what you expected to happen. -->
