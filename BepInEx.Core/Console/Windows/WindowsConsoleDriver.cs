@@ -31,8 +31,17 @@ namespace BepInEx
         public void Initialize(bool alreadyActive)
         {
             ConsoleActive = alreadyActive;
-
-            StandardOut = Console.Out;
+            
+            if (alreadyActive)
+            {
+                // We're in a .NET framework / XNA environment; console *is* stdout
+                ConsoleOut = Console.Out;
+                StandardOut = new StreamWriter(Console.OpenStandardOutput());
+            }
+            else
+            {
+                StandardOut = Console.Out;
+            }
         }
 
         public void CreateConsole(uint codepage)
