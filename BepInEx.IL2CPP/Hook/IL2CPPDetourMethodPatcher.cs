@@ -12,6 +12,7 @@ using MonoMod.RuntimeDetour;
 using MonoMod.Utils;
 using UnhollowerBaseLib;
 using UnhollowerBaseLib.Runtime;
+using UnhollowerBaseLib.Runtime.VersionSpecific.MethodInfo;
 using ValueType = Il2CppSystem.ValueType;
 using Void = Il2CppSystem.Void;
 
