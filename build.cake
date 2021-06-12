@@ -79,7 +79,7 @@ Task("Build")
     DotNetCoreBuild("./BepInEx.IL2CPP/BepInEx.IL2CPP.csproj", buildSettings);
 });
 
-const string DOORSTOP_VER_WIN = "3.3.1.0";
+const string DOORSTOP_VER_WIN = "3.4.0.0";
 const string DOORSTOP_VER_UNIX = "1.5.1.0";
 const string MONO_VER = "2021.5.16";
 const string DOORSTOP_DLL = "winhttp.dll";
