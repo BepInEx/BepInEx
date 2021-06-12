@@ -53,7 +53,7 @@ A more comprehensive comparison list of features and compatibility is available 
 
 ## Used libraries
 - [NeighTools/UnityDoorstop](https://github.com/NeighTools/UnityDoorstop) -
-  3.3.1.0 ([fad307f](https://github.com/NeighTools/UnityDoorstop/commit/fad307fda5c968d05675f17a49af7e790966fec3))
+  3.4.0.0 ([fad307f](https://github.com/NeighTools/UnityDoorstop/commit/fad307fda5c968d05675f17a49af7e790966fec3))
 - [NeighTools/UnityDoorstop.Unix](https://github.com/NeighTools/UnityDoorstop.Unix) -
   1.5.1.0 ([06e9790](https://github.com/NeighTools/UnityDoorstop.Unix/commit/06e979008730cf89c6bcf8806f2c18c80b0a7b21))
 - [BepInEx/HarmonyX](https://github.com/BepInEx/HarmonyX) -
@@ -64,8 +64,8 @@ A more comprehensive comparison list of features and compatibility is available 
   0.10.4 ([98ec890](https://github.com/jbevain/cecil/commit/98ec890d44643ad88d573e97be0e120435eda732))
 
 #### IL2CPP libraries
-- [Perfare/Il2CppDumper](https://github.com/Perfare/Il2CppDumper) - v6.5.3 fork ([112e2e8](https://github.com/BepInEx/Il2CppDumper/commit/112e2e8c369dfcb6d5718fd4ad7e3838d7ddabbf))
-- [knah/Il2CppAssemblyUnhollower](https://github.com/knah/Il2CppAssemblyUnhollower) - v0.4.14.0 fork ([b154a79](https://github.com/BepInEx/Il2CppAssemblyUnhollower/commit/b154a79cd0ba582c562e8e01890ce5c3a58a755d))
+- [Perfare/Il2CppDumper](https://github.com/Perfare/Il2CppDumper) - v6.6.3 fork ([112e2e8](https://github.com/BepInEx/Il2CppDumper/commit/112e2e8c369dfcb6d5718fd4ad7e3838d7ddabbf))
+- [knah/Il2CppAssemblyUnhollower](https://github.com/knah/Il2CppAssemblyUnhollower) - v0.4.15.2 fork ([b154a79](https://github.com/BepInEx/Il2CppAssemblyUnhollower/commit/b154a79cd0ba582c562e8e01890ce5c3a58a755d))
 - [mono/mono](https://github.com/mono/mono) - 6.12.0.93 fork ([7328415](https://github.com/BepInEx/mono/commit/7328415ac575399a71f32487e97bce9d5fe7f6ca))
 
 ## Credits
