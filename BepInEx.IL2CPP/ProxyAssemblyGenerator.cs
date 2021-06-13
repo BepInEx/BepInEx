@@ -20,8 +20,6 @@ namespace BepInEx.IL2CPP
 
         private static string UnityBaseLibsDirectory => Path.Combine(Paths.BepInExRootPath, "unity-libs");
 
-        private static string tempDumperDirectory => Path.Combine(Preloader.IL2CPPUnhollowedPath, "temp");
-
         private static string ComputeHash()
         {
             using var md5 = MD5.Create();
@@ -79,8 +77,6 @@ namespace BepInEx.IL2CPP
             runner.GenerateAssembliesInternal(new AppDomainListener());
 
             AppDomain.Unload(domain);
-
-            Directory.Delete(tempDumperDirectory, true);
 
             File.WriteAllText(HashPath, ComputeHash());
         }
@@ -151,9 +147,6 @@ namespace BepInEx.IL2CPP
                                                                  SearchOption.TopDirectoryOnly))
                     File.Delete(dllFile);
 
-                var tempDumperDirectory = Path.Combine(Preloader.IL2CPPUnhollowedPath, "temp");
-                Directory.CreateDirectory(tempDumperDirectory);
-
                 var dumperConfig = new Config
                 {
                     GenerateStruct = false,
@@ -162,13 +155,16 @@ namespace BepInEx.IL2CPP
 
                 listener.DoPreloaderLog("Generating Il2CppDumper intermediate assemblies", LogLevel.Info);
 
-                Il2CppDumper.Il2CppDumper.PerformDump(GameAssemblyPath,
-                                                      Path.Combine(Paths.GameRootPath, $"{Paths.ProcessName}_Data",
-                                                                   "il2cpp_data", "Metadata", "global-metadata.dat"),
-                                                      tempDumperDirectory,
-                                                      dumperConfig,
-                                                      s => listener.DoDumperLog(s, LogLevel.Debug));
+                Il2CppDumper.Il2CppDumper.Init(GameAssemblyPath,
+                                               Path.Combine(Paths.GameRootPath, $"{Paths.ProcessName}_Data",
+                                                            "il2cpp_data", "Metadata", "global-metadata.dat"),
+                                               dumperConfig,
+                                               s => listener.DoDumperLog(s, LogLevel.Debug),
+                                               out var metadata,
+                                               out var il2Cpp);
 
+                var executor = new Il2CppExecutor(metadata, il2Cpp);
+                var dummy = new DummyAssemblyGenerator(executor, true);
 
                 listener.DoPreloaderLog("Executing Il2CppUnhollower generator", LogLevel.Info);
 
@@ -181,7 +177,7 @@ namespace BepInEx.IL2CPP
                 {
                     GameAssemblyPath = GameAssemblyPath,
                     MscorlibPath = Path.Combine(Paths.ManagedPath, "mscorlib.dll"),
-                    SourceDir = Path.Combine(tempDumperDirectory, "DummyDll"),
+                    Source = dummy.Assemblies,
                     OutputDir = Preloader.IL2CPPUnhollowedPath,
                     UnityBaseLibsDir = Directory.Exists(UnityBaseLibsDirectory) ? UnityBaseLibsDirectory : null,
                     NoCopyUnhollowerLibs = true
@@ -195,6 +191,8 @@ namespace BepInEx.IL2CPP
                 {
                     listener.DoUnhollowerLog($"Exception while unhollowing: {e}", LogLevel.Error);
                 }
+
+                dummy.Assemblies.Do(x => x.Dispose());
             }
         }
     }
