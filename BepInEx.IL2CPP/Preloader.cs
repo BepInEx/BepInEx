@@ -23,6 +23,8 @@ namespace BepInEx.IL2CPP
         // TODO: This is not needed, maybe remove? (Instance is saved in IL2CPPChainloader itself)
         private static IL2CPPChainloader Chainloader { get; set; }
 
+        public static Version UnityVersion { get; private set; }
+
         public static void Run()
         {
             try
@@ -51,13 +53,12 @@ namespace BepInEx.IL2CPP
                 LogSupport.TraceHandler += UnhollowerLog.LogDebug;
                 LogSupport.ErrorHandler += UnhollowerLog.LogError;
 
+                InitializeUnityVersion();
 
                 if (ProxyAssemblyGenerator.CheckIfGenerationRequired())
                     ProxyAssemblyGenerator.GenerateAssemblies();
-                
-                
-                InitializeUnityVersion();
 
+                UnityVersionHandler.Initialize(UnityVersion.Major, UnityVersion.Minor, UnityVersion.Build);
 
                 using (var assemblyPatcher = new AssemblyPatcher())
                 {
@@ -123,8 +124,8 @@ namespace BepInEx.IL2CPP
                     return false;
                 }
 
-                UnityVersionHandler.Initialize(major, minor, build);
-                Log.LogInfo($"Running under Unity v{major}.{minor}.{build}");
+                UnityVersion = new Version(major, minor, build);
+                Log.LogInfo($"Running under Unity v{UnityVersion}");
                 return true;
             }
             catch (Exception ex)
