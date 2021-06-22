@@ -17,7 +17,7 @@ namespace BepInEx.IL2CPP
     {
         private static readonly ConfigEntry<string> ConfigUnityBaseLibrariesSource = ConfigFile.CoreConfig.Bind(
          "IL2CPP", "UnityBaseLibrariesSource",
-         "http://unitylibs.bepinex.dev/{VERSION}.zip",
+         "http://unity.bepinex.dev/libraries/{VERSION}.zip",
          "Source of the unity base libraries downloaded at runtime. If empty, nothing will be downloaded.");
 
         private static readonly ManualLogSource Il2cppDumperLogger = Logger.CreateLogSource("Il2CppDumper");
