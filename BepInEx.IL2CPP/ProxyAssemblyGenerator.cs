@@ -1,8 +1,11 @@
 ﻿using System;
 using System.IO;
+using System.IO.Compression;
+using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 using AssemblyUnhollower;
+using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
 using Il2CppDumper;
@@ -12,6 +15,11 @@ namespace BepInEx.IL2CPP
 {
     internal static class ProxyAssemblyGenerator
     {
+        private static readonly ConfigEntry<string> ConfigUnityBaseLibrariesSource = ConfigFile.CoreConfig.Bind(
+         "IL2CPP", "UnityBaseLibrariesSource",
+         "http://unity.bepinex.dev/libraries/{VERSION}.zip",
+         "Source of the unity base libraries downloaded at runtime. If empty, nothing will be downloaded.");
+
         private static readonly ManualLogSource Il2cppDumperLogger = Logger.CreateLogSource("Il2CppDumper");
 
         public static string GameAssemblyPath => Path.Combine(Paths.GameRootPath, "GameAssembly.dll");
@@ -74,7 +82,7 @@ namespace BepInEx.IL2CPP
 
             runner.Setup(Paths.ExecutablePath, Preloader.IL2CPPUnhollowedPath, Paths.BepInExRootPath,
                          Paths.ManagedPath);
-            runner.GenerateAssembliesInternal(new AppDomainListener());
+            runner.GenerateAssembliesInternal(new AppDomainListener(), Preloader.UnityVersion.ToString(3));
 
             AppDomain.Unload(domain);
 
@@ -137,8 +145,29 @@ namespace BepInEx.IL2CPP
                 AppDomain.CurrentDomain.AddCecilPlatformAssemblies(UnityBaseLibsDirectory);
             }
 
-            public void GenerateAssembliesInternal(AppDomainListener listener)
+            public void GenerateAssembliesInternal(AppDomainListener listener, string unityVersion)
             {
+                var source =
+                    ConfigUnityBaseLibrariesSource.Value.Replace("{VERSION}", unityVersion);
+
+                if (!string.IsNullOrEmpty(source))
+                {
+                    listener.DoPreloaderLog("Downloading unity base libraries", LogLevel.Message);
+
+                    Directory.CreateDirectory(UnityBaseLibsDirectory);
+
+                    foreach (var dllFile in Directory.EnumerateFiles(UnityBaseLibsDirectory, "*.dll"))
+                    {
+                        File.Delete(dllFile);
+                    }
+
+                    using var httpClient = new HttpClient();
+                    using var zipStream = httpClient.GetStreamAsync(source).GetAwaiter().GetResult();
+                    using var zipArchive = new ZipArchive(zipStream, ZipArchiveMode.Read);
+
+                    zipArchive.ExtractToDirectory(UnityBaseLibsDirectory);
+                }
+
                 listener.DoPreloaderLog("Generating Il2CppUnhollower assemblies", LogLevel.Message);
 
                 Directory.CreateDirectory(Preloader.IL2CPPUnhollowedPath);
