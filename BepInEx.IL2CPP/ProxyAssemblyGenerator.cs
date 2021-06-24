@@ -18,7 +18,12 @@ namespace BepInEx.IL2CPP
         private static readonly ConfigEntry<string> ConfigUnityBaseLibrariesSource = ConfigFile.CoreConfig.Bind(
          "IL2CPP", "UnityBaseLibrariesSource",
          "http://unity.bepinex.dev/libraries/{VERSION}.zip",
-         "Source of the unity base libraries downloaded at runtime. If empty, nothing will be downloaded.");
+         new StringBuilder()
+             .AppendLine("URL to the ZIP of managed Unity base libraries.")
+             .AppendLine("The base libraries are used by Il2CppUnhollower to generate unhollowed Unity assemblies")
+             .AppendLine("The URL template MUST use HTTP.")
+             .AppendLine("The URL can include {VERSION} template which will be replaced with the game's Unity engine version")
+             .ToString());
 
         private static readonly ManualLogSource Il2cppDumperLogger = Logger.CreateLogSource("Il2CppDumper");
 
@@ -155,39 +160,34 @@ namespace BepInEx.IL2CPP
                     listener.DoPreloaderLog("Downloading unity base libraries", LogLevel.Message);
 
                     Directory.CreateDirectory(UnityBaseLibsDirectory);
-
-                    foreach (var dllFile in Directory.EnumerateFiles(UnityBaseLibsDirectory, "*.dll"))
-                    {
-                        File.Delete(dllFile);
-                    }
+                    Directory.EnumerateFiles(UnityBaseLibsDirectory, "*.dll").Do(File.Delete);
 
                     using var httpClient = new HttpClient();
                     using var zipStream = httpClient.GetStreamAsync(source).GetAwaiter().GetResult();
                     using var zipArchive = new ZipArchive(zipStream, ZipArchiveMode.Read);
 
+                    listener.DoPreloaderLog("Extracting downloaded unity base libraries", LogLevel.Message);
                     zipArchive.ExtractToDirectory(UnityBaseLibsDirectory);
                 }
 
                 listener.DoPreloaderLog("Generating Il2CppUnhollower assemblies", LogLevel.Message);
 
                 Directory.CreateDirectory(Preloader.IL2CPPUnhollowedPath);
-
-                foreach (var dllFile in Directory.EnumerateFiles(Preloader.IL2CPPUnhollowedPath, "*.dll",
-                                                                 SearchOption.TopDirectoryOnly))
-                    File.Delete(dllFile);
-
-                var dumperConfig = new Config
-                {
-                    GenerateStruct = false,
-                    GenerateDummyDll = true
-                };
+                Directory.EnumerateFiles(Preloader.IL2CPPUnhollowedPath, "*.dll").Do(File.Delete);
 
                 listener.DoPreloaderLog("Generating Il2CppDumper intermediate assemblies", LogLevel.Info);
 
                 Il2CppDumper.Il2CppDumper.Init(GameAssemblyPath,
-                                               Path.Combine(Paths.GameRootPath, $"{Paths.ProcessName}_Data",
-                                                            "il2cpp_data", "Metadata", "global-metadata.dat"),
-                                               dumperConfig,
+                                               Path.Combine(Paths.GameRootPath,
+                                                            $"{Paths.ProcessName}_Data",
+                                                            "il2cpp_data",
+                                                            "Metadata",
+                                                            "global-metadata.dat"),
+                                               new Config
+                                               {
+                                                   GenerateStruct = false,
+                                                   GenerateDummyDll = true
+                                               },
                                                s => listener.DoDumperLog(s, LogLevel.Debug),
                                                out var metadata,
                                                out var il2Cpp);
