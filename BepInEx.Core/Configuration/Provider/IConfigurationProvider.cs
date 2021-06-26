@@ -2,12 +2,12 @@
 
 namespace BepInEx.Configuration
 {
-    public abstract class ConfigurationProvider
+    public interface IConfigurationProvider
     {
         public IDictionary<string, string> RawData { get; }
 
-        public abstract void Load();
+        public void Load(string resourceUri);
 
-        public abstract void Save();
+        public void Save(string resourceUri);
     }
 }
