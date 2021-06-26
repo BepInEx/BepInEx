@@ -26,14 +26,6 @@ namespace BepInEx.Configuration
             Section = section;
         }
 
-        /// <inheritdoc />
-        [Obsolete("description argument is no longer used, put it in a ConfigDescription instead")]
-        public ConfigDefinition(string section, string key, string description)
-        {
-            Key = key ?? "";
-            Section = section ?? "";
-        }
-
         /// <summary>
         ///     Group of the setting. All settings within a config file are grouped by this.
         /// </summary>
