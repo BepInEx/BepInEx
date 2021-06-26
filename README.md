@@ -34,7 +34,7 @@ A more comprehensive comparison list of features and compatibility is available 
 
 **[How to install](https://bepinex.github.io/bepinex_docs/master/articles/user_guide/installation/index.html)**
 
-**[User and developer guides](https://bepinex.github.io/bepinex_docs/master/articles/index.html)**
+**[User and developer guides](https://docs.bepinex.dev/master/)**
 
 **[Discord server](https://discord.gg/MpFEDAg)**
 
