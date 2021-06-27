@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.IO;
 using System.Linq;
 using System.Text;
 using BepInEx.Logging;
+
+// TODO: Check if IDictionary implementation is reasonable
 
 namespace BepInEx.Configuration
 {
@@ -17,8 +17,9 @@ namespace BepInEx.Configuration
         private readonly BepInPlugin _ownerMetadata;
 
         /// <inheritdoc />
-        public ConfigFile(string configPath, bool saveOnInit, BepInPlugin ownerMetadata = null) : this(new LegacyConfigurationProvider(configPath), saveOnInit, ownerMetadata) { }
-        
+        public ConfigFile(string configPath, bool saveOnInit, BepInPlugin ownerMetadata = null) :
+            this(InitDefaultProvider(configPath), saveOnInit, ownerMetadata) { }
+
         /// <summary>
         ///     Create a new config file at the specified config path.
         /// </summary>
@@ -29,7 +30,7 @@ namespace BepInEx.Configuration
         {
             _ownerMetadata = ownerMetadata;
             ConfigurationProvider = configurationProvider;
-            
+
             Reload();
             if (saveOnInit) Save();
         }
@@ -37,19 +38,13 @@ namespace BepInEx.Configuration
         public static ConfigFile CoreConfig { get; } = new(Paths.BepInExConfigPath, true);
 
         public IConfigurationProvider ConfigurationProvider { get; set; }
-        
+
         /// <summary>
         ///     All config entries inside
         /// </summary>
         protected Dictionary<ConfigDefinition, ConfigEntryBase> Entries { get; } = new();
 
         private Dictionary<ConfigDefinition, string> OrphanedEntries { get; } = new();
-
-        /// <summary>
-        ///     Full path to the config file. The file might not exist until a setting is added and changed, or <see cref="Save" />
-        ///     is called.
-        /// </summary>
-        public string ConfigFilePath { get; }
 
         /// <summary>
         ///     If enabled, writes the config to disk every time a value is set.
@@ -216,6 +211,11 @@ namespace BepInEx.Configuration
             }
         }
 
+        private static IConfigurationProvider InitDefaultProvider(string configPath) =>
+            // TODO: If .cfg => use legacy provider
+            // TODO: If .toml => use TOML provider
+            new LegacyConfigurationProvider(configPath);
+
         #region Save/Load
 
         private readonly object _ioLock = new();
@@ -232,8 +232,10 @@ namespace BepInEx.Configuration
         {
             lock (_ioLock)
             {
-                ConfigurationProvider.Load();                
+                ConfigurationProvider.Load();
             }
+            
+            // TODO: Implement configuration document to document entry parsing
 
             OnConfigReloaded();
         }
@@ -246,7 +248,6 @@ namespace BepInEx.Configuration
             lock (_ioLock)
             {
                 if (_ownerMetadata != null)
-                {
                     ConfigurationProvider.Set(null, new ConfigurationNode
                     {
                         Comment = new StringBuilder()
@@ -254,7 +255,6 @@ namespace BepInEx.Configuration
                                   .AppendLine($"Plugin GUID: {_ownerMetadata.GUID}")
                                   .ToString()
                     });
-                }
 
                 ConfigurationProvider.Save();
             }
@@ -367,7 +367,7 @@ namespace BepInEx.Configuration
         /// <param name="description">Simple description of the setting shown to the user.</param>
         public ConfigEntry<T> Bind<T>(string section, string key, T defaultValue, string description) =>
             Bind(new ConfigDefinition(section, key), defaultValue, new ConfigDescription(description));
-        
+
         #endregion
 
         #region Events
