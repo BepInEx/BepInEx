@@ -16,30 +16,31 @@ namespace BepInEx.Configuration
     {
         private readonly BepInPlugin _ownerMetadata;
 
-        /// <inheritdoc cref="ConfigFile(string, bool, BepInPlugin)" />
+        /// <inheritdoc />
         public ConfigFile(string configPath, bool saveOnInit) : this(configPath, saveOnInit, null) { }
 
+        /// <inheritdoc />
+        public ConfigFile(string configPath, bool saveOnInit, BepInPlugin ownerMetadata) : this(new LegacyConfigurationProvider(configPath), saveOnInit, ownerMetadata) { }
+        
         /// <summary>
         ///     Create a new config file at the specified config path.
         /// </summary>
         /// <param name="configPath">Full path to a file that contains settings. The file will be created as needed.</param>
         /// <param name="saveOnInit">If the config file/directory doesn't exist, create it immediately.</param>
         /// <param name="ownerMetadata">Information about the plugin that owns this setting file.</param>
-        public ConfigFile(string configPath, bool saveOnInit, BepInPlugin ownerMetadata)
+        public ConfigFile(IConfigurationProvider configurationProvider, bool saveOnInit, BepInPlugin ownerMetadata)
         {
             _ownerMetadata = ownerMetadata;
-
-            if (configPath == null) throw new ArgumentNullException(nameof(configPath));
-            configPath = Path.GetFullPath(configPath);
-            ConfigFilePath = configPath;
-
-            if (File.Exists(ConfigFilePath))
-                Reload();
-            else if (saveOnInit) Save();
+            ConfigurationProvider = configurationProvider;
+            
+            Reload();
+            if (saveOnInit) Save();
         }
 
         public static ConfigFile CoreConfig { get; } = new(Paths.BepInExConfigPath, true);
 
+        public IConfigurationProvider ConfigurationProvider { get; set; }
+        
         /// <summary>
         ///     All config entries inside
         /// </summary>

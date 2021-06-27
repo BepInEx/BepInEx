@@ -1,13 +1,26 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace BepInEx.Configuration
 {
     public interface IConfigurationProvider
     {
-        public IDictionary<string, string> RawData { get; }
+        public void Load();
 
-        public void Load(string resourceUri);
+        public void Save();
 
-        public void Save(string resourceUri);
+        public ConfigurationNode Get(string[] path);
+
+        public void Set(string[] path, ConfigurationNode node);
+        
+        public IEnumerable<string[]> EntryPaths { get; }
+    }
+
+    public class ConfigurationNode
+    {
+        public string Value { get; set; }
+        public string Comment { get; set; }
+        public Type ValueType { get; set; }
     }
 }

@@ -6,17 +6,40 @@ namespace BepInEx.Configuration
 {
     public class LegacyConfigurationProvider : IConfigurationProvider
     {
-        public IDictionary<string, string> RawData { get; private set; }
+        private string filePath;
 
-        public void Load(string resourceUri)
+        private Dictionary<string[], string> items = new(new ArrayComparer());
+
+        private class ArrayComparer : IEqualityComparer<string[]>
         {
-            if (!File.Exists(resourceUri))
-                throw new FileNotFoundException(resourceUri);
+            public bool Equals(string[] x, string[] y)
+            {
+                if (ReferenceEquals(x, y)) return true;
+                if (ReferenceEquals(x, null)) return false;
+                if (ReferenceEquals(y, null)) return false;
+                return x.GetType() == y.GetType() && x.SequenceEqual(y);
+            }
 
-            var dict = new Dictionary<string, string>();
+            public int GetHashCode(string[] arr)
+            {
+                return arr.Aggregate(1009, (current, s) => current * 9176 + s.GetHashCode());
+            }
+        }
+        
+        public LegacyConfigurationProvider(string filePath)
+        {
+            if (!File.Exists(filePath))
+                throw new FileNotFoundException(filePath);
+            this.filePath = filePath;
+        }
+        
+        public void Load()
+        {
+            items.Clear();
+
             var currentSection = new string[0];
             
-            foreach (var rawLine in File.ReadAllLines(resourceUri))
+            foreach (var rawLine in File.ReadAllLines(filePath))
             {
                 var line = rawLine.Trim();
                 
@@ -36,12 +59,26 @@ namespace BepInEx.Configuration
                 var currentKey = split[0].Trim();
                 var currentValue = split[1].Trim();
 
-                dict[ConfigurationPath.Combine(currentSection.Concat(new []{ currentKey }))] = currentValue;
+                items[currentSection.Concat(new[] { currentKey }).ToArray()] = currentValue;
             }
-
-            RawData = dict;
         }
 
-        public void Save(string resourceUri) => throw new System.NotImplementedException();
+        // TODO: Write to TOML instead
+        public void Save() => throw new System.NotImplementedException();
+
+        public ConfigurationNode Get(string[] path)
+        {
+            if (!items.TryGetValue(path, out var value))
+                return null;
+            return new ConfigurationNode
+            {
+                ValueType = typeof(string),
+                Value = value
+            };
+        }
+
+        public void Set(string[] path, ConfigurationNode node) => items[path] = node.Value;
+
+        public IEnumerable<string[]> EntryPaths => items.Keys.ToList();
     }
 }
