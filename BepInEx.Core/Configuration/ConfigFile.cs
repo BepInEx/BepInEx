@@ -16,6 +16,8 @@ namespace BepInEx.Configuration
     /// </summary>
     public class ConfigFile : IDictionary<ConfigDefinition, ConfigEntryBase>
     {
+        public static readonly char PathSeparator = '.';
+        
         private readonly BepInPlugin _ownerMetadata;
 
         /// <inheritdoc />
@@ -379,6 +381,8 @@ namespace BepInEx.Configuration
         {
             if (changedEntryBase == null) throw new ArgumentNullException(nameof(changedEntryBase));
 
+            // TODO: Set value to provider
+            
             if (SaveOnConfigSet)
                 Save();
 

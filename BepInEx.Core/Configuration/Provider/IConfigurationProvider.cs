@@ -20,8 +20,8 @@ namespace BepInEx.Configuration
 
     public class ConfigurationNode
     {
-        public string Value { get; set; }
-        public string Comment { get; set; }
-        public Type ValueType { get; set; }
+        public string Value { get; init; }
+        public string Comment { get; init; }
+        public Type ValueType { get; init; }
     }
 }

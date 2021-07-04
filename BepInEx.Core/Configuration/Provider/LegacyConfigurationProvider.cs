@@ -48,7 +48,7 @@ namespace BepInEx.Configuration
 
                 if (line.StartsWith("[") && line.EndsWith("]")) //section
                 {
-                    currentSection = line.Substring(1, line.Length - 2).Trim().Split('.');
+                    currentSection = line[1..^2].Trim().Split('.');
                     continue;
                 }
 

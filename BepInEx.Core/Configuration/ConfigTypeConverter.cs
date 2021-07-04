@@ -208,7 +208,7 @@ namespace BepInEx.Configuration
                 var values = new List<object>();
                 for (var i = 0;; i++)
                 {
-                    indexPath[indexPath.Length - 1] = i.ToString(CultureInfo.InvariantCulture);
+                    indexPath[^1] = i.ToString(CultureInfo.InvariantCulture);
                     var val = provider.GetValue(indexPath, elType);
                     if (val == null)
                         break;
@@ -228,7 +228,7 @@ namespace BepInEx.Configuration
                 var indexPath = path.AddItem("0").ToArray();
                 for (var i = 0;; i++)
                 {
-                    indexPath[indexPath.Length - 1] = i.ToString(CultureInfo.InvariantCulture);
+                    indexPath[^1] = i.ToString(CultureInfo.InvariantCulture);
                     var val = provider.GetValue(indexPath, elType);
                     if (val == null)
                         break;
@@ -250,7 +250,7 @@ namespace BepInEx.Configuration
                 foreach (var subItem in provider.EntryPaths.Where(p => !p.SequenceEqual(path) && p.StartsWith(path)))
                 {
                     var val = provider.GetValue(subItem, elType);
-                    var key = string.Join(".", subItem.Take(path.Length).ToArray());
+                    var key = string.Join(ConfigFile.PathSeparator.ToString(), subItem.Skip(path.Length).ToArray());
                     add(key, val);
                 }
 
@@ -281,115 +281,6 @@ namespace BepInEx.Configuration
         {
             if (arr.Count < prefix.Count) return false;
             return !prefix.Where((t, i) => t != arr[i]).Any();
-        }
-        
-        private static string Escape(this string txt)
-        {
-            if (string.IsNullOrEmpty(txt)) return string.Empty;
-
-            var stringBuilder = new StringBuilder(txt.Length + 2);
-            foreach (var c in txt)
-                switch (c)
-                {
-                    case '\0':
-                        stringBuilder.Append(@"\0");
-                        break;
-                    case '\a':
-                        stringBuilder.Append(@"\a");
-                        break;
-                    case '\b':
-                        stringBuilder.Append(@"\b");
-                        break;
-                    case '\t':
-                        stringBuilder.Append(@"\t");
-                        break;
-                    case '\n':
-                        stringBuilder.Append(@"\n");
-                        break;
-                    case '\v':
-                        stringBuilder.Append(@"\v");
-                        break;
-                    case '\f':
-                        stringBuilder.Append(@"\f");
-                        break;
-                    case '\r':
-                        stringBuilder.Append(@"\r");
-                        break;
-                    case '\'':
-                        stringBuilder.Append(@"\'");
-                        break;
-                    case '\\':
-                        stringBuilder.Append(@"\");
-                        break;
-                    case '\"':
-                        stringBuilder.Append(@"\""");
-                        break;
-                    default:
-                        stringBuilder.Append(c);
-                        break;
-                }
-
-            return stringBuilder.ToString();
-        }
-
-        private static string Unescape(this string txt)
-        {
-            if (string.IsNullOrEmpty(txt))
-                return txt;
-            var stringBuilder = new StringBuilder(txt.Length);
-            for (var i = 0; i < txt.Length;)
-            {
-                var num = txt.IndexOf('\\', i);
-                if (num < 0 || num == txt.Length - 1)
-                    num = txt.Length;
-                stringBuilder.Append(txt, i, num - i);
-                if (num >= txt.Length)
-                    break;
-                var c = txt[num + 1];
-                switch (c)
-                {
-                    case '0':
-                        stringBuilder.Append('\0');
-                        break;
-                    case 'a':
-                        stringBuilder.Append('\a');
-                        break;
-                    case 'b':
-                        stringBuilder.Append('\b');
-                        break;
-                    case 't':
-                        stringBuilder.Append('\t');
-                        break;
-                    case 'n':
-                        stringBuilder.Append('\n');
-                        break;
-                    case 'v':
-                        stringBuilder.Append('\v');
-                        break;
-                    case 'f':
-                        stringBuilder.Append('\f');
-                        break;
-                    case 'r':
-                        stringBuilder.Append('\r');
-                        break;
-                    case '\'':
-                        stringBuilder.Append('\'');
-                        break;
-                    case '\"':
-                        stringBuilder.Append('\"');
-                        break;
-                    case '\\':
-                        stringBuilder.Append('\\');
-                        break;
-                    default:
-                        stringBuilder.Append('\\').Append(c);
-                        break;
-                }
-
-                i = num + 2;
-            }
-
-            return stringBuilder.ToString();
         }
     }
 }

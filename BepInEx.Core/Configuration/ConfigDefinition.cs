@@ -12,7 +12,7 @@ namespace BepInEx.Configuration
     /// <inheritdoc />
     public class ConfigDefinition : IEquatable<ConfigDefinition>
     {
-        private static readonly char[] _invalidConfigChars = { '=', '\n', '\t', '\\', '"', '\'', '[', ']', '.' };
+        private static readonly char[] _invalidConfigChars = { '=', '\n', '\t', '\\', '"', '\'', '[', ']', ConfigFile.PathSeparator };
 
         /// <summary>
         ///     Create a new definition. Definitions with same section and key are equal.
@@ -27,6 +27,18 @@ namespace BepInEx.Configuration
             Section = section;
         }
 
+        public ConfigDefinition(string fullPath) : this(fullPath.Split(ConfigFile.PathSeparator))
+        {
+        }
+        
+        public ConfigDefinition(params string[] pathComponents)
+        {
+            foreach (var pathComponent in pathComponents)
+                CheckInvalidConfigChars(pathComponent, nameof(pathComponents));
+            Key = string.Join(ConfigFile.PathSeparator.ToString(), pathComponents.Take(pathComponents.Length - 1).ToArray());
+            Section = pathComponents[^1];
+        }
+
         /// <summary>
         ///     Group of the setting. All settings within a config file are grouped by this.
         /// </summary>
@@ -37,7 +49,7 @@ namespace BepInEx.Configuration
         /// </summary>
         public string Key { get; }
         
-        internal string[] ConfigPath => Section.Split('.').AddItem(Key).ToArray();
+        internal string[] ConfigPath => Section.Split(ConfigFile.PathSeparator).AddItem(Key).ToArray();
 
         /// <summary>
         ///     Check if the definitions are the same.
@@ -55,7 +67,7 @@ namespace BepInEx.Configuration
             if (val == null) throw new ArgumentNullException(name);
             if (val.Any(c => _invalidConfigChars.Contains(c)))
                 throw new
-                    ArgumentException(@"Cannot use any of the following characters in section and key names: = \n \t \ "" ' [ ] .",
+                    ArgumentException($"Cannot use any of the following characters in section and key names: {string.Join(" ", _invalidConfigChars.Select(c => c.ToString().Escape()).ToArray())}",
                                       name);
         }
 
