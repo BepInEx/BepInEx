@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using BepInEx.Logging;
+using HarmonyLib;
 
 namespace BepInEx.Configuration
 {
@@ -190,6 +192,97 @@ namespace BepInEx.Configuration
         /// </summary>
         public static IEnumerable<Type> GetSupportedTypes() => DirectConverters.Keys;
 
+        public static object GetValue(this IConfigurationProvider provider, string[] path, Type type)
+        {
+            // We have direct value; simply resolve it normally
+            if (CanConvertDirectly(type))
+            {
+                var val = provider.Get(path);
+                return val != null ? ConvertToValue(val.Value, type) : null;
+            }
+
+            if (type.IsArray)
+            {
+                var elType = type.GetElementType();
+                var indexPath = path.AddItem("0").ToArray();
+                var values = new List<object>();
+                for (var i = 0;; i++)
+                {
+                    indexPath[indexPath.Length - 1] = i.ToString(CultureInfo.InvariantCulture);
+                    var val = provider.GetValue(indexPath, elType);
+                    if (val == null)
+                        break;
+                    values.Add(val);
+                }
+                var arr = Array.CreateInstance(elType, values.Count);
+                for (var i = 0; i < values.Count; i++)
+                    arr.SetValue(values[i], i);
+                return arr;
+            } 
+            
+            if (typeof(IList<>).IsAssignableFrom(type))
+            {
+                var res = Activator.CreateInstance(type);
+                var elType = type.GetGenericArguments()[0];
+                var add = MethodInvoker.GetHandler(AccessTools.Method(type, "Add", new[] { elType }));
+                var indexPath = path.AddItem("0").ToArray();
+                for (var i = 0;; i++)
+                {
+                    indexPath[indexPath.Length - 1] = i.ToString(CultureInfo.InvariantCulture);
+                    var val = provider.GetValue(indexPath, elType);
+                    if (val == null)
+                        break;
+                    add(val);
+                }
+
+                return res;
+            }
+            
+            if (typeof(IDictionary<,>).IsAssignableFrom(type))
+            {
+                var res = Activator.CreateInstance(type);
+                var gArgs = type.GetGenericArguments();
+                if (gArgs[0] != typeof(string))
+                    throw new Exception("Only dictionaries with string keys are supported");
+                var elType = gArgs[1];
+                var add = MethodInvoker.GetHandler(AccessTools.Method(type, "Add", new[] { typeof(string), elType }));
+                
+                foreach (var subItem in provider.EntryPaths.Where(p => !p.SequenceEqual(path) && p.StartsWith(path)))
+                {
+                    var val = provider.GetValue(subItem, elType);
+                    var key = string.Join(".", subItem.Take(path.Length).ToArray());
+                    add(key, val);
+                }
+
+                return res;
+            }
+
+            var result = Activator.CreateInstance(type);
+                        
+            foreach (var fieldInfo in type.GetFields(AccessTools.all).Where(f => !f.IsInitOnly))
+            {
+                var fVal = provider.GetValue(path.AddToArray(fieldInfo.Name), fieldInfo.FieldType);
+                if (fVal != null)
+                    fieldInfo.SetValue(fieldInfo.IsStatic ? null : result, fVal);
+            }
+            
+            foreach (var propertyInfo in type.GetProperties(AccessTools.all).Where(p => p.CanWrite))
+            {
+                var pVal = provider.GetValue(path.AddToArray(propertyInfo.Name), propertyInfo.PropertyType);
+                // TODO: Support indexed props?
+                if (pVal != null)
+                    propertyInfo.SetValue(propertyInfo.GetSetMethod(true).IsStatic ? null : result, pVal, null);
+            }
+
+            return result;
+        }
+
+        private static bool StartsWith(this IList<string> arr, ICollection<string> prefix)
+        {
+            if (arr.Count < prefix.Count) return false;
+            return !prefix.Where((t, i) => t != arr[i]).Any();
+        }
+        
         private static string Escape(this string txt)
         {
             if (string.IsNullOrEmpty(txt)) return string.Empty;

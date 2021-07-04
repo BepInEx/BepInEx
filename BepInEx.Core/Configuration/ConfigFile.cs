@@ -323,7 +323,7 @@ namespace BepInEx.Configuration
                 var entry = new ConfigEntry<T>(this, configDefinition, defaultValue, configDescription);
                 Entries[configDefinition] = entry;
 
-                entry.BoxedValue = GetValue(configDefinition.ConfigPath, typeof(T)) ?? defaultValue;
+                entry.BoxedValue = ConfigurationProvider.GetValue(configDefinition.ConfigPath, typeof(T)) ?? defaultValue;
 
                 if (SaveOnConfigSet)
                     Save();
@@ -332,64 +332,6 @@ namespace BepInEx.Configuration
             }
         }
         
-        private object GetValue(string[] path, Type type)
-        {
-            // We have direct value; simply resolve it normally
-            if (ConfigTypeConverter.CanConvertDirectly(type))
-            {
-                var val = ConfigurationProvider.Get(path);
-                if (val != null)
-                    return ConfigTypeConverter.ConvertToValue(val.Value, type);
-                return null;
-            }
-            else if (type.IsArray)
-            {
-                var elType = type.GetElementType();
-                var indexPath = path.AddItem("0").ToArray();
-                var values = new List<object>();
-                for (var i = 0;; i++)
-                {
-                    indexPath[indexPath.Length - 1] = i.ToString(CultureInfo.InvariantCulture);
-                    var val = GetValue(indexPath, elType);
-                    if (val == null)
-                        break;
-                    values.Add(val);
-                }
-                var arr = Array.CreateInstance(elType, values.Count);
-                for (var i = 0; i < values.Count; i++)
-                    arr.SetValue(values[i], i);
-                return arr;
-            } 
-            else if (typeof(IList<>).IsAssignableFrom(type))
-            {
-                var res = Activator.CreateInstance(type);
-                var elType = type.GetGenericArguments()[0];
-                var add = MethodInvoker.GetHandler(AccessTools.Method(type, "Add", new[] { elType }));
-                var indexPath = path.AddItem("0").ToArray();
-                for (var i = 0;; i++)
-                {
-                    indexPath[indexPath.Length - 1] = i.ToString(CultureInfo.InvariantCulture);
-                    var val = GetValue(indexPath, elType);
-                    if (val == null)
-                        break;
-                    add(val);
-                }
-
-                return res;
-            } else if (typeof(IDictionary<,>).IsAssignableFrom(type))
-            {
-                var res = Activator.CreateInstance(type);
-                var gArgs = type.GetGenericArguments();
-                if (gArgs[0] != typeof(string))
-                    throw new Exception("Only dictionaries with string keys are supported");
-                var elType = gArgs[1];
-                var add = MethodInvoker.GetHandler(AccessTools.Method(type, "Add", new[] { typeof(string), elType }));
-                
-            }
-
-            return null;
-        }
-
         /// <summary>
         ///     Create a new setting. The setting is saved to drive and loaded automatically.
         ///     Each section and key pair can be used to add only one setting, trying to add a second setting will throw an
