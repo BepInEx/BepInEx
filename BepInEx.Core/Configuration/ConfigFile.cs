@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using BepInEx.Logging;
+using HarmonyLib;
 
 // TODO: Check if IDictionary implementation is reasonable
 
@@ -37,7 +39,7 @@ namespace BepInEx.Configuration
 
         public static ConfigFile CoreConfig { get; } = new(Paths.BepInExConfigPath, true);
 
-        public IConfigurationProvider ConfigurationProvider { get; set; }
+        public IConfigurationProvider ConfigurationProvider { get; }
 
         /// <summary>
         ///     All config entries inside
@@ -313,30 +315,79 @@ namespace BepInEx.Configuration
                                       T defaultValue,
                                       ConfigDescription configDescription = null)
         {
-            if (!TomlTypeConverter.CanConvert(typeof(T)))
-                throw new
-                    ArgumentException($"Type {typeof(T)} is not supported by the config system. Supported types: {string.Join(", ", TomlTypeConverter.GetSupportedTypes().Select(x => x.Name).ToArray())}");
-
             lock (_ioLock)
             {
                 if (Entries.TryGetValue(configDefinition, out var rawEntry))
                     return (ConfigEntry<T>) rawEntry;
 
                 var entry = new ConfigEntry<T>(this, configDefinition, defaultValue, configDescription);
-
                 Entries[configDefinition] = entry;
 
-                if (OrphanedEntries.TryGetValue(configDefinition, out var homelessValue))
-                {
-                    entry.SetSerializedValue(homelessValue);
-                    OrphanedEntries.Remove(configDefinition);
-                }
+                entry.BoxedValue = GetValue(configDefinition.ConfigPath, typeof(T)) ?? defaultValue;
 
                 if (SaveOnConfigSet)
                     Save();
 
                 return entry;
             }
+        }
+        
+        private object GetValue(string[] path, Type type)
+        {
+            // We have direct value; simply resolve it normally
+            if (ConfigTypeConverter.CanConvertDirectly(type))
+            {
+                var val = ConfigurationProvider.Get(path);
+                if (val != null)
+                    return ConfigTypeConverter.ConvertToValue(val.Value, type);
+                return null;
+            }
+            else if (type.IsArray)
+            {
+                var elType = type.GetElementType();
+                var indexPath = path.AddItem("0").ToArray();
+                var values = new List<object>();
+                for (var i = 0;; i++)
+                {
+                    indexPath[indexPath.Length - 1] = i.ToString(CultureInfo.InvariantCulture);
+                    var val = GetValue(indexPath, elType);
+                    if (val == null)
+                        break;
+                    values.Add(val);
+                }
+                var arr = Array.CreateInstance(elType, values.Count);
+                for (var i = 0; i < values.Count; i++)
+                    arr.SetValue(values[i], i);
+                return arr;
+            } 
+            else if (typeof(IList<>).IsAssignableFrom(type))
+            {
+                var res = Activator.CreateInstance(type);
+                var elType = type.GetGenericArguments()[0];
+                var add = MethodInvoker.GetHandler(AccessTools.Method(type, "Add", new[] { elType }));
+                var indexPath = path.AddItem("0").ToArray();
+                for (var i = 0;; i++)
+                {
+                    indexPath[indexPath.Length - 1] = i.ToString(CultureInfo.InvariantCulture);
+                    var val = GetValue(indexPath, elType);
+                    if (val == null)
+                        break;
+                    add(val);
+                }
+
+                return res;
+            } else if (typeof(IDictionary<,>).IsAssignableFrom(type))
+            {
+                var res = Activator.CreateInstance(type);
+                var gArgs = type.GetGenericArguments();
+                if (gArgs[0] != typeof(string))
+                    throw new Exception("Only dictionaries with string keys are supported");
+                var elType = gArgs[1];
+                var add = MethodInvoker.GetHandler(AccessTools.Method(type, "Add", new[] { typeof(string), elType }));
+                
+            }
+
+            return null;
         }
 
         /// <summary>

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using HarmonyLib;
 
 namespace BepInEx.Configuration
 {
@@ -11,7 +12,7 @@ namespace BepInEx.Configuration
     /// <inheritdoc />
     public class ConfigDefinition : IEquatable<ConfigDefinition>
     {
-        private static readonly char[] _invalidConfigChars = { '=', '\n', '\t', '\\', '"', '\'', '[', ']' };
+        private static readonly char[] _invalidConfigChars = { '=', '\n', '\t', '\\', '"', '\'', '[', ']', '.' };
 
         /// <summary>
         ///     Create a new definition. Definitions with same section and key are equal.
@@ -35,6 +36,8 @@ namespace BepInEx.Configuration
         ///     Name of the setting.
         /// </summary>
         public string Key { get; }
+        
+        internal string[] ConfigPath => Section.Split('.').AddItem(Key).ToArray();
 
         /// <summary>
         ///     Check if the definitions are the same.
@@ -50,12 +53,9 @@ namespace BepInEx.Configuration
         private static void CheckInvalidConfigChars(string val, string name)
         {
             if (val == null) throw new ArgumentNullException(name);
-            if (val != val.Trim())
-                throw new ArgumentException("Cannot use whitespace characters at start or end of section and key names",
-                                            name);
             if (val.Any(c => _invalidConfigChars.Contains(c)))
                 throw new
-                    ArgumentException(@"Cannot use any of the following characters in section and key names: = \n \t \ "" ' [ ]",
+                    ArgumentException(@"Cannot use any of the following characters in section and key names: = \n \t \ "" ' [ ] .",
                                       name);
         }
 

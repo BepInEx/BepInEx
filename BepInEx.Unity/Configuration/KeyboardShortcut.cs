@@ -20,7 +20,7 @@ namespace BepInEx.Configuration
     {
         static KeyboardShortcut()
         {
-            TomlTypeConverter.AddConverter(
+            ConfigTypeConverter.AddConverter(
                                            typeof(KeyboardShortcut),
                                            new TypeConverter
                                            {

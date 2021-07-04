@@ -24,7 +24,7 @@ namespace BepInEx.Unity
                 }
             };
 
-            TomlTypeConverter.AddConverter(typeof(Color), colorConverter);
+            ConfigTypeConverter.AddConverter(typeof(Color), colorConverter);
 
             var jsonConverter = new TypeConverter
             {
@@ -32,10 +32,10 @@ namespace BepInEx.Unity
                 ConvertToObject = (str, type) => JsonUtility.FromJson(type: type, json: str)
             };
 
-            TomlTypeConverter.AddConverter(typeof(Vector2), jsonConverter);
-            TomlTypeConverter.AddConverter(typeof(Vector3), jsonConverter);
-            TomlTypeConverter.AddConverter(typeof(Vector4), jsonConverter);
-            TomlTypeConverter.AddConverter(typeof(Quaternion), jsonConverter);
+            ConfigTypeConverter.AddConverter(typeof(Vector2), jsonConverter);
+            ConfigTypeConverter.AddConverter(typeof(Vector3), jsonConverter);
+            ConfigTypeConverter.AddConverter(typeof(Vector4), jsonConverter);
+            ConfigTypeConverter.AddConverter(typeof(Quaternion), jsonConverter);
         }
     }
 }

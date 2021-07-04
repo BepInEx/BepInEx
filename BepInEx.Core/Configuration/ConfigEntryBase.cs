@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using BepInEx.Logging;
+using HarmonyLib;
 
 namespace BepInEx.Configuration
 {
@@ -120,7 +123,7 @@ namespace BepInEx.Configuration
         /// <summary>
         ///     Get the serialized representation of the value.
         /// </summary>
-        public string GetSerializedValue() => TomlTypeConverter.ConvertToString(BoxedValue, SettingType);
+        public string GetSerializedValue() => ConfigTypeConverter.ConvertToString(BoxedValue, SettingType);
 
         /// <summary>
         ///     Set the value by using its serialized form.
@@ -129,7 +132,7 @@ namespace BepInEx.Configuration
         {
             try
             {
-                var newValue = TomlTypeConverter.ConvertToValue(value, SettingType);
+                var newValue = ConfigTypeConverter.ConvertToValue(value, SettingType);
                 BoxedValue = newValue;
             }
             catch (Exception e)
@@ -164,7 +167,7 @@ namespace BepInEx.Configuration
 
             writer.WriteLine("# Setting type: " + SettingType.Name);
 
-            writer.WriteLine("# Default value: " + TomlTypeConverter.ConvertToString(DefaultValue, SettingType));
+            writer.WriteLine("# Default value: " + ConfigTypeConverter.ConvertToString(DefaultValue, SettingType));
 
             if (Description.AcceptableValues != null)
             {

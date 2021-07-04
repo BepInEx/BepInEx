@@ -10,21 +10,21 @@ namespace BepInEx.Configuration
     /// <summary>
     ///     Serializer/deserializer used by the config system.
     /// </summary>
-    public static class TomlTypeConverter
+    public static class ConfigTypeConverter
     {
         // Don't put anything from UnityEngine here or it will break preloader, use LazyTomlConverterLoader instead
-        private static Dictionary<Type, TypeConverter> TypeConverters { get; } = new()
+        private static Dictionary<Type, TypeConverter> DirectConverters { get; } = new()
         {
             [typeof(string)] = new TypeConverter
             {
-                ConvertToString = (obj, type) => Escape((string) obj),
-                ConvertToObject = (str, type) =>
-                {
-                    // Check if the string is a file path with unescaped \ path separators (e.g. D:\test and not D:\\test)
-                    if (Regex.IsMatch(str, @"^""?\w:\\(?!\\)(?!.+\\\\)"))
-                        return str;
-                    return Unescape(str);
-                }
+                ConvertToString = (obj, type) => obj.ToString(), //Escape((string) obj),
+                ConvertToObject = (str, type) => str,
+                // {
+                //     // Check if the string is a file path with unescaped \ path separators (e.g. D:\test and not D:\\test)
+                //     if (Regex.IsMatch(str, @"^""?\w:\\(?!\\)(?!.+\\\\)"))
+                //         return str;
+                //     return Unescape(str);
+                // }
             },
             [typeof(bool)] = new TypeConverter
             {
@@ -98,15 +98,25 @@ namespace BepInEx.Configuration
                 ConvertToObject = (str, type) => decimal.Parse(str, NumberFormatInfo.InvariantInfo)
             },
 
-            //enums are special
+            // Special direct converters
 
             [typeof(Enum)] = new TypeConverter
             {
                 ConvertToString = (obj, type) => obj.ToString(),
                 ConvertToObject = (str, type) => Enum.Parse(type, str, true)
+            },
+            [typeof(DateTime)] = new TypeConverter
+            {
+                ConvertToString = (obj, type) => ((DateTime) obj).ToString("O"),
+                ConvertToObject = (str, type) => DateTime.ParseExact(str, "O", CultureInfo.InvariantCulture)
+            },
+            [typeof(DateTimeOffset)] = new TypeConverter
+            {
+                ConvertToString = (obj, type) => ((DateTimeOffset) obj).ToString("O"),
+                ConvertToObject = (str, type) => DateTimeOffset.ParseExact(str, "O", CultureInfo.InvariantCulture)
             }
         };
-
+        
         /// <summary>
         ///     Convert object of a given type to a string using available converters.
         /// </summary>
@@ -145,9 +155,9 @@ namespace BepInEx.Configuration
                 throw new ArgumentNullException(nameof(valueType));
 
             if (valueType.IsEnum)
-                return TypeConverters[typeof(Enum)];
+                return DirectConverters[typeof(Enum)];
 
-            TypeConverters.TryGetValue(valueType, out var result);
+            DirectConverters.TryGetValue(valueType, out var result);
 
             return result;
         }
@@ -160,25 +170,25 @@ namespace BepInEx.Configuration
         {
             if (type == null) throw new ArgumentNullException(nameof(type));
             if (converter == null) throw new ArgumentNullException(nameof(converter));
-            if (CanConvert(type))
+            if (CanConvertDirectly(type))
             {
                 Logger.LogWarning("Tried to add a TomlConverter when one already exists for type " + type.FullName);
                 return false;
             }
 
-            TypeConverters.Add(type, converter);
+            DirectConverters.Add(type, converter);
             return true;
         }
 
         /// <summary>
         ///     Check if a given type can be converted to and from string.
         /// </summary>
-        public static bool CanConvert(Type type) => GetConverter(type) != null;
+        public static bool CanConvertDirectly(Type type) => GetConverter(type) != null;
 
         /// <summary>
         ///     Give a list of types with registered converters.
         /// </summary>
-        public static IEnumerable<Type> GetSupportedTypes() => TypeConverters.Keys;
+        public static IEnumerable<Type> GetSupportedTypes() => DirectConverters.Keys;
 
         private static string Escape(this string txt)
         {
