@@ -12,6 +12,8 @@ namespace BepInEx.Configuration
         ConfigurationNode Get(string[] path);
 
         void Set(string[] path, ConfigurationNode node);
+
+        ConfigurationNode Delete(string[] path);
         
         IEnumerable<string[]> EntryPaths { get; }
     }

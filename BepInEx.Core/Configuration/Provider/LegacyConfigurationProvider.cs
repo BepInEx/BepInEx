@@ -79,6 +79,14 @@ namespace BepInEx.Configuration
 
         public void Set(string[] path, ConfigurationNode node) => items[path] = node.Value;
 
+        public ConfigurationNode Delete(string[] path)
+        {
+            var val = Get(path);
+            if (val == null) return null;
+            items.Remove(path);
+            return val;
+        }
+
         public IEnumerable<string[]> EntryPaths => items.Keys.ToList();
     }
 }
