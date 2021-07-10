@@ -50,7 +50,9 @@ namespace BepInEx.Preloader
 				PreloaderLog = new PreloaderConsoleListener();
 				Logger.Listeners.Add(PreloaderLog);
 
-				string consoleTile = $"BepInEx {typeof(Paths).Assembly.GetName().Version} - {Paths.ProcessName}";
+				Version version = typeof(Paths).Assembly.GetName().Version;
+
+				string consoleTile = $"BepInEx {version} - {Paths.ProcessName} ({File.GetLastWriteTime(Paths.ExecutablePath)})";
 
 				if (ConsoleManager.ConsoleActive)
 					ConsoleManager.SetConsoleTitle(consoleTile);
@@ -82,6 +84,9 @@ namespace BepInEx.Preloader
 					Patcher = PatchEntrypoint,
 					TypeName = "BepInEx.Chainloader"
 				});
+
+				Logger.Log(LogLevel.Info,
+					$"Loaded 1 patcher method from [BepInEx.Preloader {version}]");
 
 				AssemblyPatcher.AddPatchersFromDirectory(Paths.PatcherPluginPath);
 
