@@ -50,7 +50,7 @@ namespace BepInEx.Preloader
 				PreloaderLog = new PreloaderConsoleListener();
 				Logger.Listeners.Add(PreloaderLog);
 
-				var version = typeof(Paths).Assembly.GetName().Version;
+				Version version = typeof(Paths).Assembly.GetName().Version;
 
 				string consoleTile = $"BepInEx {version} - {Paths.ProcessName} ({File.GetLastWriteTime(Paths.ExecutablePath)})";
 
