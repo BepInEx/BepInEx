@@ -4,6 +4,7 @@
 # This script is used to run a Unity game with BepInEx enabled.
 #
 # Usage: Configure the script below and simply run this script when you want to run your game modded.
+a="/$0"; a=${a%/*}; a=${a#/}; a=${a:-.}; BASEDIR=$(cd "$a"; pwd -P)
 
 # -------- SETTINGS --------
 # ---- EDIT AS NEEDED ------
@@ -19,17 +20,28 @@ executable_name=""
 export DOORSTOP_ENABLE=TRUE
 
 # What .NET assembly to execute. Valid value is a path to a .NET DLL that mono can execute.
-export DOORSTOP_INVOKE_DLL_PATH="${PWD}/BepInEx/core/BepInEx.Preloader.dll"
+export DOORSTOP_INVOKE_DLL_PATH="$BASEDIR/BepInEx/core/BepInEx.Preloader.dll"
+
+# If specified, Doorstop will load core libraries from this folder instead of the normal Managed folder
+# Mainly usable to unstrip assemblies in some games
+export DOORSTOP_CORLIB_OVERRIDE_PATH=""
 
 # ----- DO NOT EDIT FROM THIS LINE FORWARD  ------
 # ----- (unless you know what you're doing) ------
+
+# Special case: program is launched via Steam
+# In that case rerun the script via their bootstrapper to ensure Steam overlay works
+if [ "$2" = "SteamLaunch" ]; then
+    "$1" "$2" "$3" "$4" "$0" "$5"
+    exit
+fi
 
 if [ ! -x "$1" -a ! -x "$executable_name" ]; then
     echo "Please open run.sh in a text editor and configure executable name."
     exit 1
 fi
 
-doorstop_libs="${PWD}/doorstop_libs"
+doorstop_libs="$BASEDIR/doorstop_libs"
 arch=""
 executable_path=""
 lib_postfix=""
@@ -37,13 +49,13 @@ lib_postfix=""
 os_type=`uname -s`
 case $os_type in
     Linux*)
-        executable_path="${PWD}/${executable_name}"
+        executable_path="$BASEDIR/${executable_name}"
         lib_postfix="so"
         ;;
     Darwin*)
         executable_name=`basename "${executable_name}" .app`
-        real_executable_name=`defaults read "${PWD}/${executable_name}.app/Contents/Info" CFBundleExecutable`
-        executable_path="${PWD}/${executable_name}.app/Contents/MacOS/${real_executable_name}"
+        real_executable_name=`defaults read "$BASEDIR/${executable_name}.app/Contents/Info" CFBundleExecutable`
+        executable_path="$BASEDIR/${executable_name}.app/Contents/MacOS/${real_executable_name}"
         lib_postfix="dylib"
         ;;
     *)
