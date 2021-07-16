@@ -68,15 +68,20 @@ namespace BepInEx.Bootstrap
 
 			Resolver.ResolveFailure += (sender, reference) =>
 			{
-				if (Utility.TryParseAssemblyName(reference.FullName, out var name) && 
-					(Utility.TryResolveDllAssembly(name, Paths.BepInExAssemblyDirectory, ReaderParameters, out var assembly) ||
-					 Utility.TryResolveDllAssembly(name, Paths.PluginPath, ReaderParameters, out assembly)))
-					return assembly;
+				if (!Utility.TryParseAssemblyName(reference.FullName, out var name))
+					return AssemblyResolve?.Invoke(sender, reference);
 
-				foreach (string dllSearchPath in Paths.DllSearchPaths)
-					if (Utility.TryResolveDllAssembly(name, dllSearchPath, ReaderParameters, out assembly))
-						return assembly;
+				var resolvePaths = new[]
+				{
+					Paths.BepInExAssemblyDirectory,
+					Paths.PluginPath,
+					Paths.PatcherPluginPath
+				}.Concat(Paths.DllSearchPaths);
 				
+				foreach (string dllSearchPath in resolvePaths)
+					if (Utility.TryResolveDllAssembly(name, dllSearchPath, ReaderParameters, out var assembly))
+						return assembly;
+
 				return AssemblyResolve?.Invoke(sender, reference);
 			};
 		}
