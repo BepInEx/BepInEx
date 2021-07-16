@@ -85,13 +85,15 @@ namespace BepInEx.Bootstrap
             if (!Utility.TryParseAssemblyName(reference.FullName, out var name))
                 return null;
 
-            if (Utility.TryResolveDllAssembly(name, Paths.BepInExAssemblyDirectory, ReaderParameters,
-                                              out var assembly) ||
-                Utility.TryResolveDllAssembly(name, Paths.PluginPath, ReaderParameters, out assembly) ||
-                Utility.TryResolveDllAssembly(name, Paths.ManagedPath, ReaderParameters, out assembly))
-                return assembly;
+            var resolveDirs = new[]
+            {
+                Paths.BepInExAssemblyDirectory,
+                Paths.PluginPath,
+                Paths.PatcherPluginPath,
+                Paths.ManagedPath,
+            }.Concat(SearchDirectories);
 
-            foreach (var dir in SearchDirectories)
+            foreach (var dir in resolveDirs)
             {
                 if (!Directory.Exists(dir))
                 {
@@ -99,7 +101,7 @@ namespace BepInEx.Bootstrap
                     continue;
                 }
 
-                if (Utility.TryResolveDllAssembly(name, dir, ReaderParameters, out assembly))
+                if (Utility.TryResolveDllAssembly(name, dir, ReaderParameters, out var assembly))
                     return assembly;
             }
 
