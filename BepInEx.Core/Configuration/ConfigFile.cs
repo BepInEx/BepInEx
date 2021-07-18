@@ -327,7 +327,11 @@ namespace BepInEx.Configuration
 
                 var entry = new ConfigEntry<T>(this, configDefinition, defaultValue, configDescription);
                 Entries[configDefinition] = entry;
+
                 entry.SyncFromConfig();
+                // Sync back in case the entry did not exist before
+                entry.SyncToConfig();
+
                 if (SaveOnConfigSet)
                     Save();
 
@@ -382,7 +386,7 @@ namespace BepInEx.Configuration
         {
             if (changedEntryBase == null) throw new ArgumentNullException(nameof(changedEntryBase));
 
-            // TODO: Set value to provider
+            changedEntryBase.SyncToConfig();
             
             if (SaveOnConfigSet)
                 Save();
