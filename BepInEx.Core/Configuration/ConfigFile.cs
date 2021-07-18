@@ -39,7 +39,9 @@ namespace BepInEx.Configuration
             if (saveOnInit) Save();
         }
 
-        public static ConfigFile CoreConfig { get; } = new(Paths.BepInExConfigPath, true);
+
+        private static ConfigFile core;
+        public static ConfigFile CoreConfig => core ??= new(Paths.BepInExConfigPath, true);
 
         public IConfigurationProvider ConfigurationProvider { get; }
 
