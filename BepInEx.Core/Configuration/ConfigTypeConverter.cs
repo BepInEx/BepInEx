@@ -19,14 +19,8 @@ namespace BepInEx.Configuration
         {
             [typeof(string)] = new TypeConverter
             {
-                ConvertToString = (obj, type) => obj.ToString(), //Escape((string) obj),
+                ConvertToString = (obj, type) => obj.ToString(),
                 ConvertToObject = (str, type) => str,
-                // {
-                //     // Check if the string is a file path with unescaped \ path separators (e.g. D:\test and not D:\\test)
-                //     if (Regex.IsMatch(str, @"^""?\w:\\(?!\\)(?!.+\\\\)"))
-                //         return str;
-                //     return Unescape(str);
-                // }
             },
             [typeof(bool)] = new TypeConverter
             {
@@ -192,7 +186,25 @@ namespace BepInEx.Configuration
         /// </summary>
         public static IEnumerable<Type> GetSupportedTypes() => DirectConverters.Keys;
 
-        public static object GetValue(this IConfigurationProvider provider, string[] path, Type type)
+        public static void SerializeValue(this IConfigurationProvider provider, string[] path, object obj, string comment = null)
+        {
+            var type = obj.GetType();
+            if (CanConvertDirectly(type))
+            {
+                provider.Set(path, new ConfigurationNode
+                {
+                    ValueType = type,
+                    Value = ConvertToString(obj, type),
+                    Comment = comment
+                });
+                return;
+            }
+
+            // TODO: Implement
+            throw new NotImplementedException();
+        }
+        
+        public static object DeserializeValue(this IConfigurationProvider provider, string[] path, Type type)
         {
             // We have direct value; simply resolve it normally
             if (CanConvertDirectly(type))
@@ -209,7 +221,7 @@ namespace BepInEx.Configuration
                 for (var i = 0;; i++)
                 {
                     indexPath[^1] = i.ToString(CultureInfo.InvariantCulture);
-                    var val = provider.GetValue(indexPath, elType);
+                    var val = provider.DeserializeValue(indexPath, elType);
                     if (val == null)
                         break;
                     values.Add(val);
@@ -229,7 +241,7 @@ namespace BepInEx.Configuration
                 for (var i = 0;; i++)
                 {
                     indexPath[^1] = i.ToString(CultureInfo.InvariantCulture);
-                    var val = provider.GetValue(indexPath, elType);
+                    var val = provider.DeserializeValue(indexPath, elType);
                     if (val == null)
                         break;
                     add(val);
@@ -249,7 +261,7 @@ namespace BepInEx.Configuration
                 
                 foreach (var subItem in provider.EntryPaths.Where(p => !p.SequenceEqual(path) && p.StartsWith(path)))
                 {
-                    var val = provider.GetValue(subItem, elType);
+                    var val = provider.DeserializeValue(subItem, elType);
                     var key = string.Join(ConfigFile.PathSeparator.ToString(), subItem.Skip(path.Length).ToArray());
                     add(key, val);
                 }
@@ -261,14 +273,14 @@ namespace BepInEx.Configuration
                         
             foreach (var fieldInfo in type.GetFields(AccessTools.all).Where(f => !f.IsInitOnly))
             {
-                var fVal = provider.GetValue(path.AddToArray(fieldInfo.Name), fieldInfo.FieldType);
+                var fVal = provider.DeserializeValue(path.AddToArray(fieldInfo.Name), fieldInfo.FieldType);
                 if (fVal != null)
                     fieldInfo.SetValue(fieldInfo.IsStatic ? null : result, fVal);
             }
             
             foreach (var propertyInfo in type.GetProperties(AccessTools.all).Where(p => p.CanWrite))
             {
-                var pVal = provider.GetValue(path.AddToArray(propertyInfo.Name), propertyInfo.PropertyType);
+                var pVal = provider.DeserializeValue(path.AddToArray(propertyInfo.Name), propertyInfo.PropertyType);
                 // TODO: Support indexed props?
                 if (pVal != null)
                     propertyInfo.SetValue(propertyInfo.GetSetMethod(true).IsStatic ? null : result, pVal, null);
