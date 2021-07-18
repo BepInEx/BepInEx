@@ -16,9 +16,9 @@ Key=1
 ");
             c.Reload();
             var w = c.Bind("Cat", "Key", 0, "Test");
-            Assert.AreEqual(w.Value, 1);
+            Assert.AreEqual(1, w.Value);
             var w2 = c.Bind("Cat", "Key2", 0, new ConfigDescription("Test"));
-            Assert.AreEqual(w2.Value, 0);
+            Assert.AreEqual(0, w2.Value);
         }
 
         [TestMethod]
@@ -26,7 +26,7 @@ Key=1
         {
             var (c, provider) = LegacyTestConfigProvider.MakeConfig();
             var w = c.Bind("Cat", "Key", 0, new ConfigDescription("Test"));
-            Assert.AreEqual(w.Value, 0);
+            Assert.AreEqual(0, w.Value);
 
             provider.FileContents = @"
 [Cat]
@@ -35,7 +35,7 @@ Key=1
 ";
             
             c.Reload();
-            Assert.AreEqual(w.Value, 1);
+            Assert.AreEqual(1, w.Value);
         }
 
         [TestMethod]
