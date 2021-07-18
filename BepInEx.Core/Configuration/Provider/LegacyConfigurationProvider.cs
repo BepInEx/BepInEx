@@ -40,7 +40,6 @@ namespace BepInEx.Configuration
 
         public virtual void Load()
         {
-
             items.Clear();
 
             var currentSection = new string[0];
@@ -54,7 +53,7 @@ namespace BepInEx.Configuration
 
                 if (line.StartsWith("[") && line.EndsWith("]")) //section
                 {
-                    currentSection = line[1..^2].Trim().Split('.');
+                    currentSection = line[1..^1].Trim().Split('.');
                     continue;
                 }
 
