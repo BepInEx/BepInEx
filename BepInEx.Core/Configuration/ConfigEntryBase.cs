@@ -152,6 +152,11 @@ namespace BepInEx.Configuration
             return value;
         }
 
+        public void SyncFromConfig()
+        {
+            BoxedValue = ConfigFile.ConfigurationProvider.GetValue(Definition.ConfigPath, SettingType) ?? DefaultValue;
+        }
+
         /// <summary>
         ///     Trigger setting changed event.
         /// </summary>

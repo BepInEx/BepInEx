@@ -239,9 +239,10 @@ namespace BepInEx.Configuration
             lock (_ioLock)
             {
                 ConfigurationProvider.Load();
+
+                foreach (var kv in Entries)
+                    kv.Value.SyncFromConfig();
             }
-            
-            // TODO: Implement configuration document to document entry parsing
 
             OnConfigReloaded();
         }
@@ -326,9 +327,7 @@ namespace BepInEx.Configuration
 
                 var entry = new ConfigEntry<T>(this, configDefinition, defaultValue, configDescription);
                 Entries[configDefinition] = entry;
-
-                entry.BoxedValue = ConfigurationProvider.GetValue(configDefinition.ConfigPath, typeof(T)) ?? defaultValue;
-
+                entry.SyncFromConfig();
                 if (SaveOnConfigSet)
                     Save();
 
