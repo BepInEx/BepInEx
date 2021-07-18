@@ -5,7 +5,13 @@ namespace BepInEx.Configuration.Tests
 {
     public class LegacyTestConfigProvider : LegacyConfigurationProvider
     {
-        public string FileContents { get; set; }
+        private string fileContents;
+
+        public string FileContents
+        {
+            get => fileContents;
+            set => fileContents = value.Replace("\r\n", "\n");
+         }
 
         public LegacyTestConfigProvider() : base("none")
         {
@@ -13,7 +19,7 @@ namespace BepInEx.Configuration.Tests
 
         public override IEnumerable<string> ReadAllLines()
         {
-            return FileContents.Split(Environment.NewLine);
+            return FileContents.Split("\n");
         }
 
         public override void Save()
