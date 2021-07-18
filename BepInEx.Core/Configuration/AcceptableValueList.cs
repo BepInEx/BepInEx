@@ -40,6 +40,6 @@ namespace BepInEx.Configuration
 
         /// <inheritdoc />
         public override string ToDescriptionString() =>
-            "# Acceptable values: " + string.Join(", ", AcceptableValues.Select(x => x.ToString()).ToArray());
+            $"Acceptable values: {string.Join(", ", AcceptableValues.Select(x => x.ToString()).ToArray())}";
     }
 }
