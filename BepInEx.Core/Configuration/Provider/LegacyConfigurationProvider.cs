@@ -28,18 +28,24 @@ namespace BepInEx.Configuration
         
         public LegacyConfigurationProvider(string filePath)
         {
-            if (!File.Exists(filePath))
-                throw new FileNotFoundException(filePath);
             this.filePath = filePath;
         }
         
-        public void Load()
+        public virtual IEnumerable<string> ReadAllLines()
         {
+            if (!File.Exists(filePath))
+                throw new FileNotFoundException(filePath);
+            return File.ReadAllLines(filePath);
+        }
+
+        public virtual void Load()
+        {
+
             items.Clear();
 
             var currentSection = new string[0];
-            
-            foreach (var rawLine in File.ReadAllLines(filePath))
+
+            foreach (var rawLine in ReadAllLines())
             {
                 var line = rawLine.Trim();
                 
@@ -64,7 +70,7 @@ namespace BepInEx.Configuration
         }
 
         // TODO: Write to TOML instead
-        public void Save() => throw new System.NotImplementedException();
+        public virtual void Save() => throw new System.NotImplementedException();
 
         public ConfigurationNode Get(string[] path)
         {
