@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace BepInEx.Configuration
 {
@@ -8,7 +9,7 @@ namespace BepInEx.Configuration
     {
         private string filePath;
 
-        private Dictionary<string[], string> items = new(new ArrayComparer());
+        protected Dictionary<string[], string> items = new(new ArrayComparer());
 
         private class ArrayComparer : IEqualityComparer<string[]>
         {
@@ -78,11 +79,16 @@ namespace BepInEx.Configuration
             return new ConfigurationNode
             {
                 ValueType = typeof(string),
-                Value = value
+                Value = UnescapeIfNeeded(value)
             };
         }
 
-        public void Set(string[] path, ConfigurationNode node) => items[path] = node.Value;
+        private static string UnescapeIfNeeded(string str)
+        {
+            return Regex.IsMatch(str, @"^""?\w:\\(?!\\)(?!.+\\\\)") ? str : str.Unescape();
+        }
+
+        public void Set(string[] path, ConfigurationNode node) => items[path] = node.Value.Escape();
 
         public ConfigurationNode Delete(string[] path)
         {

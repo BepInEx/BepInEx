@@ -26,6 +26,13 @@ namespace BepInEx.Configuration.Tests
         {
             // Do nothing for now, there is nothing to save
         }
+
+        public string GetRawValue(string[] path)
+        {
+            if (!items.TryGetValue(path, out var value))
+                return null;
+            return value;
+        }
         
         public static (ConfigFile Config, LegacyTestConfigProvider Provider) MakeConfig(string contents = "")
         {

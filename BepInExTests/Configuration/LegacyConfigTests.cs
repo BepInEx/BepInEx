@@ -84,18 +84,15 @@ Key=1
         {
             const string testVal = "new line\n test \t\0";
 
-            var (c, _) = LegacyTestConfigProvider.MakeConfig();
+            var (c, p) = LegacyTestConfigProvider.MakeConfig();
             var w = c.Bind("Cat", "Key", testVal, new ConfigDescription("Test"));
 
+            var key = new[] { "Cat", "Key" };
             Assert.AreEqual(testVal, w.Value);
-            Assert.IsFalse(w.GetSerializedValue().Any(x => x == '\n'));
+            Assert.IsFalse(p.GetRawValue(key).Any(x => x == '\n'));
 
-            w.SetSerializedValue(w.GetSerializedValue());
-            Assert.AreEqual(testVal, w.Value);
-
-            c.Save();
-            c.Reload();
-
+            p.Set(key, p.Get(key));
+            w.SyncFromConfig();
             Assert.AreEqual(testVal, w.Value);
         }
 
@@ -117,7 +114,8 @@ Key={testVal}
 
                 Assert.AreEqual(unescaped, w.Value);
 
-                w.SetSerializedValue(w.GetSerializedValue());
+                p.Set(w.Definition.ConfigPath, p.Get(w.Definition.ConfigPath));
+                w.SyncFromConfig();
                 Assert.AreEqual(unescaped, w.Value);
 
                 c.Save();

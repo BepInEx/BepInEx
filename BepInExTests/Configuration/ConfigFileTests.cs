@@ -96,10 +96,6 @@ namespace BepInEx.Configuration.Tests
             var (c, _) = LegacyTestConfigProvider.MakeConfig();
             var w = c.Bind("Cat", "Key", new KeyboardShortcut(KeyCode.A, KeyCode.LeftShift));
             Assert.AreEqual(new KeyboardShortcut(KeyCode.A, KeyCode.LeftShift), w.Value);
-
-            w.Value = shortcut;
-            c.Reload();
-            Assert.AreEqual(shortcut, w.Value);
         }
 
         [TestMethod]
@@ -107,24 +103,22 @@ namespace BepInEx.Configuration.Tests
         {
             Assert.AreEqual(KeyboardShortcut.Empty, new KeyboardShortcut());
 
-            var (c, _) = LegacyTestConfigProvider.MakeConfig();
+            var (c, p) = LegacyTestConfigProvider.MakeConfig();
 
             var w = c.Bind("Cat", "Key", KeyboardShortcut.Empty, new ConfigDescription("Test"));
 
-            Assert.AreEqual("", w.GetSerializedValue());
+            var key = new[] { "Cat", "Key" };
+            Assert.AreEqual("", p.Get(key).Value);
 
-            w.SetSerializedValue(w.GetSerializedValue());
+            p.Set(key, p.Get(key));
+            w.SyncFromConfig();
             Assert.AreEqual(KeyboardShortcut.Empty, w.Value);
 
             var testShortcut = new KeyboardShortcut(KeyCode.A, KeyCode.B, KeyCode.C);
             w.Value = testShortcut;
 
-            w.SetSerializedValue(w.GetSerializedValue());
-            Assert.AreEqual(testShortcut, w.Value);
-
-            c.Save();
-            c.Reload();
-
+            p.Set(key, p.Get(key));
+            w.SyncFromConfig();
             Assert.AreEqual(testShortcut, w.Value);
         }
     }
