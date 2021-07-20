@@ -46,15 +46,15 @@ arch=""
 executable_path=""
 lib_postfix=""
 
-os_type=`uname -s`
+os_type=$(uname -s)
 case $os_type in
     Linux*)
         executable_path="$BASEDIR/${executable_name}"
         lib_postfix="so"
         ;;
     Darwin*)
-        executable_name=`basename "${executable_name}" .app`
-        real_executable_name=`defaults read "$BASEDIR/${executable_name}.app/Contents/Info" CFBundleExecutable`
+        executable_name=$(basename "${executable_name}" .app)
+        real_executable_name=$(defaults read "$BASEDIR/${executable_name}.app/Contents/Info" CFBundleExecutable)
         executable_path="$BASEDIR/${executable_name}.app/Contents/MacOS/${real_executable_name}"
         lib_postfix="dylib"
         ;;
@@ -75,10 +75,10 @@ if [ -n "$1" ]; then
             ;;
         Darwin*)
             # Special case: allow to specify path to the executable within .app
-            full_path_part=`echo "$1" | grep "\.app/Contents/MacOS"`
+            full_path_part=$(echo "$1" | grep "\.app/Contents/MacOS")
             if [ -z "$full_path_part" ]; then
-                executable_name=`basename "$1" .app`
-                real_executable_name=`defaults read "$1/Contents/Info" CFBundleExecutable`
+                executable_name=$(basename "$1" .app)
+                real_executable_name=$(defaults read "$1/Contents/Info" CFBundleExecutable)
                 executable_path="$1/Contents/MacOS/${real_executable_name}"
             else
                 executable_path="$1"
@@ -87,18 +87,34 @@ if [ -n "$1" ]; then
     esac
 fi
 
-# Resolve any symlinks
-case $os_type in
-    Linux*)
-        executable_path=`readlink -f "${executable_path}"`
-        ;;
-    Darwin*)
-        # On macOS there is no easy way to resolve readlinks fully. This is the best we can do.
-        executable_path=`readlink "${executable_path}"`
-        ;;
-esac
+abs_path() {
+    echo "$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
+}
 
-executable_type=`LD_PRELOAD="" file -b "${executable_path}"`;
+_readlink() {
+    # relative links with readlink (without -f) do not preserve the path info 
+    ab_path="$(abs_path "$1")"
+    link="$(readlink "${ab_path}")"
+    case $link in
+        /*);;
+        *) link="$(dirname "$ab_path")/$link";;
+    esac
+    echo "$link"
+}
+
+
+resolve_executable_path () {
+    e_path="$(abs_path "$1")"
+    
+    while [ -L "${e_path}" ]; do 
+        e_path=$(_readlink "${e_path}");
+    done
+    echo "${e_path}"
+}
+
+executable_path=$(resolve_executable_path "${executable_path}")
+echo "${executable_path}"
+executable_type=$(LD_PRELOAD="" file -b "${executable_path}");
 
 case $executable_type in
     *PE32*)
