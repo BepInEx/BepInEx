@@ -90,6 +90,12 @@ fi
 executable_type=`LD_PRELOAD="" file -b "${executable_path}"`;
 
 case $executable_type in
+    *PE32*)
+        echo "The executable is a Windows executable file. You must use Wine/Proton and BepInEx for Windows with this executable."
+        echo "Uninstall BepInEx for *nix and install BepInEx for Windows instead."
+        echo "More info: https://docs.bepinex.dev/articles/advanced/steam_interop.html#protonwine"
+        exit 1
+        ;;
     *64-bit*)
         arch="x64"
         ;;
