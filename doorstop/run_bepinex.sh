@@ -98,8 +98,6 @@ case $os_type in
         ;;
 esac
 
-echo "$executable_path"
-
 executable_type=`LD_PRELOAD="" file -b "${executable_path}"`;
 
 case $executable_type in
