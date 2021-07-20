@@ -87,6 +87,19 @@ if [ -n "$1" ]; then
     esac
 fi
 
+# Resolve any symlinks
+case $os_type in
+    Linux*)
+        executable_path=`readlink -f "${executable_path}"`
+        ;;
+    Darwin*)
+        # On macOS there is no easy way to resolve readlinks fully. This is the best we can do.
+        executable_path=`readlink "${executable_path}"`
+        ;;
+esac
+
+echo "$executable_path"
+
 executable_type=`LD_PRELOAD="" file -b "${executable_path}"`;
 
 case $executable_type in
