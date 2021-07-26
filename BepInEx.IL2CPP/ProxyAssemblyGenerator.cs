@@ -1,6 +1,8 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
@@ -194,14 +196,7 @@ namespace BepInEx.IL2CPP
 
                 var executor = new Il2CppExecutor(metadata, il2Cpp);
                 var dummy = new DummyAssemblyGenerator(executor, true);
-
-                listener.DoPreloaderLog("Executing Il2CppUnhollower generator", LogLevel.Info);
-
-                LogSupport.InfoHandler += s => listener.DoUnhollowerLog(s, LogLevel.Info);
-                LogSupport.WarningHandler += s => listener.DoUnhollowerLog(s, LogLevel.Warning);
-                LogSupport.TraceHandler += s => listener.DoUnhollowerLog(s, LogLevel.Debug);
-                LogSupport.ErrorHandler += s => listener.DoUnhollowerLog(s, LogLevel.Error);
-
+                
                 var unhollowerOptions = new UnhollowerOptions
                 {
                     GameAssemblyPath = GameAssemblyPath,
@@ -211,6 +206,39 @@ namespace BepInEx.IL2CPP
                     UnityBaseLibsDir = Directory.Exists(UnityBaseLibsDirectory) ? UnityBaseLibsDirectory : null,
                     NoCopyUnhollowerLibs = true
                 };
+
+                string renameMapLocation = Path.Combine(Paths.BepInExRootPath, "DeobfuscationMap.csv.gz");
+                if (File.Exists(renameMapLocation))
+                {
+                    listener.DoPreloaderLog("Parsing deobfuscation rename mappings", LogLevel.Info);
+
+                    using var fileStream = new FileStream(renameMapLocation, FileMode.Open, FileAccess.Read, FileShare.Read);
+                    using var gzipStream = new GZipStream(fileStream, CompressionMode.Decompress);
+
+                    using var reader = new StreamReader(gzipStream, Encoding.UTF8, false);
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+
+                        if (string.IsNullOrWhiteSpace(line) || line.StartsWith("#"))
+                            continue;
+
+                        var mapping = line.Split(';');
+
+                        if (mapping.Length != 2)
+                            continue;
+
+                        unhollowerOptions.RenameMap[mapping[0]] = mapping[1];
+                    }
+                }
+                
+
+                listener.DoPreloaderLog("Executing Il2CppUnhollower generator", LogLevel.Info);
+
+                LogSupport.InfoHandler += s => listener.DoUnhollowerLog(s, LogLevel.Info);
+                LogSupport.WarningHandler += s => listener.DoUnhollowerLog(s, LogLevel.Warning);
+                LogSupport.TraceHandler += s => listener.DoUnhollowerLog(s, LogLevel.Debug);
+                LogSupport.ErrorHandler += s => listener.DoUnhollowerLog(s, LogLevel.Error);
 
                 try
                 {
