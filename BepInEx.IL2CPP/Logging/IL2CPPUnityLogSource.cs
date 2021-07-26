@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using BepInEx.Logging;
 using UnityEngine;
 
@@ -6,9 +6,13 @@ namespace BepInEx.IL2CPP.Logging
 {
     public class IL2CPPUnityLogSource : ILogSource
     {
+        private delegate IntPtr SetLogCallbackDefinedDelegate(bool defined);
+
         public IL2CPPUnityLogSource()
         {
             Application.s_LogCallbackHandler = new Action<string, string, LogType>(UnityLogCallback);
+            
+            UnhollowerBaseLib.IL2CPP.ResolveICall<SetLogCallbackDefinedDelegate>("UnityEngine.Application::SetLogCallbackDefined")(true);
         }
 
         public string SourceName { get; } = "Unity";
