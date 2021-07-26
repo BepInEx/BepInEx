@@ -192,11 +192,7 @@ namespace BepInEx.Preloader.Core
                     }
                     catch (Exception e)
                     {
-                        Logger.LogError($"Failed to load patcher [{patcherPlugin.TypeName}]: {e.Message}");
-                        if (e is ReflectionTypeLoadException re)
-                            Logger.LogDebug(TypeLoader.TypeLoadExceptionToString(re));
-                        else
-                            Logger.LogDebug(e.ToString());
+                        Logger.LogError($"Failed to load patcher [{patcherPlugin.TypeName}]: {(e is ReflectionTypeLoadException re ? TypeLoader.TypeLoadExceptionToString(re) : e)}");
                     }
 
                 var assName = ass.GetName();
