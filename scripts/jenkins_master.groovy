@@ -17,7 +17,7 @@ pipeline {
                         lastBuildCommit = currentBuild.previousBuild.buildVariables["LAST_BUILD"]
                 }
                 // Skip only here so that last build info is saved properly
-                scmSkip()
+                scmSkip(deleteBuild: true)
                 // Clean up old project before starting
                 cleanWs()
 
