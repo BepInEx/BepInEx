@@ -1,6 +1,5 @@
 name: Bug Report
 description: Report a behaviour that is not desired in BepInEx
-title: "[Bug]: "
 labels: [bug]
 body:
   - type: markdown
