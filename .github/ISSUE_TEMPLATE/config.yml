@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: GitHub Discussions
+    url: https://github.com/BepInEx/BepInEx/discussions
+    about: "Not an issue or a bug report? Talk freely about BepInEx features and issues here without a template."
+  - name: BepInEx Discord
+    url: https://discord.gg/MpFEDAg
+    about: "Talk about plugin development and report smaller issues here. You'll most likely get faster support on Discord."
