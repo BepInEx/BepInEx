@@ -1,24 +1,25 @@
 /*
 *  BepInEx Bleeding Edge build CI jenkinsfile
 */
-lastBuildCommit = ""
+lastBuildCommit = ''
 
 pipeline {
     agent any
     parameters {
         // Check if the build is Bleeding Edge. Affects whether the result is pushed to BepisBuilds
-        booleanParam(name: "IS_BE")
+        booleanParam(name: 'IS_BE')
     }
     stages {
         stage('Pull Projects') {
             steps {
                 script {
-                    if(currentBuild.previousBuild != null && currentBuild.previousBuild.buildVariables.containsKey("LAST_BUILD"))
-                        lastBuildCommit = currentBuild.previousBuild.buildVariables["LAST_BUILD"]
+                    if (currentBuild.previousBuild != null && currentBuild.previousBuild.buildVariables.containsKey('LAST_BUILD')) {
+                        lastBuildCommit = currentBuild.previousBuild.buildVariables['LAST_BUILD']
+                    }
                 }
 
                 // Skip only here so that last build info is saved properly
-                scmSkip(deleteBuild: true)
+                scmSkip()
 
                 // Clean up old project before starting
                 cleanWs()
@@ -27,7 +28,7 @@ pipeline {
                     git 'https://github.com/BepInEx/BepInEx.git'
 
                     script {
-                        longCommit = sh(returnStdout: true, script: "git rev-parse HEAD").trim()
+                        longCommit = sh(returnStdout: true, script: 'git rev-parse HEAD').trim()
                     }
                 }
             }
@@ -35,7 +36,7 @@ pipeline {
         stage('Build BepInEx') {
             steps {
                 dir('BepInEx') {
-                    sh "chmod u+x build.sh"
+                    sh 'chmod u+x build.sh'
                     sh "./build.sh --target=Pack --bleeding_edge=${params.IS_BE} --build_id=${currentBuild.id} --last_build_commit=${lastBuildCommit}"
                 }
             }
@@ -43,7 +44,7 @@ pipeline {
         stage('Package') {
             steps {
                 dir('BepInEx/bin/dist') {
-                    archiveArtifacts "*.zip"
+                    archiveArtifacts '*.zip'
                 }
             }
         }
@@ -57,9 +58,9 @@ pipeline {
         success {
             script {
                 lastBuildCommit = longCommit
-                if(params.IS_BE) {
+                if (params.IS_BE) {
                     dir('BepInEx/bin/dist') {
-                        def filesToSend = findFiles(glob: '*.*').collect {it.name}
+                        def filesToSend = findFiles(glob: '*.*').collect { it.name }
                         withCredentials([string(credentialsId: 'bepisbuilds_addr', variable: 'BEPISBUILDS_ADDR')]) {
                             sh """curl --upload-file "{${filesToSend.join(',')}}" --ftp-pasv --ftp-skip-pasv-ip --ftp-create-dirs --ftp-method singlecwd --disable-epsv ftp://${BEPISBUILDS_ADDR}/bepinex_be/artifacts/${env.BUILD_NUMBER}/"""
                         }
