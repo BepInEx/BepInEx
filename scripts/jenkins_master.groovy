@@ -18,9 +18,6 @@ pipeline {
                     }
                 }
 
-                // Skip only here so that last build info is saved properly
-                scmSkip()
-
                 // Clean up old project before starting
                 cleanWs()
 
