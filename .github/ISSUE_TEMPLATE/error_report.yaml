@@ -1,5 +1,5 @@
 name: Error Report
-description: Report an error that is not necessarily a bug
+description: Post an error message or error log you got from BepInEx
 labels: [error, awaiting-replication]
 body:
   - type: markdown
