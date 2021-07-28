@@ -12,6 +12,8 @@ pipeline {
     stages {
         stage('Pull Projects') {
             steps {
+                scmSkip()
+
                 script {
                     if(currentBuild.previousBuild != null && currentBuild.previousBuild.buildVariables.containsKey("LAST_BUILD"))
                         lastBuildCommit = currentBuild.previousBuild.buildVariables["LAST_BUILD"]
