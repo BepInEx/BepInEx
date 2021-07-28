@@ -340,11 +340,7 @@ namespace BepInEx.Bootstrap
                         invalidPlugins.Add(plugin.Metadata.GUID);
                         Plugins.Remove(plugin.Metadata.GUID);
 
-                        Logger.LogError($"Error loading [{plugin}] : {ex.Message}");
-                        if (ex is ReflectionTypeLoadException re)
-                            Logger.LogDebug(TypeLoader.TypeLoadExceptionToString(re));
-                        else
-                            Logger.LogDebug(ex);
+                        Logger.LogError($"Error loading [{plugin}]: {(ex is ReflectionTypeLoadException re ? TypeLoader.TypeLoadExceptionToString(re) : ex)}");
                     }
                 }
             }
@@ -356,8 +352,7 @@ namespace BepInEx.Bootstrap
                 }
                 catch { }
 
-                Logger.LogError("Error occurred starting the game");
-                Logger.LogDebug(ex);
+                Logger.LogError("Error occurred starting the game: " + ex);
             }
 
             Logger.LogMessage("Chainloader startup complete");
@@ -371,8 +366,7 @@ namespace BepInEx.Bootstrap
             }
             catch (Exception e)
             {
-                Logger.LogWarning($"Couldn't run Module constructor for {assembly.FullName}::{plugin.TypeName}: {e.Message}");
-                Logger.LogDebug(e);
+                Logger.LogWarning($"Couldn't run Module constructor for {assembly.FullName}::{plugin.TypeName}: {e}");
             }
         }
 
