@@ -71,5 +71,5 @@ body:
           - BepInEx: 
           - Game: 
       render: markdown
-      validations:
-        required: true
+    validations:
+      required: true
