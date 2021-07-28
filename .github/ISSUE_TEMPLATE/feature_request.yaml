@@ -1,0 +1,28 @@
+name: Feature request
+description: Suggest an idea or an enhancement
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping make BepInEx better than ever!
+  - type: textarea
+    id: basic-description
+    attributes:
+      label: Describe your proposal
+      description: Is your feature request related to a problem? Please describe.
+      placeholder: "I'm always frustrated when..."
+    validations:
+      required: true
+  - type: textarea
+    id: basic-solution
+    attributes:
+      label: Proposed solution
+      description: "Describe the solution you'd like"
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives
+      description: "Describe any alternatives you have considered, if any"
