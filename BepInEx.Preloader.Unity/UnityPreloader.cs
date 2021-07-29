@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -9,9 +8,8 @@ using BepInEx.Configuration;
 using BepInEx.Logging;
 using BepInEx.Preloader.Core;
 using BepInEx.Preloader.Core.Logging;
+using BepInEx.Preloader.Core.Patching;
 using BepInEx.Preloader.RuntimeFixes;
-using Mono.Cecil;
-using Mono.Cecil.Cil;
 using MonoMod.Utils;
 
 namespace BepInEx.Preloader.Unity
@@ -72,20 +70,14 @@ namespace BepInEx.Preloader.Unity
 
                 using (var assemblyPatcher = new AssemblyPatcher())
                 {
-                    assemblyPatcher.PatcherPlugins.Add(new PatcherPlugin
-                    {
-                        TargetDLLs = () => new[] { ConfigEntrypointAssembly.Value },
-                        Patcher = PatchEntrypoint,
-                        TypeName = "BepInEx.Chainloader"
-                    });
-
+                    assemblyPatcher.AddPatchersFromDirectory(Paths.BepInExAssemblyDirectory);
                     assemblyPatcher.AddPatchersFromDirectory(Paths.PatcherPluginPath);
 
-                    Log.LogInfo($"{assemblyPatcher.PatcherPlugins.Count} patcher plugin{(assemblyPatcher.PatcherPlugins.Count == 1 ? "" : "s")} loaded");
+                    Log.LogInfo($"{assemblyPatcher.PatcherContext.PatcherPlugins.Count} patcher plugin{(assemblyPatcher.PatcherContext.PatcherPlugins.Count == 1 ? "" : "s")} loaded");
 
                     assemblyPatcher.LoadAssemblyDirectories(Paths.DllSearchPaths);
 
-                    Log.LogInfo($"{assemblyPatcher.PatcherPlugins.Count} assemblies discovered");
+                    Log.LogInfo($"{assemblyPatcher.PatcherContext.AvailableAssemblies.Count} assemblies discovered");
 
                     assemblyPatcher.PatchAndLoad();
                 }
@@ -130,91 +122,6 @@ namespace BepInEx.Preloader.Unity
                 File.WriteAllText(
                                   Path.Combine(Paths.GameRootPath, $"preloader_{DateTime.Now:yyyyMMdd_HHmmss_fff}.log"),
                                   log + ex);
-            }
-        }
-
-        /// <summary>
-        ///     Inserts BepInEx's own chainloader entrypoint into UnityEngine.
-        /// </summary>
-        /// <param name="assembly">The assembly that will be attempted to be patched.</param>
-        public static void PatchEntrypoint(ref AssemblyDefinition assembly)
-        {
-            if (assembly.MainModule.AssemblyReferences.Any(x => x.Name.Contains("BepInEx")))
-                throw new
-                    Exception("BepInEx has been detected to be patched! Please unpatch before using a patchless variant!");
-
-            var entrypointType = ConfigEntrypointType.Value;
-            var entrypointMethod = ConfigEntrypointMethod.Value;
-
-            var isCctor = entrypointMethod.IsNullOrWhiteSpace() || entrypointMethod == ".cctor";
-
-
-            var entryType = assembly.MainModule.Types.FirstOrDefault(x => x.Name == entrypointType);
-
-            if (entryType == null)
-                throw new Exception("The entrypoint type is invalid! Please check your config/BepInEx.cfg file");
-
-            var chainloaderAssemblyPath = Path.Combine(Paths.BepInExAssemblyDirectory, "BepInEx.Unity.dll");
-
-            var readerParameters = new ReaderParameters
-            {
-                AssemblyResolver = TypeLoader.CecilResolver
-            };
-
-            using (var chainloaderAssemblyDefinition =
-                AssemblyDefinition.ReadAssembly(chainloaderAssemblyPath, readerParameters))
-            {
-                var chainloaderType =
-                    chainloaderAssemblyDefinition.MainModule.Types.First(x => x.Name == "UnityChainloader");
-
-                var originalStartMethod = chainloaderType.EnumerateAllMethods().First(x => x.Name == "StaticStart");
-
-                var startMethod = assembly.MainModule.ImportReference(originalStartMethod);
-
-                var methods = new List<MethodDefinition>();
-
-                if (isCctor)
-                {
-                    var cctor = entryType.Methods.FirstOrDefault(m => m.IsConstructor && m.IsStatic);
-
-                    if (cctor == null)
-                    {
-                        cctor = new MethodDefinition(".cctor",
-                                                     MethodAttributes.Static | MethodAttributes.Private |
-                                                     MethodAttributes.HideBySig
-                                                   | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
-                                                     assembly.MainModule.ImportReference(typeof(void)));
-
-                        entryType.Methods.Add(cctor);
-                        var il = cctor.Body.GetILProcessor();
-                        il.Append(il.Create(OpCodes.Ret));
-                    }
-
-                    methods.Add(cctor);
-                }
-                else
-                {
-                    methods.AddRange(entryType.Methods.Where(x => x.Name == entrypointMethod));
-                }
-
-                if (!methods.Any())
-                    throw new Exception("The entrypoint method is invalid! Please check your config.ini");
-
-                foreach (var method in methods)
-                {
-                    var il = method.Body.GetILProcessor();
-
-                    var ins = il.Body.Instructions.First();
-
-                    il.InsertBefore(ins,
-                                    il
-                                        .Create(OpCodes
-                                                    .Ldnull)); // gameExePath (always null, we initialize the Paths class in Entrypoint
-
-                    il.InsertBefore(ins,
-                                    il.Create(OpCodes.Call,
-                                              startMethod)); // UnityChainloader.StaticStart(string gameExePath)
-                }
             }
         }
 
@@ -279,21 +186,6 @@ namespace BepInEx.Preloader.Unity
         }
 
         #region Config
-
-        private static readonly ConfigEntry<string> ConfigEntrypointAssembly = ConfigFile.CoreConfig.Bind(
-         "Preloader.Entrypoint", "Assembly",
-         IsPostUnity2017 ? "UnityEngine.CoreModule.dll" : "UnityEngine.dll",
-         "The local filename of the assembly to target.");
-
-        private static readonly ConfigEntry<string> ConfigEntrypointType = ConfigFile.CoreConfig.Bind(
-         "Preloader.Entrypoint", "Type",
-         "Application",
-         "The name of the type in the entrypoint assembly to search for the entrypoint method.");
-
-        private static readonly ConfigEntry<string> ConfigEntrypointMethod = ConfigFile.CoreConfig.Bind(
-         "Preloader.Entrypoint", "Method",
-         ".cctor",
-         "The name of the method in the specified entrypoint assembly and type to hook and load Chainloader from.");
 
         internal static readonly ConfigEntry<bool> ConfigApplyRuntimePatches = ConfigFile.CoreConfig.Bind(
          "Preloader", "ApplyRuntimePatches",

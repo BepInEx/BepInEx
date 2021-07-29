@@ -309,6 +309,15 @@ namespace BepInEx
             GetAttributes<T>(plugin.GetType());
 
         /// <summary>
+        ///     Gets the specified attributes of a reflection metadata type, if they exist.
+        /// </summary>
+        /// <typeparam name="T">The attribute type to retrieve.</typeparam>
+        /// <param name="member">The reflection metadata instance.</param>
+        /// <returns>The attributes of the instance, if existing.</returns>
+        public static T[] GetAttributes<T>(MemberInfo member) where T : Attribute =>
+            (T[]) member.GetCustomAttributes(typeof(T), true);
+
+        /// <summary>
         ///     Retrieves the dependencies of the specified plugin type.
         /// </summary>
         /// <param name="plugin">The plugin type.</param>

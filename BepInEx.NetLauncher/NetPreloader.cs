@@ -9,6 +9,7 @@ using BepInEx.Logging;
 using BepInEx.NetLauncher.RuntimeFixes;
 using BepInEx.Preloader.Core;
 using BepInEx.Preloader.Core.Logging;
+using BepInEx.Preloader.Core.Patching;
 using MonoMod.Utils;
 
 namespace BepInEx.NetLauncher
@@ -70,11 +71,11 @@ namespace BepInEx.NetLauncher
             {
                 assemblyPatcher.AddPatchersFromDirectory(Paths.PatcherPluginPath);
 
-                Log.LogInfo($"{assemblyPatcher.PatcherPlugins.Count} patcher plugin(s) loaded");
+                Log.LogInfo($"{assemblyPatcher.PatcherContext.PatchDefinitions.Count} patcher definition(s) loaded");
 
                 assemblyPatcher.LoadAssemblyDirectories(new[] { Paths.GameRootPath }, new[] { "dll", "exe" });
 
-                Log.LogInfo($"{assemblyPatcher.AssembliesToPatch.Count} assemblies discovered");
+                Log.LogInfo($"{assemblyPatcher.PatcherContext.AvailableAssemblies.Count} assemblies discovered");
 
                 assemblyPatcher.PatchAndLoad();
 
@@ -82,7 +83,7 @@ namespace BepInEx.NetLauncher
                 var assemblyName = AssemblyName.GetAssemblyName(executablePath);
 
                 entrypointAssembly =
-                    assemblyPatcher.LoadedAssemblies.Values.FirstOrDefault(x => x.FullName == assemblyName.FullName);
+                    assemblyPatcher.PatcherContext.LoadedAssemblies.Values.FirstOrDefault(x => x.FullName == assemblyName.FullName);
 
                 if (entrypointAssembly != null)
                 {

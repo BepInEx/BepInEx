@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -6,6 +6,7 @@ using BepInEx.Configuration;
 using BepInEx.Logging;
 using BepInEx.Preloader.Core;
 using BepInEx.Preloader.Core.Logging;
+using BepInEx.Preloader.Core.Patching;
 using UnhollowerBaseLib;
 using UnhollowerBaseLib.Runtime;
 
@@ -64,11 +65,11 @@ namespace BepInEx.IL2CPP
                 {
                     assemblyPatcher.AddPatchersFromDirectory(Paths.PatcherPluginPath);
 
-                    Log.LogInfo($"{assemblyPatcher.PatcherPlugins.Count} patcher plugin{(assemblyPatcher.PatcherPlugins.Count == 1 ? "" : "s")} loaded");
+                    Log.LogInfo($"{assemblyPatcher.PatcherContext.PatcherPlugins.Count} patcher plugin{(assemblyPatcher.PatcherContext.PatcherPlugins.Count == 1 ? "" : "s")} loaded");
 
                     assemblyPatcher.LoadAssemblyDirectories(IL2CPPUnhollowedPath);
 
-                    Log.LogInfo($"{assemblyPatcher.PatcherPlugins.Count} assemblies discovered");
+                    Log.LogInfo($"{assemblyPatcher.PatcherContext.PatcherPlugins.Count} assemblies discovered");
 
                     assemblyPatcher.PatchAndLoad();
                 }
