@@ -1,7 +1,6 @@
 ﻿using System;
-using System.IO;
 using System.Linq;
-using BepInEx.Logging;
+using System.Text;
 
 namespace BepInEx.Configuration
 {
@@ -12,6 +11,7 @@ namespace BepInEx.Configuration
     public sealed class ConfigEntry<T> : ConfigEntryBase
     {
         private T _typedValue;
+        private bool inited;
 
         internal ConfigEntry(ConfigFile configFile,
                              ConfigDefinition definition,
@@ -19,6 +19,7 @@ namespace BepInEx.Configuration
                              ConfigDescription configDescription) : base(configFile, definition, typeof(T),
                                                                          defaultValue, configDescription)
         {
+            inited = true;
             configFile.SettingChanged += (sender, args) =>
             {
                 if (args.ChangedSetting == this) SettingChanged?.Invoke(sender, args);
@@ -38,7 +39,8 @@ namespace BepInEx.Configuration
                     return;
 
                 _typedValue = value;
-                OnSettingChanged(this);
+                if (inited)
+                    OnSettingChanged(this);
             }
         }
 
@@ -118,24 +120,32 @@ namespace BepInEx.Configuration
         public abstract object BoxedValue { get; set; }
 
         /// <summary>
-        ///     Get the serialized representation of the value.
+        ///     Write a description of this setting using all available metadata.
         /// </summary>
-        public string GetSerializedValue() => TomlTypeConverter.ConvertToString(BoxedValue, SettingType);
-
-        /// <summary>
-        ///     Set the value by using its serialized form.
-        /// </summary>
-        public void SetSerializedValue(string value)
+        public string StringDescription
         {
-            try
+            get
             {
-                var newValue = TomlTypeConverter.ConvertToValue(value, SettingType);
-                BoxedValue = newValue;
-            }
-            catch (Exception e)
-            {
-                Logger.Log(LogLevel.Warning,
-                           $"Config value of setting \"{Definition}\" could not be parsed and will be ignored. Reason: {e.Message}; Value: {value}");
+                var sb = new StringBuilder();
+                if (!string.IsNullOrEmpty(Description.Description))
+                    sb.AppendLine($"  {Description.Description.Replace("\n", "\n  ")}");
+
+                sb.AppendLine($"Setting type: {SettingType.Name}");
+                sb.AppendLine($"Default value: {DefaultValue}");
+
+                if (Description.AcceptableValues != null)
+                {
+                    sb.AppendLine(Description.AcceptableValues.ToDescriptionString());
+                }
+                else if (SettingType.IsEnum)
+                {
+                    sb.AppendLine($"Acceptable values: {string.Join(", ", Enum.GetNames(SettingType))}");
+
+                    if (SettingType.GetCustomAttributes(typeof(FlagsAttribute), true).Any())
+                        sb.AppendLine("Multiple values can be set at the same time by separating them with , (e.g. Debug, Warning)");
+                }
+
+                return sb.ToString();
             }
         }
 
@@ -149,34 +159,16 @@ namespace BepInEx.Configuration
             return value;
         }
 
+        public void SyncFromConfig() => BoxedValue =
+                                            ConfigFile.ConfigurationProvider.DeserializeValue(Definition.ConfigPath,
+                                                SettingType) ?? DefaultValue;
+
+        public void SyncToConfig() =>
+            ConfigFile.ConfigurationProvider.SerializeValue(Definition.ConfigPath, BoxedValue, StringDescription);
+
         /// <summary>
         ///     Trigger setting changed event.
         /// </summary>
         protected void OnSettingChanged(object sender) => ConfigFile.OnSettingChanged(sender, this);
-
-        /// <summary>
-        ///     Write a description of this setting using all available metadata.
-        /// </summary>
-        public void WriteDescription(StreamWriter writer)
-        {
-            if (!string.IsNullOrEmpty(Description.Description))
-                writer.WriteLine($"## {Description.Description.Replace("\n", "\n## ")}");
-
-            writer.WriteLine("# Setting type: " + SettingType.Name);
-
-            writer.WriteLine("# Default value: " + TomlTypeConverter.ConvertToString(DefaultValue, SettingType));
-
-            if (Description.AcceptableValues != null)
-            {
-                writer.WriteLine(Description.AcceptableValues.ToDescriptionString());
-            }
-            else if (SettingType.IsEnum)
-            {
-                writer.WriteLine("# Acceptable values: " + string.Join(", ", Enum.GetNames(SettingType)));
-
-                if (SettingType.GetCustomAttributes(typeof(FlagsAttribute), true).Any())
-                    writer.WriteLine("# Multiple values can be set at the same time by separating them with , (e.g. Debug, Warning)");
-            }
-        }
     }
 }

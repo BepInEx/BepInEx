@@ -48,6 +48,6 @@ namespace BepInEx.Configuration
         public override bool IsValid(object value) => MinValue.CompareTo(value) <= 0 && MaxValue.CompareTo(value) >= 0;
 
         /// <inheritdoc />
-        public override string ToDescriptionString() => $"# Acceptable value range: From {MinValue} to {MaxValue}";
+        public override string ToDescriptionString() => $"Acceptable value range: From {MinValue} to {MaxValue}";
     }
 }

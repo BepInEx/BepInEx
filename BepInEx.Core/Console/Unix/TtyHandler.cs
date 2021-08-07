@@ -47,7 +47,7 @@ namespace BepInEx.Unix
             if (File.Exists(infoFilePath))
                 return infoFilePath;
 
-            infoFilePath = Utility.CombinePaths(dir, term.Substring(0, 1), term);
+            infoFilePath = Utility.CombinePaths(dir, term[..1], term);
 
             if (File.Exists(infoFilePath))
                 return infoFilePath;

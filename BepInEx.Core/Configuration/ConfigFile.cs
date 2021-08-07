@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.IO;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using BepInEx.Logging;
+using HarmonyLib;
+
+// TODO: Check if IDictionary implementation is reasonable
 
 namespace BepInEx.Configuration
 {
@@ -14,10 +16,13 @@ namespace BepInEx.Configuration
     /// </summary>
     public class ConfigFile : IDictionary<ConfigDefinition, ConfigEntryBase>
     {
+        public static readonly char PathSeparator = '.';
+        
         private readonly BepInPlugin _ownerMetadata;
 
-        /// <inheritdoc cref="ConfigFile(string, bool, BepInPlugin)" />
-        public ConfigFile(string configPath, bool saveOnInit) : this(configPath, saveOnInit, null) { }
+        /// <inheritdoc />
+        public ConfigFile(string configPath, bool saveOnInit, BepInPlugin ownerMetadata = null) :
+            this(InitDefaultProvider(configPath), saveOnInit, ownerMetadata) { }
 
         /// <summary>
         ///     Create a new config file at the specified config path.
@@ -25,20 +30,20 @@ namespace BepInEx.Configuration
         /// <param name="configPath">Full path to a file that contains settings. The file will be created as needed.</param>
         /// <param name="saveOnInit">If the config file/directory doesn't exist, create it immediately.</param>
         /// <param name="ownerMetadata">Information about the plugin that owns this setting file.</param>
-        public ConfigFile(string configPath, bool saveOnInit, BepInPlugin ownerMetadata)
+        public ConfigFile(IConfigurationProvider configurationProvider, bool saveOnInit, BepInPlugin ownerMetadata)
         {
             _ownerMetadata = ownerMetadata;
+            ConfigurationProvider = configurationProvider;
 
-            if (configPath == null) throw new ArgumentNullException(nameof(configPath));
-            configPath = Path.GetFullPath(configPath);
-            ConfigFilePath = configPath;
-
-            if (File.Exists(ConfigFilePath))
-                Reload();
-            else if (saveOnInit) Save();
+            Reload();
+            if (saveOnInit) Save();
         }
 
-        public static ConfigFile CoreConfig { get; } = new(Paths.BepInExConfigPath, true);
+
+        private static ConfigFile core;
+        public static ConfigFile CoreConfig => core ??= new(Paths.BepInExConfigPath, true);
+
+        public IConfigurationProvider ConfigurationProvider { get; }
 
         /// <summary>
         ///     All config entries inside
@@ -46,27 +51,6 @@ namespace BepInEx.Configuration
         protected Dictionary<ConfigDefinition, ConfigEntryBase> Entries { get; } = new();
 
         private Dictionary<ConfigDefinition, string> OrphanedEntries { get; } = new();
-
-        /// <summary>
-        ///     Create a list with all config entries inside of this config file.
-        /// </summary>
-        [Obsolete("Use Keys instead")]
-        public ReadOnlyCollection<ConfigDefinition> ConfigDefinitions
-        {
-            get
-            {
-                lock (_ioLock)
-                {
-                    return Entries.Keys.ToList().AsReadOnly();
-                }
-            }
-        }
-
-        /// <summary>
-        ///     Full path to the config file. The file might not exist until a setting is added and changed, or <see cref="Save" />
-        ///     is called.
-        /// </summary>
-        public string ConfigFilePath { get; }
 
         /// <summary>
         ///     If enabled, writes the config to disk every time a value is set.
@@ -233,20 +217,10 @@ namespace BepInEx.Configuration
             }
         }
 
-        /// <summary>
-        ///     Create an array with all config entries inside of this config file. Should be only used for metadata purposes.
-        ///     If you want to access and modify an existing setting then use
-        ///     <see cref="AddSetting{T}(ConfigDefinition,T,ConfigDescription)" />
-        ///     instead with no description.
-        /// </summary>
-        [Obsolete("Use Values instead")]
-        public ConfigEntryBase[] GetConfigEntries()
-        {
-            lock (_ioLock)
-            {
-                return Entries.Values.ToArray();
-            }
-        }
+        private static IConfigurationProvider InitDefaultProvider(string configPath) =>
+            // TODO: If .cfg => use legacy provider
+            // TODO: If .toml => use TOML provider
+            new LegacyConfigurationProvider(configPath);
 
         #region Save/Load
 
@@ -264,39 +238,10 @@ namespace BepInEx.Configuration
         {
             lock (_ioLock)
             {
-                OrphanedEntries.Clear();
+                ConfigurationProvider.Load();
 
-                var currentSection = string.Empty;
-
-                foreach (var rawLine in File.ReadAllLines(ConfigFilePath))
-                {
-                    var line = rawLine.Trim();
-
-                    if (line.StartsWith("#")) //comment
-                        continue;
-
-                    if (line.StartsWith("[") && line.EndsWith("]")) //section
-                    {
-                        currentSection = line.Substring(1, line.Length - 2);
-                        continue;
-                    }
-
-                    var split = line.Split(new[] { '=' }, 2); //actual config line
-                    if (split.Length != 2)
-                        continue; //empty/invalid line
-
-                    var currentKey = split[0].Trim();
-                    var currentValue = split[1].Trim();
-
-                    var definition = new ConfigDefinition(currentSection, currentKey);
-
-                    Entries.TryGetValue(definition, out var entry);
-
-                    if (entry != null)
-                        entry.SetSerializedValue(currentValue);
-                    else
-                        OrphanedEntries[definition] = currentValue;
-                }
+                foreach (var kv in Entries)
+                    kv.Value.SyncFromConfig();
             }
 
             OnConfigReloaded();
@@ -309,80 +254,22 @@ namespace BepInEx.Configuration
         {
             lock (_ioLock)
             {
-                var directoryName = Path.GetDirectoryName(ConfigFilePath);
-                if (directoryName != null) Directory.CreateDirectory(directoryName);
-
-                using (var writer = new StreamWriter(ConfigFilePath, false, Utility.UTF8NoBom))
-                {
-                    if (_ownerMetadata != null)
+                if (_ownerMetadata != null)
+                    ConfigurationProvider.Set(null, new ConfigurationNode
                     {
-                        writer.WriteLine($"## Settings file was created by plugin {_ownerMetadata.Name} v{_ownerMetadata.Version}");
-                        writer.WriteLine($"## Plugin GUID: {_ownerMetadata.GUID}");
-                        writer.WriteLine();
-                    }
+                        Comment = new StringBuilder()
+                                  .AppendLine($"Settings file was created by plugin {_ownerMetadata.Name} v{_ownerMetadata.Version}")
+                                  .AppendLine($"Plugin GUID: {_ownerMetadata.GUID}")
+                                  .ToString()
+                    });
 
-                    var allConfigEntries = Entries
-                                           .Select(x => new
-                                           {
-                                               x.Key, entry = x.Value, value = x.Value.GetSerializedValue()
-                                           })
-                                           .Concat(OrphanedEntries.Select(x => new
-                                           {
-                                               x.Key, entry = (ConfigEntryBase) null, value = x.Value
-                                           }));
-
-                    foreach (var sectionKv in allConfigEntries.GroupBy(x => x.Key.Section).OrderBy(x => x.Key))
-                    {
-                        // Section heading
-                        writer.WriteLine($"[{sectionKv.Key}]");
-
-                        foreach (var configEntry in sectionKv)
-                        {
-                            if (GenerateSettingDescriptions)
-                            {
-                                writer.WriteLine();
-                                configEntry.entry?.WriteDescription(writer);
-                            }
-
-                            writer.WriteLine($"{configEntry.Key.Key} = {configEntry.value}");
-                        }
-
-                        writer.WriteLine();
-                    }
-                }
+                ConfigurationProvider.Save();
             }
         }
 
         #endregion
 
         #region Wraps
-
-        /// <summary>
-        ///     Access one of the existing settings. If the setting has not been added yet, null is returned.
-        ///     If the setting exists but has a different type than T, an exception is thrown.
-        ///     New settings should be added with <see cref="AddSetting{T}(ConfigDefinition,T,ConfigDescription)" />.
-        /// </summary>
-        /// <typeparam name="T">Type of the value contained in this setting.</typeparam>
-        /// <param name="configDefinition">Section and Key of the setting.</param>
-        [Obsolete("Use ConfigFile[key] or TryGetEntry instead")]
-        public ConfigEntry<T> GetSetting<T>(ConfigDefinition configDefinition) =>
-            TryGetEntry<T>(configDefinition, out var entry)
-                ? entry
-                : null;
-
-        /// <summary>
-        ///     Access one of the existing settings. If the setting has not been added yet, null is returned.
-        ///     If the setting exists but has a different type than T, an exception is thrown.
-        ///     New settings should be added with <see cref="AddSetting{T}(ConfigDefinition,T,ConfigDescription)" />.
-        /// </summary>
-        /// <typeparam name="T">Type of the value contained in this setting.</typeparam>
-        /// <param name="section">Section/category/group of the setting. Settings are grouped by this.</param>
-        /// <param name="key">Name of the setting.</param>
-        [Obsolete("Use ConfigFile[key] or TryGetEntry instead")]
-        public ConfigEntry<T> GetSetting<T>(string section, string key) =>
-            TryGetEntry<T>(section, key, out var entry)
-                ? entry
-                : null;
 
         /// <summary>
         ///     Access one of the existing settings. If the setting has not been added yet, false is returned. Otherwise, true.
@@ -433,24 +320,17 @@ namespace BepInEx.Configuration
                                       T defaultValue,
                                       ConfigDescription configDescription = null)
         {
-            if (!TomlTypeConverter.CanConvert(typeof(T)))
-                throw new
-                    ArgumentException($"Type {typeof(T)} is not supported by the config system. Supported types: {string.Join(", ", TomlTypeConverter.GetSupportedTypes().Select(x => x.Name).ToArray())}");
-
             lock (_ioLock)
             {
                 if (Entries.TryGetValue(configDefinition, out var rawEntry))
                     return (ConfigEntry<T>) rawEntry;
 
                 var entry = new ConfigEntry<T>(this, configDefinition, defaultValue, configDescription);
-
                 Entries[configDefinition] = entry;
 
-                if (OrphanedEntries.TryGetValue(configDefinition, out var homelessValue))
-                {
-                    entry.SetSerializedValue(homelessValue);
-                    OrphanedEntries.Remove(configDefinition);
-                }
+                entry.SyncFromConfig();
+                // Sync back in case the entry did not exist before
+                entry.SyncToConfig();
 
                 if (SaveOnConfigSet)
                     Save();
@@ -458,7 +338,7 @@ namespace BepInEx.Configuration
                 return entry;
             }
         }
-
+        
         /// <summary>
         ///     Create a new setting. The setting is saved to drive and loaded automatically.
         ///     Each section and key pair can be used to add only one setting, trying to add a second setting will throw an
@@ -488,73 +368,6 @@ namespace BepInEx.Configuration
         public ConfigEntry<T> Bind<T>(string section, string key, T defaultValue, string description) =>
             Bind(new ConfigDefinition(section, key), defaultValue, new ConfigDescription(description));
 
-        /// <summary>
-        ///     Create a new setting. The setting is saved to drive and loaded automatically.
-        ///     Each definition can be used to add only one setting, trying to add a second setting will throw an exception.
-        /// </summary>
-        /// <typeparam name="T">Type of the value contained in this setting.</typeparam>
-        /// <param name="configDefinition">Section and Key of the setting.</param>
-        /// <param name="defaultValue">Value of the setting if the setting was not created yet.</param>
-        /// <param name="configDescription">Description of the setting shown to the user and other metadata.</param>
-        [Obsolete("Use Bind instead")]
-        public ConfigEntry<T> AddSetting<T>(ConfigDefinition configDefinition,
-                                            T defaultValue,
-                                            ConfigDescription configDescription = null) =>
-            Bind(configDefinition, defaultValue, configDescription);
-
-        /// <summary>
-        ///     Create a new setting. The setting is saved to drive and loaded automatically.
-        ///     Each section and key pair can be used to add only one setting, trying to add a second setting will throw an
-        ///     exception.
-        /// </summary>
-        /// <typeparam name="T">Type of the value contained in this setting.</typeparam>
-        /// <param name="section">Section/category/group of the setting. Settings are grouped by this.</param>
-        /// <param name="key">Name of the setting.</param>
-        /// <param name="defaultValue">Value of the setting if the setting was not created yet.</param>
-        /// <param name="configDescription">Description of the setting shown to the user and other metadata.</param>
-        [Obsolete("Use Bind instead")]
-        public ConfigEntry<T> AddSetting<T>(string section,
-                                            string key,
-                                            T defaultValue,
-                                            ConfigDescription configDescription = null) =>
-            Bind(new ConfigDefinition(section, key), defaultValue, configDescription);
-
-        /// <summary>
-        ///     Create a new setting. The setting is saved to drive and loaded automatically.
-        ///     Each section and key pair can be used to add only one setting, trying to add a second setting will throw an
-        ///     exception.
-        /// </summary>
-        /// <typeparam name="T">Type of the value contained in this setting.</typeparam>
-        /// <param name="section">Section/category/group of the setting. Settings are grouped by this.</param>
-        /// <param name="key">Name of the setting.</param>
-        /// <param name="defaultValue">Value of the setting if the setting was not created yet.</param>
-        /// <param name="description">Simple description of the setting shown to the user.</param>
-        [Obsolete("Use Bind instead")]
-        public ConfigEntry<T> AddSetting<T>(string section, string key, T defaultValue, string description) =>
-            Bind(new ConfigDefinition(section, key), defaultValue, new ConfigDescription(description));
-
-        /// <summary>
-        ///     Access a setting. Use Bind instead.
-        /// </summary>
-        [Obsolete("Use Bind instead")]
-        public ConfigWrapper<T> Wrap<T>(string section, string key, string description = null, T defaultValue = default)
-        {
-            lock (_ioLock)
-            {
-                var definition = new ConfigDefinition(section, key, description);
-                var setting = Bind(definition, defaultValue,
-                                   string.IsNullOrEmpty(description) ? null : new ConfigDescription(description));
-                return new ConfigWrapper<T>(setting);
-            }
-        }
-
-        /// <summary>
-        ///     Access a setting. Use Bind instead.
-        /// </summary>
-        [Obsolete("Use Bind instead")]
-        public ConfigWrapper<T> Wrap<T>(ConfigDefinition configDefinition, T defaultValue = default) =>
-            Wrap(configDefinition.Section, configDefinition.Key, null, defaultValue);
-
         #endregion
 
         #region Events
@@ -573,6 +386,8 @@ namespace BepInEx.Configuration
         {
             if (changedEntryBase == null) throw new ArgumentNullException(nameof(changedEntryBase));
 
+            changedEntryBase.SyncToConfig();
+            
             if (SaveOnConfigSet)
                 Save();
 

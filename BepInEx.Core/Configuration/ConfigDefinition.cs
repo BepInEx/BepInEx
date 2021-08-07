@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using HarmonyLib;
 
 namespace BepInEx.Configuration
 {
@@ -11,7 +12,7 @@ namespace BepInEx.Configuration
     /// <inheritdoc />
     public class ConfigDefinition : IEquatable<ConfigDefinition>
     {
-        private static readonly char[] _invalidConfigChars = { '=', '\n', '\t', '\\', '"', '\'', '[', ']' };
+        private static readonly char[] _invalidConfigChars = { '=', '\n', '\t', '\\', '"', '\'', '[', ']', ConfigFile.PathSeparator };
 
         /// <summary>
         ///     Create a new definition. Definitions with same section and key are equal.
@@ -26,12 +27,16 @@ namespace BepInEx.Configuration
             Section = section;
         }
 
-        /// <inheritdoc />
-        [Obsolete("description argument is no longer used, put it in a ConfigDescription instead")]
-        public ConfigDefinition(string section, string key, string description)
+        public ConfigDefinition(string fullPath) : this(fullPath.Split(ConfigFile.PathSeparator))
         {
-            Key = key ?? "";
-            Section = section ?? "";
+        }
+        
+        public ConfigDefinition(params string[] pathComponents)
+        {
+            foreach (var pathComponent in pathComponents)
+                CheckInvalidConfigChars(pathComponent, nameof(pathComponents));
+            Key = string.Join(ConfigFile.PathSeparator.ToString(), pathComponents.Take(pathComponents.Length - 1).ToArray());
+            Section = pathComponents[^1];
         }
 
         /// <summary>
@@ -43,6 +48,8 @@ namespace BepInEx.Configuration
         ///     Name of the setting.
         /// </summary>
         public string Key { get; }
+        
+        internal string[] ConfigPath => Section.Split(ConfigFile.PathSeparator).AddItem(Key).ToArray();
 
         /// <summary>
         ///     Check if the definitions are the same.
@@ -58,12 +65,9 @@ namespace BepInEx.Configuration
         private static void CheckInvalidConfigChars(string val, string name)
         {
             if (val == null) throw new ArgumentNullException(name);
-            if (val != val.Trim())
-                throw new ArgumentException("Cannot use whitespace characters at start or end of section and key names",
-                                            name);
             if (val.Any(c => _invalidConfigChars.Contains(c)))
                 throw new
-                    ArgumentException(@"Cannot use any of the following characters in section and key names: = \n \t \ "" ' [ ]",
+                    ArgumentException($"Cannot use any of the following characters in section and key names: {string.Join(" ", _invalidConfigChars.Select(c => c.ToString().Escape()).ToArray())}",
                                       name);
         }
 

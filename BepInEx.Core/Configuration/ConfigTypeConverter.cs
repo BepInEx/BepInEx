@@ -1,30 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using BepInEx.Logging;
+using HarmonyLib;
 
 namespace BepInEx.Configuration
 {
     /// <summary>
     ///     Serializer/deserializer used by the config system.
     /// </summary>
-    public static class TomlTypeConverter
+    public static class ConfigTypeConverter
     {
         // Don't put anything from UnityEngine here or it will break preloader, use LazyTomlConverterLoader instead
-        private static Dictionary<Type, TypeConverter> TypeConverters { get; } = new()
+        private static Dictionary<Type, TypeConverter> DirectConverters { get; } = new()
         {
             [typeof(string)] = new TypeConverter
             {
-                ConvertToString = (obj, type) => Escape((string) obj),
-                ConvertToObject = (str, type) =>
-                {
-                    // Check if the string is a file path with unescaped \ path separators (e.g. D:\test and not D:\\test)
-                    if (Regex.IsMatch(str, @"^""?\w:\\(?!\\)(?!.+\\\\)"))
-                        return str;
-                    return Unescape(str);
-                }
+                ConvertToString = (obj, type) => obj.ToString(),
+                ConvertToObject = (str, type) => str,
             },
             [typeof(bool)] = new TypeConverter
             {
@@ -98,15 +94,25 @@ namespace BepInEx.Configuration
                 ConvertToObject = (str, type) => decimal.Parse(str, NumberFormatInfo.InvariantInfo)
             },
 
-            //enums are special
+            // Special direct converters
 
             [typeof(Enum)] = new TypeConverter
             {
                 ConvertToString = (obj, type) => obj.ToString(),
                 ConvertToObject = (str, type) => Enum.Parse(type, str, true)
+            },
+            [typeof(DateTime)] = new TypeConverter
+            {
+                ConvertToString = (obj, type) => ((DateTime) obj).ToString("O"),
+                ConvertToObject = (str, type) => DateTime.ParseExact(str, "O", CultureInfo.InvariantCulture)
+            },
+            [typeof(DateTimeOffset)] = new TypeConverter
+            {
+                ConvertToString = (obj, type) => ((DateTimeOffset) obj).ToString("O"),
+                ConvertToObject = (str, type) => DateTimeOffset.ParseExact(str, "O", CultureInfo.InvariantCulture)
             }
         };
-
+        
         /// <summary>
         ///     Convert object of a given type to a string using available converters.
         /// </summary>
@@ -145,9 +151,9 @@ namespace BepInEx.Configuration
                 throw new ArgumentNullException(nameof(valueType));
 
             if (valueType.IsEnum)
-                return TypeConverters[typeof(Enum)];
+                return DirectConverters[typeof(Enum)];
 
-            TypeConverters.TryGetValue(valueType, out var result);
+            DirectConverters.TryGetValue(valueType, out var result);
 
             return result;
         }
@@ -160,133 +166,133 @@ namespace BepInEx.Configuration
         {
             if (type == null) throw new ArgumentNullException(nameof(type));
             if (converter == null) throw new ArgumentNullException(nameof(converter));
-            if (CanConvert(type))
+            if (CanConvertDirectly(type))
             {
                 Logger.LogWarning("Tried to add a TomlConverter when one already exists for type " + type.FullName);
                 return false;
             }
 
-            TypeConverters.Add(type, converter);
+            DirectConverters.Add(type, converter);
             return true;
         }
 
         /// <summary>
         ///     Check if a given type can be converted to and from string.
         /// </summary>
-        public static bool CanConvert(Type type) => GetConverter(type) != null;
+        public static bool CanConvertDirectly(Type type) => GetConverter(type) != null;
 
         /// <summary>
         ///     Give a list of types with registered converters.
         /// </summary>
-        public static IEnumerable<Type> GetSupportedTypes() => TypeConverters.Keys;
+        public static IEnumerable<Type> GetSupportedTypes() => DirectConverters.Keys;
 
-        private static string Escape(this string txt)
+        public static void SerializeValue(this IConfigurationProvider provider, string[] path, object obj, string comment = null)
         {
-            if (string.IsNullOrEmpty(txt)) return string.Empty;
-
-            var stringBuilder = new StringBuilder(txt.Length + 2);
-            foreach (var c in txt)
-                switch (c)
-                {
-                    case '\0':
-                        stringBuilder.Append(@"\0");
-                        break;
-                    case '\a':
-                        stringBuilder.Append(@"\a");
-                        break;
-                    case '\b':
-                        stringBuilder.Append(@"\b");
-                        break;
-                    case '\t':
-                        stringBuilder.Append(@"\t");
-                        break;
-                    case '\n':
-                        stringBuilder.Append(@"\n");
-                        break;
-                    case '\v':
-                        stringBuilder.Append(@"\v");
-                        break;
-                    case '\f':
-                        stringBuilder.Append(@"\f");
-                        break;
-                    case '\r':
-                        stringBuilder.Append(@"\r");
-                        break;
-                    case '\'':
-                        stringBuilder.Append(@"\'");
-                        break;
-                    case '\\':
-                        stringBuilder.Append(@"\");
-                        break;
-                    case '\"':
-                        stringBuilder.Append(@"\""");
-                        break;
-                    default:
-                        stringBuilder.Append(c);
-                        break;
-                }
-
-            return stringBuilder.ToString();
-        }
-
-        private static string Unescape(this string txt)
-        {
-            if (string.IsNullOrEmpty(txt))
-                return txt;
-            var stringBuilder = new StringBuilder(txt.Length);
-            for (var i = 0; i < txt.Length;)
+            var type = obj.GetType();
+            if (CanConvertDirectly(type))
             {
-                var num = txt.IndexOf('\\', i);
-                if (num < 0 || num == txt.Length - 1)
-                    num = txt.Length;
-                stringBuilder.Append(txt, i, num - i);
-                if (num >= txt.Length)
-                    break;
-                var c = txt[num + 1];
-                switch (c)
+                provider.Set(path, new ConfigurationNode
                 {
-                    case '0':
-                        stringBuilder.Append('\0');
-                        break;
-                    case 'a':
-                        stringBuilder.Append('\a');
-                        break;
-                    case 'b':
-                        stringBuilder.Append('\b');
-                        break;
-                    case 't':
-                        stringBuilder.Append('\t');
-                        break;
-                    case 'n':
-                        stringBuilder.Append('\n');
-                        break;
-                    case 'v':
-                        stringBuilder.Append('\v');
-                        break;
-                    case 'f':
-                        stringBuilder.Append('\f');
-                        break;
-                    case 'r':
-                        stringBuilder.Append('\r');
-                        break;
-                    case '\'':
-                        stringBuilder.Append('\'');
-                        break;
-                    case '\"':
-                        stringBuilder.Append('\"');
-                        break;
-                    case '\\':
-                        stringBuilder.Append('\\');
-                        break;
-                    default:
-                        stringBuilder.Append('\\').Append(c);
-                        break;
-                }
-
-                i = num + 2;
+                    ValueType = type,
+                    Value = ConvertToString(obj, type),
+                    Comment = comment
+                });
+                return;
             }
 
-            return stringBuilder.ToString();
+            // TODO: Implement
+            throw new NotImplementedException();
+        }
+        
+        public static object DeserializeValue(this IConfigurationProvider provider, string[] path, Type type)
+        {
+            // We have direct value; simply resolve it normally
+            if (CanConvertDirectly(type))
+            {
+                var val = provider.Get(path);
+                return val != null ? ConvertToValue(val.Value, type) : null;
+            }
+
+            if (type.IsArray)
+            {
+                var elType = type.GetElementType();
+                var indexPath = path.AddItem("0").ToArray();
+                var values = new List<object>();
+                for (var i = 0;; i++)
+                {
+                    indexPath[^1] = i.ToString(CultureInfo.InvariantCulture);
+                    var val = provider.DeserializeValue(indexPath, elType);
+                    if (val == null)
+                        break;
+                    values.Add(val);
+                }
+                var arr = Array.CreateInstance(elType, values.Count);
+                for (var i = 0; i < values.Count; i++)
+                    arr.SetValue(values[i], i);
+                return arr;
+            } 
+            
+            if (typeof(IList<>).IsAssignableFrom(type))
+            {
+                var res = Activator.CreateInstance(type);
+                var elType = type.GetGenericArguments()[0];
+                var add = MethodInvoker.GetHandler(AccessTools.Method(type, "Add", new[] { elType }));
+                var indexPath = path.AddItem("0").ToArray();
+                for (var i = 0;; i++)
+                {
+                    indexPath[^1] = i.ToString(CultureInfo.InvariantCulture);
+                    var val = provider.DeserializeValue(indexPath, elType);
+                    if (val == null)
+                        break;
+                    add(val);
+                }
+
+                return res;
+            }
+            
+            if (typeof(IDictionary<,>).IsAssignableFrom(type))
+            {
+                var res = Activator.CreateInstance(type);
+                var gArgs = type.GetGenericArguments();
+                if (gArgs[0] != typeof(string))
+                    throw new Exception("Only dictionaries with string keys are supported");
+                var elType = gArgs[1];
+                var add = MethodInvoker.GetHandler(AccessTools.Method(type, "Add", new[] { typeof(string), elType }));
+                
+                foreach (var subItem in provider.EntryPaths.Where(p => !p.SequenceEqual(path) && p.StartsWith(path)))
+                {
+                    var val = provider.DeserializeValue(subItem, elType);
+                    var key = string.Join(ConfigFile.PathSeparator.ToString(), subItem.Skip(path.Length).ToArray());
+                    add(key, val);
+                }
+
+                return res;
+            }
+
+            var result = Activator.CreateInstance(type);
+                        
+            foreach (var fieldInfo in type.GetFields(AccessTools.all).Where(f => !f.IsInitOnly))
+            {
+                var fVal = provider.DeserializeValue(path.AddToArray(fieldInfo.Name), fieldInfo.FieldType);
+                if (fVal != null)
+                    fieldInfo.SetValue(fieldInfo.IsStatic ? null : result, fVal);
+            }
+            
+            foreach (var propertyInfo in type.GetProperties(AccessTools.all).Where(p => p.CanWrite))
+            {
+                var pVal = provider.DeserializeValue(path.AddToArray(propertyInfo.Name), propertyInfo.PropertyType);
+                // TODO: Support indexed props?
+                if (pVal != null)
+                    propertyInfo.SetValue(propertyInfo.GetSetMethod(true).IsStatic ? null : result, pVal, null);
+            }
+
+            return result;
+        }
+
+        private static bool StartsWith(this IList<string> arr, ICollection<string> prefix)
+        {
+            if (arr.Count < prefix.Count) return false;
+            return !prefix.Where((t, i) => t != arr[i]).Any();
         }
     }
 }

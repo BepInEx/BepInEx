@@ -18,10 +18,15 @@
     <DebugType>portable</DebugType>
   </PropertyGroup>
   <ItemGroup>
-      <PackageReference Include="jnm2.ReferenceAssemblies.net35" Version="1.0.1" PrivateAssets="All"/>
-      <PackageReference Include="HarmonyX" Version="2.4.2"/>
-      <PackageReference Include="MonoMod.Utils" Version="21.4.21.3"/>
-      <PackageReference Include="SemanticVersioning" Version="1.3.0"/>
+      <PackageReference Include="IsExternalInit" Version="1.0.1">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
+      <PackageReference Include="jnm2.ReferenceAssemblies.net35" Version="1.0.1" PrivateAssets="All" />
+      <PackageReference Include="HarmonyX" Version="2.4.2" />
+      <PackageReference Include="MonoMod.Utils" Version="21.4.21.3" />
+      <PackageReference Include="SemanticVersioning" Version="1.3.0" />
+      <PackageReference Include="ValueTupleBridge" Version="0.1.5" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="Contract\IPlugin.cs" />
