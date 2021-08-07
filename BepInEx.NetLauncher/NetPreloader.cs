@@ -110,7 +110,14 @@ namespace BepInEx.NetLauncher
 
             AssemblyFix.Execute(entrypointAssembly);
 
-            entrypointAssembly.EntryPoint.Invoke(null, new[] { args });
+            try
+            {
+                entrypointAssembly.EntryPoint.Invoke(null, new[] { args });
+            }
+            catch (Exception ex)
+            {
+                Log.LogFatal($"Unhandled exception: {ex}");
+            }
         }
 
         #region Config
