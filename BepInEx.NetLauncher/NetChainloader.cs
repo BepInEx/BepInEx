@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Reflection;
 using BepInEx.Bootstrap;
+using BepInEx.Preloader.Core.Logging;
 
 namespace BepInEx.NetLauncher
 {
@@ -15,6 +16,13 @@ namespace BepInEx.NetLauncher
             pluginInstance.Load();
 
             return pluginInstance;
+        }
+
+        protected override void InitializeLoggers()
+        {
+            base.InitializeLoggers();
+
+            ChainloaderLogHelper.RewritePreloaderLogs();
         }
     }
 }

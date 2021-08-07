@@ -27,6 +27,9 @@ namespace BepInEx.NetLauncher
 
         public static void Start(string[] args)
         {
+            var preloaderListener = new PreloaderConsoleListener();
+            Logger.Listeners.Add(preloaderListener);
+
             if (string.IsNullOrEmpty(ConfigEntrypointExecutable.Value))
             {
                 Log.LogFatal($"Entry executable was not set. Please set this in your config before launching the application");
@@ -97,6 +100,8 @@ namespace BepInEx.NetLauncher
             }
 
             Log.LogMessage("Preloader finished");
+
+            Logger.Listeners.Remove(preloaderListener);
 
             var chainloader = new NetChainloader();
             chainloader.Initialize();
