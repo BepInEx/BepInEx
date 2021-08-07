@@ -24,13 +24,14 @@
   <ItemGroup>
     <PackageReference Include="BepInEx.Il2Cpp.TlsAdapter" Version="1.0.1" />
     <PackageReference Include="HarmonyX" Version="2.4.2" />
-    <PackageReference Include="Iced" Version="1.11.0" />
+    <PackageReference Include="Iced" Version="1.13.0" />
       <PackageReference Include="Il2CppAssemblyUnhollower.BaseLib" Version="0.4.15.3" />
     <PackageReference Include="Il2CppAssemblyUnhollower.BaseLib.Legacy" Version="0.4.15.2" />
     <PackageReference Include="Il2CppAssemblyUnhollower.Tool" Version="0.4.15.3" />
     <PackageReference Include="Il2CppDumper" Version="6.6.4" />
     <PackageReference Include="Il2CppReferenceLibs.Core" Version="1.0.0" IncludeAssets="compile" />
       <PackageReference Include="MonoMod.RuntimeDetour" Version="21.4.21.3" />
+      <PackageReference Include="Samboy063.Cpp2IL.Core" Version="2021.3.4" />
   </ItemGroup>
   <Import Project="..\BepInEx.Shared\BepInEx.Shared.projitems" Label="Shared" />
 
