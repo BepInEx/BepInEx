@@ -88,6 +88,15 @@ namespace BepInEx.NetLauncher
                 entrypointAssembly =
                     assemblyPatcher.PatcherContext.LoadedAssemblies.Values.FirstOrDefault(x => x.FullName == assemblyName.FullName);
 
+                foreach (var loadedAssembly in assemblyPatcher.PatcherContext.LoadedAssemblies)
+                {
+                    // TODO: Need full paths for loaded assemblies
+                    var assemblyPath = Path.Combine(Paths.GameRootPath, loadedAssembly.Key);
+
+                    Log.LogDebug($"Registering '{assemblyPath}' as a loaded assembly");
+                    AssemblyFixes.AssemblyLocations[loadedAssembly.Value.FullName] = assemblyPath;
+                }
+
                 if (entrypointAssembly != null)
                 {
                     Log.LogDebug("Found patched entrypoint assembly! Using it");
@@ -108,7 +117,7 @@ namespace BepInEx.NetLauncher
             chainloader.Execute();
 
 
-            AssemblyFix.Execute(entrypointAssembly);
+            AssemblyFixes.Execute(entrypointAssembly);
 
             try
             {
