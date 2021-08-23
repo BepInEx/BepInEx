@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -10,6 +11,7 @@ using BepInEx.NetLauncher.RuntimeFixes;
 using BepInEx.Preloader.Core;
 using BepInEx.Preloader.Core.Logging;
 using BepInEx.Preloader.Core.Patching;
+using HarmonyLib;
 using MonoMod.Utils;
 
 namespace BepInEx.NetLauncher
@@ -121,7 +123,28 @@ namespace BepInEx.NetLauncher
 
             try
             {
-                entrypointAssembly.EntryPoint.Invoke(null, new[] { args });
+                var argList = new List<object>();
+
+                var paramTypes = entrypointAssembly.EntryPoint.GetParameters();
+
+                if (paramTypes.Length == 1 && paramTypes[0].ParameterType == typeof(string[]))
+                {
+                    argList.Add(args);
+                }
+                else if (paramTypes.Length == 1 && paramTypes[0].ParameterType == typeof(string))
+                {
+                    argList.Add(string.Join(" ", args));
+                }
+                else if (paramTypes.Length != 0)
+                {
+                    // Only other entrypoint signatures I can think of that .NET supports is Task / Task<int>
+                    //   async entrypoints. That's a can of worms for another time though
+
+                    Log.LogFatal($"Could not figure out how to handle entrypoint method with this signature: {entrypointAssembly.EntryPoint.FullDescription()}");
+                    return;
+                }
+
+                entrypointAssembly.EntryPoint.Invoke(null, argList.ToArray());
             }
             catch (Exception ex)
             {
