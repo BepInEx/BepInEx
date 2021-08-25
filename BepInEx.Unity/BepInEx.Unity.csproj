@@ -21,7 +21,7 @@
         <ProjectReference Include="..\BepInEx.Preloader.Unity\BepInEx.Preloader.Unity.csproj" PrivateAssets="All"/>
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="jnm2.ReferenceAssemblies.net35" Version="1.0.1" PrivateAssets="All"/>
+        <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="All"/>
         <PackageReference Include="HarmonyX" Version="2.4.2"/>
         <PackageReference Include="UnityEngine" Version="5.6.1" IncludeAssets="compile"/>
     </ItemGroup>
