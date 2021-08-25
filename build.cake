@@ -8,6 +8,8 @@ var target = Argument("target", "Build");
 var isBleedingEdge = Argument("bleeding_edge", false);
 var buildId = Argument("build_id", 0);
 var lastBuildCommit = Argument("last_build_commit", "");
+var nugetPushSource = Argument("nuget_push_source", "https://nuget.bepinex.dev/v3/index.json");
+var nugetPushKey = Argument("nuget_push_key", "");
 
 var buildVersion = "";
 var currentCommit = RunGit("rev-parse HEAD");
@@ -74,9 +76,13 @@ Task("Build")
         buildSettings.MSBuildSettings.Properties["Version"] = new[] { buildVersion };
     }
 
-    DotNetCoreBuild("./BepInEx.Unity/BepInEx.Unity.csproj", buildSettings);
-    DotNetCoreBuild("./BepInEx.NetLauncher/BepInEx.NetLauncher.csproj", buildSettings);
-    DotNetCoreBuild("./BepInEx.IL2CPP/BepInEx.IL2CPP.csproj", buildSettings);
+    foreach(var file in GetFiles("./BepInEx.*/*.csproj"))
+    {
+        // Don't build patcher on dotnet as it is not yet supported properly
+        if (file.FullPath.Contains("BepInEx.Patcher") || file.FullPath.Contains("BepInEx.Bootstrap"))
+            continue;
+        DotNetCoreBuild(file.FullPath, buildSettings);
+    }
 });
 
 const string DOORSTOP_VER_WIN = "3.4.0.0";
@@ -123,6 +129,31 @@ Task("DownloadDependencies")
 
     ZipUncompress(monoX64Path, monoPath + Directory("x64"));
     ZipUncompress(monoX86Path, monoPath + Directory("x86"));
+});
+
+Task("PushNuGet")
+    .IsDependentOn("Build")
+    .Does(() => 
+{
+    if (string.IsNullOrEmpty(nugetPushSource))
+    {
+        Information("NuGet push source is missing");
+        return;
+    }
+    if (string.IsNullOrEmpty(nugetPushKey))
+    {
+        Information("NuGet push key is missing");
+        return;
+    }
+    
+    foreach (var file in GetFiles("./bin/NuGet/*.nupkg"))
+    {
+        Information($"Pushing {file}");
+        DotNetCoreNuGetPush(file.FullPath, new DotNetCoreNuGetPushSettings {
+            Source = nugetPushSource,
+            ApiKey = nugetPushKey,
+        });
+    }
 });
 
 Task("MakeDist")
@@ -208,6 +239,7 @@ Task("MakeDist")
 
 Task("Pack")
     .IsDependentOn("MakeDist")
+    .IsDependentOn("PushNuGet")
     .Does(() =>
 {
     var distDir = Directory("./bin/dist");
