@@ -9,6 +9,7 @@
     <Authors>BepInEx</Authors>
     <PackageProjectUrl>https://github.com/BepInEx/BepInEx</PackageProjectUrl>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageLicenseUrl>https://github.com/BepInEx/BepInEx/blob/master/LICENSE</PackageLicenseUrl>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <PackageIcon>logo.png</PackageIcon>
   </PropertyGroup>

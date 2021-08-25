@@ -1,5 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
+        <Description>BepInEx support library for Mono Unity games</Description>
         <TargetFramework>net35</TargetFramework>
         <AssemblyTitle>BepInEx.Unity</AssemblyTitle>
         <Product>BepInEx.Unity</Product>

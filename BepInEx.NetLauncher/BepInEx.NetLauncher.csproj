@@ -1,5 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
+        <Description>BepInEx support library for .NET games</Description>
         <OutputType>Exe</OutputType>
         <TargetFramework>net452</TargetFramework>
         <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>

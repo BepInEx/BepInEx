@@ -1,5 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
+        <Description>BepInEx Core library</Description>
         <TargetFrameworks>net35;netstandard2.1</TargetFrameworks>
         <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
         <AssemblyTitle>BepInEx</AssemblyTitle>
