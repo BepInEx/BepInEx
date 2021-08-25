@@ -8,7 +8,6 @@
     <Version>6.0.0</Version>
     <Authors>BepInEx</Authors>
     <PackageProjectUrl>https://github.com/BepInEx/BepInEx</PackageProjectUrl>
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageLicenseUrl>https://github.com/BepInEx/BepInEx/blob/master/LICENSE</PackageLicenseUrl>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <PackageIcon>logo.png</PackageIcon>
@@ -20,9 +19,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)BuildInfoAttribute.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\LICENSE" Pack="true" PackagePath="" />
     <None Include="..\assets\logo.png" Pack="true" Visible="false" PackagePath="" />
-    <None Include="..\README.md" Pack="false" PackagePath="" />
   </ItemGroup>
   
   <ItemGroup Condition="'$(BuildInfo)' != ''">
