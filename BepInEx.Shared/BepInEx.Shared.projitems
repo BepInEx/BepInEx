@@ -4,14 +4,24 @@
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
     <HasSharedItems>true</HasSharedItems>
     <SharedGUID>E312EFD4-47ED-4DCE-B279-6B0EE314989F</SharedGUID>
-    <Copyright>Copyright © 2020 BepInEx Team</Copyright>
+    <Copyright>Copyright © 2021 BepInEx Team</Copyright>
     <Version>6.0.0</Version>
+    <Authors>BepInEx</Authors>
+    <PackageProjectUrl>https://github.com/BepInEx/BepInEx</PackageProjectUrl>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageIcon>logo.png</PackageIcon>
   </PropertyGroup>
   <PropertyGroup Label="Configuration">
     <Import_RootNamespace>BepInEx.Shared</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)BuildInfoAttribute.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\LICENSE" Pack="true" PackagePath="" />
+    <None Include="..\assets\logo.png" Pack="true" Visible="false" PackagePath="" />
+    <None Include="..\README.md" Pack="false" PackagePath="" />
   </ItemGroup>
   
   <ItemGroup Condition="'$(BuildInfo)' != ''">
@@ -20,7 +30,7 @@
     </AssemblyAttribute>
   </ItemGroup>
   <Target Name="CopyPackage" AfterTargets="Pack">
-      <Copy SourceFiles="$(OutputPath)\$(PackageId).$(PackageVersion).nupkg"
-            DestinationFolder="$(SolutionDir)\bin\NuGet" />
+      <Move SourceFiles="$(OutputPath)\$(PackageId).$(PackageVersion).nupkg"
+            DestinationFolder="..\bin\NuGet" />
   </Target>
 </Project>

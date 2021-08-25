@@ -15,11 +15,10 @@
     <PropertyGroup>
         <StartupObject>BepInEx.Patcher.Program</StartupObject>
     </PropertyGroup>
-    <Import Project="$(SolutionDir)\packages\ILRepack.Lib.MSBuild.Task.2.0.16.1\build\ILRepack.Lib.MSBuild.Task.targets" Condition="Exists('$(SolutionDir)\packages\ILRepack.Lib.MSBuild.Task.2.0.16.1\build\ILRepack.Lib.MSBuild.Task.targets')"/>
     <ItemGroup>
-        <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="All"/>
-        <PackageReference Include="ILRepack" Version="2.0.16"/>
+        <PackageReference Include="ILRepack" Version="2.1.0-beta1"/>
         <PackageReference Include="ILRepack.Lib.MSBuild.Task" Version="2.0.18.2"/>
+        <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="All"/>
         <PackageReference Include="Mono.Cecil" Version="0.10.4"/>
     </ItemGroup>
     <ItemGroup>
