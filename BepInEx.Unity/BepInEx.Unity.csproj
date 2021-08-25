@@ -1,28 +1,29 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>net35</TargetFramework>
-    <AssemblyTitle>BepInEx.Unity</AssemblyTitle>
-    <Product>BepInEx.Unity</Product>
-    <OutputPath>..\bin\Unity\</OutputPath>
-    <DocumentationFile>$(OutputPath)\BepInEx.Unity.xml</DocumentationFile>
-    <LangVersion>9</LangVersion>
-    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugType>full</DebugType>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>none</DebugType>
-  </PropertyGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\BepInEx.Core\BepInEx.Core.csproj" />
-    <ProjectReference Include="..\BepInEx.Preloader.Core\BepInEx.Preloader.Core.csproj" />
-    <ProjectReference Include="..\BepInEx.Preloader.Unity\BepInEx.Preloader.Unity.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="jnm2.ReferenceAssemblies.net35" Version="1.0.1" PrivateAssets="All" />
-    <PackageReference Include="HarmonyX" Version="2.4.2"/>
-    <PackageReference Include="UnityEngine.Core" Version="5.6.1" IncludeAssets="compile" />
-  </ItemGroup>
-  <Import Project="..\BepInEx.Shared\BepInEx.Shared.projitems" Label="Shared" />
+    <PropertyGroup>
+        <TargetFramework>net35</TargetFramework>
+        <AssemblyTitle>BepInEx.Unity</AssemblyTitle>
+        <Product>BepInEx.Unity</Product>
+        <OutputPath>..\bin\Unity\</OutputPath>
+        <DocumentationFile>$(OutputPath)\BepInEx.Unity.xml</DocumentationFile>
+        <LangVersion>9</LangVersion>
+        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+        <DebugType>full</DebugType>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+        <DebugType>none</DebugType>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\BepInEx.Core\BepInEx.Core.csproj"/>
+        <ProjectReference Include="..\BepInEx.Preloader.Core\BepInEx.Preloader.Core.csproj" PrivateAssets="All"/>
+        <ProjectReference Include="..\BepInEx.Preloader.Unity\BepInEx.Preloader.Unity.csproj" PrivateAssets="All"/>
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="jnm2.ReferenceAssemblies.net35" Version="1.0.1" PrivateAssets="All"/>
+        <PackageReference Include="HarmonyX" Version="2.4.2"/>
+        <PackageReference Include="UnityEngine" Version="5.6.1" IncludeAssets="compile"/>
+    </ItemGroup>
+    <Import Project="..\BepInEx.Shared\BepInEx.Shared.projitems" Label="Shared"/>
 </Project>

@@ -1,41 +1,42 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFrameworks>net35;netstandard2.1</TargetFrameworks>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <AssemblyTitle>BepInEx</AssemblyTitle>
-    <Product>BepInEx</Product>
-    <LangVersion>9</LangVersion>
-    <OutputPath>..\bin\Core\</OutputPath>
-    <DocumentationFile>$(OutputPath)\$(TargetFramework)\BepInEx.Core.xml</DocumentationFile>
-    <Description>Unity plugin injection framework</Description>
-    <!-- Force nuget assembly output on netstandard2.1 -->
-    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>none</DebugType>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
-    <DebugType>portable</DebugType>
-  </PropertyGroup>
-  <ItemGroup>
-      <PackageReference Include="jnm2.ReferenceAssemblies.net35" Version="1.0.1" PrivateAssets="All"/>
-      <PackageReference Include="HarmonyX" Version="2.4.2"/>
-      <PackageReference Include="MonoMod.Utils" Version="21.4.21.3"/>
-      <PackageReference Include="SemanticVersioning" Version="1.3.0"/>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Remove="Contract\IPlugin.cs" />
-  </ItemGroup>
-  <Import Project="..\BepInEx.Shared\BepInEx.Shared.projitems" Label="Shared" />
-
-  <!-- CopyLocalLockFileAssemblies causes to also output shared assemblies: https://github.com/NuGet/Home/issues/4837#issuecomment-354536302 -->
-  <!-- Since all core assemblies usually follow naming of System.*, we just delete them for now -->
-  <!-- Also delete deps.json as they are not used by mono -->
-  <Target Name="DeleteSys" AfterTargets="Build">
+    <PropertyGroup>
+        <TargetFrameworks>net35;netstandard2.1</TargetFrameworks>
+        <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+        <AssemblyTitle>BepInEx</AssemblyTitle>
+        <Product>BepInEx</Product>
+        <LangVersion>9</LangVersion>
+        <OutputPath>..\bin\Core\</OutputPath>
+        <DocumentationFile>$(OutputPath)\$(TargetFramework)\BepInEx.Core.xml</DocumentationFile>
+        <Description>Unity plugin injection framework</Description>
+        <!-- Force nuget assembly output on netstandard2.1 -->
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+        <DebugType>none</DebugType>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+        <DebugType>portable</DebugType>
+    </PropertyGroup>
     <ItemGroup>
-      <FilesToDelete Include="$(OutputPath)System.*.dll" />
-      <FilesToDelete Include="$(OutputPath)*.deps.json" />
+        <PackageReference Include="jnm2.ReferenceAssemblies.net35" Version="1.0.1" PrivateAssets="All"/>
+        <PackageReference Include="HarmonyX" Version="2.4.2"/>
+        <PackageReference Include="MonoMod.Utils" Version="21.4.21.3"/>
+        <PackageReference Include="SemanticVersioning" Version="1.3.0"/>
     </ItemGroup>
-    <Delete Files="@(FilesToDelete)" />
-  </Target>
+    <ItemGroup>
+        <Compile Remove="Contract\IPlugin.cs"/>
+    </ItemGroup>
+    <Import Project="..\BepInEx.Shared\BepInEx.Shared.projitems" Label="Shared"/>
+
+    <!-- CopyLocalLockFileAssemblies causes to also output shared assemblies: https://github.com/NuGet/Home/issues/4837#issuecomment-354536302 -->
+    <!-- Since all core assemblies usually follow naming of System.*, we just delete them for now -->
+    <!-- Also delete deps.json as they are not used by mono -->
+    <Target Name="DeleteSys" AfterTargets="Build">
+        <ItemGroup>
+            <FilesToDelete Include="$(OutputPath)System.*.dll"/>
+            <FilesToDelete Include="$(OutputPath)*.deps.json"/>
+        </ItemGroup>
+        <Delete Files="@(FilesToDelete)"/>
+    </Target>
 </Project>

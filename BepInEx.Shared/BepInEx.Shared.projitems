@@ -19,4 +19,8 @@
         <_Parameter1>$(BuildInfo)</_Parameter1>
     </AssemblyAttribute>
   </ItemGroup>
+  <Target Name="CopyPackage" AfterTargets="Pack">
+      <Copy SourceFiles="$(OutputPath)\$(PackageId).$(PackageVersion).nupkg"
+            DestinationFolder="$(SolutionDir)\bin\NuGet" />
+  </Target>
 </Project>
