@@ -20,12 +20,14 @@ namespace BepInEx.Preloader.Core.Patching
     /// </summary>
     public class AssemblyPatcher : IDisposable
     {
+        private static readonly string CurrentAssemblyName = Assembly.GetExecutingAssembly().GetName().Name;
+
         /// <summary>
         /// The context of this assembly patcher instance that is passed to all patcher plugins.
         /// </summary>
         public PatcherContext PatcherContext { get; } = new()
         {
-            DumpedAssembliesPath = Path.Combine(Paths.BepInExRootPath, "DumpedAssemblies")
+            DumpedAssembliesPath = Utility.CombinePaths(Paths.BepInExRootPath, "DumpedAssemblies", Paths.ProcessName)
         };
 
         /// <summary>
@@ -35,6 +37,8 @@ namespace BepInEx.Preloader.Core.Patching
         private IEnumerable<BasePatcher> PatcherPluginsSafe => PatcherContext.PatcherPlugins.ToList();
 
         private ManualLogSource Logger { get; } = BepInEx.Logging.Logger.CreateLogSource("AssemblyPatcher");
+
+        private static Regex allowedGuidRegex { get; } = new(@"^[a-zA-Z0-9\._\-]+$");
 
         /// <summary>
         ///     Performs work to dispose collection objects.
@@ -50,7 +54,6 @@ namespace BepInEx.Preloader.Core.Patching
             PatcherContext.PatcherPlugins.Clear();
         }
 
-        private static Regex allowedGuidRegex { get; } = new(@"^[a-zA-Z0-9\._\-]+$");
         private PatcherPluginMetadata ToPatcherPlugin(TypeDefinition type, string assemblyPath)
         {
             if (type.IsInterface || type.IsAbstract && !type.IsSealed)
@@ -100,10 +103,10 @@ namespace BepInEx.Preloader.Core.Patching
             };
         }
 
-        private static readonly string CurrentAssemblyName = Assembly.GetExecutingAssembly().GetName().Name;
         private bool HasPatcherPlugins(AssemblyDefinition ass)
         {
-            if (ass.MainModule.AssemblyReferences.All(r => r.Name != CurrentAssemblyName) && ass.Name.Name != CurrentAssemblyName)
+            if (ass.MainModule.AssemblyReferences.All(r => r.Name != CurrentAssemblyName) &&
+                ass.Name.Name != CurrentAssemblyName)
                 return false;
             if (ass.MainModule.GetTypeReferences().All(r => r.FullName != typeof(BasePatcher).FullName))
                 return false;
@@ -146,7 +149,8 @@ namespace BepInEx.Preloader.Core.Patching
 
                         PatcherContext.PatcherPlugins.Add(instance);
 
-                        var methods = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                        var methods =
+                            type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
                         foreach (var method in methods)
                         {
@@ -155,24 +159,28 @@ namespace BepInEx.Preloader.Core.Patching
 
                             if (targetAssemblies.Length == 0 && targetTypes.Length == 0)
                                 continue;
-                            
+
                             var parameters = method.GetParameters();
 
                             if (parameters.Length < 1 || parameters.Length > 2
-                                // Next few lines ensure that the first parameter is AssemblyDefinition and does not have any
-                                // target type attributes, and vice versa
-                                || !(
-                                        (parameters[0].ParameterType == typeof(AssemblyDefinition)
-                                        || parameters[0].ParameterType == typeof(AssemblyDefinition).MakeByRefType()
-                                        && targetTypes.Length == 0)
-                                    || (parameters[0].ParameterType == typeof(TypeDefinition)
-                                        && targetAssemblies.Length == 0)
-                                )
-                                || (parameters.Length == 2 && parameters[1].ParameterType != typeof(string))
-                                || (method.ReturnType != typeof(void) && method.ReturnType != typeof(bool))
+                                                         // Next few lines ensure that the first parameter is AssemblyDefinition and does not have any
+                                                         // target type attributes, and vice versa
+                                                      || !(
+                                                              (parameters[0].ParameterType == typeof(AssemblyDefinition)
+                                                            || parameters[0].ParameterType ==
+                                                               typeof(AssemblyDefinition).MakeByRefType()
+                                                            && targetTypes.Length == 0)
+                                                           || (parameters[0].ParameterType == typeof(TypeDefinition)
+                                                            && targetAssemblies.Length == 0)
+                                                          )
+                                                      || (parameters.Length == 2 &&
+                                                          parameters[1].ParameterType != typeof(string))
+                                                      || (method.ReturnType != typeof(void) &&
+                                                          method.ReturnType != typeof(bool))
                             )
                             {
-                                Logger.LogWarning($"Skipping method [{method.FullDescription()}] as it is not a valid patcher method");
+                                Logger
+                                    .LogWarning($"Skipping method [{method.FullDescription()}] as it is not a valid patcher method");
                                 continue;
                             }
 
@@ -231,7 +239,8 @@ namespace BepInEx.Preloader.Core.Patching
                 // It's also generally dangerous to change system.dll since so many things rely on it, 
                 // and it's already loaded into the appdomain since this loader references it, so we might as well skip it
                 if (assembly.Name.Name == "System"
-                 || assembly.Name.Name == "mscorlib") //mscorlib is already loaded into the appdomain so it can't be patched
+                 || assembly.Name.Name ==
+                    "mscorlib") //mscorlib is already loaded into the appdomain so it can't be patched
                 {
                     assembly.Dispose();
                     continue;
@@ -328,7 +337,7 @@ namespace BepInEx.Preloader.Core.Patching
 
                     RunPatcher(assembly, targetDll);
                 }
-                
+
 
                 bool RunPatcher(AssemblyDefinition assembly, string targetDll)
                 {
@@ -338,11 +347,14 @@ namespace BepInEx.Preloader.Core.Patching
 
                         if (!isAssemblyPatch)
                         {
-                            var targetType = assembly.MainModule.Types.FirstOrDefault(x => x.FullName == patchDefinition.TargetType.TargetType);
+                            var targetType =
+                                assembly.MainModule.Types.FirstOrDefault(x => x.FullName ==
+                                                                              patchDefinition.TargetType.TargetType);
 
                             if (targetType == null)
                             {
-                                Logger.LogWarning($"Unable to find type [{patchDefinition.TargetType.TargetType}] defined in {patchDefinition.MethodInfo.Name}. Skipping patcher"); //TODO: Proper name
+                                Logger
+                                    .LogWarning($"Unable to find type [{patchDefinition.TargetType.TargetType}] defined in {patchDefinition.MethodInfo.Name}. Skipping patcher"); //TODO: Proper name
                                 return false;
                             }
 
@@ -380,7 +392,6 @@ namespace BepInEx.Preloader.Core.Patching
                         return false;
                     }
                 }
-                
 
 
                 foreach (var resolvedAss in AppDomain.CurrentDomain.GetAssemblies())
@@ -414,6 +425,7 @@ namespace BepInEx.Preloader.Core.Patching
                                   .AppendLine("Expect unexpected behavior and issues with plugins and patchers not being loaded.")
                                   .ToString());
 
+            var dumpedAssemblyPaths = new Dictionary<string, string>();
             // Finally, load patched assemblies into memory
             if (ConfigDumpAssemblies.Value || ConfigLoadDumpedAssemblies.Value)
             {
@@ -423,10 +435,23 @@ namespace BepInEx.Preloader.Core.Patching
                 foreach (var kv in assemblies)
                 {
                     var filename = kv.Key;
+                    var name = Path.GetFileNameWithoutExtension(filename);
+                    var ext = Path.GetExtension(filename);
                     var assembly = kv.Value;
 
-                    if (patchedAssemblies.Contains(filename))
-                        assembly.Write(Path.Combine(PatcherContext.DumpedAssembliesPath, filename));
+                    if (!patchedAssemblies.Contains(filename))
+                        continue;
+                    for (var i = 0;; i++)
+                    {
+                        var postfix = i > 0 ? $"_{i}" : "";
+                        var path = Path.Combine(PatcherContext.DumpedAssembliesPath, $"{name}{postfix}{ext}");
+                        if (!Utility.TryOpenFileStream(path, FileMode.Create, out var fs))
+                            continue;
+                        assembly.Write(fs);
+                        fs.Dispose();
+                        dumpedAssemblyPaths[filename] = path;
+                        break;
+                    }
                 }
             }
 
@@ -450,14 +475,15 @@ namespace BepInEx.Preloader.Core.Patching
                 {
                     Assembly loadedAssembly;
 
-                    if (ConfigLoadDumpedAssemblies.Value)
-                        loadedAssembly = Assembly.LoadFrom(Path.Combine(PatcherContext.DumpedAssembliesPath, filename));
+                    if (ConfigLoadDumpedAssemblies.Value &&
+                        dumpedAssemblyPaths.TryGetValue(filename, out var dumpedAssemblyPath))
+                        loadedAssembly = Assembly.LoadFrom(dumpedAssemblyPath);
                     else
-                        using (var assemblyStream = new MemoryStream())
-                        {
-                            assembly.Write(assemblyStream);
-                            loadedAssembly = Assembly.Load(assemblyStream.ToArray());
-                        }
+                    {
+                        using var assemblyStream = new MemoryStream();
+                        assembly.Write(assemblyStream);
+                        loadedAssembly = Assembly.Load(assemblyStream.ToArray());
+                    }
 
                     PatcherContext.LoadedAssemblies.Add(filename, loadedAssembly);
 
