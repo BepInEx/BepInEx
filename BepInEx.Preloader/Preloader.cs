@@ -52,12 +52,12 @@ namespace BepInEx.Preloader
 
 				Version version = typeof(Paths).Assembly.GetName().Version;
 
-				string consoleTile = $"BepInEx {version} - {Paths.ProcessName} ({File.GetLastWriteTime(Paths.ExecutablePath)})";
+				string consoleTile = $"BepInEx {version} - {Paths.ProcessName}";
 
 				if (ConsoleManager.ConsoleActive)
 					ConsoleManager.SetConsoleTitle(consoleTile);
 
-				Logger.LogMessage(consoleTile);
+				Logger.LogMessage($"{consoleTile} ({File.GetLastWriteTime(Paths.ExecutablePath)})");
 
 				//See BuildInfoAttribute for more information about this section.
 				object[] attributes = typeof(BuildInfoAttribute).Assembly.GetCustomAttributes(typeof(BuildInfoAttribute), false);
