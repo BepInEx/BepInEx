@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Reflection;
 using MonoMod.Utils;
-using SemVer;
+using SemanticVersioning;
 
 namespace BepInEx
 {

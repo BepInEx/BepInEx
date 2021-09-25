@@ -5,8 +5,8 @@ using System.Linq;
 using System.Reflection;
 using BepInEx.Bootstrap;
 using Mono.Cecil;
-using Version = SemVer.Version;
-using Range = SemVer.Range;
+using SemanticVersioning;
+using Version = SemanticVersioning.Version;
 
 namespace BepInEx
 {
@@ -70,9 +70,9 @@ namespace BepInEx
             if (attr == null)
                 return null;
 
-            return new BepInPlugin((string) attr.ConstructorArguments[0].Value,
-                                   (string) attr.ConstructorArguments[1].Value,
-                                   (string) attr.ConstructorArguments[2].Value);
+            return new BepInPlugin((string)attr.ConstructorArguments[0].Value,
+                                   (string)attr.ConstructorArguments[1].Value,
+                                   (string)attr.ConstructorArguments[2].Value);
         }
     }
 
@@ -145,14 +145,14 @@ namespace BepInEx
         void ICacheable.Save(BinaryWriter bw)
         {
             bw.Write(DependencyGUID);
-            bw.Write((int) Flags);
+            bw.Write((int)Flags);
             bw.Write(VersionRange?.ToString() ?? string.Empty);
         }
 
         void ICacheable.Load(BinaryReader br)
         {
             DependencyGUID = br.ReadString();
-            Flags = (DependencyFlags) br.ReadInt32();
+            Flags = (DependencyFlags)br.ReadInt32();
 
             var versionRange = br.ReadString();
             VersionRange = versionRange == string.Empty ? null : Range.Parse(versionRange);
@@ -163,10 +163,10 @@ namespace BepInEx
             var attrs = MetadataHelper.GetCustomAttributes<BepInDependency>(td, true);
             return attrs.Select(customAttribute =>
             {
-                var dependencyGuid = (string) customAttribute.ConstructorArguments[0].Value;
+                var dependencyGuid = (string)customAttribute.ConstructorArguments[0].Value;
                 var secondArg = customAttribute.ConstructorArguments[1].Value;
                 if (secondArg is string minVersion) return new BepInDependency(dependencyGuid, minVersion);
-                return new BepInDependency(dependencyGuid, (DependencyFlags) secondArg);
+                return new BepInDependency(dependencyGuid, (DependencyFlags)secondArg);
             }).ToList();
         }
     }
@@ -201,7 +201,7 @@ namespace BepInEx
             var attrs = MetadataHelper.GetCustomAttributes<BepInIncompatibility>(td, true);
             return attrs.Select(customAttribute =>
             {
-                var dependencyGuid = (string) customAttribute.ConstructorArguments[0].Value;
+                var dependencyGuid = (string)customAttribute.ConstructorArguments[0].Value;
                 return new BepInIncompatibility(dependencyGuid);
             }).ToList();
         }
@@ -229,7 +229,7 @@ namespace BepInEx
         {
             var attrs = MetadataHelper.GetCustomAttributes<BepInProcess>(td, true);
             return attrs.Select(customAttribute =>
-                                    new BepInProcess((string) customAttribute.ConstructorArguments[0].Value)).ToList();
+                                    new BepInProcess((string)customAttribute.ConstructorArguments[0].Value)).ToList();
         }
     }
 
@@ -271,7 +271,7 @@ namespace BepInEx
             if (attributes.Length == 0)
                 return null;
 
-            return (BepInPlugin) attributes[0];
+            return (BepInPlugin)attributes[0];
         }
 
         /// <summary>
@@ -288,7 +288,7 @@ namespace BepInEx
         /// <param name="pluginType">The plugin type.</param>
         /// <returns>The attributes of the type, if existing.</returns>
         public static T[] GetAttributes<T>(Type pluginType) where T : Attribute =>
-            (T[]) pluginType.GetCustomAttributes(typeof(T), true);
+            (T[])pluginType.GetCustomAttributes(typeof(T), true);
 
         /// <summary>
         ///     Gets the specified attributes of an assembly, if they exist.
@@ -297,7 +297,7 @@ namespace BepInEx
         /// <typeparam name="T">The attribute type to retrieve.</typeparam>
         /// <returns>The attributes of the type, if existing.</returns>
         public static T[] GetAttributes<T>(Assembly assembly) where T : Attribute =>
-            (T[]) assembly.GetCustomAttributes(typeof(T), true);
+            (T[])assembly.GetCustomAttributes(typeof(T), true);
 
         /// <summary>
         ///     Gets the specified attributes of an instance, if they exist.
@@ -315,7 +315,7 @@ namespace BepInEx
         /// <param name="member">The reflection metadata instance.</param>
         /// <returns>The attributes of the instance, if existing.</returns>
         public static T[] GetAttributes<T>(MemberInfo member) where T : Attribute =>
-            (T[]) member.GetCustomAttributes(typeof(T), true);
+            (T[])member.GetCustomAttributes(typeof(T), true);
 
         /// <summary>
         ///     Retrieves the dependencies of the specified plugin type.

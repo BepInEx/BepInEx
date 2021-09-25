@@ -267,7 +267,7 @@ namespace BepInEx.Bootstrap
                 var sortedPlugins = ModifyLoadOrder(plugins);
 
                 var invalidPlugins = new HashSet<string>();
-                var processedPlugins = new Dictionary<string, SemVer.Version>();
+                var processedPlugins = new Dictionary<string, SemanticVersioning.Version>();
                 var loadedAssemblies = new Dictionary<string, Assembly>();
 
                 foreach (var plugin in sortedPlugins)
