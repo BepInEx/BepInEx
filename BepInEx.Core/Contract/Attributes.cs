@@ -5,7 +5,7 @@ using System.Linq;
 using System.Reflection;
 using BepInEx.Bootstrap;
 using Mono.Cecil;
-using SemanticVersioning;
+using Range = SemanticVersioning.Range;
 using Version = SemanticVersioning.Version;
 
 namespace BepInEx
