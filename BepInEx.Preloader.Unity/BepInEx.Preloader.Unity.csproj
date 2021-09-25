@@ -12,7 +12,7 @@
         <OutputPath>..\bin\Unity\</OutputPath>
     </PropertyGroup>
     <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-        <OutputPath>bin/</OutputPath>
+        <OutputPath>..\bin\tmp\Unity\</OutputPath>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
         <DebugType>full</DebugType>
