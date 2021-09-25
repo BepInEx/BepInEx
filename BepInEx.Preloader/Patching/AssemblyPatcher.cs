@@ -36,8 +36,10 @@ namespace BepInEx.Preloader.Patching
 		// plugins list
 		private static IEnumerable<PatcherPlugin> PatcherPluginsSafe => PatcherPlugins.ToList();
 
-		private static readonly string DumpedAssembliesPath = Path.Combine(Paths.BepInExRootPath, "DumpedAssemblies");
+		private static readonly string DumpedAssembliesPath = Utility.CombinePaths(Paths.BepInExRootPath, "DumpedAssemblies", Paths.ProcessName);
 
+		private static readonly  Dictionary<string, string> DumpedAssemblyPaths = new Dictionary<string, string>();
+		
 		/// <summary>
 		///     Adds a single assembly patcher to the pool of applicable patches.
 		/// </summary>
@@ -296,25 +298,39 @@ namespace BepInEx.Preloader.Patching
 								 .ToString());
 			}
 
+			DumpedAssemblyPaths.Clear();
 			// Finally, load patched assemblies into memory
 			if (ConfigDumpAssemblies.Value || ConfigLoadDumpedAssemblies.Value)
 			{
 				if (!Directory.Exists(DumpedAssembliesPath))
 					Directory.CreateDirectory(DumpedAssembliesPath);
 
-				foreach (KeyValuePair<string, AssemblyDefinition> kv in assemblies)
+				foreach (var kv in assemblies)
 				{
-					string filename = kv.Key;
+					var filename = kv.Key;
+					var name = Path.GetFileNameWithoutExtension(filename);
+					var ext = Path.GetExtension(filename);
 					var assembly = kv.Value;
 
-					if (patchedAssemblies.Contains(filename))
-						assembly.Write(Path.Combine(DumpedAssembliesPath, filename));
+					if (!patchedAssemblies.Contains(filename))
+						continue;
+					for (var i = 0;; i++)
+					{
+						var postfix = i > 0 ? $"_{i}" : "";
+						var path = Path.Combine(DumpedAssembliesPath, $"{name}{postfix}{ext}");
+						if (!Utility.TryOpenFileStream(path, FileMode.Create, out var fs))
+							continue;
+						assembly.Write(fs);
+						fs.Dispose();
+						DumpedAssemblyPaths[filename] = path;
+						break;
+					}
 				}
 			}
 
 			if (ConfigBreakBeforeLoadAssemblies.Value)
 			{
-				Logger.LogInfo($"BepInEx is about load the following assemblies:\n{String.Join("\n", patchedAssemblies.ToArray())}");
+				Logger.LogInfo($"BepInEx is about load the following assemblies:\n{string.Join("\n", patchedAssemblies.ToArray())}");
 				Logger.LogInfo($"The assemblies were dumped into {DumpedAssembliesPath}");
 				Logger.LogInfo("Load any assemblies into the debugger, set breakpoints and continue execution.");
 				Debugger.Break();
@@ -346,8 +362,8 @@ namespace BepInEx.Preloader.Patching
 		/// <param name="filename">File name of the assembly being loaded.</param>
 		public static void Load(AssemblyDefinition assembly, string filename)
 		{
-			if (ConfigLoadDumpedAssemblies.Value)
-				Assembly.LoadFile(Path.Combine(DumpedAssembliesPath, filename));
+			if (ConfigLoadDumpedAssemblies.Value && DumpedAssemblyPaths.TryGetValue(filename, out var dumpedAssemblyPath))
+				Assembly.LoadFile(dumpedAssemblyPath);
 			else
 				using (var assemblyStream = new MemoryStream())
 				{
