@@ -3,16 +3,13 @@
         <TargetFrameworks>net35;netstandard2.0</TargetFrameworks>
         <AssemblyTitle>BepInEx.Preloader.Unity</AssemblyTitle>
         <Product>BepInEx.Preloader.Unity</Product>
-        <DocumentationFile>$(OutputPath)\BepInEx.Preloader.Unity.xml</DocumentationFile>
         <LangVersion>9</LangVersion>
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     </PropertyGroup>
     <PropertyGroup Condition="'$(TargetFramework)' == 'net35'">
         <!-- Output only net35 version to distribution; netstadnard is only used for generating NuGet package -->
         <OutputPath>..\bin\Unity\</OutputPath>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-        <OutputPath>..\bin\tmp\Unity\</OutputPath>
+        <DocumentationFile>$(OutputPath)\BepInEx.Preloader.Unity.xml</DocumentationFile>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
         <DebugType>full</DebugType>

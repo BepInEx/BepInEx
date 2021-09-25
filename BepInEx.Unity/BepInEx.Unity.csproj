@@ -4,13 +4,13 @@
         <TargetFrameworks>net35;netstandard2.0</TargetFrameworks>
         <AssemblyTitle>BepInEx.Unity</AssemblyTitle>
         <Product>BepInEx.Unity</Product>
-        <DocumentationFile>$(OutputPath)\BepInEx.Unity.xml</DocumentationFile>
         <LangVersion>9</LangVersion>
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     </PropertyGroup>
     <PropertyGroup Condition="'$(TargetFramework)' == 'net35'">
         <!-- Output only net35 version to distribution; netstadnard is only used for generating NuGet package -->
         <OutputPath>..\bin\Unity\</OutputPath>
+        <DocumentationFile>$(OutputPath)\BepInEx.Unity.xml</DocumentationFile>
     </PropertyGroup>
     <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
         <OutputPath>..\bin\tmp\Unity\</OutputPath>
