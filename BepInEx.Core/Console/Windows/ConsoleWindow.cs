@@ -118,11 +118,14 @@ namespace UnityInjector.ConsoleUtil
 
             // Some games may ship user32.dll with some methods missing. As such, we load the DLL explicitly from system folder
             var user32Dll = LoadLibraryEx("user32.dll", IntPtr.Zero, LOAD_LIBRARY_SEARCH_SYSTEM32);
-            setForeground = user32Dll.GetFunction("SetForegroundWindow").AsDelegate<SetForegroundWindowDelegate>();
-            getForeground = user32Dll.GetFunction("GetForegroundWindow").AsDelegate<GetForegroundWindowDelegate>();
-            getSystemMenu = user32Dll.GetFunction("GetSystemMenu").AsDelegate<GetSystemMenuDelegate>();
-            deleteMenu = user32Dll.GetFunction("DeleteMenu").AsDelegate<DeleteMenuDelegate>();
+            setForeground = GetProcAddress(user32Dll, "SetForegroundWindow").AsDelegate<SetForegroundWindowDelegate>();
+            getForeground = GetProcAddress(user32Dll, "GetForegroundWindow").AsDelegate<GetForegroundWindowDelegate>();
+            getSystemMenu = GetProcAddress(user32Dll, "GetSystemMenu").AsDelegate<GetSystemMenuDelegate>();
+            deleteMenu = GetProcAddress(user32Dll, "DeleteMenu").AsDelegate<DeleteMenuDelegate>();
         }
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
 
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern bool AllocConsole();
