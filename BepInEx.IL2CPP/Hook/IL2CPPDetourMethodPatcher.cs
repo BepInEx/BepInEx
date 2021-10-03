@@ -60,11 +60,11 @@ namespace BepInEx.IL2CPP.Hook
         private static readonly Dictionary<int, Type> FixedStructCache = new();
 
         private bool isValid;
-        private INativeMethodStruct modifiedNativeMethodInfo;
+        private INativeMethodInfoStruct modifiedNativeMethodInfo;
 
         private FastNativeDetour nativeDetour;
 
-        private INativeMethodStruct originalNativeMethodInfo;
+        private INativeMethodInfoStruct originalNativeMethodInfo;
 
         /// <summary>
         ///     Constructs a new instance of <see cref="NativeDetour" /> method patcher.
@@ -96,16 +96,14 @@ namespace BepInEx.IL2CPP.Hook
 
                 // Get the native MethodInfo struct for the target method
                 originalNativeMethodInfo =
-                    UnityVersionHandler.Wrap((Il2CppMethodInfo*) (IntPtr) methodField.GetValue(null));
+                    UnityVersionHandler.Wrap((Il2CppMethodInfo*)(IntPtr)methodField.GetValue(null));
 
                 // Create a trampoline from the original target method
                 var trampolinePtr =
                     DetourGenerator.CreateTrampolineFromFunction(originalNativeMethodInfo.MethodPointer, out _, out _);
 
                 // Create a modified native MethodInfo struct to point towards the trampoline
-                modifiedNativeMethodInfo =
-                    UnityVersionHandler
-                        .NewMethod(); //(Il2CppMethodInfo*) Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppMethodInfo>());
+                modifiedNativeMethodInfo = UnityVersionHandler.NewMethod();
                 Buffer.MemoryCopy(originalNativeMethodInfo.Pointer.ToPointer(),
                                   modifiedNativeMethodInfo.Pointer.ToPointer(), modifiedNativeMethodInfo.StructSize,
                                   originalNativeMethodInfo.StructSize);
@@ -320,8 +318,8 @@ namespace BepInEx.IL2CPP.Hook
         {
             if (type == typeof(void))
                 return Il2CppClassPointerStore<Void>.NativeClassPtr;
-            return (IntPtr) typeof(Il2CppClassPointerStore<>).MakeGenericType(type).GetField("NativeClassPtr")
-                                                             .GetValue(null);
+            return (IntPtr)typeof(Il2CppClassPointerStore<>).MakeGenericType(type).GetField("NativeClassPtr")
+                                                            .GetValue(null);
         }
 
         private static void EmitConvertArgumentToManaged(ILGenerator il,
