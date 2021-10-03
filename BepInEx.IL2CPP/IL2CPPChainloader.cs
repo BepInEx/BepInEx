@@ -7,13 +7,14 @@ using BepInEx.Bootstrap;
 using BepInEx.Configuration;
 using BepInEx.IL2CPP.Hook;
 using BepInEx.IL2CPP.Logging;
+using BepInEx.IL2CPP.Utils;
 using BepInEx.Logging;
 using BepInEx.Preloader.Core;
 using BepInEx.Preloader.Core.Logging;
 using HarmonyLib.Public.Patching;
 using Il2Cpp.TlsAdapter;
+using MonoMod.Utils;
 using UnhollowerBaseLib;
-using UnhollowerBaseLib.Runtime;
 using UnhollowerRuntimeLib;
 using UnityEngine;
 using Logger = BepInEx.Logging.Logger;
@@ -40,8 +41,21 @@ namespace BepInEx.IL2CPP
 
         public static IL2CPPChainloader Instance { get; set; }
 
-        [DllImport("kernel32", CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]
-        private static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
+        /// <summary>
+        /// Register and add a Unity Component (for example MonoBehaviour) into BepInEx global manager.
+        ///
+        /// Automatically registers the type with Il2Cpp type system if it isn't initialised already.
+        /// </summary>
+        /// <typeparam name="T">Type of the component to add.</typeparam>
+        public static T AddUnityComponent<T>() where T : Il2CppObjectBase => AddUnityComponent(typeof(T)).Cast<T>();
+
+        /// <summary>
+        /// Register and add a Unity Component (for example MonoBehaviour) into BepInEx global manager.
+        ///
+        /// Automatically registers the type with Il2Cpp type system if it isn't initialised already.
+        /// </summary>
+        /// <param name="t">Type of the component to add</param>
+        public static Il2CppObjectBase AddUnityComponent(Type t) => Il2CppUtils.AddComponent(t);
 
         public override void Initialize(string gameExePath = null)
         {
@@ -56,18 +70,14 @@ namespace BepInEx.IL2CPP
             var gameAssemblyModule = Process.GetCurrentProcess().Modules.Cast<ProcessModule>()
                                             .First(x => x.ModuleName.Contains("GameAssembly"));
 
-            // TODO: Check that DynDll.GetFunction works fine now
-            var runtimeInvokePtr =
-                GetProcAddress(gameAssemblyModule.BaseAddress,
-                               "il2cpp_runtime_invoke"); //DynDll.GetFunction(gameAssemblyModule.BaseAddress, "il2cpp_runtime_invoke");
+            gameAssemblyModule.BaseAddress.TryGetFunction("il2cpp_runtime_invoke", out var runtimeInvokePtr);
             PreloaderLogger.Log.LogDebug($"Runtime invoke pointer: 0x{runtimeInvokePtr.ToInt64():X}");
             RuntimeInvokeDetour =
                 FastNativeDetour.CreateAndApply(runtimeInvokePtr, OnInvokeMethod, out originalInvoke,
                                                 CallingConvention.Cdecl);
 
-            var installTlsPtr =
-                GetProcAddress(gameAssemblyModule.BaseAddress, "il2cpp_unity_install_unitytls_interface");
-            if (installTlsPtr != IntPtr.Zero)
+            if (gameAssemblyModule.BaseAddress.TryGetFunction("il2cpp_unity_install_unitytls_interface",
+                                                              out var installTlsPtr))
                 InstallUnityTlsInterfaceDetour =
                     FastNativeDetour.CreateAndApply(installTlsPtr, OnInstallUnityTlsInterface,
                                                     out originalInstallUnityTlsInterface, CallingConvention.Cdecl);
@@ -141,7 +151,7 @@ namespace BepInEx.IL2CPP
         {
             var type = pluginAssembly.GetType(pluginInfo.TypeName);
 
-            var pluginInstance = (BasePlugin) Activator.CreateInstance(type);
+            var pluginInstance = (BasePlugin)Activator.CreateInstance(type);
 
             pluginInstance.Load();
 
