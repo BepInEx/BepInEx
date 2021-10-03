@@ -5,12 +5,12 @@
         <AssemblyTitle>BepInEx.Unity</AssemblyTitle>
         <Product>BepInEx.Unity</Product>
         <LangVersion>9</LangVersion>
-        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     </PropertyGroup>
     <PropertyGroup Condition="'$(TargetFramework)' == 'net35'">
         <!-- Output only net35 version to distribution; netstadnard is only used for generating NuGet package -->
         <OutputPath>..\bin\Unity\</OutputPath>
         <DocumentationFile>$(OutputPath)\BepInEx.Unity.xml</DocumentationFile>
+        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
         <DebugType>full</DebugType>

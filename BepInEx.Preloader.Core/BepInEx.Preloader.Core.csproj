@@ -4,10 +4,9 @@
         <TargetFrameworks>net35;netstandard2.0;netstandard2.1</TargetFrameworks>
         <AssemblyTitle>BepInEx.Preloader.Core</AssemblyTitle>
         <Product>BepInEx.Preloader.Core</Product>
-        <OutputPath>..\bin\Core\$(TargetFramework)</OutputPath>
-        <DocumentationFile>$(OutputPath)\BepInEx.Preloader.Core.xml</DocumentationFile>
+        <OutputPath>..\bin\Core</OutputPath>
+        <DocumentationFile>$(OutputPath)\$(TargetFramework)\BepInEx.Preloader.Core.xml</DocumentationFile>
         <LangVersion>9</LangVersion>
-        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
         <DebugType>full</DebugType>
