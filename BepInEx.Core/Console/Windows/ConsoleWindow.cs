@@ -7,13 +7,24 @@ using System;
 using System.Runtime.InteropServices;
 using BepInEx;
 using BepInEx.ConsoleUtil;
+using MonoMod.Utils;
 
 namespace UnityInjector.ConsoleUtil
 {
     internal class ConsoleWindow
     {
+        private const uint SC_CLOSE = 0xF060;
+        private const uint MF_BYCOMMAND = 0x00000000;
+
+        private const uint LOAD_LIBRARY_SEARCH_SYSTEM32 = 0x00000800;
         public static IntPtr ConsoleOutHandle;
         public static IntPtr OriginalStdoutHandle;
+
+        private static bool methodsInited;
+        private static SetForegroundWindowDelegate setForeground;
+        private static GetForegroundWindowDelegate getForeground;
+        private static GetSystemMenuDelegate getSystemMenu;
+        private static DeleteMenuDelegate deleteMenu;
         public static bool IsAttached { get; private set; }
 
         public static string Title
@@ -23,43 +34,37 @@ namespace UnityInjector.ConsoleUtil
                 if (!IsAttached)
                     return;
 
-                if (value == null) throw new ArgumentNullException(nameof(value));
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value));
 
-                if (value.Length > 24500) throw new InvalidOperationException("Console title too long");
+                if (value.Length > 24500)
+                    throw new InvalidOperationException("Console title too long");
 
-                if (!SetConsoleTitle(value)) throw new InvalidOperationException("Console title invalid");
+                if (!SetConsoleTitle(value))
+                    throw new InvalidOperationException("Console title invalid");
             }
-        }
-
-        public static void PreventClose()
-        {
-            if (!IsAttached)
-                return;
-
-            var hwnd = GetConsoleWindow();
-            var hmenu = GetSystemMenu(hwnd, false);
-            if (hmenu != IntPtr.Zero)
-                DeleteMenu(hmenu, SC_CLOSE, MF_BYCOMMAND);
         }
 
         public static void Attach()
         {
             if (IsAttached)
                 return;
+            Initialize();
 
             if (OriginalStdoutHandle == IntPtr.Zero)
                 OriginalStdoutHandle = GetStdHandle(-11);
 
             // Store Current Window
-            var currWnd = GetForegroundWindow();
+            var currWnd = getForeground();
+
+            var cur = GetConsoleWindow();
 
             //Check for existing console before allocating
             if (GetConsoleWindow() == IntPtr.Zero)
                 if (!AllocConsole())
                     throw new Exception("AllocConsole() failed");
-
             // Restore Foreground
-            SetForegroundWindow(currWnd);
+            setForeground(currWnd);
 
             ConsoleOutHandle = CreateFile("CONOUT$", 0x80000000 | 0x40000000, 2, IntPtr.Zero, 3, 0, IntPtr.Zero);
             Kon.conOut = ConsoleOutHandle;
@@ -72,6 +77,18 @@ namespace UnityInjector.ConsoleUtil
                 CloseHandle(OriginalStdoutHandle);
 
             IsAttached = true;
+        }
+
+        public static void PreventClose()
+        {
+            if (!IsAttached)
+                return;
+            Initialize();
+
+            var hwnd = GetConsoleWindow();
+            var hmenu = getSystemMenu(hwnd, false);
+            if (hmenu != IntPtr.Zero)
+                deleteMenu(hmenu, SC_CLOSE, MF_BYCOMMAND);
         }
 
         public static void Detach()
@@ -93,12 +110,19 @@ namespace UnityInjector.ConsoleUtil
             IsAttached = false;
         }
 
-        [DllImport("user32.dll")]
-        private static extern IntPtr GetForegroundWindow();
+        private static void Initialize()
+        {
+            if (methodsInited)
+                return;
+            methodsInited = true;
 
-        [DllImport("user32.dll")]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        private static extern bool SetForegroundWindow(IntPtr hWnd);
+            // Some games may ship user32.dll with some methods missing. As such, we load the DLL explicitly from system folder
+            var user32Dll = LoadLibraryEx("user32.dll", IntPtr.Zero, LOAD_LIBRARY_SEARCH_SYSTEM32);
+            setForeground = user32Dll.GetFunction("SetForegroundWindow").AsDelegate<SetForegroundWindowDelegate>();
+            getForeground = user32Dll.GetFunction("GetForegroundWindow").AsDelegate<GetForegroundWindowDelegate>();
+            getSystemMenu = user32Dll.GetFunction("GetSystemMenu").AsDelegate<GetSystemMenuDelegate>();
+            deleteMenu = user32Dll.GetFunction("DeleteMenu").AsDelegate<DeleteMenuDelegate>();
+        }
 
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern bool AllocConsole();
@@ -130,13 +154,21 @@ namespace UnityInjector.ConsoleUtil
         [DllImport("kernel32.dll", BestFitMapping = true, CharSet = CharSet.Auto, SetLastError = true)]
         private static extern bool SetConsoleTitle(string title);
 
-        [DllImport("user32.dll")]
-        private static extern IntPtr GetSystemMenu(IntPtr hwnd, bool bRevert);
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern IntPtr LoadLibraryEx(string lpLibFileName, IntPtr hFile, uint dwFlags);
 
-        private const uint SC_CLOSE = 0xF060;
-        private const uint MF_BYCOMMAND = 0x00000000;
 
-        [DllImport("user32.dll")]
-        private static extern bool DeleteMenu(IntPtr hMenu, uint uPosition, uint uFlags);
+        [UnmanagedFunctionPointer(CallingConvention.Winapi)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private delegate bool SetForegroundWindowDelegate(IntPtr hWnd);
+
+        [UnmanagedFunctionPointer(CallingConvention.Winapi)]
+        private delegate IntPtr GetForegroundWindowDelegate();
+
+        [UnmanagedFunctionPointer(CallingConvention.Winapi)]
+        private delegate IntPtr GetSystemMenuDelegate(IntPtr hwnd, bool bRevert);
+
+        [UnmanagedFunctionPointer(CallingConvention.Winapi)]
+        private delegate bool DeleteMenuDelegate(IntPtr hMenu, uint uPosition, uint uFlags);
     }
 }
