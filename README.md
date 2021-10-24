@@ -71,9 +71,10 @@ A more comprehensive comparison list of features and compatibility is available 
   fork ([112e2e8](https://github.com/BepInEx/Il2CppDumper/commit/112e2e8c369dfcb6d5718fd4ad7e3838d7ddabbf))
 - [SamboyCoding/Cpp2IL](https://github.com/SamboyCoding/Cpp2IL)  -
   2021.4.1 ([8798cc2](https://github.com/SamboyCoding/Cpp2IL/commit/8798cc238666ac2b7bee932540290834bd2c9b08))
-- [knah/Il2CppAssemblyUnhollower](https://github.com/knah/Il2CppAssemblyUnhollower) - v0.4.15.3
-  fork ([b154a79](https://github.com/BepInEx/Il2CppAssemblyUnhollower/commit/b154a79cd0ba582c562e8e01890ce5c3a58a755d))
-- [mono/mono](https://github.com/mono/mono) - 6.12.0.93 fork ([7328415](https://github.com/BepInEx/mono/commit/7328415ac575399a71f32487e97bce9d5fe7f6ca))
+- [knah/Il2CppAssemblyUnhollower](https://github.com/knah/Il2CppAssemblyUnhollower) - v0.4.17.1
+  fork ([3c93a61](https://github.com/BepInEx/Il2CppAssemblyUnhollower/commit/3c93a61d321f0f58e49da5896445dbaea8063405))
+- [mono/mono](https://github.com/mono/mono) - 6.12.0.93
+  fork ([7328415](https://github.com/BepInEx/mono/commit/7328415ac575399a71f32487e97bce9d5fe7f6ca))
 
 ## Credits
 - [Usagirei](https://github.com/Usagirei) - Code for using the console and for assisting with technical support
