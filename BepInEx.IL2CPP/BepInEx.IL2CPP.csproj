@@ -25,15 +25,15 @@
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="BepInEx.Il2Cpp.TlsAdapter" Version="1.0.1"/>
-        <PackageReference Include="HarmonyX" Version="2.5.5"/>
-        <PackageReference Include="Iced" Version="1.13.0"/>
-        <PackageReference Include="Il2CppAssemblyUnhollower.BaseLib" Version="0.4.16.0"/>
-        <PackageReference Include="Il2CppAssemblyUnhollower.BaseLib.Legacy" Version="0.4.16.0"/>
-        <PackageReference Include="Il2CppAssemblyUnhollower.Tool" Version="0.4.16.0"/>
+        <PackageReference Include="HarmonyX" Version="2.5.7"/>
+        <PackageReference Include="Iced" Version="1.15.0"/>
+        <PackageReference Include="Il2CppAssemblyUnhollower.BaseLib" Version="0.4.17"/>
+        <PackageReference Include="Il2CppAssemblyUnhollower.BaseLib.Legacy" Version="0.4.17"/>
+        <PackageReference Include="Il2CppAssemblyUnhollower.Tool" Version="0.4.17"/>
         <PackageReference Include="Il2CppDumper" Version="6.6.4"/>
-        <PackageReference Include="Il2CppReferenceLibs.Core" Version="1.0.0" IncludeAssets="compile" PrivateAssets="all" />
-        <PackageReference Include="MonoMod.RuntimeDetour" Version="21.9.19.1"/>
-        <PackageReference Include="Samboy063.Cpp2IL.Core" Version="2021.3.7"/>
+        <PackageReference Include="Il2CppReferenceLibs.Core" Version="1.0.0" IncludeAssets="compile" PrivateAssets="all"/>
+        <PackageReference Include="MonoMod.RuntimeDetour" Version="21.10.10.1"/>
+        <PackageReference Include="Samboy063.Cpp2IL.Core" Version="2021.4.1"/>
     </ItemGroup>
     <Import Project="..\BepInEx.Shared\BepInEx.Shared.projitems" Label="Shared"/>
 
