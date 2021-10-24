@@ -32,7 +32,7 @@ namespace BepInEx
         {
             ConsoleActive = alreadyActive || Console.WindowWidth != 0 && Console.WindowHeight != 0;
             
-            if (alreadyActive)
+            if (ConsoleActive)
             {
                 // We're in a .NET framework / XNA environment; console *is* stdout
                 ConsoleOut = Console.Out;
