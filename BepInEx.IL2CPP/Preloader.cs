@@ -30,7 +30,7 @@ namespace BepInEx.IL2CPP
         {
             try
             {
-                ConsoleManager.Initialize(Console.WindowWidth != 0 && Console.WindowHeight != 0);
+                ConsoleManager.Initialize(false);
 
                 PreloaderLog = new PreloaderConsoleListener();
                 Logger.Listeners.Add(PreloaderLog);

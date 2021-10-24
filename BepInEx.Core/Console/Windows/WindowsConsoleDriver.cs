@@ -30,7 +30,7 @@ namespace BepInEx
 
         public void Initialize(bool alreadyActive)
         {
-            ConsoleActive = alreadyActive;
+            ConsoleActive = alreadyActive || Console.WindowWidth != 0 && Console.WindowHeight != 0;
             
             if (alreadyActive)
             {
