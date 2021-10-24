@@ -59,15 +59,20 @@ A more comprehensive comparison list of features and compatibility is available 
 - [NeighTools/UnityDoorstop.Unix](https://github.com/NeighTools/UnityDoorstop.Unix) -
   1.5.1.0 ([06e9790](https://github.com/NeighTools/UnityDoorstop.Unix/commit/06e979008730cf89c6bcf8806f2c18c80b0a7b21))
 - [BepInEx/HarmonyX](https://github.com/BepInEx/HarmonyX) -
-  2.4.2 ([64462b3](https://github.com/BepInEx/HarmonyX/commit/64462b3e31abcbc3839fbfae10b620f2a693de31))
+  2.5.7 ([9688051](https://github.com/BepInEx/HarmonyX/commit/9688051fa44d0fab947981746c787a4afd2ee01e))
 - [0x0ade/MonoMod](https://github.com/0x0ade/MonoMod) -
-  v21.4.21.3 ([9f525d6](https://github.com/MonoMod/MonoMod/commit/9f525d6f28eb9593c72ca5a45e3783d72816810f))
+  v21.10.10.1 ([9f525d6](https://github.com/MonoMod/MonoMod/commit/c5252c17628a4b68a2849ad45918eeb73c5e3d89))
 - [jbevain/cecil](https://github.com/jbevain/cecil) -
   0.10.4 ([98ec890](https://github.com/jbevain/cecil/commit/98ec890d44643ad88d573e97be0e120435eda732))
 
 #### IL2CPP libraries
-- [Perfare/Il2CppDumper](https://github.com/Perfare/Il2CppDumper) - v6.6.3 fork ([112e2e8](https://github.com/BepInEx/Il2CppDumper/commit/112e2e8c369dfcb6d5718fd4ad7e3838d7ddabbf))
-- [knah/Il2CppAssemblyUnhollower](https://github.com/knah/Il2CppAssemblyUnhollower) - v0.4.15.3 fork ([b154a79](https://github.com/BepInEx/Il2CppAssemblyUnhollower/commit/b154a79cd0ba582c562e8e01890ce5c3a58a755d))
+
+- [Perfare/Il2CppDumper](https://github.com/Perfare/Il2CppDumper) - v6.6.3
+  fork ([112e2e8](https://github.com/BepInEx/Il2CppDumper/commit/112e2e8c369dfcb6d5718fd4ad7e3838d7ddabbf))
+- [SamboyCoding/Cpp2IL](https://github.com/SamboyCoding/Cpp2IL)  -
+  2021.4.1 ([8798cc2](https://github.com/SamboyCoding/Cpp2IL/commit/8798cc238666ac2b7bee932540290834bd2c9b08))
+- [knah/Il2CppAssemblyUnhollower](https://github.com/knah/Il2CppAssemblyUnhollower) - v0.4.15.3
+  fork ([b154a79](https://github.com/BepInEx/Il2CppAssemblyUnhollower/commit/b154a79cd0ba582c562e8e01890ce5c3a58a755d))
 - [mono/mono](https://github.com/mono/mono) - 6.12.0.93 fork ([7328415](https://github.com/BepInEx/mono/commit/7328415ac575399a71f32487e97bce9d5fe7f6ca))
 
 ## Credits
