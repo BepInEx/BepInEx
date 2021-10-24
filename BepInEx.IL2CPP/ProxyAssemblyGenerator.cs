@@ -13,6 +13,7 @@ using HarmonyLib;
 using Il2CppDumper;
 using Mono.Cecil;
 using UnhollowerBaseLib;
+using AssemblyUnhollowerRunner = AssemblyUnhollower.Program;
 using Logger = BepInEx.Logging.Logger;
 
 namespace BepInEx.IL2CPP
@@ -28,12 +29,6 @@ namespace BepInEx.IL2CPP
              .AppendLine("The URL template MUST use HTTP.")
              .AppendLine("The URL can include {VERSION} template which will be replaced with the game's Unity engine version")
              .ToString());
-
-        internal enum IL2CPPDumperType
-        {
-            Il2CppDumper,
-            Cpp2IL
-        }
 
         private static readonly ConfigEntry<IL2CPPDumperType> ConfigIl2CppDumperType = ConfigFile.CoreConfig.Bind(
          "IL2CPP", "Il2CppDumperType",
@@ -61,19 +56,36 @@ namespace BepInEx.IL2CPP
         {
             using var md5 = MD5.Create();
 
-            var gameAssemblyBytes = File.ReadAllBytes(GameAssemblyPath);
-            md5.TransformBlock(gameAssemblyBytes, 0, gameAssemblyBytes.Length, gameAssemblyBytes, 0);
+            static void HashFile(ICryptoTransform hash, string file)
+            {
+                const int defaultCopyBufferSize = 81920;
+                using var fs = File.OpenRead(file);
+                var buffer = new byte[defaultCopyBufferSize];
+                int read;
+                while ((read = fs.Read(buffer)) > 0)
+                    hash.TransformBlock(buffer, 0, read, buffer, 0);
+            }
+
+            static void HashString(ICryptoTransform hash, string str)
+            {
+                var buffer = Encoding.UTF8.GetBytes(str);
+                hash.TransformBlock(buffer, 0, buffer.Length, buffer, 0);
+            }
+
+            HashFile(md5, GameAssemblyPath);
 
             if (Directory.Exists(UnityBaseLibsDirectory))
                 foreach (var file in Directory.EnumerateFiles(UnityBaseLibsDirectory, "*.dll",
                                                               SearchOption.TopDirectoryOnly))
                 {
-                    var pathBytes = Encoding.UTF8.GetBytes(Path.GetFileName(file));
-                    md5.TransformBlock(pathBytes, 0, pathBytes.Length, pathBytes, 0);
-
-                    var contentBytes = File.ReadAllBytes(file);
-                    md5.TransformBlock(contentBytes, 0, contentBytes.Length, contentBytes, 0);
+                    HashString(md5, Path.GetFileName(file));
+                    HashFile(md5, file);
                 }
+
+            // Hash some common dependencies as they can affect output
+            HashString(md5, typeof(AssemblyUnhollowerRunner).Assembly.GetName().Version.ToString());
+            HashString(md5, typeof(Cpp2IlApi).Assembly.GetName().Version.ToString());
+            HashString(md5, typeof(Il2CppDumper.Il2CppDumper).Assembly.GetName().Version.ToString());
 
             md5.TransformFinalBlock(new byte[0], 0, 0);
 
@@ -90,7 +102,7 @@ namespace BepInEx.IL2CPP
 
             if (ComputeHash() != File.ReadAllText(HashPath))
             {
-                Preloader.Log.LogInfo("Detected a game update, will regenerate proxy assemblies");
+                Preloader.Log.LogInfo("Detected outdated proxy assemblies, will regenerate them now");
                 return true;
             }
 
@@ -109,17 +121,24 @@ namespace BepInEx.IL2CPP
             });
 
             var runner =
-                (AppDomainRunner) AppDomainHelper.CreateInstanceAndUnwrap(domain,
-                                                                          typeof(AppDomainRunner).Assembly.FullName,
-                                                                          typeof(AppDomainRunner).FullName);
+                (AppDomainRunner)AppDomainHelper.CreateInstanceAndUnwrap(domain,
+                                                                         typeof(AppDomainRunner).Assembly.FullName,
+                                                                         typeof(AppDomainRunner).FullName);
 
             runner.Setup(Paths.ExecutablePath, Preloader.IL2CPPUnhollowedPath, Paths.BepInExRootPath,
                          Paths.ManagedPath);
-            runner.GenerateAssembliesInternal(new AppDomainListener(), Preloader.UnityVersion.ToString(3), ConfigIl2CppDumperType.Value);
+            runner.GenerateAssembliesInternal(new AppDomainListener(), Preloader.UnityVersion.ToString(3),
+                                              ConfigIl2CppDumperType.Value);
 
             AppDomain.Unload(domain);
 
             File.WriteAllText(HashPath, ComputeHash());
+        }
+
+        internal enum IL2CPPDumperType
+        {
+            Il2CppDumper,
+            Cpp2IL
         }
 
         private static class AppDomainHelper
@@ -178,7 +197,9 @@ namespace BepInEx.IL2CPP
                 AppDomain.CurrentDomain.AddCecilPlatformAssemblies(UnityBaseLibsDirectory);
             }
 
-            public void GenerateAssembliesInternal(AppDomainListener listener, string unityVersion, IL2CPPDumperType dumperType)
+            public void GenerateAssembliesInternal(AppDomainListener listener,
+                                                   string unityVersion,
+                                                   IL2CPPDumperType dumperType)
             {
                 var source =
                     ConfigUnityBaseLibrariesSource.Value.Replace("{VERSION}", unityVersion);
@@ -235,12 +256,18 @@ namespace BepInEx.IL2CPP
                 }
                 else // if (dumperType == IL2CPPDumperType.Cpp2IL)
                 {
-                    Cpp2IL.Core.Logger.VerboseLog += (message, s) => listener.DoDumperLog($"[{s}] {message.Trim()}", LogLevel.Debug);
-                    Cpp2IL.Core.Logger.InfoLog += (message, s) => listener.DoDumperLog($"[{s}] {message.Trim()}", LogLevel.Info);
-                    Cpp2IL.Core.Logger.WarningLog += (message, s) => listener.DoDumperLog($"[{s}] {message.Trim()}", LogLevel.Warning);
-                    Cpp2IL.Core.Logger.ErrorLog += (message, s) => listener.DoDumperLog($"[{s}] {message.Trim()}", LogLevel.Error);
+                    Cpp2IL.Core.Logger.VerboseLog += (message, s) =>
+                        listener.DoDumperLog($"[{s}] {message.Trim()}", LogLevel.Debug);
+                    Cpp2IL.Core.Logger.InfoLog += (message, s) =>
+                        listener.DoDumperLog($"[{s}] {message.Trim()}", LogLevel.Info);
+                    Cpp2IL.Core.Logger.WarningLog += (message, s) =>
+                        listener.DoDumperLog($"[{s}] {message.Trim()}", LogLevel.Warning);
+                    Cpp2IL.Core.Logger.ErrorLog += (message, s) =>
+                        listener.DoDumperLog($"[{s}] {message.Trim()}", LogLevel.Error);
 
-                    var cpp2IlUnityVersion = Cpp2IlApi.DetermineUnityVersion(Paths.ExecutablePath, Path.Combine(Paths.GameRootPath, $"{Paths.ProcessName}_Data"));
+                    var cpp2IlUnityVersion =
+                        Cpp2IlApi.DetermineUnityVersion(Paths.ExecutablePath,
+                                                        Path.Combine(Paths.GameRootPath, $"{Paths.ProcessName}_Data"));
 
                     Cpp2IlApi.InitializeLibCpp2Il(GameAssemblyPath, metadataPath, cpp2IlUnityVersion, false);
 
@@ -276,7 +303,8 @@ namespace BepInEx.IL2CPP
                 {
                     listener.DoPreloaderLog("Parsing deobfuscation rename mappings", LogLevel.Info);
 
-                    using var fileStream = new FileStream(renameMapLocation, FileMode.Open, FileAccess.Read, FileShare.Read);
+                    using var fileStream =
+                        new FileStream(renameMapLocation, FileMode.Open, FileAccess.Read, FileShare.Read);
                     using var gzipStream = new GZipStream(fileStream, CompressionMode.Decompress);
 
                     using var reader = new StreamReader(gzipStream, Encoding.UTF8, false);
@@ -295,7 +323,7 @@ namespace BepInEx.IL2CPP
                         unhollowerOptions.RenameMap[mapping[0]] = mapping[1];
                     }
                 }
-                
+
 
                 listener.DoPreloaderLog("Executing Il2CppUnhollower generator", LogLevel.Info);
 
@@ -306,7 +334,7 @@ namespace BepInEx.IL2CPP
 
                 try
                 {
-                    Program.Main(unhollowerOptions);
+                    AssemblyUnhollowerRunner.Main(unhollowerOptions);
                 }
                 catch (Exception e)
                 {
