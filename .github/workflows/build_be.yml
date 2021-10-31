@@ -34,7 +34,7 @@ jobs:
       - name: Upload to BepisBuilds
         run: |
           artifacts_list=$(ls ./bin/dist/*.* | tr '\n' ','); artifacts_list=${artifacts_list::-1};
-          curl --upload-file "{${artifacts_list}}" --ftp-pasv --ftp-skip-pasv-ip --ftp-create-dirs --ftp-method singlecwd --disable-epsv ${{ secrets.BEPISBUILDS_ADDR }}/bepinex_be/artifacts/${{ env.BEPINEX_BUILD }}/
+          curl --upload-file "{${artifacts_list}}" --ftp-pasv --ftp-skip-pasv-ip --ftp-create-dirs --ftp-method singlecwd --disable-epsv ${{ secrets.BEPISBUILDS_ADDR }}/bepinex_be/artifacts/${{ steps.info.outputs.build_id }}/
       - name: Generate changelog
         id: generate_changelog
         run: |
