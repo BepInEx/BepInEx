@@ -1,0 +1,21 @@
+name: Basic build
+
+on:
+  push:
+    branches-ignore:
+      - master # For master, we use special BE build workflow
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2.3.5
+      - name: Build
+        run: |
+          ./build.sh --target=Pack
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v2.2.4
+        with:
+          path: "./bin/dist/*.zip"
+          name: "BepInEx_CI"
