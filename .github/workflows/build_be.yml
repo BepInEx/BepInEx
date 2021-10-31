@@ -1,0 +1,22 @@
+name: Build
+
+on: [ push, pull_request ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2.3.5
+      - uses: nrwl/last-successful-commit-action@v1
+        id: last_successful_commit
+        with:
+          branch: master
+          workflow_id: build_be.yml
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Print build info
+        env:
+          LAST_BUILD_HASH: ${{ steps.last_successful_commit.commit_hash }}
+        run: |
+          echo Current hash: ${GITHUB_SHA}; Last successful build: ${LAST_BUILD_HASH}
+          echo Build ID: ${GITHUB_RUN_ID}; Run number: ${GITHUB_RUN_NUMBER}
+      
