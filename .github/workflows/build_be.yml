@@ -1,0 +1,63 @@
+name: Build Bleeding Edge
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2.3.5
+        with:
+          fetch-depth: 0 # Need to fetch all for proper history
+      - uses: nrwl/last-successful-commit-action@v1
+        id: last_successful_commit
+        with:
+          branch: master
+          workflow_id: build_be.yml
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Print build info
+        id: info
+        env:
+          LAST_BUILD_HASH: ${{ steps.last_successful_commit.outputs.commit_hash }}
+        run: |
+          cur_build=$((GITHUB_RUN_NUMBER + 500)); # Increment number to not collide with Jenkins CI builds
+          echo "Current hash: ${GITHUB_SHA}; Last successful build: ${LAST_BUILD_HASH}"
+          echo "Build number: ${cur_build}"
+          echo "::set-output name=build_id::${cur_build}"
+          echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+      - name: Build
+        run: |
+          ./build.sh --target=Pack --bleeding_edge=true --build_id=${{ steps.info.outputs.build_id }} --last_build_commit=\"${{ steps.last_successful_commit.outputs.commit_hash }}\" --nuget_push_key=\"${{ secrets.BEPIN_DEV_NUGET_KEY }}\"
+      - name: Upload to BepisBuilds
+        run: |
+          artifacts_list=$(ls ./bin/dist/*.* | tr '\n' ','); artifacts_list=${artifacts_list::-1};
+          curl --upload-file "{${artifacts_list}}" --ftp-pasv --ftp-skip-pasv-ip --ftp-create-dirs --ftp-method singlecwd --disable-epsv ${{ secrets.BEPISBUILDS_ADDR }}/bepinex_be/artifacts/${{ env.BEPINEX_BUILD }}/
+      - name: Generate changelog
+        id: generate_changelog
+        run: |
+          changelog=$(git --no-pager log --no-merges --pretty="format:- (\`%h\`) [%an] %s" ${{ steps.last_successful_commit.outputs.commit_hash }}..HEAD | sed ':a;N;$!ba;s/"/\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
+          echo "::set-output name=changelog::$changelog"
+      - name: Notify success
+        uses: joelwmale/webhook-action@2.1.0
+        with:
+          url: ${{ secrets.BEPINEX_DISCORD_WEBHOOK }}
+          body: |
+            {
+              "embeds": [
+                {
+                  "title": "BepInEx Bleeding Edge build #${{ steps.info.outputs.build_id }}",
+                  "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+                  "color": 1559874,
+                  "description": "Changelog:\n\n${{ steps.generate_changelog.outputs.changelog }}\n\n[**Artifacts on BepisBuilds**](https://builds.bepis.io/projects/bepinex_be)"
+                }
+              ]
+            }
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v2.2.4
+        with:
+          path: "./bin/dist/*.zip"
+          name: "BepInEx_CI_${{ steps.info.outputs.sha_short }}_${{ steps.info.outputs.build_id }}"
+      
