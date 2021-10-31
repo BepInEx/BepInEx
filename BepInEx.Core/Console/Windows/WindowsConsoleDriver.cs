@@ -2,10 +2,10 @@
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using BepInEx.ConsoleUtil;
 using HarmonyLib;
 using Microsoft.Win32.SafeHandles;
+using MonoMod.Utils;
 using UnityInjector.ConsoleUtil;
 
 namespace BepInEx
@@ -22,6 +22,14 @@ namespace BepInEx
             AccessTools.Constructor(typeof(FileStream), new[] { typeof(IntPtr), typeof(FileAccess) })
         }.FirstOrDefault(m => m != null);
 
+        private readonly Func<int> getWindowHeight = AccessTools
+                                                     .PropertyGetter(typeof(Console), nameof(Console.WindowHeight))
+                                                     ?.CreateDelegate<Func<int>>();
+
+        private readonly Func<int> getWindowWidth = AccessTools
+                                                    .PropertyGetter(typeof(Console), nameof(Console.WindowWidth))
+                                                    ?.CreateDelegate<Func<int>>();
+
         public TextWriter StandardOut { get; private set; }
         public TextWriter ConsoleOut { get; private set; }
 
@@ -30,8 +38,8 @@ namespace BepInEx
 
         public void Initialize(bool alreadyActive)
         {
-            ConsoleActive = alreadyActive || Console.WindowWidth != 0 && Console.WindowHeight != 0;
-            
+            ConsoleActive = alreadyActive || getWindowWidth?.Invoke() != 0 && getWindowHeight?.Invoke() != 0;
+
             if (ConsoleActive)
             {
                 // We're in a .NET framework / XNA environment; console *is* stdout
@@ -107,7 +115,7 @@ namespace BepInEx
                                                               fileHandle, fileHandle.DangerousGetHandle(),
                                                               FileAccess.Write
                                                           });
-            return (FileStream) Activator.CreateInstance(typeof(FileStream), ctorParams);
+            return (FileStream)Activator.CreateInstance(typeof(FileStream), ctorParams);
         }
 
         private IntPtr GetOutHandle()
