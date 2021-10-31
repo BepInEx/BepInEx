@@ -17,6 +17,6 @@ jobs:
         env:
           LAST_BUILD_HASH: ${{ steps.last_successful_commit.commit_hash }}
         run: |
-          echo Current hash: ${GITHUB_SHA}; Last successful build: ${LAST_BUILD_HASH}
-          echo Build ID: ${GITHUB_RUN_ID}; Run number: ${GITHUB_RUN_NUMBER}
+          echo "Current hash: ${GITHUB_SHA}; Last successful build: ${LAST_BUILD_HASH}"
+          echo "Build ID: ${GITHUB_RUN_ID}; Run number: ${GITHUB_RUN_NUMBER}"
       
