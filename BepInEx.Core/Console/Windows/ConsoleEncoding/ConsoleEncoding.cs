@@ -24,7 +24,7 @@ namespace UnityInjector.ConsoleUtil
             _codePage = codePage;
         }
 
-        public override int CodePage => (int) _codePage;
+        public override int CodePage => (int)_codePage;
 
         public static Encoding OutputEncoding => new ConsoleEncoding(ConsoleCodePage);
 
@@ -47,7 +47,7 @@ namespace UnityInjector.ConsoleUtil
 
         public override int GetBytes(char[] chars, int charIndex, int charCount, byte[] bytes, int byteIndex)
         {
-            var byteCount = GetMaxByteCount(charCount);
+            var byteCount = GetByteCount(chars, charIndex, charCount);
 
             WriteCharBuffer(chars, charIndex, charCount);
 
@@ -68,7 +68,7 @@ namespace UnityInjector.ConsoleUtil
 
         public override int GetChars(byte[] bytes, int byteIndex, int byteCount, char[] chars, int charIndex)
         {
-            var charCount = GetMaxCharCount(byteCount);
+            var charCount = GetCharCount(bytes, byteIndex, byteCount);
 
             WriteByteBuffer(bytes, byteIndex, byteCount);
 
