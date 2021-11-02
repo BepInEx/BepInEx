@@ -9,11 +9,20 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Check BE status
+        id: be_status
+        if: ${{ github.repository_owner == 'BepInEx' }} # Only generate BE builds on main repo, forks should only get artifacts
+        run: |
+          echo "Generating Bleeding Edge build!"
+          echo "::set-output name=is_be::true"
       - uses: actions/checkout@v2.3.5
         with:
           fetch-depth: 0 # Need to fetch all for proper history
       - uses: nrwl/last-successful-commit-action@v1
         id: last_successful_commit
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: ${{ env.GITHUB_TOKEN != null }}
         with:
           branch: master
           workflow_id: build_be.yml
@@ -30,18 +39,25 @@ jobs:
           echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
       - name: Build
         run: |
-          ./build.sh --target=Pack --bleeding_edge=true --build_id=${{ steps.info.outputs.build_id }} --last_build_commit=\"${{ steps.last_successful_commit.outputs.commit_hash }}\" --nuget_push_key=\"${{ secrets.BEPIN_DEV_NUGET_KEY }}\"
+          ./build.sh --target=Pack --bleeding_edge=${{ steps.be_status.outputs.is_be == 'true' }} --build_id=${{ steps.info.outputs.build_id || 0 }} --last_build_commit=\"${{ steps.last_successful_commit.outputs.commit_hash }}\" --nuget_push_key=\"${{ secrets.BEPIN_DEV_NUGET_KEY }}\"
       - name: Upload to BepisBuilds
+        env:
+          BEPISBUILDS_ADDR: ${{ secrets.BEPISBUILDS_ADDR }}
+        if: ${{ steps.be_status.outputs.is_be == 'true' && env.BEPISBUILDS_ADDR != null }}
         run: |
           artifacts_list=$(ls ./bin/dist/*.* | tr '\n' ','); artifacts_list=${artifacts_list::-1};
           curl --upload-file "{${artifacts_list}}" --ftp-pasv --ftp-skip-pasv-ip --ftp-create-dirs --ftp-method singlecwd --disable-epsv ${{ secrets.BEPISBUILDS_ADDR }}/bepinex_be/artifacts/${{ steps.info.outputs.build_id }}/
       - name: Generate changelog
         id: generate_changelog
+        if: ${{ steps.be_status.outputs.is_be == 'true' }}
         run: |
           changelog=$(git --no-pager log --no-merges --pretty="format:- (\`%h\`) [%an] %s" ${{ steps.last_successful_commit.outputs.commit_hash }}..HEAD | sed ':a;N;$!ba;s/"/\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
           echo "::set-output name=changelog::$changelog"
       - name: Notify success
         uses: joelwmale/webhook-action@2.1.0
+        env:
+          BEPINEX_DISCORD_WEBHOOK: ${{ secrets.BEPINEX_DISCORD_WEBHOOK }}
+        if: ${{ steps.be_status.outputs.is_be == 'true' && env.BEPINEX_DISCORD_WEBHOOK != null }}
         with:
           url: ${{ secrets.BEPINEX_DISCORD_WEBHOOK }}
           body: |
@@ -59,5 +75,5 @@ jobs:
         uses: actions/upload-artifact@v2.2.4
         with:
           path: "./bin/dist/*.zip"
-          name: "BepInEx_CI_${{ steps.info.outputs.sha_short }}_${{ steps.info.outputs.build_id }}"
+          name: "BepInEx_CI_${{ steps.info.outputs.sha_short }}_${{ steps.info.outputs.build_id || 0 }}"
       
