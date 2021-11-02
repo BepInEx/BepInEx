@@ -11,6 +11,7 @@
     <PackageLicenseUrl>https://github.com/BepInEx/BepInEx/blob/master/LICENSE</PackageLicenseUrl>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <PackageIcon>logo.png</PackageIcon>
+    <PackageOutputPath>../bin/NuGet</PackageOutputPath>
   </PropertyGroup>
   <PropertyGroup Label="Configuration">
     <Import_RootNamespace>BepInEx.Shared</Import_RootNamespace>
@@ -27,8 +28,4 @@
         <_Parameter1>$(BuildInfo)</_Parameter1>
     </AssemblyAttribute>
   </ItemGroup>
-  <Target Name="CopyPackage" AfterTargets="Pack">
-      <Move SourceFiles="$(OutputPath)\$(PackageId).$(PackageVersion).nupkg"
-            DestinationFolder="..\bin\NuGet" />
-  </Target>
 </Project>
