@@ -151,7 +151,7 @@ namespace BepInEx.Bootstrap
 
         protected virtual void InitializeLoggers()
         {
-            if (ConsoleManager.ConfigConsoleEnabled.Value && !ConsoleManager.ConsoleActive)
+            if (ConsoleManager.ConsoleEnabled && !ConsoleManager.ConsoleActive)
                 ConsoleManager.CreateConsole();
 
             if (ConsoleManager.ConsoleActive)

@@ -1,7 +1,6 @@
 using System;
 using System.Diagnostics;
 using System.Globalization;
-using System.IO;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using BepInEx.Preloader.Core;
@@ -14,6 +13,15 @@ namespace BepInEx.IL2CPP
 {
     public static class Preloader
     {
+        #region Config
+
+        private static readonly ConfigEntry<string> ConfigUnityVersion = ConfigFile.CoreConfig.Bind(
+         "IL2CPP", "UnityVersion",
+         string.Empty,
+         "Unity version to report to Il2CppUnhollower. If empty, version is automatically determined from the game process.");
+
+        #endregion
+
         public static string IL2CPPUnhollowedPath { get; internal set; }
 
         private static PreloaderConsoleListener PreloaderLog { get; set; }
@@ -35,8 +43,7 @@ namespace BepInEx.IL2CPP
                 PreloaderLog = new PreloaderConsoleListener();
                 Logger.Listeners.Add(PreloaderLog);
 
-
-                if (ConsoleManager.ConfigConsoleEnabled.Value)
+                if (ConsoleManager.ConsoleEnabled)
                 {
                     ConsoleManager.CreateConsole();
                     Logger.Listeners.Add(new ConsoleLogListener());
@@ -135,14 +142,5 @@ namespace BepInEx.IL2CPP
                 return false;
             }
         }
-        
-        #region Config
-
-        private static readonly ConfigEntry<string> ConfigUnityVersion = ConfigFile.CoreConfig.Bind(
-            "IL2CPP", "UnityVersion",
-            string.Empty,
-            "Unity version to report to Il2CppUnhollower. If empty, version is automatically determined from the game process.");
-        
-        #endregion
     }
 }

@@ -47,7 +47,6 @@ namespace BepInEx.Preloader.Unity
                 Logger.Sources.Add(new HarmonyLogSource());
                 Logger.Sources.Add(TraceLogSource.CreateSource());
 
-                Logger.Listeners.Add(new ConsoleLogListener());
                 PreloaderLog = new PreloaderConsoleListener();
                 Logger.Listeners.Add(PreloaderLog);
 
@@ -136,6 +135,7 @@ namespace BepInEx.Preloader.Unity
             try
             {
                 ConsoleManager.CreateConsole();
+                Logger.Listeners.Add(new ConsoleLogListener());
             }
             catch (Exception ex)
             {

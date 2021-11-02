@@ -24,7 +24,7 @@ namespace BepInEx
 
         private const uint SHIFT_JIS_CP = 932;
 
-        public static bool ConsoleEnabled => EnableConsoleArgOverride ?? ConfigConsoleEnabled.Value;
+        private const string ENABLE_CONSOLE_ARG = "--enable-console";
 
         public static readonly ConfigEntry<bool> ConfigConsoleEnabled = ConfigFile.CoreConfig.Bind(
          "Logging.Console", "Enabled",
@@ -53,26 +53,7 @@ namespace BepInEx
                                            .ToString()
                                       );
 
-        internal static IConsoleDriver Driver { get; set; }
-
-        /// <summary>
-        ///     True if an external console has been started, false otherwise.
-        /// </summary>
-        public static bool ConsoleActive => Driver?.ConsoleActive ?? false;
-
-        /// <summary>
-        ///     The stream that writes to the standard out stream of the process. Should never be null.
-        /// </summary>
-        public static TextWriter StandardOutStream => Driver?.StandardOut;
-
-        /// <summary>
-        ///     The stream that writes to an external console. Null if no such console exists
-        /// </summary>
-        public static TextWriter ConsoleStream => Driver?.ConsoleOut;
-
         private static readonly bool? EnableConsoleArgOverride;
-
-        private const string ENABLE_CONSOLE_ARG = "--enable-console";
 
         static ConsoleManager()
         {
@@ -92,6 +73,25 @@ namespace BepInEx
                 // Skip
             }
         }
+
+        public static bool ConsoleEnabled => EnableConsoleArgOverride ?? ConfigConsoleEnabled.Value;
+
+        internal static IConsoleDriver Driver { get; set; }
+
+        /// <summary>
+        ///     True if an external console has been started, false otherwise.
+        /// </summary>
+        public static bool ConsoleActive => Driver?.ConsoleActive ?? false;
+
+        /// <summary>
+        ///     The stream that writes to the standard out stream of the process. Should never be null.
+        /// </summary>
+        public static TextWriter StandardOutStream => Driver?.StandardOut;
+
+        /// <summary>
+        ///     The stream that writes to an external console. Null if no such console exists
+        /// </summary>
+        public static TextWriter ConsoleStream => Driver?.ConsoleOut;
 
 
         public static void Initialize(bool alreadyActive)
@@ -123,10 +123,9 @@ namespace BepInEx
             // Apparently some versions of Mono throw a "Encoding name 'xxx' not supported"
             // if you use Encoding.GetEncoding
             // That's why we use of codepages directly and handle then in console drivers separately
-            var codepage = ConfigConsoleShiftJis.Value ? SHIFT_JIS_CP : (uint) Encoding.UTF8.CodePage;
+            var codepage = ConfigConsoleShiftJis.Value ? SHIFT_JIS_CP : (uint)Encoding.UTF8.CodePage;
 
             Driver.CreateConsole(codepage);
-            // Console.SetOut(ConsoleStream);
 
             if (ConfigPreventClose.Value)
                 Driver.PreventClose();
