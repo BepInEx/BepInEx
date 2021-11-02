@@ -22,7 +22,7 @@ jobs:
         id: last_successful_commit
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        if: ${{ env.GITHUB_TOKEN != null }}
+        if: ${{ steps.be_status.outputs.is_be == 'true' && env.GITHUB_TOKEN != null }}
         with:
           branch: master
           workflow_id: build_be.yml
