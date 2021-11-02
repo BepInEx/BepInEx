@@ -30,6 +30,9 @@ namespace BepInEx
                                                     .PropertyGetter(typeof(Console), nameof(Console.WindowWidth))
                                                     ?.CreateDelegate<Func<int>>();
 
+        private int ConsoleWidth => getWindowWidth?.Invoke() ?? 0;
+        private int ConsoleHeight => getWindowHeight?.Invoke() ?? 0;
+
         public TextWriter StandardOut { get; private set; }
         public TextWriter ConsoleOut { get; private set; }
 
@@ -38,7 +41,7 @@ namespace BepInEx
 
         public void Initialize(bool alreadyActive)
         {
-            ConsoleActive = alreadyActive || getWindowWidth?.Invoke() != 0 && getWindowHeight?.Invoke() != 0;
+            ConsoleActive = alreadyActive || ConsoleWidth != 0 && ConsoleHeight != 0;
 
             if (ConsoleActive)
             {
