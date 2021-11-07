@@ -15,7 +15,7 @@ namespace BepInEx.IL2CPP.Utils.Collections
 {
     public class Il2CppManagedEnumerator : Object
     {
-        private static readonly Dictionary<Type, System.Func<object, Object>> unboxers = new();
+        private static readonly Dictionary<Type, System.Func<object, Object>> boxers = new();
 
         private readonly IEnumerator enumerator;
 
@@ -45,9 +45,9 @@ namespace BepInEx.IL2CPP.Utils.Collections
 
         public void Reset() => enumerator.Reset();
 
-        private static System.Func<object, Object> GetUnboxer(Type t)
+        private static System.Func<object, Object> GetValueBoxer(Type t)
         {
-            if (unboxers.TryGetValue(t, out var conv))
+            if (boxers.TryGetValue(t, out var conv))
                 return conv;
 
             var dm = new DynamicMethod($"Il2CppUnbox_{t.FullDescription()}", typeof(Object),
@@ -61,14 +61,14 @@ namespace BepInEx.IL2CPP.Utils.Collections
             il.Emit(OpCodes.Ldarg_0);
             il.Emit(OpCodes.Unbox_Any, t);
             il.Emit(OpCodes.Stloc, loc);
-            il.Emit(OpCodes.Ldloca);
+            il.Emit(OpCodes.Ldloca, loc);
             il.Emit(OpCodes.Call,
                     typeof(UnhollowerBaseLib.IL2CPP).GetMethod(nameof(UnhollowerBaseLib.IL2CPP.il2cpp_value_box)));
             il.Emit(OpCodes.Newobj, typeof(Object).GetConstructor(new[] { typeof(IntPtr) }));
             il.Emit(OpCodes.Ret);
 
             var converter = dm.CreateDelegate(typeof(System.Func<object, Object>)) as System.Func<object, Object>;
-            unboxers[t] = converter;
+            boxers[t] = converter;
             return converter;
         }
 
@@ -78,7 +78,7 @@ namespace BepInEx.IL2CPP.Utils.Collections
             if (obj is string s)
                 return new Object(UnhollowerBaseLib.IL2CPP.ManagedStringToIl2Cpp(s));
             if (t.IsPrimitive)
-                return GetUnboxer(t)(obj);
+                return GetValueBoxer(t)(obj);
             throw new NotSupportedException($"Type {t} cannot be converted directly to an Il2Cpp object");
         }
     }
