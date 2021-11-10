@@ -32,7 +32,9 @@ A more comprehensive comparison list of features and compatibility is available 
 
 **[Bleeding Edge builds](https://builds.bepis.io/projects/bepinex_be)**
 
-**[How to install](https://docs.bepinex.dev/master/articles/user_guide/installation/index.html)**
+**[How to install (latest releases)](https://docs.bepinex.dev/articles/user_guide/installation/index.html)**
+
+**[How to install (Bleeding Edge, BepInEx 6)](https://docs.bepinex.dev/articles/user_guide/installation/index.html)**
 
 **[User and developer guides](https://docs.bepinex.dev/master/)**
 
