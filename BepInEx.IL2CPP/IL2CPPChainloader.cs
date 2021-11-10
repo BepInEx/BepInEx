@@ -68,7 +68,14 @@ namespace BepInEx.IL2CPP
             ClassInjector.Detour = new UnhollowerDetourHandler();
 
             var gameAssemblyModule = Process.GetCurrentProcess().Modules.Cast<ProcessModule>()
-                                            .First(x => x.ModuleName.Contains("GameAssembly"));
+                                            .FirstOrDefault(x => x.ModuleName.Contains("GameAssembly") ||
+                                                                 x.ModuleName.Contains("UserAssembly"));
+
+            if (gameAssemblyModule == null)
+            {
+                Logger.LogFatal("Could not locate Il2Cpp game assembly (GameAssembly.dll) or (UserAssembly.dll). The game might be obfuscated or use a yet unsupported build of Unity.");
+                return;
+            }
 
             gameAssemblyModule.BaseAddress.TryGetFunction("il2cpp_runtime_invoke", out var runtimeInvokePtr);
             PreloaderLogger.Log.LogDebug($"Runtime invoke pointer: 0x{runtimeInvokePtr.ToInt64():X}");
