@@ -12,7 +12,6 @@ using BepInEx.Logging;
 using BepInEx.Preloader.Core;
 using BepInEx.Preloader.Core.Logging;
 using HarmonyLib.Public.Patching;
-using Il2Cpp.TlsAdapter;
 using MonoMod.Utils;
 using UnhollowerBaseLib;
 using UnhollowerRuntimeLib;
@@ -24,7 +23,6 @@ namespace BepInEx.IL2CPP
     public class IL2CPPChainloader : BaseChainloader<BasePlugin>
     {
         private static RuntimeInvokeDetourDelegate originalInvoke;
-        private static InstallUnityTlsInterfaceDelegate originalInstallUnityTlsInterface;
 
         private static readonly ConfigEntry<bool> ConfigUnityLogging = ConfigFile.CoreConfig.Bind(
          "Logging", "UnityLogListening",
@@ -37,7 +35,6 @@ namespace BepInEx.IL2CPP
          "Include unity log messages in log file output.");
 
         private static FastNativeDetour RuntimeInvokeDetour { get; set; }
-        private static FastNativeDetour InstallUnityTlsInterfaceDetour { get; set; }
 
         public static IL2CPPChainloader Instance { get; set; }
 
@@ -83,25 +80,10 @@ namespace BepInEx.IL2CPP
                 FastNativeDetour.CreateAndApply(runtimeInvokePtr, OnInvokeMethod, out originalInvoke,
                                                 CallingConvention.Cdecl);
 
-            if (gameAssemblyModule.BaseAddress.TryGetFunction("il2cpp_unity_install_unitytls_interface",
-                                                              out var installTlsPtr))
-                InstallUnityTlsInterfaceDetour =
-                    FastNativeDetour.CreateAndApply(installTlsPtr, OnInstallUnityTlsInterface,
-                                                    out originalInstallUnityTlsInterface, CallingConvention.Cdecl);
-
-            Logger.LogDebug("Initializing TLS adapters");
-            Il2CppTlsAdapter.Initialize();
-
             PreloaderLogger.Log.LogDebug("Runtime invoke patched");
-        }
 
-        private void OnInstallUnityTlsInterface(IntPtr unityTlsInterfaceStruct)
-        {
-            Logger.LogDebug($"Captured UnityTls interface at {unityTlsInterfaceStruct.ToInt64():x8}");
-            Il2CppTlsAdapter.Options.UnityTlsInterface = unityTlsInterfaceStruct;
-            originalInstallUnityTlsInterface(unityTlsInterfaceStruct);
-            InstallUnityTlsInterfaceDetour.Dispose();
-            InstallUnityTlsInterfaceDetour = null;
+            Logger.LogInfo($"Runtime version: {Environment.Version}");
+            Logger.LogInfo($"Runtime information: {RuntimeInformation.FrameworkDescription}");
         }
 
         private static IntPtr OnInvokeMethod(IntPtr method, IntPtr obj, IntPtr parameters, IntPtr exc)
@@ -167,8 +149,5 @@ namespace BepInEx.IL2CPP
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate IntPtr RuntimeInvokeDetourDelegate(IntPtr method, IntPtr obj, IntPtr parameters, IntPtr exc);
-
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        private delegate void InstallUnityTlsInterfaceDelegate(IntPtr unityTlsInterfaceStruct);
     }
 }

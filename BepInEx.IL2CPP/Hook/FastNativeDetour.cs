@@ -143,7 +143,7 @@ namespace BepInEx.IL2CPP.Hook
 
             var trampolineAlloc = PageAllocator.Instance.Allocate(OriginalFunctionPtr);
 
-            logger.LogDebug($"Original: {OriginalFunctionPtr.ToInt64():X}, Trampoline: {(long) trampolineAlloc:X}, diff: {Math.Abs(OriginalFunctionPtr.ToInt64() - trampolineAlloc):X}; is within +-1GB range: {PageAllocator.IsInRelJmpRange(OriginalFunctionPtr, trampolineAlloc)}");
+            logger.LogDebug($"Original: {OriginalFunctionPtr.ToInt64():X}, Trampoline: {(long)trampolineAlloc:X}, diff: {Math.Abs(OriginalFunctionPtr.ToInt64() - trampolineAlloc):X}; is within +-1GB range: {PageAllocator.IsInRelJmpRange(OriginalFunctionPtr, trampolineAlloc)}");
 
             DetourHelper.Native.MakeWritable(trampolineAlloc, PageAllocator.PAGE_SIZE);
 
@@ -165,9 +165,7 @@ namespace BepInEx.IL2CPP.Hook
                                                          out T original,
                                                          CallingConvention? callingConvention = null) where T : Delegate
         {
-            var toPtr = callingConvention != null
-                            ? MonoExtensions.GetFunctionPointerForDelegate(to, callingConvention.Value)
-                            : Marshal.GetFunctionPointerForDelegate(to);
+            var toPtr = Marshal.GetFunctionPointerForDelegate(to);
             var result = new FastNativeDetour(from, toPtr);
             original = result.GenerateTrampoline<T>();
             result.Apply();

@@ -115,22 +115,12 @@ namespace BepInEx.IL2CPP
                                                               ? "Il2CppDumper"
                                                               : "Cpp2IL");
 
-            var domain = AppDomainHelper.CreateDomain("GeneratorDomain", new AppDomainHelper.AppDomainSetup
-            {
-                ApplicationBase = Paths.BepInExAssemblyDirectory
-            });
-
-            var runner =
-                (AppDomainRunner)AppDomainHelper.CreateInstanceAndUnwrap(domain,
-                                                                         typeof(AppDomainRunner).Assembly.FullName,
-                                                                         typeof(AppDomainRunner).FullName);
+            var runner = new AppDomainRunner();
 
             runner.Setup(Paths.ExecutablePath, Preloader.IL2CPPUnhollowedPath, Paths.BepInExRootPath,
                          Paths.ManagedPath);
             runner.GenerateAssembliesInternal(new AppDomainListener(), Preloader.UnityVersion.ToString(3),
                                               ConfigIl2CppDumperType.Value);
-
-            AppDomain.Unload(domain);
 
             File.WriteAllText(HashPath, ComputeHash());
         }
@@ -141,43 +131,7 @@ namespace BepInEx.IL2CPP
             Cpp2IL
         }
 
-        private static class AppDomainHelper
-        {
-            static AppDomainHelper()
-            {
-                var appDomain = typeof(AppDomain);
-                var evidenceType = typeof(AppDomain).Assembly.GetType("System.Security.Policy.Evidence");
-                AppDomainSetupType = typeof(AppDomain).Assembly.GetType("System.AppDomainSetup");
-                CreateDomainInternal =
-                    MethodInvoker.GetHandler(AccessTools.Method(appDomain, "CreateDomain",
-                                                                new[]
-                                                                {
-                                                                    typeof(string), evidenceType, AppDomainSetupType
-                                                                }));
-                CreateInstanceAndUnwrap =
-                    AccessTools.MethodDelegate<Func<AppDomain, string, string, object>>(AccessTools.Method(appDomain,
-                        nameof(CreateInstanceAndUnwrap), new[] { typeof(string), typeof(string) }));
-            }
-
-            public static Func<AppDomain, string, string, object> CreateInstanceAndUnwrap { get; }
-            private static FastInvokeHandler CreateDomainInternal { get; }
-            private static Type AppDomainSetupType { get; }
-
-            public static AppDomain CreateDomain(string name, AppDomainSetup setup)
-            {
-                var realSetup = AccessTools.CreateInstance(AppDomainSetupType);
-                Traverse.IterateProperties(setup, realSetup, (pSrc, pTgt) => pTgt.SetValue(pSrc.GetValue()));
-                return CreateDomainInternal(null, name, null, realSetup) as AppDomain;
-            }
-
-            public class AppDomainSetup
-            {
-                public string ApplicationBase { get; set; }
-            }
-        }
-
-        [Serializable]
-        private class AppDomainListener : MarshalByRefObject
+        private class AppDomainListener
         {
             public void DoPreloaderLog(object data, LogLevel level) => Preloader.Log.Log(level, data);
 
@@ -186,8 +140,7 @@ namespace BepInEx.IL2CPP
             public void DoUnhollowerLog(object data, LogLevel level) => Preloader.UnhollowerLog.Log(level, data);
         }
 
-        [Serializable]
-        private class AppDomainRunner : MarshalByRefObject
+        private class AppDomainRunner
         {
             public void Setup(string executablePath, string unhollowedPath, string bepinPath, string managedPath)
             {
@@ -291,7 +244,7 @@ namespace BepInEx.IL2CPP
                 var unhollowerOptions = new UnhollowerOptions
                 {
                     GameAssemblyPath = GameAssemblyPath,
-                    MscorlibPath = Path.Combine(Paths.ManagedPath, "mscorlib.dll"),
+                    MscorlibPath = Path.Combine(Paths.BepInExRootPath, "corlib-libs", "mscorlib.dll"),
                     Source = sourceAssemblies,
                     OutputDir = Preloader.IL2CPPUnhollowedPath,
                     UnityBaseLibsDir = Directory.Exists(UnityBaseLibsDirectory) ? UnityBaseLibsDirectory : null,
