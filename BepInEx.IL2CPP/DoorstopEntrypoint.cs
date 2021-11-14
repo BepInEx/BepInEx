@@ -17,7 +17,8 @@ namespace BepInEx.IL2CPP
 
             PlatformUtils.SetPlatform();
 
-            Paths.SetExecutablePath(EnvVars.DOORSTOP_PROCESS_PATH, bepinPath, EnvVars.DOORSTOP_MANAGED_FOLDER_DIR, EnvVars.DOORSTOP_DLL_SEARCH_DIRS);
+            Paths.SetExecutablePath(EnvVars.DOORSTOP_PROCESS_PATH, bepinPath, EnvVars.DOORSTOP_MANAGED_FOLDER_DIR,
+                                    EnvVars.DOORSTOP_DLL_SEARCH_DIRS);
 
             // Cecil 0.11 requires one to manually set up list of trusted assemblies for assembly resolving
             AppDomain.CurrentDomain.AddCecilPlatformAssemblies(Paths.ManagedPath);
@@ -67,12 +68,9 @@ namespace BepInEx.IL2CPP
             // We set it to the current directory first as a fallback, but try to use the same location as the .exe file.
             var silentExceptionLog = $"preloader_{DateTime.Now:yyyyMMdd_HHmmss_fff}.log";
             Mutex mutex = null;
-            
+
             try
             {
-                mutex = new Mutex(false, Process.GetCurrentProcess().ProcessName + typeof(DoorstopEntrypoint).FullName);
-                mutex.WaitOne();
-
                 EnvVars.LoadVars();
 
                 silentExceptionLog =
@@ -80,6 +78,11 @@ namespace BepInEx.IL2CPP
 
                 // Get the path of this DLL via Doorstop env var because Assembly.Location mangles non-ASCII characters on some versions of Mono for unknown reasons
                 preloaderPath = Path.GetDirectoryName(Path.GetFullPath(EnvVars.DOORSTOP_INVOKE_DLL_PATH));
+
+                mutex = new Mutex(false,
+                                  Process.GetCurrentProcess().ProcessName + EnvVars.DOORSTOP_PROCESS_PATH +
+                                  typeof(DoorstopEntrypoint).FullName);
+                mutex.WaitOne();
 
                 AppDomain.CurrentDomain.AssemblyResolve += ResolveCurrentDirectory;
 
