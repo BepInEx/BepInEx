@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using BepInEx.Preloader.Core;
 
 namespace BepInEx.IL2CPP
@@ -62,6 +63,9 @@ namespace BepInEx.IL2CPP
         /// </param>
         public static void Main(string[] args)
         {
+            var mutex = new Mutex(false, typeof(DoorstopEntrypoint).FullName);
+            mutex.WaitOne();
+            
             // We set it to the current directory first as a fallback, but try to use the same location as the .exe file.
             var silentExceptionLog = $"preloader_{DateTime.Now:yyyyMMdd_HHmmss_fff}.log";
 
@@ -83,6 +87,8 @@ namespace BepInEx.IL2CPP
             {
                 File.WriteAllText(silentExceptionLog, ex.ToString());
             }
+            
+            mutex.ReleaseMutex();
         }
 
         public static Assembly ResolveCurrentDirectory(object sender, ResolveEventArgs args)
