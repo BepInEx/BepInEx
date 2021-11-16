@@ -156,9 +156,17 @@ namespace BepInEx.IL2CPP
 
         public override BasePlugin LoadPlugin(PluginInfo pluginInfo, Assembly pluginAssembly)
         {
-            var type = pluginAssembly.GetType(pluginInfo.TypeName);
+            foreach(var type in pluginAssembly.DefinedTypes)
+            {
+                if(typeof(Il2CppObjectBase).IsAssignableFrom(type) && !ClassInjector.IsTypeRegisteredInIl2Cpp(type))
+                {
+                    ClassInjector.RegisterTypeInIl2Cpp(type);
+                }
+            }
 
-            var pluginInstance = (BasePlugin)Activator.CreateInstance(type);
+            var pluginType = pluginAssembly.GetType(pluginInfo.TypeName);
+
+            var pluginInstance = (BasePlugin)Activator.CreateInstance(pluginType);
 
             pluginInstance.Load();
 
