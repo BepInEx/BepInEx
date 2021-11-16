@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
@@ -156,13 +156,7 @@ namespace BepInEx.IL2CPP
 
         public override BasePlugin LoadPlugin(PluginInfo pluginInfo, Assembly pluginAssembly)
         {
-            foreach(var type in pluginAssembly.DefinedTypes)
-            {
-                if(typeof(Il2CppObjectBase).IsAssignableFrom(type) && !ClassInjector.IsTypeRegisteredInIl2Cpp(type))
-                {
-                    ClassInjector.RegisterTypeInIl2Cpp(type);
-                }
-            }
+            PluginClassInjector.RegisterAssemblyInIl2Cpp(pluginAssembly);
 
             var pluginType = pluginAssembly.GetType(pluginInfo.TypeName);
 
