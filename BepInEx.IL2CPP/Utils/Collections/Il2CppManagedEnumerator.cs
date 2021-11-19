@@ -35,7 +35,7 @@ namespace BepInEx.IL2CPP.Utils.Collections
 
         public Object Current => enumerator.Current switch
         {
-            Il2CppIEnumerator i => i.Cast<Object>();
+            Il2CppIEnumerator i => i.Cast<Object>(),
             IEnumerator e => new Il2CppManagedEnumerator(e),
             Object oo     => oo,
             { } obj       => ManagedToIl2CppObject(obj),
