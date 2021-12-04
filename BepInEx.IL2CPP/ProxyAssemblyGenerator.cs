@@ -20,6 +20,15 @@ namespace BepInEx.IL2CPP
 {
     internal static class ProxyAssemblyGenerator
     {
+        private static readonly ConfigEntry<bool> ConfigUpdateUnhollowedAssemblies =
+            ConfigFile.CoreConfig.Bind("IL2CPP",
+                                       "UpdateUnhollowedAssemblies",
+                                       true,
+                                       new StringBuilder()
+                                           .AppendLine("Whether to run Il2CppAssemblyUnhollower automatically to generate Il2Cpp support assemblies when they are outdated.")
+                                           .AppendLine("If disabled assemblies in `BepInEx/unhollowed` won't be updated between game or BepInEx updates!")
+                                           .ToString());
+
         private static readonly ConfigEntry<string> ConfigUnityBaseLibrariesSource = ConfigFile.CoreConfig.Bind(
          "IL2CPP", "UnityBaseLibrariesSource",
          "http://unity.bepinex.dev/libraries/{VERSION}.zip",
@@ -94,13 +103,26 @@ namespace BepInEx.IL2CPP
 
         public static bool CheckIfGenerationRequired()
         {
+            static bool NeedGenerationOrSkip()
+            {
+                if (!ConfigUpdateUnhollowedAssemblies.Value)
+                {
+                    var hash = ComputeHash();
+                    Preloader.Log
+                             .LogWarning($"Unhollowed assemblies are possibly out of date. To disable this message, create file {HashPath} with the following contents: {hash}");
+                    return false;
+                }
+
+                return true;
+            }
+
             if (!Directory.Exists(Preloader.IL2CPPUnhollowedPath))
                 return true;
 
             if (!File.Exists(HashPath))
-                return true;
+                return NeedGenerationOrSkip();
 
-            if (ComputeHash() != File.ReadAllText(HashPath))
+            if (ComputeHash() != File.ReadAllText(HashPath) && NeedGenerationOrSkip())
             {
                 Preloader.Log.LogInfo("Detected outdated proxy assemblies, will regenerate them now");
                 return true;
