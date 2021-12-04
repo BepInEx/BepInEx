@@ -123,6 +123,7 @@ namespace BepInEx
             // Apparently some versions of Mono throw a "Encoding name 'xxx' not supported"
             // if you use Encoding.GetEncoding
             // That's why we use of codepages directly and handle then in console drivers separately
+
             var codepage = ConfigConsoleShiftJis.Value ? SHIFT_JIS_CP : (uint)Encoding.UTF8.CodePage;
 
             Driver.CreateConsole(codepage);

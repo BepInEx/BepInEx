@@ -15,8 +15,6 @@ using HarmonyLib.Public.Patching;
 using MonoMod.Utils;
 using UnhollowerBaseLib;
 using UnhollowerRuntimeLib;
-using UnityEngine;
-using Logger = BepInEx.Logging.Logger;
 
 namespace BepInEx.IL2CPP
 {
@@ -97,10 +95,10 @@ namespace BepInEx.IL2CPP
                 {
                     if (ConfigUnityLogging.Value)
                     {
-                        Logger.Sources.Add(new IL2CPPUnityLogSource());
+                        // Logger.Sources.Add(new IL2CPPUnityLogSource());
 
-                        Application.CallLogCallback("Test call after applying unity logging hook", "", LogType.Assert,
-                                                    true);
+                        // Application.CallLogCallback("Test call after applying unity logging hook", "", LogType.Assert,
+                        //                             true);
                     }
 
                     unhook = true;

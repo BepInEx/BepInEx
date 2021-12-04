@@ -8,14 +8,15 @@ namespace BepInEx.IL2CPP
 {
     internal static class UnityPreloaderRunner
     {
-        public static void PreloaderMain(string[] args)
+        public static void PreloaderMain()
         {
             var bepinPath =
                 Path.GetDirectoryName(Path.GetDirectoryName(Path.GetFullPath(EnvVars.DOORSTOP_INVOKE_DLL_PATH)));
 
             PlatformUtils.SetPlatform();
 
-            Paths.SetExecutablePath(EnvVars.DOORSTOP_PROCESS_PATH, bepinPath, EnvVars.DOORSTOP_MANAGED_FOLDER_DIR, EnvVars.DOORSTOP_DLL_SEARCH_DIRS);
+            Paths.SetExecutablePath(EnvVars.DOORSTOP_PROCESS_PATH, bepinPath, EnvVars.DOORSTOP_MANAGED_FOLDER_DIR,
+                                    EnvVars.DOORSTOP_DLL_SEARCH_DIRS);
 
             // Cecil 0.11 requires one to manually set up list of trusted assemblies for assembly resolving
             AppDomain.CurrentDomain.AddCecilPlatformAssemblies(Paths.ManagedPath);
@@ -32,18 +33,26 @@ namespace BepInEx.IL2CPP
         internal static Assembly LocalResolve(object sender, ResolveEventArgs args)
         {
             var assemblyName = new AssemblyName(args.Name);
+            File.AppendAllText("resolve.log", $"{args.Name}\n");
 
             var foundAssembly = AppDomain.CurrentDomain.GetAssemblies()
                                          .FirstOrDefault(x => x.GetName().Name == assemblyName.Name);
 
             if (foundAssembly != null)
+            {
+                File.AppendAllText("resolve.log", $"Resolved from memory: {foundAssembly}\n");
                 return foundAssembly;
+            }
 
             if (Utility.TryResolveDllAssembly(assemblyName, Paths.BepInExAssemblyDirectory, out foundAssembly)
              || Utility.TryResolveDllAssembly(assemblyName, Paths.PatcherPluginPath, out foundAssembly)
              || Utility.TryResolveDllAssembly(assemblyName, Paths.PluginPath, out foundAssembly)
              || Utility.TryResolveDllAssembly(assemblyName, Preloader.IL2CPPUnhollowedPath, out foundAssembly))
+            {
+                File.AppendAllText("resolve.log", $"Resolved: {foundAssembly}\n");
                 return foundAssembly;
+            }
+
 
             return null;
         }
@@ -60,7 +69,7 @@ namespace BepInEx.IL2CPP
         ///     The arguments passed in from Doorstop. First argument is the path of the currently executing
         ///     process.
         /// </param>
-        public static void Main(string[] args)
+        public static void Main()
         {
             // We set it to the current directory first as a fallback, but try to use the same location as the .exe file.
             var silentExceptionLog = $"preloader_{DateTime.Now:yyyyMMdd_HHmmss_fff}.log";
@@ -77,7 +86,7 @@ namespace BepInEx.IL2CPP
 
                 AppDomain.CurrentDomain.AssemblyResolve += ResolveCurrentDirectory;
 
-                UnityPreloaderRunner.PreloaderMain(args);
+                UnityPreloaderRunner.PreloaderMain();
             }
             catch (Exception ex)
             {

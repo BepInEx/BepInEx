@@ -209,8 +209,10 @@ namespace BepInEx
                     {
                         assembly = loader(path);
                     }
-                    catch (Exception)
+                    catch (Exception e)
                     {
+                        File.AppendAllText("resolve.log", $"Could not resolve: {e}\n");
+
                         continue;
                     }
 
