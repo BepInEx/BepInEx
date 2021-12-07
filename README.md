@@ -61,9 +61,9 @@ A more comprehensive comparison list of features and compatibility is available 
 - [NeighTools/UnityDoorstop.Unix](https://github.com/NeighTools/UnityDoorstop.Unix) -
   1.5.1.0 ([06e9790](https://github.com/NeighTools/UnityDoorstop.Unix/commit/06e979008730cf89c6bcf8806f2c18c80b0a7b21))
 - [BepInEx/HarmonyX](https://github.com/BepInEx/HarmonyX) -
-  2.5.7 ([9688051](https://github.com/BepInEx/HarmonyX/commit/9688051fa44d0fab947981746c787a4afd2ee01e))
+  2.6.1 ([e9fd3f1](https://github.com/BepInEx/HarmonyX/commit/e9fd3f14a85dcbffe6ae9e46b5ee80d561ab0107))
 - [0x0ade/MonoMod](https://github.com/0x0ade/MonoMod) -
-  v21.10.10.1 ([9f525d6](https://github.com/MonoMod/MonoMod/commit/c5252c17628a4b68a2849ad45918eeb73c5e3d89))
+  v21.11.11.1 ([7264244](https://github.com/MonoMod/MonoMod/commit/7264244ee896b1422f4d0e91d8c1ca8c49c09dd6))
 - [jbevain/cecil](https://github.com/jbevain/cecil) -
   0.10.4 ([98ec890](https://github.com/jbevain/cecil/commit/98ec890d44643ad88d573e97be0e120435eda732))
 
@@ -72,8 +72,9 @@ A more comprehensive comparison list of features and compatibility is available 
 - [Perfare/Il2CppDumper](https://github.com/Perfare/Il2CppDumper) - v6.6.3
   fork ([112e2e8](https://github.com/BepInEx/Il2CppDumper/commit/112e2e8c369dfcb6d5718fd4ad7e3838d7ddabbf))
 - [SamboyCoding/Cpp2IL](https://github.com/SamboyCoding/Cpp2IL)  -
-  2021.5.3 ([3cf500d](https://github.com/SamboyCoding/Cpp2IL/commit/3cf500d194943703ed594cb444e4f4303e5ee5b9))
-- [knah/Il2CppAssemblyUnhollower](https://github.com/knah/Il2CppAssemblyUnhollower) - v0.4.19.5
+  2021.6.1 ([03a18c8](https://github.com/SamboyCoding/Cpp2IL/commit/03a18c89555d6ce3e8863307928fb0237ada39e3))
+- [BepInEx/Il2CppAssemblyUnhollower](https://github.com/BepInEx/Il2CppAssemblyUnhollower) - v0.4.21.0 (fork of
+  knah/Il2CppAssemblyUnhollower)
   fork ([12f4224](https://github.com/BepInEx/Il2CppAssemblyUnhollower/commit/12f4224bec3bd6bb1748b6982e0f62d1cab4e0b0))
 - [mono/mono](https://github.com/mono/mono) - 6.12.0.93
   fork ([7328415](https://github.com/BepInEx/mono/commit/7328415ac575399a71f32487e97bce9d5fe7f6ca))
