@@ -21,7 +21,10 @@ namespace BepInEx.IL2CPP.Utils.Collections
 
         static Il2CppManagedEnumerator()
         {
-            ClassInjector.RegisterTypeInIl2CppWithInterfaces<Il2CppManagedEnumerator>(true, typeof(Il2CppIEnumerator));
+            ClassInjector.RegisterTypeInIl2Cpp<Il2CppManagedEnumerator>(new RegisterTypeOptions
+            {
+                Interfaces = new[] { typeof(Il2CppIEnumerator) }
+            });
         }
 
         public Il2CppManagedEnumerator(IntPtr ptr) : base(ptr) { }
@@ -36,10 +39,10 @@ namespace BepInEx.IL2CPP.Utils.Collections
         public Object Current => enumerator.Current switch
         {
             Il2CppIEnumerator i => i.Cast<Object>(),
-            IEnumerator e => new Il2CppManagedEnumerator(e),
-            Object oo     => oo,
-            { } obj       => ManagedToIl2CppObject(obj),
-            null          => null
+            IEnumerator e       => new Il2CppManagedEnumerator(e),
+            Object oo           => oo,
+            { } obj             => ManagedToIl2CppObject(obj),
+            null                => null
         };
 
         public bool MoveNext() => enumerator.MoveNext();

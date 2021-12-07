@@ -13,8 +13,10 @@ namespace BepInEx.IL2CPP.Utils.Collections
 
         static Il2CppManagedEnumerable()
         {
-            ClassInjector.RegisterTypeInIl2CppWithInterfaces<Il2CppManagedEnumerable>(true,
-                typeof(Il2CppSystem.Collections.IEnumerable));
+            ClassInjector.RegisterTypeInIl2Cpp<Il2CppManagedEnumerable>(new RegisterTypeOptions
+            {
+                Interfaces = new[] { typeof(Il2CppSystem.Collections.IEnumerable) }
+            });
         }
 
         public Il2CppManagedEnumerable(IntPtr ptr) : base(ptr) { }
