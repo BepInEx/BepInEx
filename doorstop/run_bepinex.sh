@@ -20,7 +20,7 @@ executable_name=""
 export DOORSTOP_ENABLE=TRUE
 
 # What .NET assembly to execute. Valid value is a path to a .NET DLL that mono can execute.
-export DOORSTOP_INVOKE_DLL_PATH="$BASEDIR/BepInEx/core/BepInEx.Preloader.dll"
+export DOORSTOP_INVOKE_DLL_PATH="${BASEDIR}/BepInEx/core/BepInEx.Preloader.Unity.dll"
 
 # If specified, Doorstop will load core libraries from this folder instead of the normal Managed folder
 # Mainly usable to unstrip assemblies in some games
