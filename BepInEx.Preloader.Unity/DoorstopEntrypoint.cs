@@ -56,13 +56,25 @@ namespace BepInEx.Preloader.Unity
 
         private static void PreloaderMain()
         {
-            if (UnityPreloader.ConfigApplyRuntimePatches.Value)
+            try
             {
-                XTermFix.Apply();
-                ConsoleSetOutFix.Apply();
-            }
+                if (UnityPreloader.ConfigApplyRuntimePatches.Value)
+                {
+                    XTermFix.Apply();
+                    ConsoleSetOutFix.Apply();
+                }
 
-            UnityPreloader.Run();
+                UnityPreloader.Run();
+            }
+            catch (Exception e) when (e is MissingMemberException or TypeLoadException)
+            {
+                throw new Exception("\nA reflection error has occurred.\n" +
+                              "This is typically caused by one of the following reasons:\n" +
+                              "1. The game had stripped managed assemblies.\n" +
+                              "See https://hackmd.io/@ghorsington/rJuLdZTzK for how to check and deal with this.\n" +
+                              "2. The game loads a module that is also used by BepInEx.\n" +
+                              "Check for 0Harmony.dll in the game's data directory and rename it if it exists.\n", e);
+            }
         }
 
         private static Assembly LocalResolve(object sender, ResolveEventArgs args)
