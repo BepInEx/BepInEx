@@ -32,7 +32,7 @@ export DOORSTOP_CORLIB_OVERRIDE_PATH=""
 # Special case: program is launched via Steam
 # In that case rerun the script via their bootstrapper to ensure Steam overlay works
 if [ "$2" = "SteamLaunch" ]; then
-    "$1" "$2" "$3" "$4" "$0" "$5"
+    "$1" "$2" "$3" "$4" "$0" "$5" "${@:6}"
     exit
 fi
 
@@ -142,4 +142,4 @@ export LD_PRELOAD=$doorstop_libname:$LD_PRELOAD
 export DYLD_LIBRARY_PATH="${doorstop_libs}"
 export DYLD_INSERT_LIBRARIES="${doorstop_libs}/$doorstop_libname"
 
-"${executable_path}"
+"${executable_path}" "$@"
