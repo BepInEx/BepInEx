@@ -14,11 +14,19 @@ public static class Logger
 
     private static readonly LogListenerCollection listeners;
 
+    static Logger()
+    {
+        Sources = new LogSourceCollection();
+        listeners = new LogListenerCollection();
+
+        InternalLogSource = CreateLogSource("BepInEx");
+    }
+
     /// <summary>
-    /// Log levels that are currently listened to by at least one listener.
+    ///     Log levels that are currently listened to by at least one listener.
     /// </summary>
     public static LogLevel ListenedLogLevels => listeners.activeLogLevels;
-    
+
     /// <summary>
     ///     Collection of all log listeners that receive log events.
     /// </summary>
@@ -28,14 +36,6 @@ public static class Logger
     ///     Collection of all log source that output log events.
     /// </summary>
     public static ICollection<ILogSource> Sources { get; }
-
-    static Logger()
-    {
-        Sources = new LogSourceCollection();
-        listeners = new LogListenerCollection();
-
-        InternalLogSource = CreateLogSource("BepInEx");
-    }
 
     internal static void InternalLogEvent(object sender, LogEventArgs eventArgs)
     {
@@ -53,14 +53,14 @@ public static class Logger
     internal static void Log(LogLevel level, object data) => InternalLogSource.Log(level, data);
 
     /// <summary>
-    /// Logs an entry to the internal logger instance if any log listener wants the message.
+    ///     Logs an entry to the internal logger instance if any log listener wants the message.
     /// </summary>
     /// <param name="level">The level of the entry.</param>
     /// <param name="logHandler">Log handler to resolve log from.</param>
-    internal static void Log(LogLevel level, [InterpolatedStringHandlerArgument("level")] BepInExLogInterpolatedStringHandler logHandler)
-    {
+    internal static void Log(LogLevel level,
+                             [InterpolatedStringHandlerArgument("level")]
+                             BepInExLogInterpolatedStringHandler logHandler) =>
         InternalLogSource.Log(level, logHandler);
-    }
 
     /// <summary>
     ///     Creates a new log source with a name and attaches it to <see cref="Sources" />.
@@ -77,14 +77,14 @@ public static class Logger
     private class LogListenerCollection : List<ILogListener>, ICollection<ILogListener>
     {
         public LogLevel activeLogLevels = LogLevel.None;
-        
+
         void ICollection<ILogListener>.Add(ILogListener item)
         {
             if (item == null)
                 throw new ArgumentNullException(nameof(item));
 
             activeLogLevels |= item.LogLevelFilter;
-            
+
             base.Add(item);
         }
 
@@ -103,7 +103,7 @@ public static class Logger
 
             foreach (var i in this)
                 activeLogLevels |= i.LogLevelFilter;
-            
+
             return true;
         }
     }

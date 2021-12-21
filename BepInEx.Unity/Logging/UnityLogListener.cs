@@ -16,17 +16,17 @@ namespace BepInEx.Unity.Logging
     {
         internal static readonly Action<string> WriteStringToUnityLog;
 
+        protected static readonly ConfigEntry<LogLevel> ConfigUnityLogLevel = ConfigFile.CoreConfig.Bind(
+         "Logging.Unity", "LogLevels",
+         LogLevel.Fatal | LogLevel.Error | LogLevel.Warning | LogLevel.Message | LogLevel.Info,
+         "What log levels to log to Unity's output log.");
+
         private readonly ConfigEntry<bool> LogConsoleToUnity = ConfigFile.CoreConfig.Bind("Logging",
             "LogConsoleToUnityLog", false,
             new StringBuilder()
                 .AppendLine("If enabled, writes Standard Output messages to Unity log")
                 .AppendLine("NOTE: By default, Unity does so automatically. Only use this option if no console messages are visible in Unity log")
                 .ToString());
-        
-        protected static readonly ConfigEntry<LogLevel> ConfigUnityLogLevel = ConfigFile.CoreConfig.Bind(
-         "Logging.Unity", "LogLevels",
-         LogLevel.Fatal | LogLevel.Error | LogLevel.Warning | LogLevel.Message | LogLevel.Info,
-         "What log levels to log to Unity's output log.");
 
         static UnityLogListener()
         {

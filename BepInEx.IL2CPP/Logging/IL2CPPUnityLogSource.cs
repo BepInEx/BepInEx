@@ -6,8 +6,6 @@ namespace BepInEx.IL2CPP.Logging;
 
 public class IL2CPPUnityLogSource : ILogSource
 {
-    private delegate IntPtr SetLogCallbackDefinedDelegate(bool defined);
-
     public IL2CPPUnityLogSource()
     {
         Application.s_LogCallbackHandler = new Action<string, string, LogType>(UnityLogCallback);
@@ -36,4 +34,6 @@ public class IL2CPPUnityLogSource : ILogSource
         };
         LogEvent?.Invoke(this, new LogEventArgs(logLine, level, this));
     }
+
+    private delegate IntPtr SetLogCallbackDefinedDelegate(bool defined);
 }

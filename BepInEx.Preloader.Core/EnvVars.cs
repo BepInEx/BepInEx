@@ -26,7 +26,7 @@ public static class EnvVars
     public static string DOORSTOP_PROCESS_PATH { get; private set; }
 
     /// <summary>
-    /// Array of paths where Mono searches DLLs from before assembly resolvers are invoked.
+    ///     Array of paths where Mono searches DLLs from before assembly resolvers are invoked.
     /// </summary>
     public static string[] DOORSTOP_DLL_SEARCH_DIRS { get; private set; }
 

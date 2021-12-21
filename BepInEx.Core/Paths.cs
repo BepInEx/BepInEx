@@ -80,7 +80,7 @@ public static class Paths
     public static string ProcessName { get; private set; }
 
     /// <summary>
-    ///	    List of directories from where Mono will search assemblies before assembly resolving is invoked.
+    ///     List of directories from where Mono will search assemblies before assembly resolving is invoked.
     /// </summary>
     public static string[] DllSearchPaths { get; private set; }
 

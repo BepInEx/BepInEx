@@ -5,7 +5,7 @@ namespace BepInEx.IL2CPP.Utils.Collections;
 
 public class ManagedIl2CppEnumerable : IEnumerable
 {
-    private Il2CppSystem.Collections.IEnumerable enumerable;
+    private readonly Il2CppSystem.Collections.IEnumerable enumerable;
 
     public ManagedIl2CppEnumerable(Il2CppSystem.Collections.IEnumerable enumerable)
     {

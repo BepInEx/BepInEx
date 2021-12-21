@@ -23,7 +23,7 @@ public class AssemblyPatcher : IDisposable
     private static readonly string CurrentAssemblyName = Assembly.GetExecutingAssembly().GetName().Name;
 
     /// <summary>
-    /// The context of this assembly patcher instance that is passed to all patcher plugins.
+    ///     The context of this assembly patcher instance that is passed to all patcher plugins.
     /// </summary>
     public PatcherContext PatcherContext { get; } = new()
     {
@@ -81,7 +81,8 @@ public class AssemblyPatcher : IDisposable
 
         if (string.IsNullOrEmpty(metadata.GUID) || !allowedGuidRegex.IsMatch(metadata.GUID))
         {
-            Logger.Log(LogLevel.Warning, $"Skipping type [{type.FullName}] because its GUID [{metadata.GUID}] is of an illegal format");
+            Logger.Log(LogLevel.Warning,
+                       $"Skipping type [{type.FullName}] because its GUID [{metadata.GUID}] is of an illegal format");
             return null;
         }
 
@@ -180,7 +181,8 @@ public class AssemblyPatcher : IDisposable
                            )
                         {
                             Logger
-                                .Log(LogLevel.Warning, $"Skipping method [{method.FullDescription()}] as it is not a valid patcher method");
+                                .Log(LogLevel.Warning,
+                                     $"Skipping method [{method.FullDescription()}] as it is not a valid patcher method");
                             continue;
                         }
 
@@ -211,7 +213,8 @@ public class AssemblyPatcher : IDisposable
 
 
     /// <summary>
-    ///     Adds all .dll assemblies in given directories to be patched and loaded by this patcher instance. Non-managed assemblies
+    ///     Adds all .dll assemblies in given directories to be patched and loaded by this patcher instance. Non-managed
+    ///     assemblies
     ///     are skipped.
     /// </summary>
     /// <param name="directories">The directories to search.</param>
@@ -219,7 +222,8 @@ public class AssemblyPatcher : IDisposable
         LoadAssemblyDirectories(directories, new[] { "dll" });
 
     /// <summary>
-    ///     Adds all assemblies in given directories to be patched and loaded by this patcher instance. Non-managed assemblies are
+    ///     Adds all assemblies in given directories to be patched and loaded by this patcher instance. Non-managed assemblies
+    ///     are
     ///     skipped.
     /// </summary>
     /// <param name="directories">The directory to search.</param>
@@ -386,7 +390,8 @@ public class AssemblyPatcher : IDisposable
                 }
                 catch (Exception e)
                 {
-                    Logger.Log(LogLevel.Error, $"Failed to run [{patchDefinition.FullName}] when patching [{assembly.Name.Name}]. This assembly will not be patched. Error: {e}");
+                    Logger.Log(LogLevel.Error,
+                               $"Failed to run [{patchDefinition.FullName}] when patching [{assembly.Name.Name}]. This assembly will not be patched. Error: {e}");
                     patchedAssemblies.Remove(targetDll);
                     invalidAssemblies.Add(targetDll);
                     return false;
@@ -416,14 +421,14 @@ public class AssemblyPatcher : IDisposable
 
         if (earlyLoadAssemblies.Count != 0)
             Logger.Log(LogLevel.Warning, new StringBuilder()
-                                          .AppendLine("The following assemblies have been loaded too early and will not be patched by preloader:")
-                                          .AppendLine(string.Join(Environment.NewLine,
-                                                                  earlyLoadAssemblies
-                                                                      .Select(kv =>
-                                                                                  $"* [{kv.Key}] (first loaded by [{kv.Value}])")
-                                                                      .ToArray()))
-                                          .AppendLine("Expect unexpected behavior and issues with plugins and patchers not being loaded.")
-                                          .ToString());
+                                         .AppendLine("The following assemblies have been loaded too early and will not be patched by preloader:")
+                                         .AppendLine(string.Join(Environment.NewLine,
+                                                                 earlyLoadAssemblies
+                                                                     .Select(kv =>
+                                                                                 $"* [{kv.Key}] (first loaded by [{kv.Value}])")
+                                                                     .ToArray()))
+                                         .AppendLine("Expect unexpected behavior and issues with plugins and patchers not being loaded.")
+                                         .ToString());
 
         var dumpedAssemblyPaths = new Dictionary<string, string>();
         // Finally, load patched assemblies into memory
@@ -457,7 +462,8 @@ public class AssemblyPatcher : IDisposable
 
         if (ConfigBreakBeforeLoadAssemblies.Value)
         {
-            Logger.Log(LogLevel.Info, $"BepInEx is about load the following assemblies:\n{string.Join("\n", patchedAssemblies.ToArray())}");
+            Logger.Log(LogLevel.Info,
+                       $"BepInEx is about load the following assemblies:\n{string.Join("\n", patchedAssemblies.ToArray())}");
             Logger.Log(LogLevel.Info, $"The assemblies were dumped into {PatcherContext.DumpedAssembliesPath}");
             Logger.Log(LogLevel.Info, "Load any assemblies into the debugger, set breakpoints and continue execution.");
             Debugger.Break();

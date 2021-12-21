@@ -143,7 +143,8 @@ public class FastNativeDetour : IDetour
 
         var trampolineAlloc = PageAllocator.Instance.Allocate(OriginalFunctionPtr);
 
-        logger.Log(LogLevel.Debug, $"Original: {OriginalFunctionPtr.ToInt64():X}, Trampoline: {(long) trampolineAlloc:X}, diff: {Math.Abs(OriginalFunctionPtr.ToInt64() - trampolineAlloc):X}; is within +-1GB range: {PageAllocator.IsInRelJmpRange(OriginalFunctionPtr, trampolineAlloc)}");
+        logger.Log(LogLevel.Debug,
+                   $"Original: {OriginalFunctionPtr.ToInt64():X}, Trampoline: {trampolineAlloc:X}, diff: {Math.Abs(OriginalFunctionPtr.ToInt64() - trampolineAlloc):X}; is within +-1GB range: {PageAllocator.IsInRelJmpRange(OriginalFunctionPtr, trampolineAlloc)}");
 
         DetourHelper.Native.MakeWritable(trampolineAlloc, PageAllocator.PAGE_SIZE);
 

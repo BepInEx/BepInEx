@@ -23,10 +23,7 @@ public class PreloaderConsoleListener : ILogListener
     public LogLevel LogLevelFilter => ConfigConsoleDisplayedLevel.Value;
 
     /// <inheritdoc />
-    public void LogEvent(object sender, LogEventArgs eventArgs)
-    {
-        LogEvents.Add(eventArgs);
-    }
+    public void LogEvent(object sender, LogEventArgs eventArgs) => LogEvents.Add(eventArgs);
 
     /// <inheritdoc />
     public void Dispose() { }

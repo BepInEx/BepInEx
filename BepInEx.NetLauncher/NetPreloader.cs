@@ -20,6 +20,15 @@ public static class NetPreloader
 {
     private static readonly ManualLogSource Log = PreloaderLogger.Log;
 
+    #region Config
+
+    private static readonly ConfigEntry<string> ConfigEntrypointExecutable = ConfigFile.CoreConfig.Bind<string>(
+     "Preloader.Entrypoint", "Assembly",
+     null,
+     "The local filename of the .NET executable to target.");
+
+    #endregion
+
     [DllImport("Kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     private static extern bool SetDllDirectory(string lpPathName);
 
@@ -34,7 +43,8 @@ public static class NetPreloader
 
         if (string.IsNullOrEmpty(ConfigEntrypointExecutable.Value))
         {
-            Log.Log(LogLevel.Fatal, $"Entry executable was not set. Please set this in your config before launching the application");
+            Log.Log(LogLevel.Fatal,
+                    $"Entry executable was not set. Please set this in your config before launching the application");
             Program.ReadExit();
             return;
         }
@@ -76,7 +86,8 @@ public static class NetPreloader
         {
             assemblyPatcher.AddPatchersFromDirectory(Paths.PatcherPluginPath);
 
-            Log.Log(LogLevel.Info, $"{assemblyPatcher.PatcherContext.PatchDefinitions.Count} patcher definition(s) loaded");
+            Log.Log(LogLevel.Info,
+                    $"{assemblyPatcher.PatcherContext.PatchDefinitions.Count} patcher definition(s) loaded");
 
             assemblyPatcher.LoadAssemblyDirectories(new[] { Paths.GameRootPath }, new[] { "dll", "exe" });
 
@@ -152,13 +163,4 @@ public static class NetPreloader
             Log.LogFatal($"Unhandled exception: {ex}");
         }
     }
-
-    #region Config
-
-    private static readonly ConfigEntry<string> ConfigEntrypointExecutable = ConfigFile.CoreConfig.Bind<string>(
-     "Preloader.Entrypoint", "Assembly",
-     null,
-     "The local filename of the .NET executable to target.");
-
-    #endregion
 }

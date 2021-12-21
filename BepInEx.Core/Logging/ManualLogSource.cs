@@ -34,12 +34,13 @@ public class ManualLogSource : ILogSource
     /// <param name="data">Data to log.</param>
     public void Log(LogLevel level, object data) => LogEvent?.Invoke(this, new LogEventArgs(data, level, this));
 
-    public void Log(LogLevel level, [InterpolatedStringHandlerArgument("level")] BepInExLogInterpolatedStringHandler logHandler)
+    public void Log(LogLevel level,
+                    [InterpolatedStringHandlerArgument("level")] BepInExLogInterpolatedStringHandler logHandler)
     {
         if (logHandler.Enabled)
             LogEvent?.Invoke(this, new LogEventArgs(logHandler.ToString(), level, this));
     }
-    
+
     /// <summary>
     ///     Logs a message with <see cref="LogLevel.Fatal" /> level.
     /// </summary>

@@ -169,7 +169,8 @@ public static class TypeLoader
             }
             catch (BadImageFormatException e)
             {
-                Logger.Log(LogLevel.Debug, $"Skipping loading {dll} because it's not a valid .NET assembly. Full error: {e.Message}");
+                Logger.Log(LogLevel.Debug,
+                           $"Skipping loading {dll} because it's not a valid .NET assembly. Full error: {e.Message}");
             }
             catch (Exception e)
             {
@@ -228,7 +229,8 @@ public static class TypeLoader
         }
         catch (Exception e)
         {
-            Logger.Log(LogLevel.Warning, $"Failed to load cache \"{cacheName}\"; skipping loading cache. Reason: {e.Message}.");
+            Logger.Log(LogLevel.Warning,
+                       $"Failed to load cache \"{cacheName}\"; skipping loading cache. Reason: {e.Message}.");
         }
 
         return result;
@@ -271,7 +273,8 @@ public static class TypeLoader
         }
         catch (Exception e)
         {
-            Logger.Log(LogLevel.Warning, $"Failed to save cache \"{cacheName}\"; skipping saving cache. Reason: {e.Message}.");
+            Logger.Log(LogLevel.Warning,
+                       $"Failed to save cache \"{cacheName}\"; skipping saving cache. Reason: {e.Message}.");
         }
     }
 

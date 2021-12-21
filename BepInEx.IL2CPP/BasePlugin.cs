@@ -24,9 +24,8 @@ public abstract class BasePlugin
     public virtual bool Unload() => false;
 
     /// <summary>
-    /// Add a Component (e.g. MonoBehaviour) into Unity scene.
-    ///
-    /// Automatically registers the type with Il2Cpp Type system if it isn't already. 
+    ///     Add a Component (e.g. MonoBehaviour) into Unity scene.
+    ///     Automatically registers the type with Il2Cpp Type system if it isn't already.
     /// </summary>
     /// <typeparam name="T">Type of the component to add.</typeparam>
     public T AddComponent<T>() where T : Il2CppObjectBase => IL2CPPChainloader.AddUnityComponent<T>();

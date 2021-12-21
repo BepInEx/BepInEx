@@ -51,9 +51,9 @@ public static class Preloader
 
             ChainloaderLogHelper.PrintLogInfo(Log);
 
-            Log.Log(LogLevel.Debug,$"Game executable path: {Paths.ExecutablePath}");
-            Log.Log(LogLevel.Debug,$"Unhollowed assembly directory: {IL2CPPUnhollowedPath}");
-            Log.Log(LogLevel.Debug,$"BepInEx root path: {Paths.BepInExRootPath}");
+            Log.Log(LogLevel.Debug, $"Game executable path: {Paths.ExecutablePath}");
+            Log.Log(LogLevel.Debug, $"Unhollowed assembly directory: {IL2CPPUnhollowedPath}");
+            Log.Log(LogLevel.Debug, $"BepInEx root path: {Paths.BepInExRootPath}");
 
             UnhollowerLog = Logger.CreateLogSource("Unhollower");
             LogSupport.InfoHandler += UnhollowerLog.LogInfo;
@@ -100,11 +100,11 @@ public static class Preloader
     private static void InitializeUnityVersion()
     {
         if (TryInitializeUnityVersion(ConfigUnityVersion.Value))
-            Log.LogWarning($"Unity version obtained from the config.");
+            Log.LogWarning("Unity version obtained from the config.");
         else if (TryInitializeUnityVersion(Process.GetCurrentProcess().MainModule.FileVersionInfo.FileVersion))
-            Log.LogDebug($"Unity version obtained from main application module.");
+            Log.LogDebug("Unity version obtained from main application module.");
         else
-            Log.LogError($"Running under default Unity version. UnityVersionHandler is not initialized.");
+            Log.LogError("Running under default Unity version. UnityVersionHandler is not initialized.");
     }
 
     private static bool TryInitializeUnityVersion(string version)

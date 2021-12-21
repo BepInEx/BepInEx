@@ -53,15 +53,16 @@ internal static class UnityPreloader
             ChainloaderLogHelper.PrintLogInfo(Log);
 
             Log.Log(LogLevel.Info, $"Running under Unity v{GetUnityVersion()}");
-            Log.Log(LogLevel.Info,$"CLR runtime version: {Environment.Version}");
-            Log.Log(LogLevel.Info,$"Supports SRE: {Utility.CLRSupportsDynamicAssemblies}");
+            Log.Log(LogLevel.Info, $"CLR runtime version: {Environment.Version}");
+            Log.Log(LogLevel.Info, $"Supports SRE: {Utility.CLRSupportsDynamicAssemblies}");
 
             Log.Log(LogLevel.Debug, $"Game executable path: {Paths.ExecutablePath}");
-            Log.Log(LogLevel.Debug,$"Unity Managed directory: {Paths.ManagedPath}");
-            Log.Log(LogLevel.Debug,$"BepInEx root path: {Paths.BepInExRootPath}");
+            Log.Log(LogLevel.Debug, $"Unity Managed directory: {Paths.ManagedPath}");
+            Log.Log(LogLevel.Debug, $"BepInEx root path: {Paths.BepInExRootPath}");
 
             if (runtimePatchException != null)
-                Log.Log(LogLevel.Warning, $"Failed to apply runtime patches for Mono. See more info in the output log. Error message: {runtimePatchException.Message}");
+                Log.Log(LogLevel.Warning,
+                        $"Failed to apply runtime patches for Mono. See more info in the output log. Error message: {runtimePatchException.Message}");
 
             Log.Log(LogLevel.Message, "Preloader started");
 
@@ -72,11 +73,13 @@ internal static class UnityPreloader
                 assemblyPatcher.AddPatchersFromDirectory(Paths.BepInExAssemblyDirectory);
                 assemblyPatcher.AddPatchersFromDirectory(Paths.PatcherPluginPath);
 
-                Log.Log(LogLevel.Info, $"{assemblyPatcher.PatcherContext.PatcherPlugins.Count} patcher plugin{(assemblyPatcher.PatcherContext.PatcherPlugins.Count == 1 ? "" : "s")} loaded");
+                Log.Log(LogLevel.Info,
+                        $"{assemblyPatcher.PatcherContext.PatcherPlugins.Count} patcher plugin{(assemblyPatcher.PatcherContext.PatcherPlugins.Count == 1 ? "" : "s")} loaded");
 
                 assemblyPatcher.LoadAssemblyDirectories(Paths.DllSearchPaths);
 
-                Log.Log(LogLevel.Info, $"{assemblyPatcher.PatcherContext.AvailableAssemblies.Count} assemblies discovered");
+                Log.Log(LogLevel.Info,
+                        $"{assemblyPatcher.PatcherContext.AvailableAssemblies.Count} assemblies discovered");
 
                 assemblyPatcher.PatchAndLoad();
             }

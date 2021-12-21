@@ -52,7 +52,8 @@ public abstract class BaseChainloader<TPlugin>
 
         if (string.IsNullOrEmpty(metadata.GUID) || !allowedGuidRegex.IsMatch(metadata.GUID))
         {
-            Logger.Log(LogLevel.Warning, $"Skipping type [{type.FullName}] because its GUID [{metadata.GUID}] is of an illegal format.");
+            Logger.Log(LogLevel.Warning,
+                       $"Skipping type [{type.FullName}] because its GUID [{metadata.GUID}] is of an illegal format.");
             return null;
         }
 
@@ -196,7 +197,8 @@ public abstract class BaseChainloader<TPlugin>
             {
                 if (loadedVersion != null)
                 {
-                    Logger.Log(LogLevel.Warning, $"Skipping [{pluginInfo}] because a newer version exists ({loadedVersion})");
+                    Logger.Log(LogLevel.Warning,
+                               $"Skipping [{pluginInfo}] because a newer version exists ({loadedVersion})");
                     continue;
                 }
 
@@ -210,7 +212,8 @@ public abstract class BaseChainloader<TPlugin>
 
                 if (invalidProcessName)
                 {
-                    Logger.Log(LogLevel.Warning, $"Skipping [{pluginInfo}] because of process filters ({string.Join(", ", pluginInfo.Processes.Select(p => p.ProcessName).ToArray())})");
+                    Logger.Log(LogLevel.Warning,
+                               $"Skipping [{pluginInfo}] because of process filters ({string.Join(", ", pluginInfo.Processes.Select(p => p.ProcessName).ToArray())})");
                     continue;
                 }
 
@@ -340,7 +343,8 @@ public abstract class BaseChainloader<TPlugin>
                     invalidPlugins.Add(plugin.Metadata.GUID);
                     Plugins.Remove(plugin.Metadata.GUID);
 
-                    Logger.Log(LogLevel.Error, $"Error loading [{plugin}]: {(ex is ReflectionTypeLoadException re ? TypeLoader.TypeLoadExceptionToString(re) : ex.ToString())}");
+                    Logger.Log(LogLevel.Error,
+                               $"Error loading [{plugin}]: {(ex is ReflectionTypeLoadException re ? TypeLoader.TypeLoadExceptionToString(re) : ex.ToString())}");
                 }
             }
         }
@@ -366,7 +370,8 @@ public abstract class BaseChainloader<TPlugin>
         }
         catch (Exception e)
         {
-            Logger.Log(LogLevel.Warning, $"Couldn't run Module constructor for {assembly.FullName}::{plugin.TypeName}: {e}");
+            Logger.Log(LogLevel.Warning,
+                       $"Couldn't run Module constructor for {assembly.FullName}::{plugin.TypeName}: {e}");
         }
     }
 

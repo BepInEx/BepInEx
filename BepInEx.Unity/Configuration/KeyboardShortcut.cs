@@ -54,7 +54,7 @@ public struct KeyboardShortcut
     /// <param name="mainKey">Main key to press</param>
     /// <param name="modifiers">Keys that should be held down before main key is registered</param>
     public KeyboardShortcut(KeyCode mainKey, params KeyCode[] modifiers) : this(new[] { mainKey }.Concat(modifiers)
-                                                                                    .ToArray())
+                                                                                                 .ToArray())
     {
         if (mainKey == KeyCode.None && modifiers.Any())
             throw new

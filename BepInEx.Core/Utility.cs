@@ -25,7 +25,7 @@ public static class Utility
     public static bool CLRSupportsDynamicAssemblies => CheckSRE();
 
     /// <summary>
-    ///	An encoding for UTF-8 which does not emit a byte order mark (BOM). 
+    ///     An encoding for UTF-8 which does not emit a byte order mark (BOM).
     /// </summary>
     public static Encoding UTF8NoBom { get; } = new UTF8Encoding(false);
 
@@ -302,7 +302,7 @@ public static class Utility
     }
 
     /// <summary>
-    /// Compute a MD5 hash of the given stream.
+    ///     Compute a MD5 hash of the given stream.
     /// </summary>
     /// <param name="stream">Stream to hash</param>
     /// <returns>MD5 hash as a hex string</returns>
@@ -321,7 +321,7 @@ public static class Utility
     }
 
     /// <summary>
-    /// Convert the given array to a hex string.
+    ///     Convert the given array to a hex string.
     /// </summary>
     /// <param name="data">Bytes to convert.</param>
     /// <returns>Bytes reinterpreted as a hex number.</returns>
@@ -374,8 +374,8 @@ public static class Utility
     }
 
     /// <summary>
-    /// Gets unique files in all given directories. If the file with the same name exists in multiple directories,
-    /// only the first occurrence is returned.
+    ///     Gets unique files in all given directories. If the file with the same name exists in multiple directories,
+    ///     only the first occurrence is returned.
     /// </summary>
     /// <param name="directories">Directories to search from.</param>
     /// <param name="pattern">File pattern to search.</param>

@@ -14,7 +14,24 @@ namespace BepInEx.Preloader.Unity;
 [PatcherPluginInfo("io.bepinex.entrypointpatcher", "BepInEx Entrypoint", "1.0")]
 internal class EntrypointPatcher : BasePatcher
 {
-    private bool HasLoaded { get; set; } = false;
+    private static readonly ConfigEntry<string> ConfigEntrypointAssembly = ConfigFile.CoreConfig.Bind(
+     "Preloader.Entrypoint", "Assembly",
+     UnityPreloader.IsPostUnity2017
+         ? "UnityEngine.CoreModule.dll"
+         : "UnityEngine.dll",
+     "The local filename of the assembly to target.");
+
+    private static readonly ConfigEntry<string> ConfigEntrypointType = ConfigFile.CoreConfig.Bind(
+     "Preloader.Entrypoint", "Type",
+     "Application",
+     "The name of the type in the entrypoint assembly to search for the entrypoint method.");
+
+    private static readonly ConfigEntry<string> ConfigEntrypointMethod = ConfigFile.CoreConfig.Bind(
+     "Preloader.Entrypoint", "Method",
+     ".cctor",
+     "The name of the method in the specified entrypoint assembly and type to hook and load Chainloader from.");
+
+    private bool HasLoaded { get; set; }
 
     [TargetAssembly(TargetAssemblyAttribute.AllAssemblies)]
     public bool PatchEntrypoint(ref AssemblyDefinition assembly, string filename)
@@ -110,23 +127,7 @@ internal class EntrypointPatcher : BasePatcher
     public override void Finalizer()
     {
         if (!HasLoaded)
-            Log.Log(LogLevel.Fatal, $"Failed to patch BepInEx chainloader into assembly '{ConfigEntrypointAssembly.Value}', either due to error or not being able to find it. Is it spelled correctly?");
+            Log.Log(LogLevel.Fatal,
+                    $"Failed to patch BepInEx chainloader into assembly '{ConfigEntrypointAssembly.Value}', either due to error or not being able to find it. Is it spelled correctly?");
     }
-
-    private static readonly ConfigEntry<string> ConfigEntrypointAssembly = ConfigFile.CoreConfig.Bind(
-     "Preloader.Entrypoint", "Assembly",
-     UnityPreloader.IsPostUnity2017
-         ? "UnityEngine.CoreModule.dll"
-         : "UnityEngine.dll",
-     "The local filename of the assembly to target.");
-
-    private static readonly ConfigEntry<string> ConfigEntrypointType = ConfigFile.CoreConfig.Bind(
-     "Preloader.Entrypoint", "Type",
-     "Application",
-     "The name of the type in the entrypoint assembly to search for the entrypoint method.");
-
-    private static readonly ConfigEntry<string> ConfigEntrypointMethod = ConfigFile.CoreConfig.Bind(
-     "Preloader.Entrypoint", "Method",
-     ".cctor",
-     "The name of the method in the specified entrypoint assembly and type to hook and load Chainloader from.");
 }
