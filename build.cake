@@ -3,10 +3,12 @@
 #addin nuget:?package=Cake.Compression&version=0.2.6
 #addin nuget:?package=Cake.Json&version=6.0.1
 #addin nuget:?package=Newtonsoft.Json&version=13.0.1
+#addin nuget:?package=Cake.Http&version=1.3.0
 
 var target = Argument("target", "Build");
 var isBleedingEdge = Argument("bleeding_edge", false);
 var buildId = Argument("build_id", 0);
+var cleanDependencyCache = Argument("clean_build_cache", false);
 var lastBuildCommit = Argument("last_build_commit", "");
 var nugetPushSource = Argument("nuget_push_source", "https://nuget.bepinex.dev/v3/index.json");
 var nugetPushKey = Argument("nuget_push_key", "");
@@ -24,16 +26,21 @@ string RunGit(string command, string separator = "")
     return string.Join(separator, process.GetStandardOutput());
 }
 
+const string DEP_CACHE_NAME = ".dep_cache";
+
 Task("Cleanup")
     .Does(() =>
 {
     Information("Removing old binaries");
     CreateDirectory("./bin");
-    CleanDirectory("./bin");
+    CleanDirectory("./bin", fi => {
+      var cachePath = fi.Path.FullPath.Contains(DEP_CACHE_NAME);
+      return !cachePath || cleanDependencyCache && cachePath;
+    });
 
     Information("Cleaning up old build objects");
-    CleanDirectories(GetDirectories("./**/bin/"));
-    CleanDirectories(GetDirectories("./**/obj/"));
+    CleanDirectories(GetDirectories("./BepInEx.*/**/bin/"));
+    CleanDirectories(GetDirectories("./BepInEx.*/**/obj/"));
 });
 
 Task("Build")
@@ -74,45 +81,71 @@ const string DOORSTOP_VER_WIN = "3.4.0.0";
 const string DOORSTOP_VER_UNIX = "1.5.1.0";
 const string MONO_VER = "2021.6.24";
 const string DOORSTOP_DLL = "winhttp.dll";
+
+var depCachePath = Directory($"./bin/{DEP_CACHE_NAME}");
+var doorstopPath = depCachePath + Directory("doorstop");
+var monoPath = depCachePath + Directory("mono");
+
 Task("DownloadDependencies")
     .Does(() =>
 {
-    Information("Downloading Doorstop");
+    var cacheFile = depCachePath + File("cache.json");
+    var cache = FileExists(cacheFile) ? DeserializeJsonFromFile<Dictionary<string, string>>(cacheFile) : new Dictionary<string, string>();
 
-    var doorstopPath = Directory("./bin/doorstop");
-    var doorstopX64Path = doorstopPath + File("doorstop_x64.zip");
-    var doorstopX86Path = doorstopPath + File("doorstop_x86.zip");
-    var doorstopLinuxPath = doorstopPath + File("doorstop_linux.zip");
-    var doorstopMacPath = doorstopPath + File("doorstop_macos.zip");
+    bool NeedsRedownload(string repo, string curVer)
+    {
+        if (!cache.TryGetValue(repo, out var ver) || ver != curVer)
+        {
+            cache[repo] = curVer;
+            return true;
+        }
+        return false;
+    }
+
     CreateDirectory(doorstopPath);
-
-    DownloadFile($"https://github.com/NeighTools/UnityDoorstop/releases/download/v{DOORSTOP_VER_WIN}/Doorstop_x64_{DOORSTOP_VER_WIN}.zip", doorstopX64Path);
-    DownloadFile($"https://github.com/NeighTools/UnityDoorstop/releases/download/v{DOORSTOP_VER_WIN}/Doorstop_x86_{DOORSTOP_VER_WIN}.zip", doorstopX86Path);
-    
-    DownloadFile($"https://github.com/NeighTools/UnityDoorstop.Unix/releases/download/v{DOORSTOP_VER_UNIX}/doorstop_v{DOORSTOP_VER_UNIX}_linux.zip", doorstopLinuxPath);
-    DownloadFile($"https://github.com/NeighTools/UnityDoorstop.Unix/releases/download/v{DOORSTOP_VER_UNIX}/doorstop_v{DOORSTOP_VER_UNIX}_macos.zip", doorstopMacPath);
-
-    Information("Extracting Doorstop");
-    ZipUncompress(doorstopX86Path, doorstopPath + Directory("x86"));
-    ZipUncompress(doorstopX64Path, doorstopPath + Directory("x64"));
-
-    ZipUncompress(doorstopLinuxPath, doorstopPath + Directory("unix"));
-    ZipUncompress(doorstopMacPath, doorstopPath + Directory("unix"));
-
-    Information("Downloading Mono");
-
-    var monoPath = Directory("./bin/doorstop/mono");
-    var monoX64Path = doorstopPath + File("mono_x64.zip");
-    var monoX86Path = doorstopPath + File("mono_x86.zip");
     CreateDirectory(monoPath);
 
-    DownloadFile($"https://github.com/BepInEx/mono/releases/download/{MONO_VER}/mono-x64.zip", monoX64Path);
-    DownloadFile($"https://github.com/BepInEx/mono/releases/download/{MONO_VER}/mono-x86.zip", monoX86Path);
+    if (NeedsRedownload("NeighTools/UnityDoorstop", DOORSTOP_VER_WIN))
+    {
+        Information("Updating Doorstop (Windows)");
+        var doorstopX64Path = doorstopPath + File("doorstop_x64.zip");
+        var doorstopX86Path = doorstopPath + File("doorstop_x86.zip");
 
-    Information("Extracting Mono");
+        DownloadFile($"https://github.com/NeighTools/UnityDoorstop/releases/download/v{DOORSTOP_VER_WIN}/Doorstop_x64_{DOORSTOP_VER_WIN}.zip", doorstopX64Path);
+        DownloadFile($"https://github.com/NeighTools/UnityDoorstop/releases/download/v{DOORSTOP_VER_WIN}/Doorstop_x86_{DOORSTOP_VER_WIN}.zip", doorstopX86Path);
 
-    ZipUncompress(monoX64Path, monoPath + Directory("x64"));
-    ZipUncompress(monoX86Path, monoPath + Directory("x86"));
+        ZipUncompress(doorstopX86Path, doorstopPath + Directory("x86"));
+        ZipUncompress(doorstopX64Path, doorstopPath + Directory("x64"));
+    }
+
+    if (NeedsRedownload("NeighTools/UnityDoorstop.Unix", DOORSTOP_VER_UNIX))
+    {
+        Information("Updating Doorstop (Unix)");
+        var doorstopLinuxPath = doorstopPath + File("doorstop_linux.zip");
+        var doorstopMacPath = doorstopPath + File("doorstop_macos.zip");
+
+        DownloadFile($"https://github.com/NeighTools/UnityDoorstop.Unix/releases/download/v{DOORSTOP_VER_UNIX}/doorstop_v{DOORSTOP_VER_UNIX}_linux.zip", doorstopLinuxPath);
+        DownloadFile($"https://github.com/NeighTools/UnityDoorstop.Unix/releases/download/v{DOORSTOP_VER_UNIX}/doorstop_v{DOORSTOP_VER_UNIX}_macos.zip", doorstopMacPath);
+
+        ZipUncompress(doorstopLinuxPath, doorstopPath + Directory("unix"));
+        ZipUncompress(doorstopMacPath, doorstopPath + Directory("unix"));
+    }
+
+    if (NeedsRedownload("BepInEx/mono", MONO_VER))
+    {
+        Information("Updating Mono");
+
+        var monoX64Path = doorstopPath + File("mono_x64.zip");
+        var monoX86Path = doorstopPath + File("mono_x86.zip");
+
+        DownloadFile($"https://github.com/BepInEx/mono/releases/download/{MONO_VER}/mono-x64.zip", monoX64Path);
+        DownloadFile($"https://github.com/BepInEx/mono/releases/download/{MONO_VER}/mono-x86.zip", monoX86Path);
+
+        ZipUncompress(monoX64Path, monoPath + Directory("x64"));
+        ZipUncompress(monoX86Path, monoPath + Directory("x86"));
+    }
+
+    SerializeJsonToFile(cacheFile, cache);
 });
 
 Task("PushNuGet")
@@ -146,7 +179,6 @@ Task("MakeDist")
     .Does(() =>
 {
     var distDir = Directory("./bin/dist");
-    var doorstopPath = Directory("./bin/doorstop");
 
     CreateDirectory(distDir);
 
@@ -194,7 +226,7 @@ Task("MakeDist")
 
             if (copyMono)
             {
-                CopyDirectory("./bin/doorstop/mono/" + arch + "/mono", Directory(distArchDir) + Directory("mono"));
+                CopyDirectory(monoPath + Directory(arch) + Directory("mono"), Directory(distArchDir) + Directory("mono"));
             }
         }
 
