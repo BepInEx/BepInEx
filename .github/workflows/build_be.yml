@@ -37,6 +37,9 @@ jobs:
           echo "Build number: ${cur_build}"
           echo "::set-output name=build_id::${cur_build}"
           echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+      - uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: "6.0.x"
       - name: Build
         run: |
           ./build.sh --target=Pack --bleeding_edge=${{ steps.be_status.outputs.is_be == 'true' }} --build_id=${{ steps.info.outputs.build_id || 0 }} --last_build_commit=\"${{ steps.last_successful_commit.outputs.commit_hash }}\" --nuget_push_key=\"${{ secrets.BEPIN_DEV_NUGET_KEY }}\"
