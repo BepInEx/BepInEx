@@ -83,7 +83,7 @@ internal class LinuxConsoleDriver : IConsoleDriver
     }
 
     public void CreateConsole(uint codepage) =>
-        Logger.LogWarning("An external console currently cannot be spawned on a Unix platform.");
+        Logger.Log(LogLevel.Warning, "An external console currently cannot be spawned on a Unix platform.");
 
     public void DetachConsole() =>
         throw new PlatformNotSupportedException("Cannot detach console on a Unix platform");

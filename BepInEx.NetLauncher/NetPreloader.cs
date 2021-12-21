@@ -34,7 +34,7 @@ public static class NetPreloader
 
         if (string.IsNullOrEmpty(ConfigEntrypointExecutable.Value))
         {
-            Log.LogFatal($"Entry executable was not set. Please set this in your config before launching the application");
+            Log.Log(LogLevel.Fatal, $"Entry executable was not set. Please set this in your config before launching the application");
             Program.ReadExit();
             return;
         }
@@ -43,7 +43,7 @@ public static class NetPreloader
 
         if (!File.Exists(executablePath))
         {
-            Log.LogFatal($"Unable to locate executable: {ConfigEntrypointExecutable.Value}");
+            Log.Log(LogLevel.Fatal, $"Unable to locate executable: {ConfigEntrypointExecutable.Value}");
             Program.ReadExit();
             return;
         }
@@ -66,9 +66,9 @@ public static class NetPreloader
 
         ChainloaderLogHelper.PrintLogInfo(Log);
 
-        Log.LogInfo($"CLR runtime version: {Environment.Version}");
+        Log.Log(LogLevel.Info, $"CLR runtime version: {Environment.Version}");
 
-        Log.LogMessage("Preloader started");
+        Log.Log(LogLevel.Message, "Preloader started");
 
         Assembly entrypointAssembly;
 
@@ -76,11 +76,11 @@ public static class NetPreloader
         {
             assemblyPatcher.AddPatchersFromDirectory(Paths.PatcherPluginPath);
 
-            Log.LogInfo($"{assemblyPatcher.PatcherContext.PatchDefinitions.Count} patcher definition(s) loaded");
+            Log.Log(LogLevel.Info, $"{assemblyPatcher.PatcherContext.PatchDefinitions.Count} patcher definition(s) loaded");
 
             assemblyPatcher.LoadAssemblyDirectories(new[] { Paths.GameRootPath }, new[] { "dll", "exe" });
 
-            Log.LogInfo($"{assemblyPatcher.PatcherContext.AvailableAssemblies.Count} assemblies discovered");
+            Log.Log(LogLevel.Info, $"{assemblyPatcher.PatcherContext.AvailableAssemblies.Count} assemblies discovered");
 
             assemblyPatcher.PatchAndLoad();
 

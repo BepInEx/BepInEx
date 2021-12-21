@@ -24,7 +24,7 @@ internal class AssemblyFixes
     [HarmonyPatch(typeof(Assembly), nameof(Assembly.GetEntryAssembly))]
     public static bool GetEntryAssemblyPrefix(ref Assembly __result)
     {
-        Logger.LogDebug($"Ran GetEntryAssembly");
+        Logger.Log(LogLevel.Debug, "Ran GetEntryAssembly");
 
         __result = EntryAssembly;
         return false;
@@ -38,7 +38,7 @@ internal class AssemblyFixes
                             .FirstOrDefault(x => x.GetName().FullName == assemblyString);
 
 
-        Logger.LogDebug($"LoadByName: {assemblyString} : {__result != null}");
+        Logger.Log(LogLevel.Debug, $"LoadByName: {assemblyString} : {__result != null}");
 
         return __result != null;
     }
@@ -47,7 +47,7 @@ internal class AssemblyFixes
     [HarmonyPatch("System.Reflection.RuntimeAssembly", nameof(Assembly.Location), MethodType.Getter)]
     public static bool GetLocation(ref string __result, Assembly __instance)
     {
-        Logger.LogDebug($"GetLocation: {__instance.FullName}");
+        Logger.Log(LogLevel.Debug, $"GetLocation: {__instance.FullName}");
 
         if (AssemblyLocations.TryGetValue(__instance.FullName, out var location))
         {

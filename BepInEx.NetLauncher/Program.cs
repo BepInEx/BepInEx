@@ -23,8 +23,8 @@ internal static class NetPreloaderRunner
         }
         catch (Exception ex)
         {
-            PreloaderLogger.Log.LogFatal("Unhandled exception");
-            PreloaderLogger.Log.LogFatal(ex);
+            PreloaderLogger.Log.Log(LogLevel.Fatal, "Unhandled exception");
+            PreloaderLogger.Log.Log(LogLevel.Fatal, ex);
             Program.ReadExit();
         }
     }

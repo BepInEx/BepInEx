@@ -52,18 +52,18 @@ internal static class UnityPreloader
 
             ChainloaderLogHelper.PrintLogInfo(Log);
 
-            Log.LogInfo($"Running under Unity v{GetUnityVersion()}");
-            Log.LogInfo($"CLR runtime version: {Environment.Version}");
-            Log.LogInfo($"Supports SRE: {Utility.CLRSupportsDynamicAssemblies}");
+            Log.Log(LogLevel.Info, $"Running under Unity v{GetUnityVersion()}");
+            Log.Log(LogLevel.Info,$"CLR runtime version: {Environment.Version}");
+            Log.Log(LogLevel.Info,$"Supports SRE: {Utility.CLRSupportsDynamicAssemblies}");
 
-            Log.LogDebug($"Game executable path: {Paths.ExecutablePath}");
-            Log.LogDebug($"Unity Managed directory: {Paths.ManagedPath}");
-            Log.LogDebug($"BepInEx root path: {Paths.BepInExRootPath}");
+            Log.Log(LogLevel.Debug, $"Game executable path: {Paths.ExecutablePath}");
+            Log.Log(LogLevel.Debug,$"Unity Managed directory: {Paths.ManagedPath}");
+            Log.Log(LogLevel.Debug,$"BepInEx root path: {Paths.BepInExRootPath}");
 
             if (runtimePatchException != null)
-                Log.LogWarning($"Failed to apply runtime patches for Mono. See more info in the output log. Error message: {runtimePatchException.Message}");
+                Log.Log(LogLevel.Warning, $"Failed to apply runtime patches for Mono. See more info in the output log. Error message: {runtimePatchException.Message}");
 
-            Log.LogMessage("Preloader started");
+            Log.Log(LogLevel.Message, "Preloader started");
 
             TypeLoader.SearchDirectories.UnionWith(Paths.DllSearchPaths);
 
@@ -72,28 +72,25 @@ internal static class UnityPreloader
                 assemblyPatcher.AddPatchersFromDirectory(Paths.BepInExAssemblyDirectory);
                 assemblyPatcher.AddPatchersFromDirectory(Paths.PatcherPluginPath);
 
-                Log.LogInfo($"{assemblyPatcher.PatcherContext.PatcherPlugins.Count} patcher plugin{(assemblyPatcher.PatcherContext.PatcherPlugins.Count == 1 ? "" : "s")} loaded");
+                Log.Log(LogLevel.Info, $"{assemblyPatcher.PatcherContext.PatcherPlugins.Count} patcher plugin{(assemblyPatcher.PatcherContext.PatcherPlugins.Count == 1 ? "" : "s")} loaded");
 
                 assemblyPatcher.LoadAssemblyDirectories(Paths.DllSearchPaths);
 
-                Log.LogInfo($"{assemblyPatcher.PatcherContext.AvailableAssemblies.Count} assemblies discovered");
+                Log.Log(LogLevel.Info, $"{assemblyPatcher.PatcherContext.AvailableAssemblies.Count} assemblies discovered");
 
                 assemblyPatcher.PatchAndLoad();
             }
 
-
-            Log.LogMessage("Preloader finished");
-
+            Log.Log(LogLevel.Message, "Preloader finished");
             Logger.Listeners.Remove(PreloaderLog);
-
             PreloaderLog.Dispose();
         }
         catch (Exception ex)
         {
             try
             {
-                Log.LogFatal("Could not run preloader!");
-                Log.LogFatal(ex);
+                Log.Log(LogLevel.Fatal, "Could not run preloader!");
+                Log.Log(LogLevel.Fatal, ex);
 
                 if (!ConsoleManager.ConsoleActive)
                 {

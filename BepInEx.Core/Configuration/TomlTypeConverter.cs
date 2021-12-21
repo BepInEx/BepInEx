@@ -162,7 +162,7 @@ public static class TomlTypeConverter
         if (converter == null) throw new ArgumentNullException(nameof(converter));
         if (CanConvert(type))
         {
-            Logger.LogWarning("Tried to add a TomlConverter when one already exists for type " + type.FullName);
+            Logger.Log(LogLevel.Warning, "Tried to add a TomlConverter when one already exists for type " + type.FullName);
             return false;
         }
 

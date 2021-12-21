@@ -51,9 +51,9 @@ public static class Preloader
 
             ChainloaderLogHelper.PrintLogInfo(Log);
 
-            Log.LogDebug($"Game executable path: {Paths.ExecutablePath}");
-            Log.LogDebug($"Unhollowed assembly directory: {IL2CPPUnhollowedPath}");
-            Log.LogDebug($"BepInEx root path: {Paths.BepInExRootPath}");
+            Log.Log(LogLevel.Debug,$"Game executable path: {Paths.ExecutablePath}");
+            Log.Log(LogLevel.Debug,$"Unhollowed assembly directory: {IL2CPPUnhollowedPath}");
+            Log.Log(LogLevel.Debug,$"BepInEx root path: {Paths.BepInExRootPath}");
 
             UnhollowerLog = Logger.CreateLogSource("Unhollower");
             LogSupport.InfoHandler += UnhollowerLog.LogInfo;

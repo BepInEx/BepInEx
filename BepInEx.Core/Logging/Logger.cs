@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using BepInEx.Core.Logging;
 
 namespace BepInEx.Logging;
 
@@ -10,10 +12,17 @@ public static class Logger
 {
     private static readonly ManualLogSource InternalLogSource;
 
+    private static readonly LogListenerCollection listeners;
+
+    /// <summary>
+    /// Log levels that are currently listened to by at least one listener.
+    /// </summary>
+    public static LogLevel ListenedLogLevels => listeners.activeLogLevels;
+    
     /// <summary>
     ///     Collection of all log listeners that receive log events.
     /// </summary>
-    public static ICollection<ILogListener> Listeners { get; }
+    public static ICollection<ILogListener> Listeners => listeners;
 
     /// <summary>
     ///     Collection of all log source that output log events.
@@ -23,14 +32,17 @@ public static class Logger
     static Logger()
     {
         Sources = new LogSourceCollection();
-        Listeners = new List<ILogListener>();
+        listeners = new LogListenerCollection();
 
         InternalLogSource = CreateLogSource("BepInEx");
     }
 
     internal static void InternalLogEvent(object sender, LogEventArgs eventArgs)
     {
-        foreach (var listener in Listeners) listener?.LogEvent(sender, eventArgs);
+        // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator Prevent extra allocations
+        foreach (var listener in listeners)
+            if ((eventArgs.Level & listener.LogLevelFilter) != LogLevel.None)
+                listener?.LogEvent(sender, eventArgs);
     }
 
     /// <summary>
@@ -40,12 +52,15 @@ public static class Logger
     /// <param name="data">The data of the entry.</param>
     internal static void Log(LogLevel level, object data) => InternalLogSource.Log(level, data);
 
-    internal static void LogFatal(object data) => Log(LogLevel.Fatal, data);
-    internal static void LogError(object data) => Log(LogLevel.Error, data);
-    internal static void LogWarning(object data) => Log(LogLevel.Warning, data);
-    internal static void LogMessage(object data) => Log(LogLevel.Message, data);
-    internal static void LogInfo(object data) => Log(LogLevel.Info, data);
-    internal static void LogDebug(object data) => Log(LogLevel.Debug, data);
+    /// <summary>
+    /// Logs an entry to the internal logger instance if any log listener wants the message.
+    /// </summary>
+    /// <param name="level">The level of the entry.</param>
+    /// <param name="logHandler">Log handler to resolve log from.</param>
+    internal static void Log(LogLevel level, [InterpolatedStringHandlerArgument("level")] BepInExLogInterpolatedStringHandler logHandler)
+    {
+        InternalLogSource.Log(level, logHandler);
+    }
 
     /// <summary>
     ///     Creates a new log source with a name and attaches it to <see cref="Sources" />.
@@ -55,10 +70,42 @@ public static class Logger
     public static ManualLogSource CreateLogSource(string sourceName)
     {
         var source = new ManualLogSource(sourceName);
-
         Sources.Add(source);
-
         return source;
+    }
+
+    private class LogListenerCollection : List<ILogListener>, ICollection<ILogListener>
+    {
+        public LogLevel activeLogLevels = LogLevel.None;
+        
+        void ICollection<ILogListener>.Add(ILogListener item)
+        {
+            if (item == null)
+                throw new ArgumentNullException(nameof(item));
+
+            activeLogLevels |= item.LogLevelFilter;
+            
+            base.Add(item);
+        }
+
+        void ICollection<ILogListener>.Clear()
+        {
+            activeLogLevels = LogLevel.None;
+            base.Clear();
+        }
+
+        bool ICollection<ILogListener>.Remove(ILogListener item)
+        {
+            if (item == null || !base.Remove(item))
+                return false;
+
+            activeLogLevels = LogLevel.None;
+
+            foreach (var i in this)
+                activeLogLevels |= i.LogLevelFilter;
+            
+            return true;
+        }
     }
 
 

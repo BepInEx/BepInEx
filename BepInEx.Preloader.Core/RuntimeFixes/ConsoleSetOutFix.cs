@@ -37,13 +37,13 @@ internal class LoggedTextWriter : TextWriter
 
     public override void Write(string value)
     {
-        ConsoleSetOutFix.ConsoleLogSource.LogInfo(value);
+        ConsoleSetOutFix.ConsoleLogSource.Log(LogLevel.Info, value);
         Parent.Write(value);
     }
 
     public override void WriteLine(string value)
     {
-        ConsoleSetOutFix.ConsoleLogSource.LogInfo(value);
+        ConsoleSetOutFix.ConsoleLogSource.Log(LogLevel.Info, value);
         Parent.WriteLine(value);
     }
 }

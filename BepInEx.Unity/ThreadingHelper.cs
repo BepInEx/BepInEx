@@ -113,7 +113,7 @@ public sealed class ThreadingHelper : MonoBehaviour, ISynchronizeInvoke
     private static void LogInvocationException(Exception ex)
     {
         Logger.Log(LogLevel.Error, ex);
-        if (ex.InnerException != null) Logger.Log(LogLevel.Error, "INNER: " + ex.InnerException);
+        if (ex.InnerException != null) Logger.Log(LogLevel.Error, $"INNER: {ex.InnerException}");
     }
 
     #region ISynchronizeInvoke

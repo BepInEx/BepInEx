@@ -43,12 +43,12 @@ public class DiskLogListener : ILogListener
         {
             if (counter == fileLimit)
             {
-                Logger.LogError("Couldn't open a log file for writing. Skipping log file creation");
+                Logger.Log(LogLevel.Error, "Couldn't open a log file for writing. Skipping log file creation");
 
                 return;
             }
 
-            Logger.LogWarning($"Couldn't open log file '{localPath}' for writing, trying another...");
+            Logger.Log(LogLevel.Warning, $"Couldn't open log file '{localPath}' for writing, trying another...");
 
             localPath = $"LogOutput.{counter++}.log";
         }
@@ -63,7 +63,7 @@ public class DiskLogListener : ILogListener
     /// <summary>
     ///     Log levels to display.
     /// </summary>
-    public LogLevel DisplayedLogLevel { get; set; }
+    public LogLevel DisplayedLogLevel { get; }
 
     /// <summary>
     ///     Writer for the disk log.
@@ -78,15 +78,15 @@ public class DiskLogListener : ILogListener
     private bool InstantFlushing { get; }
 
     /// <inheritdoc />
+    public LogLevel LogLevelFilter => DisplayedLogLevel;
+
+    /// <inheritdoc />
     public void LogEvent(object sender, LogEventArgs eventArgs)
     {
         if (LogWriter == null)
             return;
 
         if (BlacklistedSources.Contains(eventArgs.Source.SourceName))
-            return;
-
-        if ((eventArgs.Level & DisplayedLogLevel) == 0)
             return;
 
         LogWriter.WriteLine(eventArgs.ToString());

@@ -75,25 +75,25 @@ public class AssemblyPatcher : IDisposable
         // Perform checks that will prevent the plugin from being loaded in ALL cases
         if (metadata == null)
         {
-            Logger.LogWarning($"Skipping over type [{type.FullName}] as no metadata attribute is specified");
+            Logger.Log(LogLevel.Warning, $"Skipping over type [{type.FullName}] as no metadata attribute is specified");
             return null;
         }
 
         if (string.IsNullOrEmpty(metadata.GUID) || !allowedGuidRegex.IsMatch(metadata.GUID))
         {
-            Logger.LogWarning($"Skipping type [{type.FullName}] because its GUID [{metadata.GUID}] is of an illegal format");
+            Logger.Log(LogLevel.Warning, $"Skipping type [{type.FullName}] because its GUID [{metadata.GUID}] is of an illegal format");
             return null;
         }
 
         if (metadata.Version == null)
         {
-            Logger.LogWarning($"Skipping type [{type.FullName}] because its version is invalid");
+            Logger.Log(LogLevel.Warning, $"Skipping type [{type.FullName}] because its version is invalid");
             return null;
         }
 
         if (metadata.Name == null)
         {
-            Logger.LogWarning($"Skipping type [{type.FullName}] because its name is null");
+            Logger.Log(LogLevel.Warning, $"Skipping type [{type.FullName}] because its name is null");
             return null;
         }
 
@@ -180,13 +180,13 @@ public class AssemblyPatcher : IDisposable
                            )
                         {
                             Logger
-                                .LogWarning($"Skipping method [{method.FullDescription()}] as it is not a valid patcher method");
+                                .Log(LogLevel.Warning, $"Skipping method [{method.FullDescription()}] as it is not a valid patcher method");
                             continue;
                         }
 
                         void AddDefinition(PatchDefinition definition)
                         {
-                            Logger.LogDebug($"Discovered patch [{definition.FullName}]");
+                            Logger.Log(LogLevel.Debug, $"Discovered patch [{definition.FullName}]");
                             sortedPatchers.Add(definition);
                         }
 
@@ -299,7 +299,7 @@ public class AssemblyPatcher : IDisposable
             }
             catch (Exception ex)
             {
-                Logger.LogError($"Failed to run initializer of {assemblyPatcher.Info.GUID}: {ex}");
+                Logger.Log(LogLevel.Error, $"Failed to run initializer of {assemblyPatcher.Info.GUID}: {ex}");
             }
 
         // Then, perform the actual patching
@@ -310,7 +310,7 @@ public class AssemblyPatcher : IDisposable
         // TODO: Maybe instead reload the assembly and repatch with other valid patchers?
         var invalidAssemblies = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 
-        Logger.LogMessage($"Executing {PatcherContext.PatchDefinitions.Count} patch(es)");
+        Logger.Log(LogLevel.Message, $"Executing {PatcherContext.PatchDefinitions.Count} patch(es)");
 
         foreach (var patchDefinition in PatcherContext.PatchDefinitions.ToList())
         {
@@ -386,7 +386,7 @@ public class AssemblyPatcher : IDisposable
                 }
                 catch (Exception e)
                 {
-                    Logger.LogError($"Failed to run [{patchDefinition.FullName}] when patching [{assembly.Name.Name}]. This assembly will not be patched. Error: {e}");
+                    Logger.Log(LogLevel.Error, $"Failed to run [{patchDefinition.FullName}] when patching [{assembly.Name.Name}]. This assembly will not be patched. Error: {e}");
                     patchedAssemblies.Remove(targetDll);
                     invalidAssemblies.Add(targetDll);
                     return false;
@@ -415,15 +415,15 @@ public class AssemblyPatcher : IDisposable
         var earlyLoadAssemblies = resolvedAssemblies.Where(kv => patchedAssemblyNames.Contains(kv.Key)).ToList();
 
         if (earlyLoadAssemblies.Count != 0)
-            Logger.LogWarning(new StringBuilder()
-                              .AppendLine("The following assemblies have been loaded too early and will not be patched by preloader:")
-                              .AppendLine(string.Join(Environment.NewLine,
-                                                      earlyLoadAssemblies
-                                                          .Select(kv =>
-                                                                      $"* [{kv.Key}] (first loaded by [{kv.Value}])")
-                                                          .ToArray()))
-                              .AppendLine("Expect unexpected behavior and issues with plugins and patchers not being loaded.")
-                              .ToString());
+            Logger.Log(LogLevel.Warning, new StringBuilder()
+                                          .AppendLine("The following assemblies have been loaded too early and will not be patched by preloader:")
+                                          .AppendLine(string.Join(Environment.NewLine,
+                                                                  earlyLoadAssemblies
+                                                                      .Select(kv =>
+                                                                                  $"* [{kv.Key}] (first loaded by [{kv.Value}])")
+                                                                      .ToArray()))
+                                          .AppendLine("Expect unexpected behavior and issues with plugins and patchers not being loaded.")
+                                          .ToString());
 
         var dumpedAssemblyPaths = new Dictionary<string, string>();
         // Finally, load patched assemblies into memory
@@ -457,9 +457,9 @@ public class AssemblyPatcher : IDisposable
 
         if (ConfigBreakBeforeLoadAssemblies.Value)
         {
-            Logger.LogInfo($"BepInEx is about load the following assemblies:\n{string.Join("\n", patchedAssemblies.ToArray())}");
-            Logger.LogInfo($"The assemblies were dumped into {PatcherContext.DumpedAssembliesPath}");
-            Logger.LogInfo("Load any assemblies into the debugger, set breakpoints and continue execution.");
+            Logger.Log(LogLevel.Info, $"BepInEx is about load the following assemblies:\n{string.Join("\n", patchedAssemblies.ToArray())}");
+            Logger.Log(LogLevel.Info, $"The assemblies were dumped into {PatcherContext.DumpedAssembliesPath}");
+            Logger.Log(LogLevel.Info, "Load any assemblies into the debugger, set breakpoints and continue execution.");
             Debugger.Break();
         }
 
@@ -489,7 +489,7 @@ public class AssemblyPatcher : IDisposable
 
                 PatcherContext.LoadedAssemblies.Add(filename, loadedAssembly);
 
-                Logger.LogDebug($"Loaded '{assembly.FullName}' into memory");
+                Logger.Log(LogLevel.Debug, $"Loaded '{assembly.FullName}' into memory");
             }
 
             // Though we have to dispose of all assemblies regardless of them being patched or not
@@ -504,7 +504,7 @@ public class AssemblyPatcher : IDisposable
             }
             catch (Exception ex)
             {
-                Logger.LogError($"Failed to run finalizer of {assemblyPatcher.Info.GUID}: {ex}");
+                Logger.Log(LogLevel.Error, $"Failed to run finalizer of {assemblyPatcher.Info.GUID}: {ex}");
             }
     }
 

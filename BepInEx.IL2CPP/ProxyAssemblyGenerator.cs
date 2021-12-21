@@ -109,7 +109,7 @@ internal static class ProxyAssemblyGenerator
             {
                 var hash = ComputeHash();
                 Preloader.Log
-                         .LogWarning($"Unhollowed assemblies are possibly out of date. To disable this message, create file {HashPath} with the following contents: {hash}");
+                         .Log(LogLevel.Warning, $"Unhollowed assemblies are possibly out of date. To disable this message, create file {HashPath} with the following contents: {hash}");
                 return false;
             }
 
@@ -124,7 +124,7 @@ internal static class ProxyAssemblyGenerator
 
         if (ComputeHash() != File.ReadAllText(HashPath) && NeedGenerationOrSkip())
         {
-            Preloader.Log.LogInfo("Detected outdated proxy assemblies, will regenerate them now");
+            Preloader.Log.Log(LogLevel.Info, "Detected outdated proxy assemblies, will regenerate them now");
             return true;
         }
 

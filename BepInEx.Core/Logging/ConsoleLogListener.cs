@@ -14,11 +14,11 @@ public class ConsoleLogListener : ILogListener
      "Only displays the specified log levels in the console output.");
 
     /// <inheritdoc />
+    public LogLevel LogLevelFilter => ConfigConsoleDisplayedLevel.Value;
+
+    /// <inheritdoc />
     public void LogEvent(object sender, LogEventArgs eventArgs)
     {
-        if ((eventArgs.Level & ConfigConsoleDisplayedLevel.Value) == 0)
-            return;
-
         ConsoleManager.SetConsoleColor(eventArgs.Level.GetConsoleColor());
         ConsoleManager.ConsoleStream?.Write(eventArgs.ToStringLine());
         ConsoleManager.SetConsoleColor(ConsoleColor.Gray);

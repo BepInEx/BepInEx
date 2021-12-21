@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using BepInEx.Bootstrap;
 using BepInEx.Configuration;
+using BepInEx.Logging;
 using BepInEx.Preloader.Core.Patching;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -28,7 +29,7 @@ internal class EntrypointPatcher : BasePatcher
         var entrypointType = ConfigEntrypointType.Value;
         var entrypointMethod = ConfigEntrypointMethod.Value;
 
-        Log.LogDebug($"Hooking chainloader into {entrypointType}::{entrypointMethod}");
+        Log.Log(LogLevel.Debug, $"Hooking chainloader into {entrypointType}::{entrypointMethod}");
 
         var isCctor = entrypointMethod.IsNullOrWhiteSpace() || entrypointMethod == ".cctor";
 
@@ -109,7 +110,7 @@ internal class EntrypointPatcher : BasePatcher
     public override void Finalizer()
     {
         if (!HasLoaded)
-            Log.LogFatal($"Failed to patch BepInEx chainloader into assembly '{ConfigEntrypointAssembly.Value}', either due to error or not being able to find it. Is it spelled correctly?");
+            Log.Log(LogLevel.Fatal, $"Failed to patch BepInEx chainloader into assembly '{ConfigEntrypointAssembly.Value}', either due to error or not being able to find it. Is it spelled correctly?");
     }
 
     private static readonly ConfigEntry<string> ConfigEntrypointAssembly = ConfigFile.CoreConfig.Bind(

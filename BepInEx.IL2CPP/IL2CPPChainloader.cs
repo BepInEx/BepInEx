@@ -73,12 +73,12 @@ public class IL2CPPChainloader : BaseChainloader<BasePlugin>
 
         if (gameAssemblyModule == null)
         {
-            Logger.LogFatal("Could not locate Il2Cpp game assembly (GameAssembly.dll) or (UserAssembly.dll). The game might be obfuscated or use a yet unsupported build of Unity.");
+            Logger.Log(LogLevel.Fatal, "Could not locate Il2Cpp game assembly (GameAssembly.dll) or (UserAssembly.dll). The game might be obfuscated or use a yet unsupported build of Unity.");
             return;
         }
 
         gameAssemblyModule.BaseAddress.TryGetFunction("il2cpp_runtime_invoke", out var runtimeInvokePtr);
-        PreloaderLogger.Log.LogDebug($"Runtime invoke pointer: 0x{runtimeInvokePtr.ToInt64():X}");
+        PreloaderLogger.Log.Log(LogLevel.Debug, $"Runtime invoke pointer: 0x{runtimeInvokePtr.ToInt64():X}");
         RuntimeInvokeDetour =
             FastNativeDetour.CreateAndApply(runtimeInvokePtr, OnInvokeMethod, out originalInvoke,
                                             CallingConvention.Cdecl);
@@ -89,7 +89,7 @@ public class IL2CPPChainloader : BaseChainloader<BasePlugin>
                 FastNativeDetour.CreateAndApply(installTlsPtr, OnInstallUnityTlsInterface,
                                                 out originalInstallUnityTlsInterface, CallingConvention.Cdecl);
 
-        Logger.LogDebug("Initializing TLS adapters");
+        Logger.Log(LogLevel.Debug, "Initializing TLS adapters");
         Il2CppTlsAdapter.Initialize();
 
         PreloaderLogger.Log.LogDebug("Runtime invoke patched");
@@ -97,7 +97,7 @@ public class IL2CPPChainloader : BaseChainloader<BasePlugin>
 
     private void OnInstallUnityTlsInterface(IntPtr unityTlsInterfaceStruct)
     {
-        Logger.LogDebug($"Captured UnityTls interface at {unityTlsInterfaceStruct.ToInt64():x8}");
+        Logger.Log(LogLevel.Debug, $"Captured UnityTls interface at {unityTlsInterfaceStruct.ToInt64():x8}");
         Il2CppTlsAdapter.Options.UnityTlsInterface = unityTlsInterfaceStruct;
         originalInstallUnityTlsInterface(unityTlsInterfaceStruct);
         InstallUnityTlsInterfaceDetour.Dispose();
@@ -127,8 +127,8 @@ public class IL2CPPChainloader : BaseChainloader<BasePlugin>
             }
             catch (Exception ex)
             {
-                Logger.LogFatal("Unable to execute IL2CPP chainloader");
-                Logger.LogError(ex);
+                Logger.Log(LogLevel.Fatal, "Unable to execute IL2CPP chainloader");
+                Logger.Log(LogLevel.Error, ex);
             }
 
         var result = originalInvoke(method, obj, parameters, exc);
@@ -137,7 +137,7 @@ public class IL2CPPChainloader : BaseChainloader<BasePlugin>
         {
             RuntimeInvokeDetour.Dispose();
 
-            PreloaderLogger.Log.LogDebug("Runtime invoke unpatched");
+            PreloaderLogger.Log.Log(LogLevel.Debug, "Runtime invoke unpatched");
         }
 
         return result;

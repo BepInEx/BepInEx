@@ -97,7 +97,7 @@ public static class TypeLoader
         {
             if (!Directory.Exists(dir))
             {
-                Logger.LogDebug($"Unable to resolve cecil search directory '{dir}'");
+                Logger.Log(LogLevel.Debug, $"Unable to resolve cecil search directory '{dir}'");
                 continue;
             }
 
@@ -154,7 +154,7 @@ public static class TypeLoader
                     }
 
                 using var ass = AssemblyDefinition.ReadAssembly(dllMs, ReaderParameters);
-                Logger.LogDebug($"Examining '{dll}'");
+                Logger.Log(LogLevel.Debug, $"Examining '{dll}'");
 
                 if (!assemblyFilter?.Invoke(ass) ?? false)
                 {
@@ -169,11 +169,11 @@ public static class TypeLoader
             }
             catch (BadImageFormatException e)
             {
-                Logger.LogDebug($"Skipping loading {dll} because it's not a valid .NET assembly. Full error: {e.Message}");
+                Logger.Log(LogLevel.Debug, $"Skipping loading {dll} because it's not a valid .NET assembly. Full error: {e.Message}");
             }
             catch (Exception e)
             {
-                Logger.LogError(e.ToString());
+                Logger.Log(LogLevel.Error, e);
             }
 
         if (cacheName != null)
@@ -228,7 +228,7 @@ public static class TypeLoader
         }
         catch (Exception e)
         {
-            Logger.LogWarning($"Failed to load cache \"{cacheName}\"; skipping loading cache. Reason: {e.Message}.");
+            Logger.Log(LogLevel.Warning, $"Failed to load cache \"{cacheName}\"; skipping loading cache. Reason: {e.Message}.");
         }
 
         return result;
@@ -271,7 +271,7 @@ public static class TypeLoader
         }
         catch (Exception e)
         {
-            Logger.LogWarning($"Failed to save cache \"{cacheName}\"; skipping saving cache. Reason: {e.Message}.");
+            Logger.Log(LogLevel.Warning, $"Failed to save cache \"{cacheName}\"; skipping saving cache. Reason: {e.Message}.");
         }
     }
 

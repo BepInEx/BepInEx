@@ -10,7 +10,7 @@ public static class ChainloaderLogHelper
     public static void PrintLogInfo(ManualLogSource log)
     {
         var consoleTitle = $"BepInEx {Paths.BepInExVersion} - {Paths.ProcessName}";
-        log.LogMessage(consoleTitle);
+        log.Log(LogLevel.Message, consoleTitle);
 
         if (ConsoleManager.ConsoleActive)
             ConsoleManager.SetConsoleTitle(consoleTitle);
@@ -21,10 +21,10 @@ public static class ChainloaderLogHelper
         if (attributes.Length > 0)
         {
             var attribute = (BuildInfoAttribute) attributes[0];
-            log.LogMessage(attribute.Info);
+            log.Log(LogLevel.Message, attribute.Info);
         }
 
-        Logger.LogInfo($"System platform: {PlatformHelper.Current}");
+        Logger.Log(LogLevel.Info, $"System platform: {PlatformHelper.Current}");
     }
 
     public static void RewritePreloaderLogs()

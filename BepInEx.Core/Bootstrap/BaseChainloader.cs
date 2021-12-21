@@ -46,25 +46,25 @@ public abstract class BaseChainloader<TPlugin>
         // Perform checks that will prevent the plugin from being loaded in ALL cases
         if (metadata == null)
         {
-            Logger.LogWarning($"Skipping over type [{type.FullName}] as no metadata attribute is specified");
+            Logger.Log(LogLevel.Warning, $"Skipping over type [{type.FullName}] as no metadata attribute is specified");
             return null;
         }
 
         if (string.IsNullOrEmpty(metadata.GUID) || !allowedGuidRegex.IsMatch(metadata.GUID))
         {
-            Logger.LogWarning($"Skipping type [{type.FullName}] because its GUID [{metadata.GUID}] is of an illegal format.");
+            Logger.Log(LogLevel.Warning, $"Skipping type [{type.FullName}] because its GUID [{metadata.GUID}] is of an illegal format.");
             return null;
         }
 
         if (metadata.Version == null)
         {
-            Logger.LogWarning($"Skipping type [{type.FullName}] because its version is invalid.");
+            Logger.Log(LogLevel.Warning, $"Skipping type [{type.FullName}] because its version is invalid.");
             return null;
         }
 
         if (metadata.Name == null)
         {
-            Logger.LogWarning($"Skipping type [{type.FullName}] because its name is null.");
+            Logger.Log(LogLevel.Warning, $"Skipping type [{type.FullName}] because its name is null.");
             return null;
         }
 
@@ -146,7 +146,7 @@ public abstract class BaseChainloader<TPlugin>
 
         _initialized = true;
 
-        Logger.LogMessage("Chainloader initialized");
+        Logger.Log(LogLevel.Message, "Chainloader initialized");
     }
 
     protected virtual void InitializeLoggers()
@@ -196,7 +196,7 @@ public abstract class BaseChainloader<TPlugin>
             {
                 if (loadedVersion != null)
                 {
-                    Logger.LogWarning($"Skipping [{pluginInfo}] because a newer version exists ({loadedVersion})");
+                    Logger.Log(LogLevel.Warning, $"Skipping [{pluginInfo}] because a newer version exists ({loadedVersion})");
                     continue;
                 }
 
@@ -210,7 +210,7 @@ public abstract class BaseChainloader<TPlugin>
 
                 if (invalidProcessName)
                 {
-                    Logger.LogWarning($"Skipping [{pluginInfo}] because of process filters ({string.Join(", ", pluginInfo.Processes.Select(p => p.ProcessName).ToArray())})");
+                    Logger.Log(LogLevel.Warning, $"Skipping [{pluginInfo}] because of process filters ({string.Join(", ", pluginInfo.Processes.Select(p => p.ProcessName).ToArray())})");
                     continue;
                 }
 
@@ -233,14 +233,14 @@ public abstract class BaseChainloader<TPlugin>
                 var message =
                     $@"Could not load [{pluginInfo}] because it is incompatible with: {string.Join(", ", incompatiblePlugins)}";
                 DependencyErrors.Add(message);
-                Logger.LogError(message);
+                Logger.Log(LogLevel.Error, message);
             }
             else if (PluginTargetsWrongBepin(pluginInfo))
             {
                 var message =
                     $@"Plugin [{pluginInfo}] targets a wrong version of BepInEx ({pluginInfo.TargettedBepInExVersion}) and might not work until you update";
                 DependencyErrors.Add(message);
-                Logger.LogWarning(message);
+                Logger.Log(LogLevel.Warning, message);
             }
 
         var emptyDependencies = new string[0];
@@ -262,7 +262,7 @@ public abstract class BaseChainloader<TPlugin>
         {
             var plugins = DiscoverPlugins();
 
-            Logger.LogInfo($"{plugins.Count} plugin{(plugins.Count == 1 ? "" : "s")} to load");
+            Logger.Log(LogLevel.Info, $"{plugins.Count} plugin{(plugins.Count == 1 ? "" : "s")} to load");
 
             var sortedPlugins = ModifyLoadOrder(plugins);
 
@@ -306,7 +306,7 @@ public abstract class BaseChainloader<TPlugin>
                     var message =
                         $"Skipping [{plugin}] because it has a dependency that was not loaded. See previous errors for details.";
                     DependencyErrors.Add(message);
-                    Logger.LogWarning(message);
+                    Logger.Log(LogLevel.Warning, message);
                     continue;
                 }
 
@@ -316,7 +316,7 @@ public abstract class BaseChainloader<TPlugin>
                         string.Join(", ", missingDependencies.Select(s => s.VersionRange == null ? s.DependencyGUID : $"{s.DependencyGUID} ({s.VersionRange})").ToArray())
                     }";
                     DependencyErrors.Add(message);
-                    Logger.LogError(message);
+                    Logger.Log(LogLevel.Error, message);
 
                     invalidPlugins.Add(plugin.Metadata.GUID);
                     continue;
@@ -324,7 +324,7 @@ public abstract class BaseChainloader<TPlugin>
 
                 try
                 {
-                    Logger.LogInfo($"Loading [{plugin}]");
+                    Logger.Log(LogLevel.Info, $"Loading [{plugin}]");
 
                     if (!loadedAssemblies.TryGetValue(plugin.Location, out var ass))
                         loadedAssemblies[plugin.Location] = ass = Assembly.LoadFile(plugin.Location);
@@ -340,7 +340,7 @@ public abstract class BaseChainloader<TPlugin>
                     invalidPlugins.Add(plugin.Metadata.GUID);
                     Plugins.Remove(plugin.Metadata.GUID);
 
-                    Logger.LogError($"Error loading [{plugin}]: {(ex is ReflectionTypeLoadException re ? TypeLoader.TypeLoadExceptionToString(re) : ex)}");
+                    Logger.Log(LogLevel.Error, $"Error loading [{plugin}]: {(ex is ReflectionTypeLoadException re ? TypeLoader.TypeLoadExceptionToString(re) : ex.ToString())}");
                 }
             }
         }
@@ -352,10 +352,10 @@ public abstract class BaseChainloader<TPlugin>
             }
             catch { }
 
-            Logger.LogError("Error occurred starting the game: " + ex);
+            Logger.Log(LogLevel.Error, $"Error occurred starting the game: {ex}");
         }
 
-        Logger.LogMessage("Chainloader startup complete");
+        Logger.Log(LogLevel.Message, "Chainloader startup complete");
     }
 
     private static void TryRunModuleCtor(PluginInfo plugin, Assembly assembly)
@@ -366,7 +366,7 @@ public abstract class BaseChainloader<TPlugin>
         }
         catch (Exception e)
         {
-            Logger.LogWarning($"Couldn't run Module constructor for {assembly.FullName}::{plugin.TypeName}: {e}");
+            Logger.Log(LogLevel.Warning, $"Couldn't run Module constructor for {assembly.FullName}::{plugin.TypeName}: {e}");
         }
     }
 

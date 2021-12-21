@@ -81,7 +81,7 @@ public class UnityChainloader : BaseChainloader<BaseUnityPlugin>
 
         Logger.Listeners.Add(new UnityLogListener());
 
-        if (!PlatformHelper.Is(Platform.Windows)) Logger.LogInfo($"Detected Unity version: v{UnityVersion}");
+        if (!PlatformHelper.Is(Platform.Windows)) Logger.Log(LogLevel.Info, $"Detected Unity version: v{UnityVersion}");
 
 
         if (!ConfigDiskWriteUnityLog.Value) DiskLogListener.BlacklistedSources.Add("Unity Log");
