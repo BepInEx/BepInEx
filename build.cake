@@ -19,11 +19,9 @@ var latestTag = RunGit("describe --tags --abbrev=0");
 
 string RunGit(string command, string separator = "") 
 {
-    using(var process = StartAndReturnProcess("git", new ProcessSettings { Arguments = command, RedirectStandardOutput = true })) 
-    {
-        process.WaitForExit();
-        return string.Join(separator, process.GetStandardOutput());
-    }
+    using var process = StartAndReturnProcess("git", new() { Arguments = command, RedirectStandardOutput = true });
+    process.WaitForExit();
+    return string.Join(separator, process.GetStandardOutput());
 }
 
 Task("Cleanup")
@@ -38,25 +36,17 @@ Task("Cleanup")
     CleanDirectories(GetDirectories("./**/obj/"));
 });
 
-Task("PullDependencies")
-    .Does(() =>
-{
-    Information("Updating git submodules");
-    StartProcess("git", "submodule update --init --recursive");
-});
-
 Task("Build")
     .IsDependentOn("Cleanup")
-    .IsDependentOn("PullDependencies")
     .Does(() =>
 {
     var bepinExProperties = Directory("./BepInEx.Shared");
 
     buildVersion = FindRegexMatchGroupInFile(bepinExProperties + File("BepInEx.Shared.projitems"), @"\<Version\>([0-9]+\.[0-9]+\.[0-9]+)\<\/Version\>", 1, System.Text.RegularExpressions.RegexOptions.None).Value;
 
-    var buildSettings = new DotNetCoreBuildSettings {
+    var buildSettings = new DotNetBuildSettings {
         Configuration = "Release",
-		MSBuildSettings = new DotNetCoreMSBuildSettings() // Apparently needed in some versions of CakeBuild
+		MSBuildSettings = new() // Apparently needed in some versions of CakeBuild
     };
 
     if (isBleedingEdge) 
@@ -70,18 +60,13 @@ Task("Build")
         };
 
         buildSettings.MSBuildSettings.Properties["AssemblyVersion"] = new[] { buildVersion + "." + buildId };
-
         buildVersion += "-be." + buildId;
-
         buildSettings.MSBuildSettings.Properties["Version"] = new[] { buildVersion };
     }
 
-    foreach(var file in GetFiles("./BepInEx.*/*.csproj"))
+    foreach (var file in GetFiles("./BepInEx.*/*.csproj"))
     {
-        // Don't build patcher on dotnet as it is not yet supported properly
-        if (file.FullPath.Contains("BepInEx.Patcher") || file.FullPath.Contains("BepInEx.Bootstrap"))
-            continue;
-        DotNetCoreBuild(file.FullPath, buildSettings);
+        DotNetBuild(file.FullPath, buildSettings);
     }
 });
 
@@ -114,7 +99,6 @@ Task("DownloadDependencies")
     ZipUncompress(doorstopLinuxPath, doorstopPath + Directory("unix"));
     ZipUncompress(doorstopMacPath, doorstopPath + Directory("unix"));
 
-    
     Information("Downloading Mono");
 
     var monoPath = Directory("./bin/doorstop/mono");
@@ -149,7 +133,7 @@ Task("PushNuGet")
     foreach (var file in GetFiles("./bin/NuGet/*.nupkg"))
     {
         Information($"Pushing {file}");
-        DotNetCoreNuGetPush(file.FullPath, new DotNetCoreNuGetPushSettings {
+        DotNetNuGetPush(file.FullPath, new() {
             Source = nugetPushSource,
             ApiKey = nugetPushKey,
         });
@@ -162,11 +146,9 @@ Task("MakeDist")
     .Does(() =>
 {
     var distDir = Directory("./bin/dist");
-    //var distPatcherDir = distDir + Directory("patcher");
     var doorstopPath = Directory("./bin/doorstop");
 
     CreateDirectory(distDir);
-    //CreateDirectory(distPatcherDir);
 
     var changelog = TransformText("<%commit_count%> commits since <%last_tag%>\r\n\r\nChangelog (excluding merges):\r\n<%commit_log%>")
                         .WithToken("commit_count", RunGit($"rev-list --count {latestTag}..HEAD"))
@@ -176,8 +158,8 @@ Task("MakeDist")
 
     void PackageBepin(string platform, string arch, string originDir, string doorstopConfigFile = null, bool copyMono = false) 
     {
-        string platformName = platform + (arch == null ? "" : "_" + arch);
-        bool isUnix = arch == "unix";
+        var platformName = platform + (arch == null ? "" : "_" + arch);
+        var isUnix = arch == "unix";
 
         Information("Creating distributions for platform \"" + platformName + "\"...");
     
@@ -216,8 +198,7 @@ Task("MakeDist")
             }
         }
 
-        CopyFiles("./bin/" + Directory(originDir) + "/*.*", Directory(bepinDir) + Directory("core"));
-
+        CopyFiles($"./bin/{originDir}/*.*", Directory(bepinDir) + Directory("core"));
 
         FileWriteText(distArchDir + File("changelog.txt"), changelog);
 
@@ -234,7 +215,6 @@ Task("MakeDist")
     PackageBepin("UnityIL2CPP", "x86", "IL2CPP", "doorstop_config_il2cpp.ini", copyMono: true);
     PackageBepin("UnityIL2CPP", "x64", "IL2CPP", "doorstop_config_il2cpp.ini", copyMono: true);
     PackageBepin("NetLauncher", null, "NetLauncher");
-    //CopyFileToDirectory(File("./bin/patcher/BepInEx.Patcher.exe"), distPatcherDir);
 });
 
 Task("Pack")
@@ -253,9 +233,6 @@ Task("Pack")
     ZipCompress(distDir + Directory("UnityIL2CPP_x64"), distDir + File($"BepInEx_UnityIL2CPP_x64{commitPrefix}{buildVersion}.zip"));
     ZipCompress(distDir + Directory("NetLauncher"), distDir + File($"BepInEx_NetLauncher{commitPrefix}{buildVersion}.zip"));
 
-    // Information("Packing BepInEx.Patcher");
-    // ZipCompress(distDir + Directory("patcher"), distDir + File($"BepInEx_Patcher{commitPrefix}{buildVersion}.zip"));
-
     if(isBleedingEdge) 
     {
         var changelog = "";
@@ -267,41 +244,37 @@ Task("Pack")
         }
 
         FileWriteText(distDir + File("info.json"), 
-            SerializeJsonPretty(new Dictionary<string, object>{
+            SerializeJsonPretty(new Dictionary<string, object> {
                 ["id"] = buildId.ToString(),
                 ["date"] = DateTime.Now.ToString("o"),
                 ["changelog"] = changelog,
                 ["hash"] = currentCommit,
                 ["short_hash"] = currentCommitShort,
                 ["artifacts"] = new Dictionary<string, object>[] {
-                    new Dictionary<string, object> {
+                    new() {
                         ["file"] = $"BepInEx_UnityMono_x64{commitPrefix}{buildVersion}.zip",
                         ["description"] = "BepInEx Unity Mono for Windows x64 machines"
                     },
-                    new Dictionary<string, object> {
+                    new() {
                         ["file"] = $"BepInEx_UnityMono_x86{commitPrefix}{buildVersion}.zip",
                         ["description"] = "BepInEx Unity Mono for Windows x86 machines"
                     },
-                    new Dictionary<string, object> {
+                    new() {
                         ["file"] = $"BepInEx_UnityMono_unix{commitPrefix}{buildVersion}.zip",
                         ["description"] = "BepInEx Unity Mono for Unix machines with GCC (Linux, MacOS)"
                     },
-                    new Dictionary<string, object> {
+                    new() {
                         ["file"] = $"BepInEx_UnityIL2CPP_x64{commitPrefix}{buildVersion}.zip",
                         ["description"] = "BepInEx Unity IL2CPP for Windows x64 machines"
                     },
-                    new Dictionary<string, object> {
+                    new() {
                         ["file"] = $"BepInEx_UnityIL2CPP_x86{commitPrefix}{buildVersion}.zip",
                         ["description"] = "BepInEx Unity IL2CPP for Windows x86 machines"
                     },
-                    new Dictionary<string, object> {
+                    new() {
                         ["file"] = $"BepInEx_NetLauncher{commitPrefix}{buildVersion}.zip",
                         ["description"] = "BepInEx .NET Launcher for .NET Framework/XNA games"
                     },
-                    // new Dictionary<string, object> {
-                        // ["file"] = $"BepInEx_Patcher{commitPrefix}{buildVersion}.zip",
-                        // ["description"] = "Hardpatcher for BepInEx. IMPORTANT: USE ONLY IF DOORSTOP DOES NOT WORK FOR SOME REASON!"
-                    // }
                 }
             }));
     }
