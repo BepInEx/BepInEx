@@ -104,7 +104,7 @@ public class FastNativeDetour : IDetour
         {
             debuggerLogSource
                 .LogDebug($"Detouring 0x{OriginalFunctionPtr.ToString("X")} -> 0x{DetourFunctionPtr.ToString("X")}");
-            debuggerLogSource.LogDebug("Original (32) asm");
+            debuggerLogSource.Log(LogLevel.Debug, "Original (32) asm");
             DetourGenerator.Disassemble(debuggerLogSource, OriginalFunctionPtr, 32);
         }
 
@@ -116,10 +116,10 @@ public class FastNativeDetour : IDetour
 
         if (debuggerLogSource != null)
         {
-            debuggerLogSource.LogDebug($"Trampoline allocation: 0x{TrampolinePtr.ToString("X")}");
-            debuggerLogSource.LogDebug("Modified (32) asm");
+            debuggerLogSource.Log(LogLevel.Debug, $"Trampoline allocation: 0x{TrampolinePtr.ToString("X")}");
+            debuggerLogSource.Log(LogLevel.Debug, "Modified (32) asm");
             DetourGenerator.Disassemble(debuggerLogSource, OriginalFunctionPtr, 32);
-            debuggerLogSource.LogDebug($"Trampoline ({trampolineLength}) asm");
+            debuggerLogSource.Log(LogLevel.Debug, $"Trampoline ({trampolineLength}) asm");
             DetourGenerator.Disassemble(debuggerLogSource, TrampolinePtr, trampolineLength);
         }
 

@@ -200,7 +200,8 @@ public class AssemblyPatcher : IDisposable
                 }
                 catch (Exception e)
                 {
-                    Logger.LogError($"Failed to load patchers from type [{patcherPlugin.TypeName}]: {(e is ReflectionTypeLoadException re ? TypeLoader.TypeLoadExceptionToString(re) : e)}");
+                    Logger.Log(LogLevel.Error,
+                               $"Failed to load patchers from type [{patcherPlugin.TypeName}]: {(e is ReflectionTypeLoadException re ? TypeLoader.TypeLoadExceptionToString(re) : e.ToString())}");
                 }
 
             var assName = ass.GetName();

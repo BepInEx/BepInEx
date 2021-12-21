@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using BepInEx.Logging;
 
-namespace BepInEx.Core.Logging;
+namespace BepInEx.Core.Logging.Interpolation;
 
 /// <summary>
 ///     Interpolated string handler for BepInEx <see cref="Logger" />. This allows to conditionally skip logging certain
@@ -98,4 +98,70 @@ public class BepInExLogInterpolatedStringHandler
 
     /// <inheritdoc />
     public override string ToString() => sb?.ToString() ?? string.Empty;
+}
+
+/// <inheritdoc />
+[InterpolatedStringHandler]
+public class BepInExFatalLogInterpolatedStringHandler : BepInExLogInterpolatedStringHandler
+{
+    /// <inheritdoc />
+    public BepInExFatalLogInterpolatedStringHandler(int literalLength,
+                                                    int formattedCount,
+                                                    out bool isEnabled) : base(literalLength, formattedCount,
+                                                                               LogLevel.Fatal, out isEnabled) { }
+}
+
+/// <inheritdoc />
+[InterpolatedStringHandler]
+public class BepInExErrorLogInterpolatedStringHandler : BepInExLogInterpolatedStringHandler
+{
+    /// <inheritdoc />
+    public BepInExErrorLogInterpolatedStringHandler(int literalLength,
+                                                    int formattedCount,
+                                                    out bool isEnabled) : base(literalLength, formattedCount,
+                                                                               LogLevel.Error, out isEnabled) { }
+}
+
+/// <inheritdoc />
+[InterpolatedStringHandler]
+public class BepInExWarningLogInterpolatedStringHandler : BepInExLogInterpolatedStringHandler
+{
+    /// <inheritdoc />
+    public BepInExWarningLogInterpolatedStringHandler(int literalLength,
+                                                      int formattedCount,
+                                                      out bool isEnabled) : base(literalLength, formattedCount,
+        LogLevel.Warning, out isEnabled) { }
+}
+
+/// <inheritdoc />
+[InterpolatedStringHandler]
+public class BepInExMessageLogInterpolatedStringHandler : BepInExLogInterpolatedStringHandler
+{
+    /// <inheritdoc />
+    public BepInExMessageLogInterpolatedStringHandler(int literalLength,
+                                                      int formattedCount,
+                                                      out bool isEnabled) : base(literalLength, formattedCount,
+        LogLevel.Message, out isEnabled) { }
+}
+
+/// <inheritdoc />
+[InterpolatedStringHandler]
+public class BepInExInfoLogInterpolatedStringHandler : BepInExLogInterpolatedStringHandler
+{
+    /// <inheritdoc />
+    public BepInExInfoLogInterpolatedStringHandler(int literalLength,
+                                                   int formattedCount,
+                                                   out bool isEnabled) : base(literalLength, formattedCount,
+                                                                              LogLevel.Info, out isEnabled) { }
+}
+
+/// <inheritdoc />
+[InterpolatedStringHandler]
+public class BepInExDebugLogInterpolatedStringHandler : BepInExLogInterpolatedStringHandler
+{
+    /// <inheritdoc />
+    public BepInExDebugLogInterpolatedStringHandler(int literalLength,
+                                                    int formattedCount,
+                                                    out bool isEnabled) : base(literalLength, formattedCount,
+                                                                               LogLevel.Debug, out isEnabled) { }
 }

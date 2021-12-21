@@ -48,13 +48,13 @@ public class TraceLogSource : TraceListener
     ///     Writes a message to the underlying <see cref="ManualLogSource" /> instance.
     /// </summary>
     /// <param name="message">The message to write.</param>
-    public override void Write(string message) => LogSource.LogInfo(message);
+    public override void Write(string message) => LogSource.Log(LogLevel.Info, message);
 
     /// <summary>
     ///     Writes a message and a newline to the underlying <see cref="ManualLogSource" /> instance.
     /// </summary>
     /// <param name="message">The message to write.</param>
-    public override void WriteLine(string message) => LogSource.LogInfo(message);
+    public override void WriteLine(string message) => LogSource.Log(LogLevel.Info, message);
 
     /// <inheritdoc />
     public override void TraceEvent(TraceEventCache eventCache,

@@ -91,7 +91,7 @@ public static class Preloader
         }
         catch (Exception ex)
         {
-            Log.LogFatal(ex);
+            Log.Log(LogLevel.Fatal, ex);
 
             throw;
         }
@@ -100,11 +100,11 @@ public static class Preloader
     private static void InitializeUnityVersion()
     {
         if (TryInitializeUnityVersion(ConfigUnityVersion.Value))
-            Log.LogWarning("Unity version obtained from the config.");
+            Log.Log(LogLevel.Warning, "Unity version obtained from the config.");
         else if (TryInitializeUnityVersion(Process.GetCurrentProcess().MainModule.FileVersionInfo.FileVersion))
-            Log.LogDebug("Unity version obtained from main application module.");
+            Log.Log(LogLevel.Debug, "Unity version obtained from main application module.");
         else
-            Log.LogError("Running under default Unity version. UnityVersionHandler is not initialized.");
+            Log.Log(LogLevel.Error, "Running under default Unity version. UnityVersionHandler is not initialized.");
     }
 
     private static bool TryInitializeUnityVersion(string version)

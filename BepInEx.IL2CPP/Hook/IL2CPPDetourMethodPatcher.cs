@@ -275,7 +275,7 @@ public unsafe class IL2CPPDetourMethodPatcher : MethodPatcher
         return dmd;
     }
 
-    private static void ReportException(Exception ex) => DetourLogger.LogError(ex.ToString());
+    private static void ReportException(Exception ex) => DetourLogger.Log(LogLevel.Error, ex.ToString());
 
     private static Type ConvertManagedTypeToIL2CPPType(Type managedType)
     {

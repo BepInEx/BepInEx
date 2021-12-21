@@ -91,7 +91,7 @@ public class IL2CPPChainloader : BaseChainloader<BasePlugin>
         Logger.Log(LogLevel.Debug, "Initializing TLS adapters");
         Il2CppTlsAdapter.Initialize();
 
-        PreloaderLogger.Log.LogDebug("Runtime invoke patched");
+        PreloaderLogger.Log.Log(LogLevel.Debug, "Runtime invoke patched");
     }
 
     private void OnInstallUnityTlsInterface(IntPtr unityTlsInterfaceStruct)
