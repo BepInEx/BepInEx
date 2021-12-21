@@ -3,26 +3,25 @@ using System.Reflection;
 using BepInEx.Bootstrap;
 using BepInEx.Preloader.Core.Logging;
 
-namespace BepInEx.NetLauncher
+namespace BepInEx.NetLauncher;
+
+public class NetChainloader : BaseChainloader<BasePlugin>
 {
-    public class NetChainloader : BaseChainloader<BasePlugin>
+    public override BasePlugin LoadPlugin(PluginInfo pluginInfo, Assembly pluginAssembly)
     {
-        public override BasePlugin LoadPlugin(PluginInfo pluginInfo, Assembly pluginAssembly)
-        {
-            var type = pluginAssembly.GetType(pluginInfo.TypeName);
+        var type = pluginAssembly.GetType(pluginInfo.TypeName);
 
-            var pluginInstance = (BasePlugin) Activator.CreateInstance(type);
+        var pluginInstance = (BasePlugin) Activator.CreateInstance(type);
 
-            pluginInstance.Load();
+        pluginInstance.Load();
 
-            return pluginInstance;
-        }
+        return pluginInstance;
+    }
 
-        protected override void InitializeLoggers()
-        {
-            base.InitializeLoggers();
+    protected override void InitializeLoggers()
+    {
+        base.InitializeLoggers();
 
-            ChainloaderLogHelper.RewritePreloaderLogs();
-        }
+        ChainloaderLogHelper.RewritePreloaderLogs();
     }
 }

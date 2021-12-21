@@ -4,47 +4,46 @@ using System.Text;
 using BepInEx.Logging;
 using HarmonyLib;
 
-namespace BepInEx.Preloader.RuntimeFixes
+namespace BepInEx.Preloader.RuntimeFixes;
+
+public static class ConsoleSetOutFix
 {
-    public static class ConsoleSetOutFix
+    private static LoggedTextWriter loggedTextWriter;
+    internal static ManualLogSource ConsoleLogSource = Logger.CreateLogSource("Console");
+
+    public static void Apply()
     {
-        private static LoggedTextWriter loggedTextWriter;
-        internal static ManualLogSource ConsoleLogSource = Logger.CreateLogSource("Console");
-
-        public static void Apply()
-        {
-            loggedTextWriter = new LoggedTextWriter { Parent = Console.Out };
-            Console.SetOut(loggedTextWriter);
-            Harmony.CreateAndPatchAll(typeof(ConsoleSetOutFix));
-        }
-
-        [HarmonyPatch(typeof(Console), nameof(Console.SetOut))]
-        [HarmonyPrefix]
-        private static bool OnSetOut(TextWriter newOut)
-        {
-            loggedTextWriter.Parent = newOut;
-            return false;
-        }
+        loggedTextWriter = new LoggedTextWriter { Parent = Console.Out };
+        Console.SetOut(loggedTextWriter);
+        Harmony.CreateAndPatchAll(typeof(ConsoleSetOutFix));
     }
 
-    internal class LoggedTextWriter : TextWriter
+    [HarmonyPatch(typeof(Console), nameof(Console.SetOut))]
+    [HarmonyPrefix]
+    private static bool OnSetOut(TextWriter newOut)
     {
-        public override Encoding Encoding { get; } = Encoding.UTF8;
+        loggedTextWriter.Parent = newOut;
+        return false;
+    }
+}
 
-        public TextWriter Parent { get; set; }
+internal class LoggedTextWriter : TextWriter
+{
+    public override Encoding Encoding { get; } = Encoding.UTF8;
 
-        public override void Flush() => Parent.Flush();
+    public TextWriter Parent { get; set; }
 
-        public override void Write(string value)
-        {
-            ConsoleSetOutFix.ConsoleLogSource.LogInfo(value);
-            Parent.Write(value);
-        }
+    public override void Flush() => Parent.Flush();
 
-        public override void WriteLine(string value)
-        {
-            ConsoleSetOutFix.ConsoleLogSource.LogInfo(value);
-            Parent.WriteLine(value);
-        }
+    public override void Write(string value)
+    {
+        ConsoleSetOutFix.ConsoleLogSource.LogInfo(value);
+        Parent.Write(value);
+    }
+
+    public override void WriteLine(string value)
+    {
+        ConsoleSetOutFix.ConsoleLogSource.LogInfo(value);
+        Parent.WriteLine(value);
     }
 }

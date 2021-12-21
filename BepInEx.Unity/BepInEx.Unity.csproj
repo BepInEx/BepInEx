@@ -4,7 +4,7 @@
         <TargetFrameworks>net35;netstandard2.0</TargetFrameworks>
         <AssemblyTitle>BepInEx.Unity</AssemblyTitle>
         <Product>BepInEx.Unity</Product>
-        <LangVersion>9</LangVersion>
+        <LangVersion>10</LangVersion>
     </PropertyGroup>
     <PropertyGroup Condition="'$(TargetFramework)' == 'net35'">
         <!-- Output only net35 version to distribution; netstadnard is only used for generating NuGet package -->

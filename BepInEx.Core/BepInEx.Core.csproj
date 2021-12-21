@@ -5,7 +5,7 @@
         <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
         <AssemblyTitle>BepInEx</AssemblyTitle>
         <Product>BepInEx</Product>
-        <LangVersion>9</LangVersion>
+        <LangVersion>10</LangVersion>
         <OutputPath>..\bin\Core\</OutputPath>
         <DocumentationFile>$(OutputPath)\$(TargetFramework)\BepInEx.Core.xml</DocumentationFile>
         <Description>Unity plugin injection framework</Description>

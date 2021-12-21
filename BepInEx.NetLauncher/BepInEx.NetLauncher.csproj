@@ -6,7 +6,7 @@
         <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
         <AssemblyTitle>BepInEx.NetLauncher</AssemblyTitle>
         <Product>BepInEx.NetLauncher</Product>
-        <LangVersion>9</LangVersion>
+        <LangVersion>10</LangVersion>
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">

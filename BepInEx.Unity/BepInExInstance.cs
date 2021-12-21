@@ -1,9 +1,8 @@
 ﻿using BepInEx.Unity.Bootstrap;
 
-namespace BepInEx.Unity
+namespace BepInEx.Unity;
+
+public static class BepInExInstance
 {
-    public static class BepInExInstance
-    {
-        public static UnityChainloader Chainloader { get; }
-    }
+    public static UnityChainloader Chainloader { get; }
 }

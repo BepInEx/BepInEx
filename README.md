@@ -3,6 +3,7 @@
 </p>
 
 # BepInEx
+
 ![Github All Releases](https://img.shields.io/github/downloads/bepinex/bepinex/total.svg)
 ![GitHub release](https://img.shields.io/github/release/bepinex/bepinex.svg)
 [![BepInEx Discord](https://user-images.githubusercontent.com/7288322/34429117-c74dbd12-ecb8-11e7-896d-46369cd0de5b.png)](https://discord.gg/MpFEDAg)
@@ -24,7 +25,6 @@ BepInEx is a plugin / modding framework for Unity Mono, IL2CPP and .NET framewor
 | .NET / XNA   | ✔️       | Mono | Mono  | N/A |
 
 A more comprehensive comparison list of features and compatibility is available at https://bepis.io/unity.html
-
 
 ## Resources
 
@@ -56,6 +56,7 @@ A more comprehensive comparison list of features and compatibility is available 
 | uMod              | [BepInEx.uMod.Loader](https://github.com/BepInEx/BepInEx.uMod.Loader)                     |
 
 ## Used libraries
+
 - [NeighTools/UnityDoorstop](https://github.com/NeighTools/UnityDoorstop) -
   3.4.0.0 ([fad307f](https://github.com/NeighTools/UnityDoorstop/commit/fad307fda5c968d05675f17a49af7e790966fec3))
 - [NeighTools/UnityDoorstop.Unix](https://github.com/NeighTools/UnityDoorstop.Unix) -
@@ -80,7 +81,9 @@ A more comprehensive comparison list of features and compatibility is available 
   fork ([7328415](https://github.com/BepInEx/mono/commit/7328415ac575399a71f32487e97bce9d5fe7f6ca))
 
 ## Credits
+
 - [Usagirei](https://github.com/Usagirei) - Code for using the console and for assisting with technical support
 - [essu](https://github.com/exdownloader) - Project logo, moral support and lots of misc. help
-- [denikson](https://github.com/denikson) - [UnityDoorstop](https://github.com/NeighTools/UnityDoorstop) for the patchless loader
+- [denikson](https://github.com/denikson) - [UnityDoorstop](https://github.com/NeighTools/UnityDoorstop) for the
+  patchless loader
 - [nn@](https://twitter.com/NnAone2cmg) - Japanese translation of the wiki

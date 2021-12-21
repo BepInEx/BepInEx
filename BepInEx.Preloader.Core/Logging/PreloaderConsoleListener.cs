@@ -2,33 +2,32 @@
 using BepInEx.Configuration;
 using BepInEx.Logging;
 
-namespace BepInEx.Preloader.Core.Logging
+namespace BepInEx.Preloader.Core.Logging;
+
+/// <summary>
+///     Log listener that listens to logs during preloading time and buffers messages for output in Unity logs later.
+/// </summary>
+public class PreloaderConsoleListener : ILogListener
 {
+    private static readonly ConfigEntry<LogLevel> ConfigConsoleDisplayedLevel = ConfigFile.CoreConfig.Bind(
+     "Logging.Console", "LogLevels",
+     LogLevel.Fatal | LogLevel.Error | LogLevel.Warning | LogLevel.Message | LogLevel.Info,
+     "Which log levels to show in the console output.");
+
     /// <summary>
-    ///     Log listener that listens to logs during preloading time and buffers messages for output in Unity logs later.
+    ///     A list of all <see cref="LogEventArgs" /> objects that this listener has received.
     /// </summary>
-    public class PreloaderConsoleListener : ILogListener
+    public static List<LogEventArgs> LogEvents { get; } = new();
+
+    /// <inheritdoc />
+    public void LogEvent(object sender, LogEventArgs eventArgs)
     {
-        private static readonly ConfigEntry<LogLevel> ConfigConsoleDisplayedLevel = ConfigFile.CoreConfig.Bind(
-         "Logging.Console", "LogLevels",
-         LogLevel.Fatal | LogLevel.Error | LogLevel.Warning | LogLevel.Message | LogLevel.Info,
-         "Which log levels to show in the console output.");
+        if ((eventArgs.Level & ConfigConsoleDisplayedLevel.Value) == 0)
+            return;
 
-        /// <summary>
-        ///     A list of all <see cref="LogEventArgs" /> objects that this listener has received.
-        /// </summary>
-        public static List<LogEventArgs> LogEvents { get; } = new();
-
-        /// <inheritdoc />
-        public void LogEvent(object sender, LogEventArgs eventArgs)
-        {
-            if ((eventArgs.Level & ConfigConsoleDisplayedLevel.Value) == 0)
-                return;
-
-            LogEvents.Add(eventArgs);
-        }
-
-        /// <inheritdoc />
-        public void Dispose() { }
+        LogEvents.Add(eventArgs);
     }
+
+    /// <inheritdoc />
+    public void Dispose() { }
 }

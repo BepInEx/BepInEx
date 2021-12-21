@@ -6,7 +6,7 @@
         <Product>BepInEx.Preloader.Core</Product>
         <OutputPath>..\bin\Core</OutputPath>
         <DocumentationFile>$(OutputPath)\$(TargetFramework)\BepInEx.Preloader.Core.xml</DocumentationFile>
-        <LangVersion>9</LangVersion>
+        <LangVersion>10</LangVersion>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
         <DebugType>full</DebugType>

@@ -1,27 +1,26 @@
 ﻿using System;
 using System.IO;
 
-namespace BepInEx
+namespace BepInEx;
+
+internal interface IConsoleDriver
 {
-    internal interface IConsoleDriver
-    {
-        TextWriter StandardOut { get; }
-        TextWriter ConsoleOut { get; }
+    TextWriter StandardOut { get; }
+    TextWriter ConsoleOut { get; }
 
-        bool ConsoleActive { get; }
-        bool ConsoleIsExternal { get; }
+    bool ConsoleActive { get; }
+    bool ConsoleIsExternal { get; }
 
-        void PreventClose();
+    void PreventClose();
 
-        void Initialize(bool alreadyActive);
+    void Initialize(bool alreadyActive);
 
-        // Apparently Windows code-pages work in Mono.
-        // https://stackoverflow.com/a/33456543
-        void CreateConsole(uint codepage);
-        void DetachConsole();
+    // Apparently Windows code-pages work in Mono.
+    // https://stackoverflow.com/a/33456543
+    void CreateConsole(uint codepage);
+    void DetachConsole();
 
-        void SetConsoleColor(ConsoleColor color);
+    void SetConsoleColor(ConsoleColor color);
 
-        void SetConsoleTitle(string title);
-    }
+    void SetConsoleTitle(string title);
 }
