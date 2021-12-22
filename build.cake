@@ -1,8 +1,8 @@
-#addin nuget:?package=Cake.FileHelpers&version=3.2.1
-#addin nuget:?package=SharpZipLib&version=1.2.0
-#addin nuget:?package=Cake.Compression&version=0.2.4
-#addin nuget:?package=Cake.Json&version=4.0.0
-#addin nuget:?package=Newtonsoft.Json&version=11.0.2
+#addin nuget:?package=Cake.FileHelpers&version=4.0.1
+#addin nuget:?package=SharpZipLib&version=1.3.1
+#addin nuget:?package=Cake.Compression&version=0.2.6
+#addin nuget:?package=Cake.Json&version=6.0.1
+#addin nuget:?package=Newtonsoft.Json&version=13.0.1
 
 const string DOORSTOP_VER_WIN = "3.4.0.0";
 const string DOORSTOP_VER_NIX = "1.5.1.0";
