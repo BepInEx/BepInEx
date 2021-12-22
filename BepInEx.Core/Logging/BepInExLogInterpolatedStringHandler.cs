@@ -35,7 +35,7 @@ public class BepInExLogInterpolatedStringHandler
                                                LogLevel logLevel,
                                                out bool isEnabled)
     {
-        Enabled = (logLevel & Logger.ListenedLogLevels) == LogLevel.None;
+        Enabled = (logLevel & Logger.ListenedLogLevels) != LogLevel.None;
         isEnabled = Enabled;
         sb = Enabled ? new StringBuilder(literalLength + formattedCount * GUESSED_LENGTH_PER_HOLE) : null;
     }
