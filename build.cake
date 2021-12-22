@@ -151,7 +151,7 @@ Task("MakeDist")
         if(ensureLf)
             ReplaceTextInFiles($"{distArchDir}/{doorstopConfigPattern}", "\r\n", "\n");
         CopyFiles("./bin/*.*", bepinDir + Directory("core"));
-        CopyFiles(doorstopFiles, doorstopTargetDir);
+        CopyFiles(doorstopFiles.ToString(), doorstopTargetDir);
         FileWriteText(distArchDir + File("changelog.txt"), changelog);
     }
 
