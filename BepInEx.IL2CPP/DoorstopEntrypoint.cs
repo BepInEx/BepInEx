@@ -2,12 +2,15 @@
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using BepInEx.IL2CPP;
 using BepInEx.Preloader.Core;
 
 namespace BepInEx.IL2CPP
 {
     internal static class UnityPreloaderRunner
     {
+        internal static string preloaderPath;
+
         public static void PreloaderMain()
         {
             var bepinPath =
@@ -24,7 +27,7 @@ namespace BepInEx.IL2CPP
             Preloader.IL2CPPUnhollowedPath = Path.Combine(Paths.BepInExRootPath, "unhollowed");
 
             AppDomain.CurrentDomain.AssemblyResolve += LocalResolve;
-            AppDomain.CurrentDomain.AssemblyResolve -= DoorstopEntrypoint.ResolveCurrentDirectory;
+            AppDomain.CurrentDomain.AssemblyResolve -= ResolveCurrentDirectory;
 
 
             Preloader.Run();
@@ -56,43 +59,6 @@ namespace BepInEx.IL2CPP
 
             return null;
         }
-    }
-
-    internal static class DoorstopEntrypoint
-    {
-        private static string preloaderPath;
-
-        /// <summary>
-        ///     The main entrypoint of BepInEx, called from Doorstop.
-        /// </summary>
-        /// <param name="args">
-        ///     The arguments passed in from Doorstop. First argument is the path of the currently executing
-        ///     process.
-        /// </param>
-        public static void Main()
-        {
-            // We set it to the current directory first as a fallback, but try to use the same location as the .exe file.
-            var silentExceptionLog = $"preloader_{DateTime.Now:yyyyMMdd_HHmmss_fff}.log";
-
-            try
-            {
-                EnvVars.LoadVars();
-
-                silentExceptionLog =
-                    Path.Combine(Path.GetDirectoryName(EnvVars.DOORSTOP_PROCESS_PATH), silentExceptionLog);
-
-                // Get the path of this DLL via Doorstop env var because Assembly.Location mangles non-ASCII characters on some versions of Mono for unknown reasons
-                preloaderPath = Path.GetDirectoryName(Path.GetFullPath(EnvVars.DOORSTOP_INVOKE_DLL_PATH));
-
-                AppDomain.CurrentDomain.AssemblyResolve += ResolveCurrentDirectory;
-
-                UnityPreloaderRunner.PreloaderMain();
-            }
-            catch (Exception ex)
-            {
-                File.WriteAllText(silentExceptionLog, ex.ToString());
-            }
-        }
 
         public static Assembly ResolveCurrentDirectory(object sender, ResolveEventArgs args)
         {
@@ -105,6 +71,45 @@ namespace BepInEx.IL2CPP
             catch (Exception)
             {
                 return null;
+            }
+        }
+    }
+}
+
+namespace Doorstop
+{
+    internal static class Entrypoint
+    {
+        /// <summary>
+        ///     The main entrypoint of BepInEx, called from Doorstop.
+        /// </summary>
+        /// <param name="args">
+        ///     The arguments passed in from Doorstop. First argument is the path of the currently executing
+        ///     process.
+        /// </param>
+        public static void Start()
+        {
+            // We set it to the current directory first as a fallback, but try to use the same location as the .exe file.
+            var silentExceptionLog = $"preloader_{DateTime.Now:yyyyMMdd_HHmmss_fff}.log";
+
+            try
+            {
+                EnvVars.LoadVars();
+
+                silentExceptionLog =
+                    Path.Combine(Path.GetDirectoryName(EnvVars.DOORSTOP_PROCESS_PATH), silentExceptionLog);
+
+                // Get the path of this DLL via Doorstop env var because Assembly.Location mangles non-ASCII characters on some versions of Mono for unknown reasons
+                UnityPreloaderRunner.preloaderPath =
+                    Path.GetDirectoryName(Path.GetFullPath(EnvVars.DOORSTOP_INVOKE_DLL_PATH));
+
+                AppDomain.CurrentDomain.AssemblyResolve += UnityPreloaderRunner.ResolveCurrentDirectory;
+
+                UnityPreloaderRunner.PreloaderMain();
+            }
+            catch (Exception ex)
+            {
+                File.WriteAllText(silentExceptionLog, ex.ToString());
             }
         }
     }
