@@ -24,7 +24,7 @@ internal partial class ConsoleEncoding : Encoding
         _codePage = codePage;
     }
 
-    public override int CodePage => (int) _codePage;
+    public override int CodePage => (int)_codePage;
 
     public static Encoding OutputEncoding => new ConsoleEncoding(ConsoleCodePage);
 
@@ -41,22 +41,20 @@ internal partial class ConsoleEncoding : Encoding
     public override int GetByteCount(char[] chars, int index, int count)
     {
         WriteCharBuffer(chars, index, count);
-        var result = WideCharToMultiByte(_codePage, 0, _charBuffer, count, _zeroByte, 0, IntPtr.Zero, IntPtr.Zero);
+        var result = WideCharToMultiByte(_codePage, 0, chars, count, _zeroByte, 0, IntPtr.Zero, IntPtr.Zero);
         return result;
     }
 
     public override int GetBytes(char[] chars, int charIndex, int charCount, byte[] bytes, int byteIndex)
     {
         var byteCount = GetByteCount(chars, charIndex, charCount);
-
         WriteCharBuffer(chars, charIndex, charCount);
-
         ExpandByteBuffer(byteCount);
-        var result = WideCharToMultiByte(_codePage, 0, chars, charCount, _byteBuffer, byteCount, IntPtr.Zero,
-                                         IntPtr.Zero);
-        ReadByteBuffer(bytes, byteIndex, byteCount);
-
-        return result;
+        _ = WideCharToMultiByte(_codePage, 0, chars, charCount, _byteBuffer, byteCount, IntPtr.Zero,
+                                IntPtr.Zero);
+        var readCount = Math.Min(bytes.Length, byteCount);
+        ReadByteBuffer(bytes, byteIndex, readCount);
+        return readCount;
     }
 
     public override int GetCharCount(byte[] bytes, int index, int count)
@@ -69,16 +67,15 @@ internal partial class ConsoleEncoding : Encoding
     public override int GetChars(byte[] bytes, int byteIndex, int byteCount, char[] chars, int charIndex)
     {
         var charCount = GetCharCount(bytes, byteIndex, byteCount);
-
         WriteByteBuffer(bytes, byteIndex, byteCount);
-
         ExpandCharBuffer(charCount);
-        var result = MultiByteToWideChar(_codePage, 0, bytes, byteCount, _charBuffer, charCount);
-        ReadCharBuffer(chars, charIndex, charCount);
-
-        return result;
+        _ = MultiByteToWideChar(_codePage, 0, bytes, byteCount, _charBuffer, charCount);
+        var readCount = Math.Min(chars.Length, charCount);
+        ReadCharBuffer(chars, charIndex, readCount);
+        return readCount;
     }
 
-    public override int GetMaxByteCount(int charCount) => charCount * 2;
+    // Account for some exotic UTF-8 characters
+    public override int GetMaxByteCount(int charCount) => charCount * 4;
     public override int GetMaxCharCount(int byteCount) => byteCount;
 }
