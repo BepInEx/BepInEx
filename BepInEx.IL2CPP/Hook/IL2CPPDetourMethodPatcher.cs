@@ -4,15 +4,19 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.InteropServices;
+using System.Text;
 using BepInEx.Logging;
 using HarmonyLib;
 using HarmonyLib.Public.Patching;
+using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using MonoMod.RuntimeDetour;
 using MonoMod.Utils;
 using UnhollowerBaseLib;
 using UnhollowerBaseLib.Runtime;
 using UnhollowerBaseLib.Runtime.VersionSpecific.MethodInfo;
+using OpCode = System.Reflection.Emit.OpCode;
+using OpCodes = System.Reflection.Emit.OpCodes;
 using ValueType = Il2CppSystem.ValueType;
 using Void = Il2CppSystem.Void;
 
@@ -289,9 +293,9 @@ public unsafe class IL2CPPDetourMethodPatcher : MethodPatcher
             if (directType == typeof(string) || directType.IsSubclassOf(typeof(Il2CppObjectBase)))
                 return typeof(IntPtr*);
         }
-        else if (managedType.IsSubclassOf(typeof(ValueType))
-                ) // Struct that's passed on the stack => handle as general struct
+        else if (managedType.IsSubclassOf(typeof(ValueType)) && !PlatformHelper.Is(Platform.Bits64))
         {
+            // Struct that's passed on the stack => handle as general struct
             uint align = 0;
             var fixedSize =
                 UnhollowerBaseLib.IL2CPP.il2cpp_class_value_size(Il2CppTypeToClassPointer(managedType), ref align);
@@ -329,10 +333,10 @@ public unsafe class IL2CPPDetourMethodPatcher : MethodPatcher
     {
         variable = null;
 
-        // Box struct into object first before conversion
-        // This will likely incur struct copying down the line, but it shouldn't be a massive loss
-        if (managedParamType.IsSubclassOf(typeof(ValueType)))
+        if (managedParamType.IsSubclassOf(typeof(ValueType)) && !PlatformHelper.Is(Platform.Bits64))
         {
+            // Box struct into object first before conversion
+            // This will likely incur struct copying down the line, but it shouldn't be a massive loss
             il.Emit(OpCodes.Ldc_I8, Il2CppTypeToClassPointer(managedParamType).ToInt64());
             il.Emit(OpCodes.Conv_I);
             il.Emit(OpCodes.Ldarga_S, argIndex);
