@@ -6,6 +6,7 @@ using BepInEx.Logging;
 using BepInEx.Preloader.Core;
 using BepInEx.Preloader.Core.Logging;
 using BepInEx.Preloader.Core.Patching;
+using BepInEx.Preloader.RuntimeFixes;
 using UnhollowerBaseLib;
 using UnhollowerBaseLib.Runtime;
 
@@ -38,6 +39,8 @@ public static class Preloader
     {
         try
         {
+            HarmonyBackendFix.Initialize();
+
             ConsoleManager.Initialize(false);
 
             PreloaderLog = new PreloaderConsoleListener();

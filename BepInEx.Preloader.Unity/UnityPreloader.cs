@@ -1,5 +1,4 @@
 using System;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -19,6 +18,15 @@ namespace BepInEx.Preloader.Unity;
 /// </summary>
 internal static class UnityPreloader
 {
+    #region Config
+
+    internal static readonly ConfigEntry<bool> ConfigApplyRuntimePatches = ConfigFile.CoreConfig.Bind(
+     "Preloader", "ApplyRuntimePatches",
+     true,
+     "Enables or disables runtime patches.\nThis should always be true, unless you cannot start the game due to a Harmony related issue (such as running .NET Standard runtime) or you know what you're doing.");
+
+    #endregion
+
     /// <summary>
     ///     The log writer that is specific to the preloader.
     /// </summary>
@@ -33,7 +41,7 @@ internal static class UnityPreloader
     {
         try
         {
-            InitializeHarmony();
+            HarmonyBackendFix.Initialize();
 
             ConsoleManager.Initialize(false);
             AllocateConsole();
@@ -151,52 +159,4 @@ internal static class UnityPreloader
 
         return $"Unknown ({(IsPostUnity2017 ? "post" : "pre")}-2017)";
     }
-
-    private static void InitializeHarmony()
-    {
-        switch (ConfigHarmonyBackend.Value)
-        {
-            case MonoModBackend.auto:
-                break;
-            case MonoModBackend.dynamicmethod:
-            case MonoModBackend.methodbuilder:
-            case MonoModBackend.cecil:
-                Environment.SetEnvironmentVariable("MONOMOD_DMD_TYPE", ConfigHarmonyBackend.Value.ToString());
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(ConfigHarmonyBackend), ConfigHarmonyBackend.Value,
-                                                      "Unknown backend");
-        }
-    }
-
-    private enum MonoModBackend
-    {
-        // Enum names are important!
-        [Description("Auto")]
-        auto = 0,
-
-        [Description("DynamicMethod")]
-        dynamicmethod,
-
-        [Description("MethodBuilder")]
-        methodbuilder,
-
-        [Description("Cecil")]
-        cecil
-    }
-
-    #region Config
-
-    internal static readonly ConfigEntry<bool> ConfigApplyRuntimePatches = ConfigFile.CoreConfig.Bind(
-     "Preloader", "ApplyRuntimePatches",
-     true,
-     "Enables or disables runtime patches.\nThis should always be true, unless you cannot start the game due to a Harmony related issue (such as running .NET Standard runtime) or you know what you're doing.");
-
-    private static readonly ConfigEntry<MonoModBackend> ConfigHarmonyBackend = ConfigFile.CoreConfig.Bind(
-     "Preloader",
-     "HarmonyBackend",
-     MonoModBackend.auto,
-     "Specifies which MonoMod backend to use for Harmony patches. Auto uses the best available backend.\nThis setting should only be used for development purposes (e.g. debugging in dnSpy). Other code might override this setting.");
-
-    #endregion
 }
