@@ -21,7 +21,7 @@ public static class DetourGenerator
         var output = new StringOutput();
         var codeReader = new ByteArrayCodeReader(data);
         var decoder = Decoder.Create(64, codeReader);
-        decoder.IP = (ulong) memoryPtr.ToInt64();
+        decoder.IP = (ulong)memoryPtr.ToInt64();
         while (codeReader.CanReadByte)
         {
             decoder.Decode(out var instr);
@@ -34,9 +34,9 @@ public static class DetourGenerator
                 var address = new byte[8];
 
                 for (var i = 0; i < 8; i++)
-                    address[i] = (byte) codeReader.ReadByte();
+                    address[i] = (byte)codeReader.ReadByte();
 
-                logSource.LogDebug($"{instr.IP + (ulong) instr.Length:X16} db 0x{BitConverter.ToUInt64(address, 0):X16}");
+                logSource.LogDebug($"{instr.IP + (ulong)instr.Length:X16} db 0x{BitConverter.ToUInt64(address, 0):X16}");
                 decoder.IP += 8;
             }
         }
@@ -115,7 +115,7 @@ public static class DetourGenerator
 
         var codeReader = new ByteArrayCodeReader(instructionBuffer);
         var decoder = Decoder.Create(arch == Architecture.X64 ? 64 : 32, codeReader);
-        decoder.IP = (ulong) functionPtr.ToInt64();
+        decoder.IP = (ulong)functionPtr.ToInt64();
 
         uint totalBytes = 0;
         var origInstructions = new InstructionList();
@@ -124,9 +124,13 @@ public static class DetourGenerator
         {
             decoder.Decode(out var instr);
 
-            origInstructions.Add(instr);
+            // FIXME: This hack somehow fixes the issue with il2cpp_unity_install_unitytls_interface hook crash
+            _ = instr.ToString();
 
-            totalBytes += (uint) instr.Length;
+            if (!readOverflowArea)
+                origInstructions.Add(instr);
+
+            totalBytes += (uint)instr.Length;
             if (instr.Code == Code.INVALID)
                 throw new Exception("Found garbage");
             if (totalBytes >= minimumTrampolineLength)
@@ -173,7 +177,7 @@ public static class DetourGenerator
             throw new Exception("Not enough instructions!");
 
 
-        ref readonly var lastInstr = ref origInstructions[origInstructions.Count - 1];
+        ref readonly var lastInstr = ref origInstructions[^1];
 
         if (lastInstr.FlowControl != FlowControl.Return)
         {
@@ -187,11 +191,9 @@ public static class DetourGenerator
             origInstructions.Add(detourInstruction);
         }
 
-
         // Generate trampoline from instruction list
-
         var codeWriter = new CodeWriterImpl();
-        var relocatedBaseAddress = (ulong) trampolinePtr;
+        var relocatedBaseAddress = (ulong)trampolinePtr;
         var block = new InstructionBlock(codeWriter, origInstructions, relocatedBaseAddress);
 
         var success = BlockEncoder.TryEncode(decoder.Bitness, block, out var errorMessage, out var result);
@@ -199,12 +201,10 @@ public static class DetourGenerator
         if (!success) throw new Exception(errorMessage);
 
         // Write generated trampoline
-
         var newCode = codeWriter.ToArray();
         Marshal.Copy(newCode, 0, trampolinePtr, newCode.Length);
 
-
-        jmpLength = newCode.Length - (int) totalBytes;
+        jmpLength = newCode.Length - (int)totalBytes;
         trampolineLength = newCode.Length;
     }
 
