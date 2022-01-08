@@ -285,23 +285,23 @@ Task("Pack")
                 ["artifacts"] = new Dictionary<string, object>[] {
                     new() {
                         ["file"] = $"BepInEx_UnityMono_x64{commitPrefix}{buildVersion}.zip",
-                        ["description"] = "BepInEx Unity Mono for Windows x64 machines"
+                        ["description"] = "BepInEx Unity Mono for Windows x64 games"
                     },
                     new() {
                         ["file"] = $"BepInEx_UnityMono_x86{commitPrefix}{buildVersion}.zip",
-                        ["description"] = "BepInEx Unity Mono for Windows x86 machines"
+                        ["description"] = "BepInEx Unity Mono for Windows x86 games"
                     },
                     new() {
                         ["file"] = $"BepInEx_UnityMono_unix{commitPrefix}{buildVersion}.zip",
-                        ["description"] = "BepInEx Unity Mono for Unix machines with GCC (Linux, MacOS)"
+                        ["description"] = "BepInEx Unity Mono for Unix games using GCC (Linux, MacOS)"
                     },
                     new() {
                         ["file"] = $"BepInEx_UnityIL2CPP_x64{commitPrefix}{buildVersion}.zip",
-                        ["description"] = "BepInEx Unity IL2CPP for Windows x64 machines"
+                        ["description"] = "BepInEx Unity IL2CPP for Windows x64 games"
                     },
                     new() {
                         ["file"] = $"BepInEx_UnityIL2CPP_x86{commitPrefix}{buildVersion}.zip",
-                        ["description"] = "BepInEx Unity IL2CPP for Windows x86 machines"
+                        ["description"] = "BepInEx Unity IL2CPP for Windows x86 games"
                     },
                     new() {
                         ["file"] = $"BepInEx_NetLauncher{commitPrefix}{buildVersion}.zip",
