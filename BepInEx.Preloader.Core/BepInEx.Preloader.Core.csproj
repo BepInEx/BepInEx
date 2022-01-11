@@ -21,8 +21,8 @@
     <Import Project="..\BepInEx.Shared\BepInEx.Shared.projitems" Label="Shared"/>
     <ItemGroup>
         <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="All"/>
-        <PackageReference Include="HarmonyX" Version="2.7.0"/>
-        <PackageReference Include="MonoMod.RuntimeDetour" Version="21.12.13.1"/>
-        <PackageReference Include="MonoMod.Utils" Version="21.12.13.1"/>
+        <PackageReference Include="HarmonyX" Version="2.8.0"/>
+        <PackageReference Include="MonoMod.RuntimeDetour" Version="22.1.4.3"/>
+        <PackageReference Include="MonoMod.Utils" Version="22.1.4.3"/>
     </ItemGroup>
 </Project>

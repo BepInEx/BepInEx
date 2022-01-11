@@ -26,7 +26,7 @@
         <ProjectReference Include="..\BepInEx.Preloader.Core\BepInEx.Preloader.Core.csproj" PrivateAssets="All"/>
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="HarmonyX" Version="2.7.0"/>
+        <PackageReference Include="HarmonyX" Version="2.8.0"/>
         <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="All"/>
     </ItemGroup>
     <Import Project="..\BepInEx.Shared\BepInEx.Shared.projitems" Label="Shared"/>

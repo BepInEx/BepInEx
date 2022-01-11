@@ -62,9 +62,9 @@ A more comprehensive comparison list of features and compatibility is available 
 - [NeighTools/UnityDoorstop.Unix](https://github.com/NeighTools/UnityDoorstop.Unix) -
   1.5.1.0 ([06e9790](https://github.com/NeighTools/UnityDoorstop.Unix/commit/06e979008730cf89c6bcf8806f2c18c80b0a7b21))
 - [BepInEx/HarmonyX](https://github.com/BepInEx/HarmonyX) -
-  2.7.0 ([2537257](https://github.com/BepInEx/HarmonyX/commit/253725768e59b0e1ea90105cdbcc4a0a477422c7))
+  2.8.0 ([04d985a](https://github.com/BepInEx/HarmonyX/commit/04d985a2e931a4b274a170ccfbb80465adda15fa))
 - [0x0ade/MonoMod](https://github.com/0x0ade/MonoMod) -
-  v21.11.11.1 ([ede81f4](https://github.com/MonoMod/MonoMod/commit/ede81f48924d58abf05359409fad740fe2b0dfb5))
+  v22.1.4.3 ([1fe55bb](https://github.com/MonoMod/MonoMod/commit/1fe55bb10f5ad54b896b141c715f731719d7e48a))
 - [jbevain/cecil](https://github.com/jbevain/cecil) -
   0.10.4 ([98ec890](https://github.com/jbevain/cecil/commit/98ec890d44643ad88d573e97be0e120435eda732))
 
@@ -73,7 +73,7 @@ A more comprehensive comparison list of features and compatibility is available 
 - [Perfare/Il2CppDumper](https://github.com/Perfare/Il2CppDumper) - v6.6.3
   fork ([112e2e8](https://github.com/BepInEx/Il2CppDumper/commit/112e2e8c369dfcb6d5718fd4ad7e3838d7ddabbf))
 - [SamboyCoding/Cpp2IL](https://github.com/SamboyCoding/Cpp2IL)  -
-  2021.6.1 ([03a18c8](https://github.com/SamboyCoding/Cpp2IL/commit/03a18c89555d6ce3e8863307928fb0237ada39e3))
+  2022.0.0 ([6c43346](https://github.com/SamboyCoding/Cpp2IL/commit/6c43346e95bc04bfbeb4db43b929860120d3a49b))
 - [BepInEx/Il2CppAssemblyUnhollower](https://github.com/BepInEx/Il2CppAssemblyUnhollower) - v0.4.22.0 (fork of
   knah/Il2CppAssemblyUnhollower)
   fork ([a8b334d](https://github.com/BepInEx/Il2CppAssemblyUnhollower/commit/a8b334d3e303a31c45ef6de44ced844f83b8dcae))
