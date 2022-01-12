@@ -145,18 +145,19 @@ internal static class ProxyAssemblyGenerator
         });
 
         var runner =
-            (AppDomainRunner) AppDomainHelper.CreateInstanceAndUnwrap(domain,
-                                                                      typeof(AppDomainRunner).Assembly.FullName,
-                                                                      typeof(AppDomainRunner).FullName);
+            (AppDomainRunner)AppDomainHelper.CreateInstanceAndUnwrap(domain,
+                                                                     typeof(AppDomainRunner).Assembly.FullName,
+                                                                     typeof(AppDomainRunner).FullName);
 
         runner.Setup(Paths.ExecutablePath, Preloader.IL2CPPUnhollowedPath, Paths.BepInExRootPath,
                      Paths.ManagedPath);
-        runner.GenerateAssembliesInternal(new AppDomainListener(), Preloader.UnityVersion.ToString(3),
-                                          ConfigIl2CppDumperType.Value);
+        var ok = runner.GenerateAssemblies(new AppDomainListener(), Preloader.UnityVersion.ToString(3),
+                                           ConfigIl2CppDumperType.Value);
 
         AppDomain.Unload(domain);
 
-        File.WriteAllText(HashPath, ComputeHash());
+        if (ok)
+            File.WriteAllText(HashPath, ComputeHash());
     }
 
     internal enum IL2CPPDumperType
@@ -221,9 +222,25 @@ internal static class ProxyAssemblyGenerator
             AppDomain.CurrentDomain.AddCecilPlatformAssemblies(UnityBaseLibsDirectory);
         }
 
-        public void GenerateAssembliesInternal(AppDomainListener listener,
-                                               string unityVersion,
-                                               IL2CPPDumperType dumperType)
+        public bool GenerateAssemblies(AppDomainListener listener,
+                                       string unityVersion,
+                                       IL2CPPDumperType dumperType)
+        {
+            try
+            {
+                GenerateAssembliesInternal(listener, unityVersion, dumperType);
+                return true;
+            }
+            catch (Exception e)
+            {
+                listener.DoUnhollowerLog($"Failed to generate unhollowed assemblies: {e}", LogLevel.Fatal);
+                return false;
+            }
+        }
+
+        private void GenerateAssembliesInternal(AppDomainListener listener,
+                                                string unityVersion,
+                                                IL2CPPDumperType dumperType)
         {
             var source =
                 ConfigUnityBaseLibrariesSource.Value.Replace("{VERSION}", unityVersion);
