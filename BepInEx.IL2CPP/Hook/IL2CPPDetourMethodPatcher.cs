@@ -204,8 +204,7 @@ public unsafe class IL2CPPDetourMethodPatcher : MethodPatcher
         var paramStartIndex = 0;
 
         var managedReturnType = AccessTools.GetReturnedType(Original);
-        var hasReturnBuffer = managedReturnType.IsSubclassOf(typeof(ValueType)) &&
-                              PlatformHelper.Is(Platform.Bits64);
+        var hasReturnBuffer = managedReturnType.IsSubclassOf(typeof(ValueType)) && Environment.Is64BitProcess;
         if (hasReturnBuffer)
             // C compilers seem to return values larger than 64 bits by allocating a return buffer on caller's side and passing it as the first parameter
             // TODO: Handle ARM
@@ -322,7 +321,7 @@ public unsafe class IL2CPPDetourMethodPatcher : MethodPatcher
             if (directType == typeof(string) || directType.IsSubclassOf(typeof(Il2CppObjectBase)))
                 return typeof(IntPtr*);
         }
-        else if (managedType.IsSubclassOf(typeof(ValueType)) && !PlatformHelper.Is(Platform.Bits64))
+        else if (managedType.IsSubclassOf(typeof(ValueType)) && !Environment.Is64BitProcess)
         {
             // Struct that's passed on the stack => handle as general struct
             uint align = 0;
@@ -369,7 +368,7 @@ public unsafe class IL2CPPDetourMethodPatcher : MethodPatcher
             il.Emit(OpCodes.Conv_I);
             // On x64, struct is always a pointer but it is a non-pointer on x86
             // We don't handle byref structs on x86 yet but we're yet to encounter those
-            il.Emit(PlatformHelper.Is(Platform.Bits64) ? OpCodes.Ldarg : OpCodes.Ldarga_S, argIndex);
+            il.Emit(Environment.Is64BitProcess ? OpCodes.Ldarg : OpCodes.Ldarga_S, argIndex);
             il.Emit(OpCodes.Call,
                     AccessTools.Method(typeof(UnhollowerBaseLib.IL2CPP),
                                        nameof(UnhollowerBaseLib.IL2CPP.il2cpp_value_box)));
