@@ -94,7 +94,7 @@ public class IL2CPPChainloader : BaseChainloader<BasePlugin>
         PreloaderLogger.Log.Log(LogLevel.Debug, "Runtime invoke patched");
     }
 
-    private void OnInstallUnityTlsInterface(IntPtr unityTlsInterfaceStruct)
+    private static void OnInstallUnityTlsInterface(IntPtr unityTlsInterfaceStruct)
     {
         Logger.Log(LogLevel.Debug, $"Captured UnityTls interface at {unityTlsInterfaceStruct.ToInt64():x8}");
         Il2CppTlsAdapter.Options.UnityTlsInterface = unityTlsInterfaceStruct;
@@ -157,7 +157,7 @@ public class IL2CPPChainloader : BaseChainloader<BasePlugin>
     {
         var type = pluginAssembly.GetType(pluginInfo.TypeName);
 
-        var pluginInstance = (BasePlugin) Activator.CreateInstance(type);
+        var pluginInstance = (BasePlugin)Activator.CreateInstance(type);
 
         pluginInstance.Load();
 
