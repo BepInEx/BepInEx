@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -15,6 +15,8 @@ internal static class PlatformUtils
     [DllImport("/usr/lib/libSystem.dylib", EntryPoint = "uname", CallingConvention = CallingConvention.Cdecl,
                CharSet = CharSet.Ansi)]
     private static extern IntPtr uname_osx(ref utsname_osx utsname);
+
+    public static readonly bool ProcessIs64Bit = IntPtr.Size >= 8;
 
     /// <summary>
     ///     Recreation of MonoMod's PlatformHelper.DeterminePlatform method, but with libc calls instead of creating processes.

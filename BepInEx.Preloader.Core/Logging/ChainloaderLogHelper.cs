@@ -1,4 +1,5 @@
-﻿using System.Linq;
+using System;
+using System.Linq;
 using BepInEx.Logging;
 using BepInEx.Shared;
 using MonoMod.Utils;
@@ -17,7 +18,7 @@ public static class ChainloaderLogHelper
 
         //See BuildInfoAttribute for more information about this section.
         var attributes = typeof(BuildInfoAttribute).Assembly.GetCustomAttributes(typeof(BuildInfoAttribute), false);
-
+        
         if (attributes.Length > 0)
         {
             var attribute = (BuildInfoAttribute) attributes[0];
@@ -25,6 +26,7 @@ public static class ChainloaderLogHelper
         }
 
         Logger.Log(LogLevel.Info, $"System platform: {PlatformHelper.Current}");
+        Logger.Log(LogLevel.Info, $"Process bitness: {(PlatformUtils.ProcessIs64Bit ? "64-bit (x64)" : "32-bit (x86)")}");
     }
 
     public static void RewritePreloaderLogs()
