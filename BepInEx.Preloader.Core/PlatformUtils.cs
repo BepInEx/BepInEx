@@ -16,7 +16,19 @@ internal static class PlatformUtils
                CharSet = CharSet.Ansi)]
     private static extern IntPtr uname_osx(ref utsname_osx utsname);
 
+    [DllImport("ntdll.dll", SetLastError = true)]
+    private static extern bool RtlGetVersion(ref WindowsOSVersionInfoExW versionInfo);
+
+
+    private static bool Is(this Platform current, Platform expected) => (current & expected) == expected;
+
+
     public static readonly bool ProcessIs64Bit = IntPtr.Size >= 8;
+    public static Version WindowsVersion { get; set; }
+
+    public static string LinuxArchitecture { get; set; }
+    public static string LinuxKernelVersion { get; set; }
+
 
     /// <summary>
     ///     Recreation of MonoMod's PlatformHelper.DeterminePlatform method, but with libc calls instead of creating processes.
@@ -40,12 +52,21 @@ internal static class PlatformUtils
             current = Platform.Windows;
         else if (platID.Contains("mac") || platID.Contains("osx"))
             current = Platform.MacOS;
-        else if (platID.Contains("lin") || platID.Contains("unix")) current = Platform.Linux;
+        else if (platID.Contains("lin") || platID.Contains("unix"))
+            current = Platform.Linux;
 
-        if (Is(current, Platform.Linux) && Directory.Exists("/data") && File.Exists("/system/build.prop"))
+        if (current.Is(Platform.Linux) && Directory.Exists("/data") && File.Exists("/system/build.prop"))
             current = Platform.Android;
-        else if (Is(current, Platform.Unix) && Directory.Exists("/System/Library/AccessibilityBundles"))
+        else if (current.Is(Platform.Unix) && Directory.Exists("/System/Library/AccessibilityBundles"))
             current = Platform.iOS;
+
+        if (current.Is(Platform.Windows))
+        {
+            var windowsVersionInfo = new WindowsOSVersionInfoExW();
+            RtlGetVersion(ref windowsVersionInfo);
+
+            WindowsVersion = new Version((int)windowsVersionInfo.dwMajorVersion, (int)windowsVersionInfo.dwMinorVersion, 0, (int)windowsVersionInfo.dwBuildNumber);
+        }
 
         // Is64BitOperatingSystem has been added in .NET Framework 4.0
         var m_get_Is64BitOperatingSystem =
@@ -54,13 +75,13 @@ internal static class PlatformUtils
             current |= (bool) m_get_Is64BitOperatingSystem.Invoke(null, new object[0]) ? Platform.Bits64 : 0;
         else
             current |= IntPtr.Size >= 8 ? Platform.Bits64 : 0;
-
-        if ((Is(current, Platform.MacOS) || Is(current, Platform.Linux)) && Type.GetType("Mono.Runtime") != null)
+        
+        if ((current.Is(Platform.MacOS) || current.Is(Platform.Linux)) && Type.GetType("Mono.Runtime") != null)
         {
             string arch;
             IntPtr result;
 
-            if (Is(current, Platform.MacOS))
+            if (current.Is(Platform.MacOS))
             {
                 var utsname_osx = new utsname_osx();
                 result = uname_osx(ref utsname_osx);
@@ -72,6 +93,9 @@ internal static class PlatformUtils
                 var utsname_linux = new utsname_linux();
                 result = uname_linux(ref utsname_linux);
                 arch = utsname_linux.machine;
+
+                LinuxArchitecture = utsname_linux.machine;
+                LinuxKernelVersion = utsname_linux.version;
             }
 
             if (result == IntPtr.Zero && (arch.StartsWith("aarch") || arch.StartsWith("arm")))
@@ -88,7 +112,23 @@ internal static class PlatformUtils
         PlatformHelper.Current = current;
     }
 
-    private static bool Is(Platform current, Platform expected) => (current & expected) == expected;
+    [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Unicode)]
+    public struct WindowsOSVersionInfoExW
+    {
+        private static uint size = (uint)Marshal.SizeOf(typeof(WindowsOSVersionInfoExW));
+        public uint dwOSVersionInfoSize = size;
+        public uint dwMajorVersion;
+        public uint dwMinorVersion;
+        public uint dwBuildNumber;
+        public uint dwPlatformId;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
+        public string szCSDVersion;
+        public ushort wServicePackMajor;
+        public ushort wServicePackMinor;
+        public ushort wSuiteMask;
+        public byte wProductType;
+        public byte wReserved;
+    }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct utsname_osx

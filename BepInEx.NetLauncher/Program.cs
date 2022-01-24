@@ -31,6 +31,8 @@ internal static class NetPreloaderRunner
 
     internal static void OuterMain(string[] args, string filename)
     {
+        PlatformUtils.SetPlatform();
+
         Paths.SetExecutablePath(filename);
 
         AppDomain.CurrentDomain.AssemblyResolve += LocalResolve;
