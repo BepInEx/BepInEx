@@ -31,4 +31,5 @@
         <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="All" />
     </ItemGroup>
     <Import Project="..\BepInEx.Shared\BepInEx.Shared.projitems" Label="Shared" />
+    <Import Project="..\BepInEx.NetLauncher.Shared\BepInEx.NetLauncher.Shared.projitems" Label="Shared" />
 </Project>

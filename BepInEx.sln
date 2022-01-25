@@ -35,12 +35,18 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "BepInEx.Shared", "BepInEx.S
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BepInEx.NetLauncher.Common", "BepInEx.NetLauncher.Common\BepInEx.NetLauncher.Common.csproj", "{76EB1952-7826-471C-9CF3-815D094DA077}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BepInEx.NetCore", "BepInEx.NetCore\BepInEx.NetCore.csproj", "{08083F40-98AA-4176-BA01-817C18C35C7F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BepInEx.NetCore", "BepInEx.NetCore\BepInEx.NetCore.csproj", "{08083F40-98AA-4176-BA01-817C18C35C7F}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "BepInEx.NetLauncher.Shared", "BepInEx.NetLauncher.Shared\BepInEx.NetLauncher.Shared.shproj", "{067BCC8C-FC25-4929-B4F4-C6A5A7496994}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		BepInEx.NetLauncher.Shared\BepInEx.NetLauncher.Shared.projitems*{067bcc8c-fc25-4929-b4f4-c6a5a7496994}*SharedItemsImports = 13
+		BepInEx.NetLauncher.Shared\BepInEx.NetLauncher.Shared.projitems*{08083f40-98aa-4176-ba01-817c18c35c7f}*SharedItemsImports = 5
+		BepInEx.Shared\BepInEx.Shared.projitems*{08083f40-98aa-4176-ba01-817c18c35c7f}*SharedItemsImports = 5
 		BepInEx.Shared\BepInEx.Shared.projitems*{15f8bc38-a761-4f93-8903-1b531ac5d9f9}*SharedItemsImports = 5
 		BepInEx.Shared\BepInEx.Shared.projitems*{429d5f83-7fec-4d09-ab82-e868eb61af59}*SharedItemsImports = 5
+		BepInEx.NetLauncher.Shared\BepInEx.NetLauncher.Shared.projitems*{490b052b-7f23-4052-ad04-613856618901}*SharedItemsImports = 5
 		BepInEx.Shared\BepInEx.Shared.projitems*{490b052b-7f23-4052-ad04-613856618901}*SharedItemsImports = 5
 		BepInEx.Shared\BepInEx.Shared.projitems*{4ffba620-f5ed-47f9-b90c-dad1316fd9b9}*SharedItemsImports = 5
 		BepInEx.Shared\BepInEx.Shared.projitems*{5c7847fb-c16d-47bd-bb17-1045669f9aa7}*SharedItemsImports = 13
@@ -131,6 +137,7 @@ Global
 		{429D5F83-7FEC-4D09-AB82-E868EB61AF59} = {D5F47CFC-E4F3-46EE-B4F3-2474CF7D9E2C}
 		{76EB1952-7826-471C-9CF3-815D094DA077} = {6EC98884-A3DC-4828-85EF-5F10F7519429}
 		{08083F40-98AA-4176-BA01-817C18C35C7F} = {6EC98884-A3DC-4828-85EF-5F10F7519429}
+		{067BCC8C-FC25-4929-B4F4-C6A5A7496994} = {6EC98884-A3DC-4828-85EF-5F10F7519429}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {55AC11EF-F568-4C79-A356-7ED9510145B1}
