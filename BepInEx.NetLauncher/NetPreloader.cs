@@ -95,9 +95,9 @@ public static class NetPreloader
             Log.LogError($"Game executable is {(executableInfo.Is64Bit ? "64" : "32")}-bit while BepInEx has been compiled as {(launcherInfo.Is64Bit ? "64" : "32")}-bit. Expect crashes");
         }
 
-        if (executableInfo.NetFrameworkVersion != launcherInfo.NetFrameworkVersion)
+        if (executableInfo.NetFrameworkVersion != launcherInfo.NetFrameworkVersion || executableInfo.AssemblyFrameworkType != launcherInfo.AssemblyFrameworkType)
         {
-            Log.LogWarning($"Game executable has been compiled as .NET Framework {executableInfo.NetFrameworkVersion}, while BepInEx has been compiled as .NET Framework {launcherInfo.NetFrameworkVersion}. There may be issues within the game caused by this");
+            Log.LogWarning($"Game executable has been compiled as {executableInfo}, while BepInEx has been compiled as {launcherInfo}. There may be issues within the game caused by this");
         }
 
         Log.LogInfo($"Game executable build architecture: {executableInfo}");
