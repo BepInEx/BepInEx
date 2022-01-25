@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using BepInEx.Bootstrap;
 using BepInEx.Configuration;
 using BepInEx.Logging;
+using BepInEx.NetLauncher.Common;
 using BepInEx.NetLauncher.RuntimeFixes;
 using BepInEx.Preloader.Core;
 using BepInEx.Preloader.Core.Logging;

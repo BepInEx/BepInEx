@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -33,15 +33,37 @@ internal class WindowsConsoleDriver : IConsoleDriver
     private int ConsoleWidth => getWindowWidth?.Invoke() ?? 0;
     private int ConsoleHeight => getWindowHeight?.Invoke() ?? 0;
 
+    private bool useWinApiEncoder;
+
     public TextWriter StandardOut { get; private set; }
     public TextWriter ConsoleOut { get; private set; }
 
     public bool ConsoleActive { get; private set; }
     public bool ConsoleIsExternal => true;
 
-    public void Initialize(bool alreadyActive)
+    private bool TryCheckConsoleExists()
     {
-        ConsoleActive = alreadyActive || ConsoleWidth != 0 && ConsoleHeight != 0;
+        try
+        {
+            return ConsoleWidth != 0 && ConsoleHeight != 0;
+        }
+        catch (IOException)
+        {
+            //System.IO.IOException: The handle is invalid.
+            //    at System.ConsolePal.GetBufferInfo(Boolean throwOnNoConsole, Boolean & succeeded)
+            //at System.ConsolePal.get_WindowWidth()
+            //at System.Console.get_WindowWidth()
+            //at BepInEx.WindowsConsoleDriver.get_ConsoleWidth()
+            //at BepInEx.WindowsConsoleDriver.Initialize(Boolean alreadyActive)
+
+            return false;
+        }
+    }
+
+    public void Initialize(bool alreadyActive, bool useWinApiEncoder)
+    {
+        ConsoleActive = alreadyActive || TryCheckConsoleExists();
+        this.useWinApiEncoder = useWinApiEncoder;
 
         if (ConsoleActive)
         {
@@ -82,7 +104,7 @@ internal class WindowsConsoleDriver : IConsoleDriver
 
         var consoleOutStream = OpenFileStream(ConsoleWindow.ConsoleOutHandle);
         // Can't use Console.OutputEncoding because it can be null (i.e. not preference by user)
-        ConsoleOut = new StreamWriter(consoleOutStream, ConsoleEncoding.OutputEncoding)
+        ConsoleOut = new StreamWriter(consoleOutStream, useWinApiEncoder ? ConsoleEncoding.OutputEncoding : Utility.UTF8NoBom)
         {
             AutoFlush = true
         };

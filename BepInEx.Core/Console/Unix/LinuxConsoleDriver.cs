@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using BepInEx.Configuration;
 using BepInEx.Logging;
@@ -46,7 +46,7 @@ internal class LinuxConsoleDriver : IConsoleDriver
         // Not supported by all distros
     }
 
-    public void Initialize(bool alreadyActive)
+    public void Initialize(bool alreadyActive, bool useWinApiEncoder)
     {
         // Console is always considered active on Unix
         ConsoleActive = true;

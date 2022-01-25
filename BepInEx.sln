@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.28922.388
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.32112.339
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BepInExTests", "BepInExTests\BepInExTests.csproj", "{E7CD429A-D057-48E3-8C51-E5C934E8E07B}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -26,23 +26,25 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "IL2CPP", "IL2CPP", "{D5F47C
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BepInEx.IL2CPP", "BepInEx.IL2CPP\BepInEx.IL2CPP.csproj", "{429D5F83-7FEC-4D09-AB82-E868EB61AF59}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Assets", "Assets", "{68C57430-3E92-4B50-A9A5-208FE9CCD914}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Markdown", "Markdown", "{68C57430-3E92-4B50-A9A5-208FE9CCD914}"
 	ProjectSection(SolutionItems) = preProject
 		README.md = README.md
-		build.cake = build.cake
 	EndProjectSection
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "BepInEx.Shared", "BepInEx.Shared\BepInEx.Shared.shproj", "{5C7847FB-C16D-47BD-BB17-1045669F9AA7}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BepInEx.NetLauncher.Common", "BepInEx.NetLauncher.Common\BepInEx.NetLauncher.Common.csproj", "{76EB1952-7826-471C-9CF3-815D094DA077}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BepInEx.NetCore", "BepInEx.NetCore\BepInEx.NetCore.csproj", "{08083F40-98AA-4176-BA01-817C18C35C7F}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		BepInEx.Shared\BepInEx.Shared.projitems*{15f8bc38-a761-4f93-8903-1b531ac5d9f9}*SharedItemsImports = 5
 		BepInEx.Shared\BepInEx.Shared.projitems*{429d5f83-7fec-4d09-ab82-e868eb61af59}*SharedItemsImports = 5
 		BepInEx.Shared\BepInEx.Shared.projitems*{490b052b-7f23-4052-ad04-613856618901}*SharedItemsImports = 5
 		BepInEx.Shared\BepInEx.Shared.projitems*{4ffba620-f5ed-47f9-b90c-dad1316fd9b9}*SharedItemsImports = 5
 		BepInEx.Shared\BepInEx.Shared.projitems*{5c7847fb-c16d-47bd-bb17-1045669f9aa7}*SharedItemsImports = 13
-		BepInEx.Shared\BepInEx.Shared.projitems*{6e6bc1e5-5be8-4566-b3ae-52c4cb218aeb}*SharedItemsImports = 5
 		BepInEx.Shared\BepInEx.Shared.projitems*{d404c973-441d-48ed-b266-c21320ba0d87}*SharedItemsImports = 5
-		BepInEx.Shared\BepInEx.Shared.projitems*{dc89f18b-235b-4c01-ab31-af40dce5c4c7}*SharedItemsImports = 5
 		BepInEx.Shared\BepInEx.Shared.projitems*{eae9fae6-8011-45a3-8b6e-0c7f14210533}*SharedItemsImports = 5
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -102,6 +104,22 @@ Global
 		{429D5F83-7FEC-4D09-AB82-E868EB61AF59}.Release_Unity|Any CPU.Build.0 = Release|Any CPU
 		{429D5F83-7FEC-4D09-AB82-E868EB61AF59}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{429D5F83-7FEC-4D09-AB82-E868EB61AF59}.Release|Any CPU.Build.0 = Release|Any CPU
+		{76EB1952-7826-471C-9CF3-815D094DA077}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{76EB1952-7826-471C-9CF3-815D094DA077}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{76EB1952-7826-471C-9CF3-815D094DA077}.Release_NetFramework|Any CPU.ActiveCfg = Release|Any CPU
+		{76EB1952-7826-471C-9CF3-815D094DA077}.Release_NetFramework|Any CPU.Build.0 = Release|Any CPU
+		{76EB1952-7826-471C-9CF3-815D094DA077}.Release_Unity|Any CPU.ActiveCfg = Release|Any CPU
+		{76EB1952-7826-471C-9CF3-815D094DA077}.Release_Unity|Any CPU.Build.0 = Release|Any CPU
+		{76EB1952-7826-471C-9CF3-815D094DA077}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{76EB1952-7826-471C-9CF3-815D094DA077}.Release|Any CPU.Build.0 = Release|Any CPU
+		{08083F40-98AA-4176-BA01-817C18C35C7F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{08083F40-98AA-4176-BA01-817C18C35C7F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{08083F40-98AA-4176-BA01-817C18C35C7F}.Release_NetFramework|Any CPU.ActiveCfg = Release|Any CPU
+		{08083F40-98AA-4176-BA01-817C18C35C7F}.Release_NetFramework|Any CPU.Build.0 = Release|Any CPU
+		{08083F40-98AA-4176-BA01-817C18C35C7F}.Release_Unity|Any CPU.ActiveCfg = Release|Any CPU
+		{08083F40-98AA-4176-BA01-817C18C35C7F}.Release_Unity|Any CPU.Build.0 = Release|Any CPU
+		{08083F40-98AA-4176-BA01-817C18C35C7F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{08083F40-98AA-4176-BA01-817C18C35C7F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -111,6 +129,8 @@ Global
 		{D404C973-441D-48ED-B266-C21320BA0D87} = {6E2DD21E-0854-4F4A-B925-D90E0016D03D}
 		{490B052B-7F23-4052-AD04-613856618901} = {6EC98884-A3DC-4828-85EF-5F10F7519429}
 		{429D5F83-7FEC-4D09-AB82-E868EB61AF59} = {D5F47CFC-E4F3-46EE-B4F3-2474CF7D9E2C}
+		{76EB1952-7826-471C-9CF3-815D094DA077} = {6EC98884-A3DC-4828-85EF-5F10F7519429}
+		{08083F40-98AA-4176-BA01-817C18C35C7F} = {6EC98884-A3DC-4828-85EF-5F10F7519429}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {55AC11EF-F568-4C79-A356-7ED9510145B1}

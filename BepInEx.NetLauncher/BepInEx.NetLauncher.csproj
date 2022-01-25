@@ -17,17 +17,18 @@
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
         <DebugType>portable</DebugType>
         <OutputPath>..\bin\NetLauncher\</OutputPath>
-        <DocumentationFile/>
+        <DocumentationFile />
         <PlatformTarget>x86</PlatformTarget>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     </PropertyGroup>
     <ItemGroup>
-        <ProjectReference Include="..\BepInEx.Core\BepInEx.Core.csproj"/>
-        <ProjectReference Include="..\BepInEx.Preloader.Core\BepInEx.Preloader.Core.csproj" PrivateAssets="All"/>
+        <ProjectReference Include="..\BepInEx.Core\BepInEx.Core.csproj" />
+        <ProjectReference Include="..\BepInEx.NetLauncher.Common\BepInEx.NetLauncher.Common.csproj" />
+        <ProjectReference Include="..\BepInEx.Preloader.Core\BepInEx.Preloader.Core.csproj" PrivateAssets="All" />
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="HarmonyX" Version="2.8.0"/>
-        <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="All"/>
+        <PackageReference Include="HarmonyX" Version="2.8.0" />
+        <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="All" />
     </ItemGroup>
-    <Import Project="..\BepInEx.Shared\BepInEx.Shared.projitems" Label="Shared"/>
+    <Import Project="..\BepInEx.Shared\BepInEx.Shared.projitems" Label="Shared" />
 </Project>

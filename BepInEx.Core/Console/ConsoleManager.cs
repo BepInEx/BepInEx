@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.IO;
 using System.Text;
@@ -94,7 +94,7 @@ public static class ConsoleManager
     public static TextWriter ConsoleStream => Driver?.ConsoleOut;
 
 
-    public static void Initialize(bool alreadyActive)
+    public static void Initialize(bool alreadyActive, bool useWinApiEncoder)
     {
         if (PlatformHelper.Is(Platform.Unix))
             Driver = new LinuxConsoleDriver();
@@ -104,7 +104,7 @@ public static class ConsoleManager
             throw new PlatformNotSupportedException("Was unable to determine console driver for platform " +
                                                     PlatformHelper.Current);
 
-        Driver.Initialize(alreadyActive);
+        Driver.Initialize(alreadyActive, useWinApiEncoder);
     }
 
     private static void DriverCheck()
