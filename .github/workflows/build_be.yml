@@ -70,7 +70,7 @@ jobs:
                   "title": "BepInEx Bleeding Edge build #${{ steps.info.outputs.build_id }}",
                   "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
                   "color": 1559874,
-                  "description": "Changelog:\n\n${{ steps.generate_changelog.outputs.changelog }}\n\n[**Artifacts on BepisBuilds**](https://builds.bepis.io/projects/bepinex_be)"
+                  "description": "Changelog:\n\n${{ steps.generate_changelog.outputs.changelog }}\n\n[**Artifacts on BepInBuilds**](https://builds.bepinex.dev/projects/bepinex_be)"
                 }
               ]
             }
