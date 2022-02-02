@@ -45,11 +45,13 @@ jobs:
           ./build.sh --target=Pack --bleeding_edge=${{ steps.be_status.outputs.is_be == 'true' }} --build_id=${{ steps.info.outputs.build_id || 0 }} --last_build_commit=\"${{ steps.last_successful_commit.outputs.commit_hash }}\" --nuget_push_key=\"${{ secrets.BEPIN_DEV_NUGET_KEY }}\"
       - name: Upload to BepisBuilds
         env:
-          BEPISBUILDS_ADDR: ${{ secrets.BEPISBUILDS_ADDR }}
-        if: ${{ steps.be_status.outputs.is_be == 'true' && env.BEPISBUILDS_ADDR != null }}
+          BEPISBUILDS_HOST: ${{ secrets.BEPISBUILDS_HOST }}
+          BEPISBUILDS_AUTH: ${{ secrets.BEPISBUILDS_AUTH }}
+          BEPISBUILDS_PORT: ${{ secrets.BEPISBUILDS_PORT }}
+        if: ${{ steps.be_status.outputs.is_be == 'true' && env.BEPISBUILDS_HOST != null }}
         run: |
           artifacts_list=$(ls ./bin/dist/*.* | tr '\n' ','); artifacts_list=${artifacts_list::-1};
-          curl --upload-file "{${artifacts_list}}" --ftp-pasv --ftp-skip-pasv-ip --ftp-create-dirs --ftp-method singlecwd --disable-epsv ${{ secrets.BEPISBUILDS_ADDR }}/bepinex_be/artifacts/${{ steps.info.outputs.build_id }}/
+          curl --upload-file "{${artifacts_list}}" --ftp-pasv --ftp-skip-pasv-ip --ftp-create-dirs --ftp-method singlecwd --disable-epsv "ftp://${BEPISBUILDS_AUTH}@${BEPISBUILDS_HOST}:${BEPISBUILDS_PORT}/bepinex_be/artifacts/${{ steps.info.outputs.build_id }}/"
       - name: Generate changelog
         id: generate_changelog
         if: ${{ steps.be_status.outputs.is_be == 'true' }}
