@@ -62,9 +62,9 @@ A more comprehensive comparison list of features and compatibility is available 
 - [NeighTools/UnityDoorstop.Unix](https://github.com/NeighTools/UnityDoorstop.Unix) -
   1.5.1.0 ([06e9790](https://github.com/NeighTools/UnityDoorstop.Unix/commit/06e979008730cf89c6bcf8806f2c18c80b0a7b21))
 - [BepInEx/HarmonyX](https://github.com/BepInEx/HarmonyX) -
-  2.8.0 ([04d985a](https://github.com/BepInEx/HarmonyX/commit/04d985a2e931a4b274a170ccfbb80465adda15fa))
+  2.9.0 ([31d794f](https://github.com/BepInEx/HarmonyX/commit/31d794f3affce55fa87c99efac7dae23a126cf52))
 - [0x0ade/MonoMod](https://github.com/0x0ade/MonoMod) -
-  v22.1.4.3 ([1fe55bb](https://github.com/MonoMod/MonoMod/commit/1fe55bb10f5ad54b896b141c715f731719d7e48a))
+  v22.1.29.1 ([68cf231](https://github.com/MonoMod/MonoMod/commit/68cf23127bd2394004e8a812b160a0862c95a309))
 - [jbevain/cecil](https://github.com/jbevain/cecil) -
   0.10.4 ([98ec890](https://github.com/jbevain/cecil/commit/98ec890d44643ad88d573e97be0e120435eda732))
 
