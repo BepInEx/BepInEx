@@ -3,7 +3,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using BepInEx.Preloader.RuntimeFixes;
-using HarmonyXInterop;
 
 namespace BepInEx.Preloader
 {
@@ -21,6 +20,9 @@ namespace BepInEx.Preloader
 			"Mono.Cecil.Mdb.dll",
 			"Mono.Cecil.Pdb.dll",
 			"Mono.Cecil.Rocks.dll",
+			"MonoMod.Utils.dll",
+			"MonoMod.RuntimeDetour.dll",
+			"0Harmony.dll",
 		};
 
 		private static void LoadCriticalAssemblies()
