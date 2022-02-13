@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -214,7 +214,7 @@ public static class ThreadingExtensions
     /// <typeparam name="TOut">Type of the output values.</typeparam>
     /// <param name="data">Input values for the work function.</param>
     /// <param name="work">Function to apply to the data on multiple threads at once.</param>
-    /// <param name="workerCount">Number of worker threads. By default SystemInfo.processorCount is used.</param>
+    /// <param name="workerCount">Number of worker threads. By default Environment.ProcessorCount is used.</param>
     /// <exception cref="TargetInvocationException">
     ///     An exception was thrown inside one of the threads, and the operation was
     ///     aborted.
@@ -296,5 +296,68 @@ public static class ThreadingExtensions
         if (exceptionThrown != null)
             throw new TargetInvocationException("An exception was thrown inside one of the threads",
                                                 exceptionThrown);
+    }
+
+    /// <summary>
+    /// Apply a function to a collection of data by spreading the work on multiple threads.
+    /// Lower overhead than RunParallel but it blocks the main thread until all work is completed or an exception has been thrown.
+    /// </summary>
+    /// <typeparam name="T">Type of the input values.</typeparam>
+    /// <param name="data">Input values for the work function.</param>
+    /// <param name="work">Function to apply to the data on multiple threads at once.</param>
+    /// <param name="workerCount">Number of worker threads. By default Environment.ProcessorCount is used.</param>
+    /// <exception cref="TargetInvocationException">An exception was thrown inside one of the threads, and the operation was aborted.</exception>
+    /// <exception cref="ArgumentException">Need at least 1 workerCount.</exception>
+    public static void ForEachParallel<T>(this IList<T> data, Action<T> work, int workerCount = -1)
+    {
+        if (workerCount < 0)
+            workerCount = Mathf.Max(2, Environment.ProcessorCount);
+        else if (workerCount == 0)
+            throw new ArgumentException("Need at least 1 worker", nameof(workerCount));
+
+        var currentIndex = data.Count;
+
+        var are = new ManualResetEvent(false);
+        var runningCount = workerCount;
+        Exception exceptionThrown = null;
+
+        void DoWork(object _)
+        {
+            try
+            {
+                while (true)
+                {
+                    if (exceptionThrown != null)
+                        return;
+
+                    var decrementedIndex = Interlocked.Decrement(ref currentIndex);
+                    if (decrementedIndex < 0)
+                        return;
+
+                    work(data[decrementedIndex]);
+                }
+            }
+            catch (Exception ex)
+            {
+                exceptionThrown = ex;
+            }
+            finally
+            {
+                var decCount = Interlocked.Decrement(ref runningCount);
+                if (decCount <= 0)
+                    are.Set();
+            }
+        }
+
+        // Start threads to process the data
+        for (var i = 0; i < workerCount - 1; i++)
+            ThreadPool.QueueUserWorkItem(DoWork);
+
+        DoWork(null);
+
+        are.WaitOne();
+
+        if (exceptionThrown != null)
+            throw new TargetInvocationException("An exception was thrown inside one of the threads", exceptionThrown);
     }
 }
