@@ -1,6 +1,6 @@
 name: Error Report
 description: Unsure if an error is a bug? Post an error message or error log you got from BepInEx
-labels: [error, awaiting-replication]
+labels: [error, needs-replication]
 body:
   - type: markdown
     attributes:
