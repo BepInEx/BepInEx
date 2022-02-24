@@ -22,7 +22,7 @@
     </PropertyGroup>
     <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')"/>
     <ItemGroup>
-        <PackageReference Include="Iced" Version="1.15.0"/>
+        <PackageReference Include="Iced" Version="1.17.0"/>
         <PackageReference Include="MSTest.TestAdapter" Version="2.2.8"/>
         <PackageReference Include="MSTest.TestFramework" Version="2.2.8"/>
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.1.0-release-20220113-05"/>

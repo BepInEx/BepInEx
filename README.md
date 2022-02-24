@@ -73,10 +73,10 @@ A more comprehensive comparison list of features and compatibility is available 
 - [Perfare/Il2CppDumper](https://github.com/Perfare/Il2CppDumper) - v6.6.3
   fork ([112e2e8](https://github.com/BepInEx/Il2CppDumper/commit/112e2e8c369dfcb6d5718fd4ad7e3838d7ddabbf))
 - [SamboyCoding/Cpp2IL](https://github.com/SamboyCoding/Cpp2IL)  -
-  2022.0.0 ([6c43346](https://github.com/SamboyCoding/Cpp2IL/commit/6c43346e95bc04bfbeb4db43b929860120d3a49b))
-- [BepInEx/Il2CppAssemblyUnhollower](https://github.com/BepInEx/Il2CppAssemblyUnhollower) - v0.4.22.0 (fork of
+  2022.0.1 ([21a45ea](https://github.com/SamboyCoding/Cpp2IL/commit/21a45ea108b11296fd2f5a015d8f818b743c3c5d))
+- [BepInEx/Il2CppAssemblyUnhollower](https://github.com/BepInEx/Il2CppAssemblyUnhollower) - v0.4.23.0 (fork of
   knah/Il2CppAssemblyUnhollower)
-  fork ([a8b334d](https://github.com/BepInEx/Il2CppAssemblyUnhollower/commit/a8b334d3e303a31c45ef6de44ced844f83b8dcae))
+  fork ([7f059df](https://github.com/BepInEx/Il2CppAssemblyUnhollower/commit/7f059dfd74c7b9dfb4a497965d241943f611bdfb))
 - [mono/mono](https://github.com/mono/mono) - 6.12.0.93
   fork ([7328415](https://github.com/BepInEx/mono/commit/7328415ac575399a71f32487e97bce9d5fe7f6ca))
 
