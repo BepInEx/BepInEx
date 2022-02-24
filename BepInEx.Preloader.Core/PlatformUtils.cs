@@ -8,6 +8,12 @@ namespace BepInEx.Preloader.Core;
 
 internal static class PlatformUtils
 {
+    public static readonly bool ProcessIs64Bit = IntPtr.Size >= 8;
+    public static Version WindowsVersion { get; set; }
+
+    public static string LinuxArchitecture { get; set; }
+    public static string LinuxKernelVersion { get; set; }
+
     [DllImport("libc.so.6", EntryPoint = "uname", CallingConvention = CallingConvention.Cdecl,
                CharSet = CharSet.Ansi)]
     private static extern IntPtr uname_linux(ref utsname_linux utsname);
@@ -21,13 +27,6 @@ internal static class PlatformUtils
 
 
     private static bool Is(this Platform current, Platform expected) => (current & expected) == expected;
-
-
-    public static readonly bool ProcessIs64Bit = IntPtr.Size >= 8;
-    public static Version WindowsVersion { get; set; }
-
-    public static string LinuxArchitecture { get; set; }
-    public static string LinuxKernelVersion { get; set; }
 
 
     /// <summary>
@@ -65,7 +64,9 @@ internal static class PlatformUtils
             var windowsVersionInfo = new WindowsOSVersionInfoExW();
             RtlGetVersion(ref windowsVersionInfo);
 
-            WindowsVersion = new Version((int)windowsVersionInfo.dwMajorVersion, (int)windowsVersionInfo.dwMinorVersion, 0, (int)windowsVersionInfo.dwBuildNumber);
+            WindowsVersion = new Version((int) windowsVersionInfo.dwMajorVersion,
+                                         (int) windowsVersionInfo.dwMinorVersion, 0,
+                                         (int) windowsVersionInfo.dwBuildNumber);
         }
 
         // Is64BitOperatingSystem has been added in .NET Framework 4.0
@@ -75,7 +76,7 @@ internal static class PlatformUtils
             current |= (bool) m_get_Is64BitOperatingSystem.Invoke(null, new object[0]) ? Platform.Bits64 : 0;
         else
             current |= IntPtr.Size >= 8 ? Platform.Bits64 : 0;
-        
+
         if ((current.Is(Platform.MacOS) || current.Is(Platform.Linux)) && Type.GetType("Mono.Runtime") != null)
         {
             string arch;
@@ -115,19 +116,35 @@ internal static class PlatformUtils
     [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Unicode)]
     public struct WindowsOSVersionInfoExW
     {
-        private static uint size = (uint)Marshal.SizeOf(typeof(WindowsOSVersionInfoExW));
-        public uint dwOSVersionInfoSize = size;
+        public uint dwOSVersionInfoSize;
         public uint dwMajorVersion;
         public uint dwMinorVersion;
         public uint dwBuildNumber;
         public uint dwPlatformId;
+
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
         public string szCSDVersion;
+
         public ushort wServicePackMajor;
         public ushort wServicePackMinor;
         public ushort wSuiteMask;
         public byte wProductType;
         public byte wReserved;
+
+        public WindowsOSVersionInfoExW()
+        {
+            dwOSVersionInfoSize = (uint) Marshal.SizeOf(typeof(WindowsOSVersionInfoExW));
+            dwMajorVersion = 0;
+            dwMinorVersion = 0;
+            dwBuildNumber = 0;
+            dwPlatformId = 0;
+            szCSDVersion = null;
+            wServicePackMajor = 0;
+            wServicePackMinor = 0;
+            wSuiteMask = 0;
+            wProductType = 0;
+            wReserved = 0;
+        }
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
