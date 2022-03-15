@@ -333,6 +333,9 @@ public unsafe class IL2CPPDetourMethodPatcher : MethodPatcher
                 ) // General reference type
         {
             return typeof(IntPtr);
+        } else if(managedType == typeof(bool)) {
+            // bool is byte in Il2Cpp, but int in CLR => force size to be correct
+            return typeof(byte);
         }
 
         return managedType;
