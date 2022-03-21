@@ -82,10 +82,11 @@ Task("Build")
     }
 });
 
-const string DOORSTOP_VER_WIN = "3.4.1.0";
+const string DOORSTOP_VER_WIN = "4.0.0-alpha.1";
 const string DOORSTOP_VER_UNIX = "1.5.1.0";
 const string MONO_VER = "2021.6.24";
-const string DOORSTOP_DLL = "winhttp.dll";
+const string DOORSTOP_DLL = "doorstop.dll";
+const string DOORSTOP_PROXY_DLL = "winhttp.dll";
 
 var depCachePath = Directory($"./bin/{DEP_CACHE_NAME}");
 var doorstopPath = depCachePath + Directory("doorstop");
@@ -112,15 +113,15 @@ Task("DownloadDependencies")
 
     if (NeedsRedownload("NeighTools/UnityDoorstop", DOORSTOP_VER_WIN))
     {
-        Information("Updating Doorstop (Windows)");
-        var doorstopX64Path = doorstopPath + File("doorstop_x64.zip");
-        var doorstopX86Path = doorstopPath + File("doorstop_x86.zip");
+        Information("Updating Doorstop");
+        // var doorstopX64Path = doorstopPath + File("doorstop_x64.zip");
+        // var doorstopX86Path = doorstopPath + File("doorstop_x86.zip");
 
-        DownloadFile($"https://github.com/NeighTools/UnityDoorstop/releases/download/v{DOORSTOP_VER_WIN}/Doorstop_x64_{DOORSTOP_VER_WIN}.zip", doorstopX64Path);
-        DownloadFile($"https://github.com/NeighTools/UnityDoorstop/releases/download/v{DOORSTOP_VER_WIN}/Doorstop_x86_{DOORSTOP_VER_WIN}.zip", doorstopX86Path);
+        // DownloadFile($"https://github.com/NeighTools/UnityDoorstop/releases/download/v{DOORSTOP_VER_WIN}/Doorstop_x64_{DOORSTOP_VER_WIN}.zip", doorstopX64Path);
+        // DownloadFile($"https://github.com/NeighTools/UnityDoorstop/releases/download/v{DOORSTOP_VER_WIN}/Doorstop_x86_{DOORSTOP_VER_WIN}.zip", doorstopX86Path);
 
-        ZipUncompress(doorstopX86Path, doorstopPath + Directory("x86"));
-        ZipUncompress(doorstopX64Path, doorstopPath + Directory("x64"));
+        // ZipUncompress(doorstopX86Path, doorstopPath + Directory("x86"));
+        // ZipUncompress(doorstopX64Path, doorstopPath + Directory("x64"));
     }
 
     if (NeedsRedownload("NeighTools/UnityDoorstop.Unix", DOORSTOP_VER_UNIX))
@@ -222,7 +223,14 @@ Task("MakeDist")
         if (doorstopArchPath != null)
         {
             CopyFile("./doorstop/" + doorstopConfigFile, Directory(distArchDir) + File(isUnix ? "run_bepinex.sh" : "doorstop_config.ini"));
-            CopyFiles(doorstopArchPath, doorstopDir);
+            if (isUnix)
+            {
+                CopyFiles(doorstopArchPath, doorstopDir);
+            }
+            else
+            {
+                CopyFile(doorstopArchPath, Directory(doorstopDir) + File(DOORSTOP_PROXY_DLL));
+            }
 
             if (isUnix)
             {
