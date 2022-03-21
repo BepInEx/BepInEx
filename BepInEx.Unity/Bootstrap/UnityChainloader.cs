@@ -58,14 +58,7 @@ public class UnityChainloader : BaseChainloader<BaseUnityPlugin>
         get => Application.unityVersion;
     }
 
-    private static Version UnityVersionAsVersion => new Version(UnityVersion.Substring(0, UnityVersion.LastIndexOf('.') + 2));
-
-    private static bool staticStartHasBeenCalled = false;
-
-    /// <summary>
-    /// This method is public so that BepInEx can correctly initialize on some versions of Unity that do not respect InternalsVisibleToAttribute. Do not call this yourself
-    /// </summary>
-    [Obsolete("This method is public so that BepInEx can correctly initialize on some versions of Unity that do not respect InternalsVisibleToAttribute. DO NOT CALL", true)]
+    [Obsolete("This method is public due to a limitation with Unity 4.x. DO NOT CALL", true)]
     public static void StaticStart(string gameExePath = null)
     {
         try
@@ -78,8 +71,6 @@ public class UnityChainloader : BaseChainloader<BaseUnityPlugin>
             var instance = new UnityChainloader();
             instance.Initialize(gameExePath);
             instance.Execute();
-
-            staticStartHasBeenCalled = true;
 
             Logger.Log(LogLevel.Debug, "Exiting chainloader StaticStart");
         }
@@ -101,26 +92,18 @@ public class UnityChainloader : BaseChainloader<BaseUnityPlugin>
 
             UnityTomlTypeConverters.AddUnityEngineConverters();
 
-            Logger.Log(LogLevel.Debug, "Creating Manager object");
+            Logger.Log(LogLevel.Debug, "Initializing ThreadingHelper");
+            //ThreadingHelper.Initialize();
 
+            Logger.Log(LogLevel.Debug, "Creating Manager object");
             ManagerObject = new GameObject("BepInEx_Manager") { hideFlags = HideFlags.HideAndDontSave };
             Object.DontDestroyOnLoad(ManagerObject);
 
             Logger.Log(LogLevel.Debug, "Getting game product name");
-
-            var productNameProp = typeof(Application).GetProperty("productName", BindingFlags.Public | BindingFlags.Static);
-
-            _consoleTitle = $"{CurrentAssemblyName} {CurrentAssemblyVersion} - {productNameProp?.GetValue(null, null) ?? Path.GetFileNameWithoutExtension(Process.GetCurrentProcess().ProcessName)}";
-
-            if (UnityVersionAsVersion.Major >= 5)
-            {
-                Logger.Log(LogLevel.Debug, "Initializing ThreadingHelper");
-                ThreadingHelper.Initialize();
-            }
-            else
-            {
-                Logger.Log(LogLevel.Debug, "Skipping ThreadingHelper init due to unity version (<= 4)");
-            }
+            var productNameProp =
+                typeof(Application).GetProperty("productName", BindingFlags.Public | BindingFlags.Static);
+            _consoleTitle =
+                $"{CurrentAssemblyName} {CurrentAssemblyVersion} - {productNameProp?.GetValue(null, null) ?? Path.GetFileNameWithoutExtension(Process.GetCurrentProcess().ProcessName)}";
 
             Logger.Log(LogLevel.Debug, "Falling back to BaseChainloader initializer");
 
