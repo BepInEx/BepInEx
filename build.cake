@@ -82,10 +82,8 @@ Task("Build")
     }
 });
 
-const string DOORSTOP_VER_WIN = "4.0.0-alpha.1";
-const string DOORSTOP_VER_UNIX = "1.5.1.0";
+const string DOORSTOP_VER = "4.0.0-alpha.1";
 const string MONO_VER = "2021.6.24";
-const string DOORSTOP_DLL = "doorstop.dll";
 const string DOORSTOP_PROXY_DLL = "winhttp.dll";
 
 var depCachePath = Directory($"./bin/{DEP_CACHE_NAME}");
@@ -111,34 +109,26 @@ Task("DownloadDependencies")
     CreateDirectory(doorstopPath);
     CreateDirectory(monoPath);
 
-    if (NeedsRedownload("NeighTools/UnityDoorstop", DOORSTOP_VER_WIN))
+    if (NeedsRedownload("NeighTools/UnityDoorstop", DOORSTOP_VER))
     {
         Information("Updating Doorstop");
-        // var doorstopX64Path = doorstopPath + File("doorstop_x64.zip");
-        // var doorstopX86Path = doorstopPath + File("doorstop_x86.zip");
+        var doorstopZipPathWin = doorstopPath + File("doorstop_win.zip");
+        var doorstopZipPathLinux = doorstopPath + File("doorstop_linux.zip");
+        var doorstopZipPathMacOs = doorstopPath + File("doorstop_macos.zip");
 
-        // DownloadFile($"https://github.com/NeighTools/UnityDoorstop/releases/download/v{DOORSTOP_VER_WIN}/Doorstop_x64_{DOORSTOP_VER_WIN}.zip", doorstopX64Path);
-        // DownloadFile($"https://github.com/NeighTools/UnityDoorstop/releases/download/v{DOORSTOP_VER_WIN}/Doorstop_x86_{DOORSTOP_VER_WIN}.zip", doorstopX86Path);
+        // TODO: Fix URLs once Doorstop 4 is released
+        DownloadFile($"https://nightly.link/NeighTools/UnityDoorstop/workflows/build-be/wip-rewrite/Doorstop_WIN-RELEASE.zip", doorstopZipPathWin);
+        DownloadFile($"https://nightly.link/NeighTools/UnityDoorstop/workflows/build-be/wip-rewrite/Doorstop_LINUX-RELEASE.zip", doorstopZipPathLinux);
+        DownloadFile($"https://nightly.link/NeighTools/UnityDoorstop/workflows/build-be/wip-rewrite/Doorstop_MACOS-RELEASE.zip", doorstopZipPathMacOs);
 
-        // ZipUncompress(doorstopX86Path, doorstopPath + Directory("x86"));
-        // ZipUncompress(doorstopX64Path, doorstopPath + Directory("x64"));
-    }
-
-    if (NeedsRedownload("NeighTools/UnityDoorstop.Unix", DOORSTOP_VER_UNIX))
-    {
-        Information("Updating Doorstop (Unix)");
-        var doorstopLinuxPath = doorstopPath + File("doorstop_linux.zip");
-        var doorstopMacPath = doorstopPath + File("doorstop_macos.zip");
-
-        DownloadFile($"https://github.com/NeighTools/UnityDoorstop.Unix/releases/download/v{DOORSTOP_VER_UNIX}/doorstop_v{DOORSTOP_VER_UNIX}_linux.zip", doorstopLinuxPath);
-        DownloadFile($"https://github.com/NeighTools/UnityDoorstop.Unix/releases/download/v{DOORSTOP_VER_UNIX}/doorstop_v{DOORSTOP_VER_UNIX}_macos.zip", doorstopMacPath);
-
-        ZipUncompress(doorstopLinuxPath, doorstopPath + Directory("unix"));
-        ZipUncompress(doorstopMacPath, doorstopPath + Directory("unix"));
+        ZipUncompress(doorstopZipPathWin, doorstopPath + Directory("win"));
+        ZipUncompress(doorstopZipPathLinux, doorstopPath + Directory("unix"));
+        ZipUncompress(doorstopZipPathMacOs, doorstopPath + Directory("unix"));
     }
 
     if (NeedsRedownload("BepInEx/mono", MONO_VER))
     {
+        // TODO: Instead download dotnet + BCL
         Information("Updating Mono");
 
         var monoX64Path = doorstopPath + File("mono_x64.zip");
@@ -194,19 +184,20 @@ Task("MakeDist")
                         .WithToken("commit_log", RunGit($"--no-pager log --no-merges --pretty=\"format:* (%h) [%an] %s\" {latestTag}..HEAD", "\r\n"))
                         .ToString();
 
-    void PackageBepin(string platform, string arch, string originDir, string doorstopConfigFile = null, bool copyMono = false) 
+    void PackageBepin(string platform, string os, string doorstopArch, string originDir, string doorstopConfigFile = null, bool copyMono = false) 
     {
-        var platformName = platform + (arch == null ? "" : "_" + arch);
-        var isUnix = arch == "unix";
+        var platformName = platform + (os == null ? "" : "_" + os) + (doorstopArch == null ? "" : "_" + doorstopArch);
+        var isUnix = os == "unix";
 
         Information("Creating distributions for platform \"" + platformName + "\"...");
     
         string doorstopArchPath = null;
+        ConvertableDirectoryPath doorstopArchDir = null;
         
-        if (arch != null)
+        if (doorstopConfigFile != null)
         {
-            doorstopArchPath = doorstopPath + Directory(arch)
-                + File(isUnix ? "*.*" : DOORSTOP_DLL);
+            doorstopArchDir = doorstopPath + Directory(os) + Directory(isUnix ? "libdoorstop" : doorstopArch);
+            doorstopArchPath = doorstopArchDir + File(isUnix ? "*.*" : DOORSTOP_PROXY_DLL);
         }
         
         var distArchDir = distDir + Directory(platformName);
@@ -220,16 +211,18 @@ Task("MakeDist")
         CreateDirectory(bepinDir + Directory("plugins"));
         CreateDirectory(bepinDir + Directory("patchers"));
 
-        if (doorstopArchPath != null)
+        if (doorstopConfigFile != null)
         {
             CopyFile("./doorstop/" + doorstopConfigFile, Directory(distArchDir) + File(isUnix ? "run_bepinex.sh" : "doorstop_config.ini"));
             if (isUnix)
             {
                 CopyFiles(doorstopArchPath, doorstopDir);
+                MoveFile(doorstopDir + File(".doorstop_version"), distArchDir + File(".doorstop_version"));
             }
             else
             {
                 CopyFile(doorstopArchPath, Directory(doorstopDir) + File(DOORSTOP_PROXY_DLL));
+                CopyFile(doorstopArchDir + File(".doorstop_version"), doorstopDir + File(".doorstop_version"));
             }
 
             if (isUnix)
@@ -239,7 +232,7 @@ Task("MakeDist")
 
             if (copyMono)
             {
-                CopyDirectory(monoPath + Directory(arch) + Directory("mono"), Directory(distArchDir) + Directory("mono"));
+                CopyDirectory(monoPath + Directory(doorstopArch) + Directory("mono"), Directory(distArchDir) + Directory("mono"));
             }
         }
 
@@ -254,12 +247,12 @@ Task("MakeDist")
         }
     }
 
-    PackageBepin("UnityMono", "x86", "Unity", "doorstop_config_mono.ini");
-    PackageBepin("UnityMono", "x64", "Unity", "doorstop_config_mono.ini");
-    PackageBepin("UnityMono", "unix", "Unity", "run_bepinex.sh");
-    PackageBepin("UnityIL2CPP", "x86", "IL2CPP", "doorstop_config_il2cpp.ini", copyMono: true);
-    PackageBepin("UnityIL2CPP", "x64", "IL2CPP", "doorstop_config_il2cpp.ini", copyMono: true);
-    PackageBepin("NetLauncher", null, "NetLauncher");
+    PackageBepin("UnityMono", "win", "x86", "Unity", "doorstop_config_mono.ini");
+    PackageBepin("UnityMono", "win", "x64", "Unity", "doorstop_config_mono.ini");
+    PackageBepin("UnityMono", "unix", null, "Unity", "run_bepinex.sh");
+    PackageBepin("UnityIL2CPP", "win", "x86", "IL2CPP", "doorstop_config_il2cpp.ini", copyMono: true);
+    PackageBepin("UnityIL2CPP", "win", "x64", "IL2CPP", "doorstop_config_il2cpp.ini", copyMono: true);
+    PackageBepin("NetLauncher", "win", null, "NetLauncher");
 });
 
 Task("Pack")
@@ -271,12 +264,12 @@ Task("Pack")
     var commitPrefix = isBleedingEdge ? $"_{currentCommitShort}_" : "_";
 
     Information("Packing BepInEx");
-    ZipCompress(distDir + Directory("UnityMono_x86"), distDir + File($"BepInEx_UnityMono_x86{commitPrefix}{buildVersion}.zip"));
-    ZipCompress(distDir + Directory("UnityMono_x64"), distDir + File($"BepInEx_UnityMono_x64{commitPrefix}{buildVersion}.zip"));
+    ZipCompress(distDir + Directory("UnityMono_win_x86"), distDir + File($"BepInEx_UnityMono_win_x86{commitPrefix}{buildVersion}.zip"));
+    ZipCompress(distDir + Directory("UnityMono_win_x64"), distDir + File($"BepInEx_UnityMono_win_x64{commitPrefix}{buildVersion}.zip"));
     ZipCompress(distDir + Directory("UnityMono_unix"), distDir + File($"BepInEx_UnityMono_unix{commitPrefix}{buildVersion}.zip"));
-    ZipCompress(distDir + Directory("UnityIL2CPP_x86"), distDir + File($"BepInEx_UnityIL2CPP_x86{commitPrefix}{buildVersion}.zip"));
-    ZipCompress(distDir + Directory("UnityIL2CPP_x64"), distDir + File($"BepInEx_UnityIL2CPP_x64{commitPrefix}{buildVersion}.zip"));
-    ZipCompress(distDir + Directory("NetLauncher"), distDir + File($"BepInEx_NetLauncher{commitPrefix}{buildVersion}.zip"));
+    ZipCompress(distDir + Directory("UnityIL2CPP_win_x86"), distDir + File($"BepInEx_UnityIL2CPP_win_x86{commitPrefix}{buildVersion}.zip"));
+    ZipCompress(distDir + Directory("UnityIL2CPP_win_x64"), distDir + File($"BepInEx_UnityIL2CPP_win_x64{commitPrefix}{buildVersion}.zip"));
+    ZipCompress(distDir + Directory("NetLauncher_win"), distDir + File($"BepInEx_NetLauncher_win{commitPrefix}{buildVersion}.zip"));
 
     if(isBleedingEdge) 
     {
@@ -297,11 +290,11 @@ Task("Pack")
                 ["short_hash"] = currentCommitShort,
                 ["artifacts"] = new Dictionary<string, object>[] {
                     new() {
-                        ["file"] = $"BepInEx_UnityMono_x64{commitPrefix}{buildVersion}.zip",
+                        ["file"] = $"BepInEx_UnityMono_win_x64{commitPrefix}{buildVersion}.zip",
                         ["description"] = "BepInEx Unity Mono for Windows x64 games"
                     },
                     new() {
-                        ["file"] = $"BepInEx_UnityMono_x86{commitPrefix}{buildVersion}.zip",
+                        ["file"] = $"BepInEx_UnityMono_win_x86{commitPrefix}{buildVersion}.zip",
                         ["description"] = "BepInEx Unity Mono for Windows x86 games"
                     },
                     new() {
@@ -309,15 +302,15 @@ Task("Pack")
                         ["description"] = "BepInEx Unity Mono for Unix games using GCC (Linux, MacOS)"
                     },
                     new() {
-                        ["file"] = $"BepInEx_UnityIL2CPP_x64{commitPrefix}{buildVersion}.zip",
+                        ["file"] = $"BepInEx_UnityIL2CPP_win_x64{commitPrefix}{buildVersion}.zip",
                         ["description"] = "BepInEx Unity IL2CPP for Windows x64 games"
                     },
                     new() {
-                        ["file"] = $"BepInEx_UnityIL2CPP_x86{commitPrefix}{buildVersion}.zip",
+                        ["file"] = $"BepInEx_UnityIL2CPP_win_x86{commitPrefix}{buildVersion}.zip",
                         ["description"] = "BepInEx Unity IL2CPP for Windows x86 games"
                     },
                     new() {
-                        ["file"] = $"BepInEx_NetLauncher{commitPrefix}{buildVersion}.zip",
+                        ["file"] = $"BepInEx_NetLauncher_win{commitPrefix}{buildVersion}.zip",
                         ["description"] = "BepInEx .NET Launcher for .NET Framework/XNA games"
                     },
                 }
