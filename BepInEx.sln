@@ -39,6 +39,14 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BepInEx.NetCore", "BepInEx.
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "BepInEx.NetLauncher.Shared", "BepInEx.NetLauncher.Shared\BepInEx.NetLauncher.Shared.shproj", "{067BCC8C-FC25-4929-B4F4-C6A5A7496994}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Scripts", "Scripts", "{A6DDBD9E-773C-437A-88AA-995BC5FE90DF}"
+    ProjectSection(SolutionItems) = preProject
+        build.bat = build.bat
+        build.sh = build.sh
+        build.ps1 = build.ps1
+        build.cake = build.cake
+    EndProjectSection
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		BepInEx.NetLauncher.Shared\BepInEx.NetLauncher.Shared.projitems*{067bcc8c-fc25-4929-b4f4-c6a5a7496994}*SharedItemsImports = 13
