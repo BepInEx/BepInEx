@@ -186,6 +186,7 @@ Task("MakeDist")
 
     void PackageBepin(string platform, string os, string doorstopArch, string originDir, string doorstopConfigFile = null, bool copyMono = false) 
     {
+        // TODO: Right now platform name can be quite long (e.g. UnityMono_win_x86), should it be simplified?
         var platformName = platform + (os == null ? "" : "_" + os) + (doorstopArch == null ? "" : "_" + doorstopArch);
         var isUnix = os == "unix";
 
