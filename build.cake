@@ -1,3 +1,4 @@
+#nullable enable
 #addin nuget:?package=Cake.FileHelpers&version=4.0.1
 #addin nuget:?package=SharpZipLib&version=1.3.1
 #addin nuget:?package=Cake.Compression&version=0.2.6
@@ -5,7 +6,7 @@
 #addin nuget:?package=Newtonsoft.Json&version=13.0.1
 #addin nuget:?package=Cake.Http&version=1.3.0
 
-var target = Argument("target", "Build");
+var task = Argument("task", "Build");
 var isBleedingEdge = Argument("bleeding_edge", false);
 var buildId = Argument("build_id", 0);
 var cleanDependencyCache = Argument("clean_build_cache", false);
@@ -20,12 +21,31 @@ var currentCommitShort = RunGit("log -n 1 --pretty=\"format:%h\"").Trim();
 var currentBranch = RunGit("rev-parse --abbrev-ref HEAD");
 var latestTag = RunGit("describe --tags --abbrev=0");
 
-string RunGit(string command, string separator = "") 
+string RunGit(string command, string separator = "")
 {
     using var process = StartAndReturnProcess("git", new() { Arguments = command, RedirectStandardOutput = true });
     process.WaitForExit();
     return string.Join(separator, process.GetStandardOutput());
 }
+
+readonly record struct Target(string Abi, string Os, string Cpu) {
+    public string Abi { get; } = Abi.Contains('-') ? throw new FormatException($"Target ABI cannot be hyphenated: {Abi}") : Abi;
+    public string Os { get; } = Os.Contains('-') ? throw new FormatException($"Target OS cannot be hyphenated: {Os}") : Os;
+    public string Cpu { get; } = Cpu.Contains('-') ? throw new FormatException($"Target CPU cannot be hyphenated: {Cpu}") : Cpu;
+
+    public override string ToString() => $"{Abi}-{Os}-{Cpu}";
+
+    public bool IsUnix() => Os is "unix";
+}
+
+var targets = new Target[] {
+    new("UnityMono", "windows", "x86"),
+    new("UnityMono", "windows", "x64"),
+    new("UnityMono", "unix", "any"),
+    new("UnityIL2CPP", "windows", "x86"),
+    new("UnityIL2CPP", "windows", "x64"),
+    new("NetLauncher", "windows", "any"),
+};
 
 const string DEP_CACHE_NAME = ".dep_cache";
 
@@ -57,7 +77,7 @@ Task("Build")
 		MSBuildSettings = new() // Apparently needed in some versions of CakeBuild
     };
 
-    if (isBleedingEdge) 
+    if (isBleedingEdge)
     {
         buildSettings.MSBuildSettings.Properties["BuildInfo"] = new[] {
             TransformText("BLEEDING EDGE Build #<%buildNumber%> from <%shortCommit%> at <%branchName%>")
@@ -121,7 +141,7 @@ Task("DownloadDependencies")
         DownloadFile($"https://nightly.link/NeighTools/UnityDoorstop/workflows/build-be/wip-rewrite/Doorstop_LINUX-RELEASE.zip", doorstopZipPathLinux);
         DownloadFile($"https://nightly.link/NeighTools/UnityDoorstop/workflows/build-be/wip-rewrite/Doorstop_MACOS-RELEASE.zip", doorstopZipPathMacOs);
 
-        ZipUncompress(doorstopZipPathWin, doorstopPath + Directory("win"));
+        ZipUncompress(doorstopZipPathWin, doorstopPath + Directory("windows"));
         ZipUncompress(doorstopZipPathLinux, doorstopPath + Directory("unix"));
         ZipUncompress(doorstopZipPathMacOs, doorstopPath + Directory("unix"));
     }
@@ -146,7 +166,7 @@ Task("DownloadDependencies")
 
 Task("PushNuGet")
     .IsDependentOn("Build")
-    .Does(() => 
+    .Does(() =>
 {
     if (string.IsNullOrEmpty(nugetPushSource))
     {
@@ -158,7 +178,7 @@ Task("PushNuGet")
         Information("NuGet push key is missing");
         return;
     }
-    
+
     foreach (var file in GetFiles("./bin/NuGet/*.nupkg"))
     {
         Information($"Pushing {file}");
@@ -184,76 +204,75 @@ Task("MakeDist")
                         .WithToken("commit_log", RunGit($"--no-pager log --no-merges --pretty=\"format:* (%h) [%an] %s\" {latestTag}..HEAD", "\r\n"))
                         .ToString();
 
-    void PackageBepin(string platform, string os, string doorstopArch, string originDir, string doorstopConfigFile = null, bool copyMono = false) 
+    void PackageBepin(Target target, string originDir, string? doorstopConfigFile = null, bool copyMono = false)
     {
-        // TODO: Right now platform name can be quite long (e.g. UnityMono_win_x86), should it be simplified?
-        var platformName = platform + (os == null ? "" : "_" + os) + (doorstopArch == null ? "" : "_" + doorstopArch);
-        var isUnix = os == "unix";
+        Information($"Creating distributions for target \"{target}\"...");
 
-        Information("Creating distributions for platform \"" + platformName + "\"...");
-    
-        string doorstopArchPath = null;
-        ConvertableDirectoryPath doorstopArchDir = null;
-        
-        if (doorstopConfigFile != null)
+        string? doorstopTargetPath = null;
+        ConvertableDirectoryPath? doorstopTargetDir = null;
+
+        if (doorstopConfigFile is not null)
         {
-            doorstopArchDir = doorstopPath + Directory(os) + Directory(isUnix ? "libdoorstop" : doorstopArch);
-            doorstopArchPath = doorstopArchDir + File(isUnix ? "*.*" : DOORSTOP_PROXY_DLL);
+            doorstopTargetDir = doorstopPath + Directory(target.Os) + Directory(target.IsUnix() ? "libdoorstop" : target.Cpu);
+            doorstopTargetPath = doorstopTargetDir + File(target.IsUnix() ? "*.*" : DOORSTOP_PROXY_DLL);
         }
-        
-        var distArchDir = distDir + Directory(platformName);
-        var bepinDir = distArchDir + Directory("BepInEx");
-        var doorstopDir = distArchDir;
-        if (isUnix) doorstopDir += Directory("doorstop_libs");
-        
-        CreateDirectory(distArchDir);
-        CreateDirectory(doorstopDir);
-        CreateDirectory(bepinDir + Directory("core"));
-        CreateDirectory(bepinDir + Directory("plugins"));
-        CreateDirectory(bepinDir + Directory("patchers"));
 
-        if (doorstopConfigFile != null)
+        var distTargetDir = distDir + Directory($"{target}");
+        var distBepinDir = distTargetDir + Directory("BepInEx");
+        var distDoorstopDir = distTargetDir;
+        if (target.IsUnix()) distDoorstopDir += Directory("doorstop_libs");
+
+        CreateDirectory(distTargetDir);
+        CreateDirectory(distDoorstopDir);
+        CreateDirectory(distBepinDir + Directory("core"));
+        CreateDirectory(distBepinDir + Directory("plugins"));
+        CreateDirectory(distBepinDir + Directory("patchers"));
+
+        if (doorstopConfigFile is not null)
         {
-            CopyFile("./doorstop/" + doorstopConfigFile, Directory(distArchDir) + File(isUnix ? "run_bepinex.sh" : "doorstop_config.ini"));
-            if (isUnix)
+            CopyFile("./doorstop/" + doorstopConfigFile, Directory(distTargetDir) + File(target.IsUnix() ? "run_bepinex.sh" : "doorstop_config.ini"));
+            if (target.IsUnix())
             {
-                CopyFiles(doorstopArchPath, doorstopDir);
-                MoveFile(doorstopDir + File(".doorstop_version"), distArchDir + File(".doorstop_version"));
+                CopyFiles(doorstopTargetPath, distDoorstopDir);
+                MoveFile(distDoorstopDir + File(".doorstop_version"), distTargetDir + File(".doorstop_version"));
             }
             else
             {
-                CopyFile(doorstopArchPath, Directory(doorstopDir) + File(DOORSTOP_PROXY_DLL));
-                CopyFile(doorstopArchDir + File(".doorstop_version"), doorstopDir + File(".doorstop_version"));
+                CopyFile(doorstopTargetPath, Directory(distDoorstopDir) + File(DOORSTOP_PROXY_DLL));
+                CopyFile(doorstopTargetDir + File(".doorstop_version"), distDoorstopDir + File(".doorstop_version"));
             }
 
-            if (isUnix)
+            if (target.IsUnix())
             {
-                ReplaceTextInFiles($"{distArchDir}/run_bepinex.sh", "\r\n", "\n");
+                ReplaceTextInFiles($"{distTargetDir}/run_bepinex.sh", "\r\n", "\n");
             }
 
             if (copyMono)
             {
-                CopyDirectory(monoPath + Directory(doorstopArch) + Directory("mono"), Directory(distArchDir) + Directory("mono"));
+                CopyDirectory(monoPath + Directory(target.Cpu) + Directory("mono"), Directory(distTargetDir) + Directory("mono"));
             }
         }
 
-        CopyFiles($"./bin/{originDir}/*.*", Directory(bepinDir) + Directory("core"));
+        CopyFiles($"./bin/{originDir}/*.*", Directory(distBepinDir) + Directory("core"));
 
-        FileWriteText(distArchDir + File("changelog.txt"), changelog);
+        FileWriteText(distTargetDir + File("changelog.txt"), changelog);
 
-        if (platform == "NetLauncher")
+        if (target.Abi is "NetLauncher")
         {
-            DeleteFile(Directory(bepinDir) + Directory("core") + File("BepInEx.NetLauncher.exe.config"));
-            MoveFiles((string)(Directory(bepinDir) + Directory("core") + File("BepInEx.NetLauncher.*")), Directory(distArchDir));
+            DeleteFile(Directory(distBepinDir) + Directory("core") + File("BepInEx.NetLauncher.exe.config"));
+            MoveFiles((string)(Directory(distBepinDir) + Directory("core") + File("BepInEx.NetLauncher.*")), Directory(distTargetDir));
         }
     }
 
-    PackageBepin("UnityMono", "win", "x86", "Unity", "doorstop_config_mono.ini");
-    PackageBepin("UnityMono", "win", "x64", "Unity", "doorstop_config_mono.ini");
-    PackageBepin("UnityMono", "unix", null, "Unity", "run_bepinex.sh");
-    PackageBepin("UnityIL2CPP", "win", "x86", "IL2CPP", "doorstop_config_il2cpp.ini", copyMono: true);
-    PackageBepin("UnityIL2CPP", "win", "x64", "IL2CPP", "doorstop_config_il2cpp.ini", copyMono: true);
-    PackageBepin("NetLauncher", "win", null, "NetLauncher");
+    foreach (Target target in targets) {
+        (string originDir, string? doorstopConfigFile, bool copyMono) = (target.Abi, null, false);
+        if (target.Abi is var abi and ("UnityIL2CPP" or "UnityMono")) {
+            originDir = abi is "UnityIL2CPP" ? "IL2CPP" : "Unity";
+            doorstopConfigFile = target.IsUnix() ? "run_bepinex.sh" :
+                abi is "UnityIL2CPP" ? "doorstop_config_il2cpp.ini" : "doorstop_config_mono.ini";
+        }
+        PackageBepin(target, originDir, doorstopConfigFile, copyMono);
+    }
 });
 
 Task("Pack")
@@ -262,61 +281,53 @@ Task("Pack")
     .Does(() =>
 {
     var distDir = Directory("./bin/dist");
-    var commitPrefix = isBleedingEdge ? $"_{currentCommitShort}_" : "_";
+    var commitSuffix = isBleedingEdge ? $"+{currentCommitShort}" : "";
 
     Information("Packing BepInEx");
-    ZipCompress(distDir + Directory("UnityMono_win_x86"), distDir + File($"BepInEx_UnityMono_win_x86{commitPrefix}{buildVersion}.zip"));
-    ZipCompress(distDir + Directory("UnityMono_win_x64"), distDir + File($"BepInEx_UnityMono_win_x64{commitPrefix}{buildVersion}.zip"));
-    ZipCompress(distDir + Directory("UnityMono_unix"), distDir + File($"BepInEx_UnityMono_unix{commitPrefix}{buildVersion}.zip"));
-    ZipCompress(distDir + Directory("UnityIL2CPP_win_x86"), distDir + File($"BepInEx_UnityIL2CPP_win_x86{commitPrefix}{buildVersion}.zip"));
-    ZipCompress(distDir + Directory("UnityIL2CPP_win_x64"), distDir + File($"BepInEx_UnityIL2CPP_win_x64{commitPrefix}{buildVersion}.zip"));
-    ZipCompress(distDir + Directory("NetLauncher_win"), distDir + File($"BepInEx_NetLauncher_win{commitPrefix}{buildVersion}.zip"));
+    foreach (Target target in targets) {
+        ZipCompress(distDir + Directory($"{target}"), distDir + File($"BepInEx-{target}-{buildVersion}{commitSuffix}.zip"));
+    }
 
-    if(isBleedingEdge) 
+    if(isBleedingEdge)
     {
         var changelog = "";
 
-        if(!string.IsNullOrEmpty(lastBuildCommit)) {
+        if (!string.IsNullOrEmpty(lastBuildCommit)) {
             changelog = TransformText("<ul><%changelog%></ul>")
                         .WithToken("changelog", RunGit($"--no-pager log --no-merges --pretty=\"format:<li>(<code>%h</code>) [%an] %s</li>\" {lastBuildCommit}..HEAD"))
                         .ToString();
         }
 
-        FileWriteText(distDir + File("info.json"), 
+        FileWriteText(distDir + File("info.json"),
             SerializeJsonPretty(new Dictionary<string, object> {
                 ["id"] = buildId.ToString(),
                 ["date"] = DateTime.Now.ToString("o"),
                 ["changelog"] = changelog,
                 ["hash"] = currentCommit,
                 ["short_hash"] = currentCommitShort,
-                ["artifacts"] = new Dictionary<string, object>[] {
-                    new() {
-                        ["file"] = $"BepInEx_UnityMono_win_x64{commitPrefix}{buildVersion}.zip",
-                        ["description"] = "BepInEx Unity Mono for Windows x64 games"
-                    },
-                    new() {
-                        ["file"] = $"BepInEx_UnityMono_win_x86{commitPrefix}{buildVersion}.zip",
-                        ["description"] = "BepInEx Unity Mono for Windows x86 games"
-                    },
-                    new() {
-                        ["file"] = $"BepInEx_UnityMono_unix{commitPrefix}{buildVersion}.zip",
-                        ["description"] = "BepInEx Unity Mono for Unix games using GCC (Linux, MacOS)"
-                    },
-                    new() {
-                        ["file"] = $"BepInEx_UnityIL2CPP_win_x64{commitPrefix}{buildVersion}.zip",
-                        ["description"] = "BepInEx Unity IL2CPP for Windows x64 games"
-                    },
-                    new() {
-                        ["file"] = $"BepInEx_UnityIL2CPP_win_x86{commitPrefix}{buildVersion}.zip",
-                        ["description"] = "BepInEx Unity IL2CPP for Windows x86 games"
-                    },
-                    new() {
-                        ["file"] = $"BepInEx_NetLauncher_win{commitPrefix}{buildVersion}.zip",
-                        ["description"] = "BepInEx .NET Launcher for .NET Framework/XNA games"
-                    },
-                }
+                ["artifacts"] = targets.Select(target => {
+                    (string abiName, string abiGamesPrefix) = target.Abi switch {
+                        "NetLauncher" => (".NET Launcher", ".NET Framework/XNA "),
+                        "UnityIL2CPP" => ("Unity IL2CPP", ""),
+                        "UnityMono" => ("Unity Mono", ""),
+                        var abi => (abi, $"{abi} "),
+                    };
+                    (string osName, string osGamesSuffix) = target.Os switch {
+                        "unix" => ("Linux & macOS", " using GCC"),
+                        "windows" => ("Windows", ""),
+                        var os => (os, ""),
+                    };
+                    string cpuOsNameSuffix = target.Cpu switch {
+                        "any" => "",
+                        var cpu => $" {cpu}",
+                    };
+                    return new Dictionary<string, object>() {
+                        ["file"] = $"BepInEx-{target}-{buildVersion}{commitSuffix}.zip",
+                        ["description"] = $"BepInEx {abiName} for {osName}{cpuOsNameSuffix} {abiGamesPrefix}games{osGamesSuffix}",
+                    };
+                }).ToArray(),
             }));
     }
 });
 
-RunTarget(target);
+RunTarget(task);

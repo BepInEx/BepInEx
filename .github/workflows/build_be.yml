@@ -44,7 +44,7 @@ jobs:
         env:
           BEPIN_DEV_NUGET_KEY: ${{ secrets.BEPIN_DEV_NUGET_KEY }}
         run: |
-          ./build.sh --target=Pack --bleeding_edge=${{ steps.be_status.outputs.is_be == 'true' }} --build_id=${{ steps.info.outputs.build_id || 0 }} --last_build_commit=\"${{ steps.last_successful_commit.outputs.commit_hash }}\" --nuget_push_key=\"${BEPIN_DEV_NUGET_KEY}\"
+          ./build.sh --task=Pack --bleeding_edge=${{ steps.be_status.outputs.is_be == 'true' }} --build_id=${{ steps.info.outputs.build_id || 0 }} --last_build_commit=\"${{ steps.last_successful_commit.outputs.commit_hash }}\" --nuget_push_key=\"${BEPIN_DEV_NUGET_KEY}\"
       - name: Upload to BepisBuilds
         env:
           BEPISBUILDS_HOST: ${{ secrets.BEPISBUILDS_HOST }}
