@@ -6,7 +6,7 @@
 #addin nuget:?package=Newtonsoft.Json&version=13.0.1
 #addin nuget:?package=Cake.Http&version=1.3.0
 
-var task = Argument("task", "Build");
+var task = Argument("target", "Build"); // Note: "target" is special Cake argument, don't change
 var isBleedingEdge = Argument("bleeding_edge", false);
 var buildId = Argument("build_id", 0);
 var cleanDependencyCache = Argument("clean_build_cache", false);
@@ -27,22 +27,27 @@ string RunGit(string command, string separator = "") {
     return string.Join(separator, process.GetStandardOutput());
 }
 
-readonly record struct Target(string Abi, string Os, string Cpu) {
+readonly record struct Target(string Abi, string Os, string Cpu, bool NeedsRuntime = false) {
     public string Abi { get; } = Abi.Contains('-') ? throw new FormatException($"Target ABI cannot be hyphenated: {Abi}") : Abi;
     public string Os { get; } = Os.Contains('-') ? throw new FormatException($"Target OS cannot be hyphenated: {Os}") : Os;
     public string Cpu { get; } = Cpu.Contains('-') ? throw new FormatException($"Target CPU cannot be hyphenated: {Cpu}") : Cpu;
+    
+    public string RuntimeIdentifier => $"{Os}-{Cpu}";
 
     public override string ToString() => $"{Abi}-{Os}-{Cpu}";
 
-    public bool IsUnix() => Os is "unix";
+    public bool IsUnix => Os is "unix" or "linux" or "macos";
 }
 
 var targets = new Target[] {
     new("UnityMono", "windows", "x86"),
     new("UnityMono", "windows", "x64"),
     new("UnityMono", "unix", "any"),
-    new("UnityIL2CPP", "windows", "x86"),
-    new("UnityIL2CPP", "windows", "x64"),
+    new("UnityIL2CPP", "windows", "x86", true),
+    new("UnityIL2CPP", "windows", "x64", true),
+    new("UnityIL2CPP", "linux", "x86", true),
+    new("UnityIL2CPP", "linux", "x64", true),
+    new("UnityIL2CPP", "macos", "x64", true),
     new("NetLauncher", "windows", "any"),
 };
 
@@ -100,12 +105,12 @@ Task("Build")
 });
 
 const string DOORSTOP_VER = "4.0.0-alpha.1";
-const string MONO_VER = "2021.6.24";
+const string DOTNET_MINI_VER = "2022.03.26.1";
 const string DOORSTOP_PROXY_DLL = "winhttp.dll";
 
 var depCachePath = Directory($"./bin/{DEP_CACHE_NAME}");
 var doorstopPath = depCachePath + Directory("doorstop");
-var monoPath = depCachePath + Directory("mono");
+var dotnetPath = depCachePath + Directory("dotnet");
 
 Task("DownloadDependencies")
     .Does(() =>
@@ -122,13 +127,13 @@ Task("DownloadDependencies")
     }
 
     CreateDirectory(doorstopPath);
-    CreateDirectory(monoPath);
+    CreateDirectory(dotnetPath);
 
     if (NeedsRedownload("NeighTools/UnityDoorstop", DOORSTOP_VER)) {
         Information("Updating Doorstop");
-        var doorstopZipPathWin = doorstopPath + File("doorstop_win.zip");
-        var doorstopZipPathLinux = doorstopPath + File("doorstop_linux.zip");
-        var doorstopZipPathMacOs = doorstopPath + File("doorstop_macos.zip");
+        var doorstopZipPathWin = depCachePath + File("doorstop_win.zip");
+        var doorstopZipPathLinux = depCachePath + File("doorstop_linux.zip");
+        var doorstopZipPathMacOs = depCachePath + File("doorstop_macos.zip");
 
         // TODO: Fix URLs once Doorstop 4 is released
         DownloadFile($"https://nightly.link/NeighTools/UnityDoorstop/workflows/build-be/wip-rewrite/Doorstop_WIN-RELEASE.zip", doorstopZipPathWin);
@@ -140,18 +145,14 @@ Task("DownloadDependencies")
         ZipUncompress(doorstopZipPathMacOs, doorstopPath + Directory("unix"));
     }
 
-    if (NeedsRedownload("BepInEx/mono", MONO_VER)) {
-        // TODO: Instead download dotnet + BCL
-        Information("Updating Mono");
+    if (NeedsRedownload("BepInEx/dotnet-runtime", DOTNET_MINI_VER)) {
+        Information("Updating mini-dotnet, this might take a while");
 
-        var monoX64Path = doorstopPath + File("mono_x64.zip");
-        var monoX86Path = doorstopPath + File("mono_x86.zip");
+        var dotnetZipPath = depCachePath + File("dotnet-mini.zip");
 
-        DownloadFile($"https://github.com/BepInEx/mono/releases/download/{MONO_VER}/mono-x64.zip", monoX64Path);
-        DownloadFile($"https://github.com/BepInEx/mono/releases/download/{MONO_VER}/mono-x86.zip", monoX86Path);
+        DownloadFile($"https://github.com/BepInEx/dotnet-runtime/releases/download/{DOTNET_MINI_VER}/dotnet-mini.zip", dotnetZipPath);
 
-        ZipUncompress(monoX64Path, monoPath + Directory("x64"));
-        ZipUncompress(monoX86Path, monoPath + Directory("x86"));
+        ZipUncompress(dotnetZipPath, dotnetPath);
     }
 
     SerializeJsonToFile(cacheFile, cache);
@@ -194,21 +195,22 @@ Task("MakeDist")
                         .WithToken("commit_log", RunGit($"--no-pager log --no-merges --pretty=\"format:* (%h) [%an] %s\" {latestTag}..HEAD", "\r\n"))
                         .ToString();
 
-    void PackageBepin(Target target, ConvertableDirectoryPath originDir, ConvertableFilePath? doorstopConfigFile = null, bool copyMono = false) {
+    void PackageBepin(Target target, ConvertableDirectoryPath originDir, ConvertableFilePath? doorstopConfigFile = null) {
         Information($"Creating distributions for target \"{target}\"...");
 
         string? doorstopTargetPath = null;
         ConvertableDirectoryPath? doorstopTargetDir = null;
 
         if (doorstopConfigFile is not null) {
-            doorstopTargetDir = doorstopPath + Directory(target.Os) + Directory(target.IsUnix() ? "libdoorstop" : target.Cpu);
-            doorstopTargetPath = $"{doorstopTargetDir + File(target.IsUnix() ? "*.*" : DOORSTOP_PROXY_DLL)}";
+            var doorstopOs = target.IsUnix ? "unix" : target.Os;
+            doorstopTargetDir = doorstopPath + Directory(doorstopOs) + Directory(target.IsUnix ? "libdoorstop" : target.Cpu);
+            doorstopTargetPath = $"{doorstopTargetDir + File(target.IsUnix ? "*.*" : DOORSTOP_PROXY_DLL)}";
         }
 
         var distTargetDir = distDir + Directory($"{target}");
         var distBepinDir = distTargetDir + Directory("BepInEx");
         var distDoorstopDir = distTargetDir;
-        if (target.IsUnix()) distDoorstopDir += Directory("doorstop_libs");
+        if (target.IsUnix) distDoorstopDir += Directory("doorstop_libs");
 
         CreateDirectory(distTargetDir);
         CreateDirectory(distDoorstopDir);
@@ -217,8 +219,8 @@ Task("MakeDist")
         CreateDirectory(distBepinDir + Directory("patchers"));
 
         if (doorstopConfigFile is not null) {
-            CopyFile(Directory("./doorstop") + doorstopConfigFile, distTargetDir + File(target.IsUnix() ? "run_bepinex.sh" : "doorstop_config.ini"));
-            if (target.IsUnix()) {
+            CopyFile(Directory("./doorstop") + doorstopConfigFile, distTargetDir + File(target.IsUnix ? "run_bepinex.sh" : "doorstop_config.ini"));
+            if (target.IsUnix) {
                 CopyFiles(new GlobPattern(doorstopTargetPath), distDoorstopDir);
                 MoveFile(distDoorstopDir + File(".doorstop_version"), distTargetDir + File(".doorstop_version"));
             } else {
@@ -226,12 +228,12 @@ Task("MakeDist")
                 CopyFile(doorstopTargetDir + File(".doorstop_version"), distDoorstopDir + File(".doorstop_version"));
             }
 
-            if (target.IsUnix()) {
+            if (target.IsUnix) {
                 ReplaceTextInFiles(distTargetDir + File("run_bepinex.sh"), "\r\n", "\n");
             }
 
-            if (copyMono) {
-                CopyDirectory(monoPath + Directory(target.Cpu) + Directory("mono"), Directory(distTargetDir) + Directory("mono"));
+            if (target.NeedsRuntime) {
+                CopyDirectory(dotnetPath + Directory(target.RuntimeIdentifier), Directory(distTargetDir) + Directory("dotnet"));
             }
         }
 
@@ -246,13 +248,13 @@ Task("MakeDist")
     }
 
     foreach (Target target in targets) {
-        (ConvertableDirectoryPath originDir, ConvertableFilePath? doorstopConfigFile, bool copyMono) = (Directory(target.Abi), null, false);
+        (ConvertableDirectoryPath originDir, ConvertableFilePath? doorstopConfigFile) = (Directory(target.Abi), null);
         if (target.Abi is var abi and ("UnityIL2CPP" or "UnityMono")) {
             originDir = Directory(abi is "UnityIL2CPP" ? "IL2CPP" : "Unity");
-            doorstopConfigFile = File(target.IsUnix() ? "run_bepinex.sh" :
+            doorstopConfigFile = File(target.IsUnix ? "run_bepinex.sh" :
                 abi is "UnityIL2CPP" ? "doorstop_config_il2cpp.ini" : "doorstop_config_mono.ini");
         }
-        PackageBepin(target, originDir, doorstopConfigFile, copyMono);
+        PackageBepin(target, originDir, doorstopConfigFile);
     }
 });
 
@@ -290,6 +292,8 @@ Task("Pack")
                 };
                 (string osName, string osGamesSuffix) = target.Os switch {
                     "unix" => ("Linux & macOS", " using GCC"),
+                    "linux" => ("Linux", " using GCC"),
+                    "macos" => ("macOS", ""),
                     "windows" => ("Windows", ""),
                     var os => (os, ""),
                 };
