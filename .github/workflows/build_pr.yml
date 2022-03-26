@@ -15,7 +15,7 @@ jobs:
           dotnet-version: "6.0.x"
       - name: Build
         run: |
-          ./build.sh --task=Pack
+          ./build.sh --target=Pack
       - name: Upload Artifacts
         uses: actions/upload-artifact@v2.2.4
         with:
