@@ -104,7 +104,7 @@ Task("Build")
     }
 });
 
-const string DOORSTOP_VER = "4.0.0-alpha.1";
+const string DOORSTOP_VER = "4.0.0-rc.2";
 const string DOTNET_MINI_VER = "2022.03.26.1";
 const string DOORSTOP_PROXY_DLL = "winhttp.dll";
 
@@ -135,10 +135,9 @@ Task("DownloadDependencies")
         var doorstopZipPathLinux = depCachePath + File("doorstop_linux.zip");
         var doorstopZipPathMacOs = depCachePath + File("doorstop_macos.zip");
 
-        // TODO: Fix URLs once Doorstop 4 is released
-        DownloadFile($"https://nightly.link/NeighTools/UnityDoorstop/workflows/build-be/wip-rewrite/Doorstop_WIN-RELEASE.zip", doorstopZipPathWin);
-        DownloadFile($"https://nightly.link/NeighTools/UnityDoorstop/workflows/build-be/wip-rewrite/Doorstop_LINUX-RELEASE.zip", doorstopZipPathLinux);
-        DownloadFile($"https://nightly.link/NeighTools/UnityDoorstop/workflows/build-be/wip-rewrite/Doorstop_MACOS-RELEASE.zip", doorstopZipPathMacOs);
+        DownloadFile($"https://github.com/NeighTools/UnityDoorstop/releases/download/v{DOORSTOP_VER}/doorstop_win_release_{DOORSTOP_VER}.zip", doorstopZipPathWin);
+        DownloadFile($"https://github.com/NeighTools/UnityDoorstop/releases/download/v{DOORSTOP_VER}/doorstop_linux_release_{DOORSTOP_VER}.zip", doorstopZipPathLinux);
+        DownloadFile($"https://github.com/NeighTools/UnityDoorstop/releases/download/v{DOORSTOP_VER}/doorstop_macos_release_{DOORSTOP_VER}.zip", doorstopZipPathMacOs);
 
         ZipUncompress(doorstopZipPathWin, doorstopPath + Directory("windows"));
         ZipUncompress(doorstopZipPathLinux, doorstopPath + Directory("unix"));
