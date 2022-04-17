@@ -21,9 +21,9 @@
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="All"/>
-        <PackageReference Include="HarmonyX" Version="2.9.0"/>
-        <PackageReference Include="MonoMod.Utils" Version="22.1.29.1"/>
-        <PackageReference Include="SemanticVersioning" Version="2.0.0"/>
+        <PackageReference Include="HarmonyX" Version="2.10.0"/>
+        <PackageReference Include="MonoMod.Utils" Version="22.3.23.4"/>
+        <PackageReference Include="SemanticVersioning" Version="2.0.2"/>
     </ItemGroup>
     <ItemGroup>
         <Compile Remove="Contract\IPlugin.cs"/>
