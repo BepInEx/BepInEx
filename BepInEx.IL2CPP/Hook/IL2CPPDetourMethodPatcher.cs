@@ -104,8 +104,8 @@ public unsafe class IL2CPPDetourMethodPatcher : MethodPatcher
             // Create a modified native MethodInfo struct to point towards the trampoline
             modifiedNativeMethodInfo = UnityVersionHandler.NewMethod();
             Buffer.MemoryCopy(originalNativeMethodInfo.Pointer.ToPointer(),
-                              modifiedNativeMethodInfo.Pointer.ToPointer(), modifiedNativeMethodInfo.StructSize,
-                              originalNativeMethodInfo.StructSize);
+                              modifiedNativeMethodInfo.Pointer.ToPointer(), UnityVersionHandler.MethodSize(),
+                              UnityVersionHandler.MethodSize());
             modifiedNativeMethodInfo.MethodPointer = trampolinePtr;
             isValid = true;
         }
