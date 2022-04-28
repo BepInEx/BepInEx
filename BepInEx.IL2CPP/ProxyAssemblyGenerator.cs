@@ -41,7 +41,7 @@ internal static class ProxyAssemblyGenerator
 
     private static readonly ConfigEntry<IL2CPPDumperType> ConfigIl2CppDumperType = ConfigFile.CoreConfig.Bind(
      "IL2CPP", "Il2CppDumperType",
-     IL2CPPDumperType.Il2CppDumper,
+     IL2CPPDumperType.Cpp2IL,
      new StringBuilder()
          .AppendLine("The IL2CPP metadata dumper tool to use when generating dummy assemblies for Il2CppAssemblyUnhollower.")
          .AppendLine("Il2CppDumper - Default. The traditional choice that has been used by BepInEx.")
@@ -312,6 +312,8 @@ internal static class ProxyAssemblyGenerator
                 Cpp2IlApi.InitializeLibCpp2Il(GameAssemblyPath, metadataPath, cpp2IlUnityVersion, false);
 
                 sourceAssemblies = Cpp2IlApi.MakeDummyDLLs();
+
+                Cpp2IlApi.DisposeAndCleanupAll();
             }
 
             stopwatch.Stop();
