@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -12,9 +13,10 @@ using BepInEx.Logging;
 using BepInEx.Preloader.Core;
 using BepInEx.Preloader.Core.Logging;
 using HarmonyLib.Public.Patching;
-using Il2CppInterop.Runtime;
-using Il2CppInterop.Runtime.Injection;
+using Il2Cpp.TlsAdapter;
 using MonoMod.Utils;
+using UnhollowerBaseLib;
+using UnhollowerRuntimeLib;
 using UnityEngine;
 using Logger = BepInEx.Logging.Logger;
 
@@ -23,6 +25,7 @@ namespace BepInEx.IL2CPP;
 public class IL2CPPChainloader : BaseChainloader<BasePlugin>
 {
     private static RuntimeInvokeDetourDelegate originalInvoke;
+    private static InstallUnityTlsInterfaceDelegate originalInstallUnityTlsInterface;
 
     private static readonly ConfigEntry<bool> ConfigUnityLogging = ConfigFile.CoreConfig.Bind(
      "Logging", "UnityLogListening",
@@ -34,7 +37,8 @@ public class IL2CPPChainloader : BaseChainloader<BasePlugin>
      false,
      "Include unity log messages in log file output.");
 
-    private static FastNativeDetour RuntimeInvokeDetour { get; set; }
+    private static FunchookDetour RuntimeInvokeDetour { get; set; }
+    private static FunchookDetour InstallUnityTlsInterfaceDetour { get; set; }
 
     public static IL2CPPChainloader Instance { get; set; }
 
@@ -54,6 +58,7 @@ public class IL2CPPChainloader : BaseChainloader<BasePlugin>
 
     public override void Initialize(string gameExePath = null)
     {
+        GeneratedDatabasesUtil.DatabasesLocationOverride = Preloader.IL2CPPUnhollowedPath;
         PatchManager.ResolvePatcher += IL2CPPDetourMethodPatcher.TryResolve;
 
         base.Initialize(gameExePath);
@@ -75,14 +80,33 @@ public class IL2CPPChainloader : BaseChainloader<BasePlugin>
         gameAssemblyModule.BaseAddress.TryGetFunction("il2cpp_runtime_invoke", out var runtimeInvokePtr);
         PreloaderLogger.Log.Log(LogLevel.Debug, $"Runtime invoke pointer: 0x{runtimeInvokePtr.ToInt64():X}");
         RuntimeInvokeDetour =
-            FastNativeDetour.CreateAndApply(runtimeInvokePtr, OnInvokeMethod, out originalInvoke);
+            FunchookDetour.CreateAndApply(runtimeInvokePtr, OnInvokeMethod, out originalInvoke,
+                                            CallingConvention.Cdecl);
+
+        if (gameAssemblyModule.BaseAddress.TryGetFunction("il2cpp_unity_install_unitytls_interface",
+                                                          out var installTlsPtr))
+            InstallUnityTlsInterfaceDetour =
+                FunchookDetour.CreateAndApply(installTlsPtr, OnInstallUnityTlsInterface,
+                                                out originalInstallUnityTlsInterface, CallingConvention.Cdecl);
+
+        Logger.Log(LogLevel.Debug, "Initializing TLS adapters");
+        Il2CppTlsAdapter.Initialize();
 
         PreloaderLogger.Log.Log(LogLevel.Debug, "Runtime invoke patched");
     }
 
+    private static void OnInstallUnityTlsInterface(IntPtr unityTlsInterfaceStruct)
+    {
+        Logger.Log(LogLevel.Debug, $"Captured UnityTls interface at {unityTlsInterfaceStruct.ToInt64():x8}");
+        Il2CppTlsAdapter.Options.UnityTlsInterface = unityTlsInterfaceStruct;
+        originalInstallUnityTlsInterface(unityTlsInterfaceStruct);
+        InstallUnityTlsInterfaceDetour.Dispose();
+        InstallUnityTlsInterfaceDetour = null;
+    }
+
     private static IntPtr OnInvokeMethod(IntPtr method, IntPtr obj, IntPtr parameters, IntPtr exc)
     {
-        var methodName = Marshal.PtrToStringAnsi(Il2CppInterop.Runtime.IL2CPP.il2cpp_method_get_name(method));
+        var methodName = Marshal.PtrToStringAnsi(UnhollowerBaseLib.IL2CPP.il2cpp_method_get_name(method));
 
         var unhook = false;
 
@@ -134,7 +158,7 @@ public class IL2CPPChainloader : BaseChainloader<BasePlugin>
     {
         var type = pluginAssembly.GetType(pluginInfo.TypeName);
 
-        var pluginInstance = (BasePlugin) Activator.CreateInstance(type);
+        var pluginInstance = (BasePlugin)Activator.CreateInstance(type);
 
         pluginInstance.Load();
 
@@ -143,4 +167,7 @@ public class IL2CPPChainloader : BaseChainloader<BasePlugin>
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     private delegate IntPtr RuntimeInvokeDetourDelegate(IntPtr method, IntPtr obj, IntPtr parameters, IntPtr exc);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate void InstallUnityTlsInterfaceDelegate(IntPtr unityTlsInterfaceStruct);
 }
