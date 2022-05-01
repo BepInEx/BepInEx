@@ -1,4 +1,5 @@
 ﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -61,7 +62,7 @@ public unsafe class IL2CPPDetourMethodPatcher : MethodPatcher
     private bool isValid;
     private INativeMethodInfoStruct modifiedNativeMethodInfo;
 
-    private FastNativeDetour nativeDetour;
+    private FunchookDetour nativeDetour;
 
     private INativeMethodInfoStruct originalNativeMethodInfo;
 
@@ -141,7 +142,7 @@ public unsafe class IL2CPPDetourMethodPatcher : MethodPatcher
 
         var detourPtr =
             Marshal.GetFunctionPointerForDelegate(unmanagedTrampolineMethod.CreateDelegate(unmanagedDelegateType));
-        nativeDetour = new FastNativeDetour(originalNativeMethodInfo.MethodPointer, detourPtr);
+        nativeDetour = new FunchookDetour(originalNativeMethodInfo.MethodPointer, detourPtr);
         nativeDetour.Apply();
 
         // TODO: Add an ILHook for the original unhollowed method to go directly to managedHookedMethod

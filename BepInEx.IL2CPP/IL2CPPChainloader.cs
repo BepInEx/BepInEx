@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -36,8 +37,8 @@ public class IL2CPPChainloader : BaseChainloader<BasePlugin>
      false,
      "Include unity log messages in log file output.");
 
-    private static FastNativeDetour RuntimeInvokeDetour { get; set; }
-    private static FastNativeDetour InstallUnityTlsInterfaceDetour { get; set; }
+    private static FunchookDetour RuntimeInvokeDetour { get; set; }
+    private static FunchookDetour InstallUnityTlsInterfaceDetour { get; set; }
 
     public static IL2CPPChainloader Instance { get; set; }
 
@@ -79,13 +80,13 @@ public class IL2CPPChainloader : BaseChainloader<BasePlugin>
         gameAssemblyModule.BaseAddress.TryGetFunction("il2cpp_runtime_invoke", out var runtimeInvokePtr);
         PreloaderLogger.Log.Log(LogLevel.Debug, $"Runtime invoke pointer: 0x{runtimeInvokePtr.ToInt64():X}");
         RuntimeInvokeDetour =
-            FastNativeDetour.CreateAndApply(runtimeInvokePtr, OnInvokeMethod, out originalInvoke,
+            FunchookDetour.CreateAndApply(runtimeInvokePtr, OnInvokeMethod, out originalInvoke,
                                             CallingConvention.Cdecl);
 
         if (gameAssemblyModule.BaseAddress.TryGetFunction("il2cpp_unity_install_unitytls_interface",
                                                           out var installTlsPtr))
             InstallUnityTlsInterfaceDetour =
-                FastNativeDetour.CreateAndApply(installTlsPtr, OnInstallUnityTlsInterface,
+                FunchookDetour.CreateAndApply(installTlsPtr, OnInstallUnityTlsInterface,
                                                 out originalInstallUnityTlsInterface, CallingConvention.Cdecl);
 
         Logger.Log(LogLevel.Debug, "Initializing TLS adapters");
