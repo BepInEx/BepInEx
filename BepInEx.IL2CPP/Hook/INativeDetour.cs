@@ -1,7 +1,4 @@
 using MonoMod.RuntimeDetour;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace BepInEx.IL2CPP.Hook;
 
