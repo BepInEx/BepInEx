@@ -2,13 +2,12 @@ using MonoMod.Utils;
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace BepInEx.IL2CPP.Hook.Funchook;
 
 internal static unsafe class FunchookImports
 {
-    #region Imports
+    #region Delegates
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] 
     public delegate IntPtr d_funchook_create();
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] 
