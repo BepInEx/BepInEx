@@ -6,22 +6,20 @@ using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
-namespace BepInEx.IL2CPP.Hook;
+namespace BepInEx.IL2CPP.Hook.Funchook;
 
-public class FunchookDetour : IDetour
+internal class FunchookDetour : INativeDetour
 {
-    public static bool DEBUG_DETOURS = false;
-
     private static readonly ManualLogSource logger = Logger.CreateLogSource("FunchookDetour");
-    public FunchookDetour(IntPtr originalFunctionPtr, IntPtr detourFunctionPtr)
+    public FunchookDetour(nint originalMethodPtr, nint detourMethodPtr)
     {
-        OriginalFunctionPtr = originalFunctionPtr;
-        DetourFunctionPtr = detourFunctionPtr;
+        OriginalMethodPtr = originalMethodPtr;
+        DetourMethodPtr = detourMethodPtr;
     }
 
-    public IntPtr OriginalFunctionPtr { get; protected set; }
-    public IntPtr DetourFunctionPtr { get; protected set; }
-    public IntPtr TrampolinePtr { get; protected set; }
+    public nint OriginalMethodPtr { get; protected set; }
+    public nint DetourMethodPtr { get; protected set; }
+    public nint TrampolinePtr { get; protected set; }
 
     public bool IsValid { get; protected set; } = true;
 
@@ -36,11 +34,11 @@ public class FunchookDetour : IDetour
         if (IsApplied) return;
 
         PrepareDetour();
-        if (DEBUG_DETOURS) logger.LogDebug($"Installing funchook instance");
+        if (NativeDetourHelper.DEBUG_DETOURS) logger.LogDebug($"Installing funchook instance");
         FunchookInstance.Install();
 
         logger.Log(LogLevel.Debug,
-               $"Original: {OriginalFunctionPtr.ToInt64():X}, Trampoline: {TrampolinePtr:X}, diff: {Math.Abs(OriginalFunctionPtr.ToInt64() - TrampolinePtr.ToInt64()):X}; is within +-1GB range: {PageAllocator.IsInRelJmpRange(OriginalFunctionPtr, TrampolinePtr)}");
+               $"Original: {OriginalMethodPtr:X}, Trampoline: {TrampolinePtr:X}, diff: {Math.Abs(OriginalMethodPtr - TrampolinePtr):X}; is within +-1GB range: {PageAllocator.IsInRelJmpRange(OriginalMethodPtr, TrampolinePtr)}");
 
         IsApplied = true;
     }
@@ -48,7 +46,7 @@ public class FunchookDetour : IDetour
     {
         if (IsApplied && IsPrepared)
         {
-            if (DEBUG_DETOURS) logger.LogDebug($"Uninstalling funchook instance");
+            if (NativeDetourHelper.DEBUG_DETOURS) logger.LogDebug($"Uninstalling funchook instance");
             FunchookInstance.Uninstall();
         }
     }
@@ -57,17 +55,17 @@ public class FunchookDetour : IDetour
     {
         if (IsPrepared) return;
 
-        if (DEBUG_DETOURS) logger.LogDebug($"Creating funchook instance");
+        if (NativeDetourHelper.DEBUG_DETOURS) logger.LogDebug($"Creating funchook instance");
 
         if (FunchookInstance == null)
             FunchookInstance = new FunchookWrapper();
 
-        if (DEBUG_DETOURS) logger.LogDebug($"Preparing detour from 0x{OriginalFunctionPtr.ToInt64():X2} to 0x{DetourFunctionPtr.ToInt64():X2}");
+        if (NativeDetourHelper.DEBUG_DETOURS) logger.LogDebug($"Preparing detour from 0x{OriginalMethodPtr:X2} to 0x{DetourMethodPtr:X2}");
 
-        var trampolinePtr = OriginalFunctionPtr;
-        FunchookInstance.Prepare(&trampolinePtr, DetourFunctionPtr);
+        var trampolinePtr = OriginalMethodPtr;
+        FunchookInstance.Prepare(&trampolinePtr, DetourMethodPtr);
 
-        if (DEBUG_DETOURS) logger.LogDebug($"Prepared detour; Trampoline: 0x{trampolinePtr.ToInt64():X2}");
+        if (NativeDetourHelper.DEBUG_DETOURS) logger.LogDebug($"Prepared detour; Trampoline: 0x{trampolinePtr:X2}");
 
         TrampolinePtr = trampolinePtr;
         IsPrepared = true;
@@ -82,7 +80,7 @@ public class FunchookDetour : IDetour
 
     public void Free()
     {
-        if (DEBUG_DETOURS) logger.LogDebug($"Destroying funchook instance");
+        if (NativeDetourHelper.DEBUG_DETOURS) logger.LogDebug($"Destroying funchook instance");
         FunchookInstance.Destroy();
         IsValid = false;
     }
