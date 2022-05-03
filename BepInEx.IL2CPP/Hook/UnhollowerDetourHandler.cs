@@ -7,7 +7,7 @@ public class UnhollowerDetourHandler : IManagedDetour
 {
     public T Detour<T>(IntPtr from, T to) where T : Delegate
     {
-        FunchookDetour.CreateAndApply(from, to, out var original);
+        NativeDetourHelper.CreateAndApply(from, to, out var original);
         return original;
     }
 }
