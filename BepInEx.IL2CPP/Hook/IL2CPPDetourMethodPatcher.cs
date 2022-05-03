@@ -63,7 +63,7 @@ public unsafe class IL2CPPDetourMethodPatcher : MethodPatcher
     private bool isValid;
     private INativeMethodInfoStruct modifiedNativeMethodInfo;
 
-    private FunchookDetour nativeDetour;
+    private INativeDetour nativeDetour;
 
     private INativeMethodInfoStruct originalNativeMethodInfo;
 
@@ -99,16 +99,11 @@ public unsafe class IL2CPPDetourMethodPatcher : MethodPatcher
             originalNativeMethodInfo =
                 UnityVersionHandler.Wrap((Il2CppMethodInfo*) (IntPtr) methodField.GetValue(null));
 
-            // Create a trampoline from the original target method
-            var trampolinePtr =
-                DetourGenerator.CreateTrampolineFromFunction(originalNativeMethodInfo.MethodPointer, out _, out _);
-
-            // Create a modified native MethodInfo struct to point towards the trampoline
+            // Create a modified native MethodInfo struct, that will point towards the trampoline
             modifiedNativeMethodInfo = UnityVersionHandler.NewMethod();
             Buffer.MemoryCopy(originalNativeMethodInfo.Pointer.ToPointer(),
                               modifiedNativeMethodInfo.Pointer.ToPointer(), UnityVersionHandler.MethodSize(),
                               UnityVersionHandler.MethodSize());
-            modifiedNativeMethodInfo.MethodPointer = trampolinePtr;
             isValid = true;
         }
         catch (Exception e)
@@ -125,7 +120,12 @@ public unsafe class IL2CPPDetourMethodPatcher : MethodPatcher
     public override MethodBase DetourTo(MethodBase replacement)
     {
         // Unpatch an existing detour if it exists
-        nativeDetour?.Dispose();
+        if (nativeDetour != null)
+        {
+            // Point back to the original method before we unpatch
+            modifiedNativeMethodInfo.MethodPointer = originalNativeMethodInfo.MethodPointer;
+            nativeDetour.Dispose();
+        }
 
         // Generate a new DMD of the modified unhollowed method, and apply harmony patches to it
         var copiedDmd = CopyOriginal();
@@ -143,8 +143,9 @@ public unsafe class IL2CPPDetourMethodPatcher : MethodPatcher
 
         var detourPtr =
             Marshal.GetFunctionPointerForDelegate(unmanagedTrampolineMethod.CreateDelegate(unmanagedDelegateType));
-        nativeDetour = new FunchookDetour(originalNativeMethodInfo.MethodPointer, detourPtr);
+        nativeDetour = NativeDetourHelper.Create(originalNativeMethodInfo.MethodPointer, detourPtr);
         nativeDetour.Apply();
+        modifiedNativeMethodInfo.MethodPointer = nativeDetour.TrampolinePtr;
 
         // TODO: Add an ILHook for the original unhollowed method to go directly to managedHookedMethod
         // Right now it goes through three times as much interop conversion as it needs to, when being called from managed side
