@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using BepInEx.Logging;
 
 namespace BepInEx.IL2CPP.Hook.Allocator;
 
@@ -26,7 +27,11 @@ internal class WindowsPageAllocator : PageAllocator
         {
             var mbi = new WinApi.MEMORY_BASIC_INFORMATION();
             if (WinApi.VirtualQuery(hint, ref mbi, Marshal.SizeOf<WinApi.MEMORY_BASIC_INFORMATION>()) == 0)
-                throw Win32Error($"Failed to query memory information of 0x{(long) hint:X9}");
+            {
+                Logger.Log(LogLevel.Debug,
+                           $"Skipping analysing 0x{(long) hint:X8} because VirtualQuery failed: {Win32Error()}");
+                goto next;
+            }
 
             if (mbi.State == WinApi.PageState.MEM_FREE)
             {
@@ -39,6 +44,7 @@ internal class WindowsPageAllocator : PageAllocator
                 }
             }
 
+            next:
             hint = mbi.BaseAddress + mbi.RegionSize;
         }
 
