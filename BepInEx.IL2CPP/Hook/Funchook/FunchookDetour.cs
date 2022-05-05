@@ -101,18 +101,4 @@ internal class FunchookDetour : INativeDetour
 
         return GenerateTrampoline(typeof(T).GetMethod("Invoke")).CreateDelegate(typeof(T)) as T;
     }
-
-    public static FunchookDetour CreateAndApply<T>(IntPtr from,
-                                                     T to,
-                                                     out T original,
-                                                     CallingConvention? callingConvention = null) where T : Delegate
-    {
-        var toPtr = callingConvention != null
-                        ? MonoExtensions.GetFunctionPointerForDelegate(to, callingConvention.Value)
-                        : Marshal.GetFunctionPointerForDelegate(to);
-        var result = new FunchookDetour(from, toPtr);
-        original = result.GenerateTrampoline<T>();
-        result.Apply();
-        return result;
-    }
 }
