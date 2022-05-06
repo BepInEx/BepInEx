@@ -12,6 +12,7 @@ using BepInEx.Logging;
 using Cpp2IL.Core;
 using HarmonyLib;
 using Il2CppDumper;
+using LibCpp2IL;
 using Mono.Cecil;
 using UnhollowerBaseLib;
 using Logger = BepInEx.Logging.Logger;
@@ -312,6 +313,8 @@ internal static class ProxyAssemblyGenerator
                 Cpp2IlApi.InitializeLibCpp2Il(GameAssemblyPath, metadataPath, cpp2IlUnityVersion, false);
 
                 sourceAssemblies = Cpp2IlApi.MakeDummyDLLs();
+
+                Cpp2IlApi.RunAttributeRestorationForAllAssemblies(null, parallel: LibCpp2IlMain.MetadataVersion >= 29 || LibCpp2IlMain.Binary!.InstructionSet is InstructionSet.X86_32 or InstructionSet.X86_64);
 
                 Cpp2IlApi.DisposeAndCleanupAll();
             }
