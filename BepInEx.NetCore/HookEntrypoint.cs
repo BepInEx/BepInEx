@@ -55,7 +55,7 @@ namespace BepInEx.NetCore
     {
         internal static void PreloaderMain()
         {
-            ConsoleManager.Initialize(false, false);
+            ConsoleManager.Initialize(false, true);
 
             ConsoleManager.CreateConsole();
 
