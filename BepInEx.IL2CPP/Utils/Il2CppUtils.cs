@@ -1,6 +1,6 @@
 ﻿using System;
-using UnhollowerBaseLib;
-using UnhollowerRuntimeLib;
+using Il2CppInterop.Runtime;
+using Il2CppInterop.Runtime.Injection;
 using UnityEngine;
 
 namespace BepInEx.IL2CPP.Utils;
