@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Globalization;
+using System.Runtime.InteropServices;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using BepInEx.Preloader.Core;
@@ -49,6 +50,8 @@ public static class Preloader
             }
 
             ChainloaderLogHelper.PrintLogInfo(Log);
+            Logger.Log(LogLevel.Info, $"Runtime version: {Environment.Version}");
+            Logger.Log(LogLevel.Info, $"Runtime information: {RuntimeInformation.FrameworkDescription}");
 
             Log.Log(LogLevel.Debug, $"Game executable path: {Paths.ExecutablePath}");
             Log.Log(LogLevel.Debug, $"Unhollowed assembly directory: {Il2CppInteropManager.IL2CPPInteropAssemblyPath}");

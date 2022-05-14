@@ -58,8 +58,6 @@ public class IL2CPPChainloader : BaseChainloader<BasePlugin>
 
         base.Initialize(gameExePath);
         Instance = this;
-        Logger.Log(LogLevel.Info, $"Runtime version: {Environment.Version}");
-        Logger.Log(LogLevel.Info, $"Runtime information: {RuntimeInformation.FrameworkDescription}");
 
         ClassInjector.Detour = new UnhollowerDetourHandler();
 
