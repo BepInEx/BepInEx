@@ -4,7 +4,6 @@ using System.Runtime.InteropServices;
 using BepInEx.IL2CPP.Hook.Allocator;
 using BepInEx.Logging;
 using MonoMod.RuntimeDetour;
-using MonoMod.Utils;
 
 namespace BepInEx.IL2CPP.Hook;
 
@@ -80,7 +79,9 @@ public class FastNativeDetour : IDetour
         if (!typeof(Delegate).IsAssignableFrom(typeof(T)))
             throw new InvalidOperationException($"Type {typeof(T)} not a delegate type.");
 
-        return GenerateTrampoline(typeof(T).GetMethod("Invoke")).CreateDelegate(typeof(T)) as T;
+        _ = GenerateTrampoline(typeof(T).GetMethod("Invoke"));
+
+        return Marshal.GetDelegateForFunctionPointer<T>(TrampolinePtr);
     }
 
     public void Dispose()
