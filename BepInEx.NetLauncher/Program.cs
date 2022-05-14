@@ -42,7 +42,7 @@ internal class Program
             filename = Process.GetCurrentProcess().MainModule.FileName;
             ResolveDirectories.Add(Path.Combine(Path.GetDirectoryName(filename), "BepInEx", "core"));
 #endif
-            
+
             AppDomain.CurrentDomain.AssemblyResolve += SharedEntrypoint.RemoteResolve(ResolveDirectories);
 
             NetPreloaderRunner.OuterMain(args, filename);
@@ -64,7 +64,7 @@ internal static class NetPreloaderRunner
     {
         Logger.Listeners.Add(new ConsoleLogListener());
 
-        ConsoleManager.Initialize(true, false);
+        ConsoleManager.Initialize(true, true);
 
         try
         {
