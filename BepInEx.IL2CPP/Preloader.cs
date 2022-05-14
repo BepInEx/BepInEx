@@ -37,7 +37,7 @@ public static class Preloader
         {
             HarmonyBackendFix.Initialize();
 
-            ConsoleManager.Initialize(false, false);
+            ConsoleManager.Initialize(false, true);
 
             PreloaderLog = new PreloaderConsoleListener();
             Logger.Listeners.Add(PreloaderLog);

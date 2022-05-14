@@ -30,7 +30,7 @@ internal class WindowsConsoleDriver : IConsoleDriver
                                                 .PropertyGetter(typeof(Console), nameof(Console.WindowWidth))
                                                 ?.CreateDelegate<Func<int>>();
 
-    private bool useWinApiEncoder;
+    private bool useManagedEncoder;
 
     private int ConsoleWidth
     {
@@ -68,10 +68,10 @@ internal class WindowsConsoleDriver : IConsoleDriver
     public bool ConsoleActive { get; private set; }
     public bool ConsoleIsExternal => true;
 
-    public void Initialize(bool alreadyActive, bool useWinApiEncoder)
+    public void Initialize(bool alreadyActive, bool useManagedEncoder)
     {
         ConsoleActive = alreadyActive || TryCheckConsoleExists();
-        this.useWinApiEncoder = useWinApiEncoder;
+        this.useManagedEncoder = useManagedEncoder;
 
         if (ConsoleActive)
         {
@@ -92,7 +92,8 @@ internal class WindowsConsoleDriver : IConsoleDriver
         // Make sure of ConsoleEncoding helper class because on some Monos
         // Encoding.GetEncoding throws NotImplementedException on most codepages
         // NOTE: We don't set Console.OutputEncoding because it resets any existing Console.Out writers
-        ConsoleEncoding.ConsoleCodePage = codepage;
+        if (!useManagedEncoder)
+            ConsoleEncoding.ConsoleCodePage = codepage;
 
         // If stdout exists, write to it, otherwise make it the same as console out
         // Not sure if this is needed? Does the original Console.Out still work?
@@ -113,7 +114,7 @@ internal class WindowsConsoleDriver : IConsoleDriver
         var consoleOutStream = OpenFileStream(ConsoleWindow.ConsoleOutHandle);
         // Can't use Console.OutputEncoding because it can be null (i.e. not preference by user)
         ConsoleOut = new StreamWriter(consoleOutStream,
-                                      useWinApiEncoder ? ConsoleEncoding.OutputEncoding : Utility.UTF8NoBom)
+                                      useManagedEncoder ? Utility.UTF8NoBom : ConsoleEncoding.OutputEncoding)
         {
             AutoFlush = true
         };

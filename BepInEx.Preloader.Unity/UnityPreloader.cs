@@ -43,7 +43,7 @@ internal static class UnityPreloader
         {
             HarmonyBackendFix.Initialize();
 
-            ConsoleManager.Initialize(false, true);
+            ConsoleManager.Initialize(false, false);
             AllocateConsole();
 
             Utility.TryDo(() =>
