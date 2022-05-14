@@ -9,7 +9,7 @@ public class IL2CPPLogSource : ILogSource
     public IL2CPPLogSource()
     {
         var loggerPointer = Marshal.GetFunctionPointerForDelegate(new IL2CPPLogCallbackDelegate(IL2CPPLogCallback));
-        UnhollowerBaseLib.IL2CPP.il2cpp_register_log_callback(loggerPointer);
+        Il2CppInterop.Runtime.IL2CPP.il2cpp_register_log_callback(loggerPointer);
     }
 
     public string SourceName { get; } = "IL2CPP";

@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Reflection.Emit;
 using HarmonyLib;
+using Il2CppInterop.Runtime;
+using Il2CppInterop.Runtime.Injection;
 using Il2CppSystem;
-using UnhollowerBaseLib;
-using UnhollowerRuntimeLib;
 using ArgumentNullException = System.ArgumentNullException;
 using Il2CppIEnumerator = Il2CppSystem.Collections.IEnumerator;
 using IntPtr = System.IntPtr;
@@ -67,7 +67,7 @@ public class Il2CppManagedEnumerator : Object
         il.Emit(OpCodes.Stloc, loc);
         il.Emit(OpCodes.Ldloca, loc);
         il.Emit(OpCodes.Call,
-                typeof(UnhollowerBaseLib.IL2CPP).GetMethod(nameof(UnhollowerBaseLib.IL2CPP.il2cpp_value_box)));
+                typeof(Il2CppInterop.Runtime.IL2CPP).GetMethod(nameof(Il2CppInterop.Runtime.IL2CPP.il2cpp_value_box)));
         il.Emit(OpCodes.Newobj, typeof(Object).GetConstructor(new[] { typeof(IntPtr) }));
         il.Emit(OpCodes.Ret);
 
@@ -80,7 +80,7 @@ public class Il2CppManagedEnumerator : Object
     {
         var t = obj.GetType();
         if (obj is string s)
-            return new Object(UnhollowerBaseLib.IL2CPP.ManagedStringToIl2Cpp(s));
+            return new Object(Il2CppInterop.Runtime.IL2CPP.ManagedStringToIl2Cpp(s));
         if (t.IsPrimitive)
             return GetValueBoxer(t)(obj);
         throw new NotSupportedException($"Type {t} cannot be converted directly to an Il2Cpp object");

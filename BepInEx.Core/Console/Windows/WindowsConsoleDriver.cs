@@ -30,35 +30,43 @@ internal class WindowsConsoleDriver : IConsoleDriver
                                                 .PropertyGetter(typeof(Console), nameof(Console.WindowWidth))
                                                 ?.CreateDelegate<Func<int>>();
 
-    private int ConsoleWidth => getWindowWidth?.Invoke() ?? 0;
-    private int ConsoleHeight => getWindowHeight?.Invoke() ?? 0;
-
     private bool useWinApiEncoder;
+
+    private int ConsoleWidth
+    {
+        get
+        {
+            try
+            {
+                return getWindowWidth?.Invoke() ?? 0;
+            }
+            catch (IOException)
+            {
+                return 0;
+            }
+        }
+    }
+
+    private int ConsoleHeight
+    {
+        get
+        {
+            try
+            {
+                return getWindowHeight?.Invoke() ?? 0;
+            }
+            catch (IOException)
+            {
+                return 0;
+            }
+        }
+    }
 
     public TextWriter StandardOut { get; private set; }
     public TextWriter ConsoleOut { get; private set; }
 
     public bool ConsoleActive { get; private set; }
     public bool ConsoleIsExternal => true;
-
-    private bool TryCheckConsoleExists()
-    {
-        try
-        {
-            return ConsoleWidth != 0 && ConsoleHeight != 0;
-        }
-        catch (IOException)
-        {
-            //System.IO.IOException: The handle is invalid.
-            //    at System.ConsolePal.GetBufferInfo(Boolean throwOnNoConsole, Boolean & succeeded)
-            //at System.ConsolePal.get_WindowWidth()
-            //at System.Console.get_WindowWidth()
-            //at BepInEx.WindowsConsoleDriver.get_ConsoleWidth()
-            //at BepInEx.WindowsConsoleDriver.Initialize(Boolean alreadyActive)
-
-            return false;
-        }
-    }
 
     public void Initialize(bool alreadyActive, bool useWinApiEncoder)
     {
@@ -104,7 +112,8 @@ internal class WindowsConsoleDriver : IConsoleDriver
 
         var consoleOutStream = OpenFileStream(ConsoleWindow.ConsoleOutHandle);
         // Can't use Console.OutputEncoding because it can be null (i.e. not preference by user)
-        ConsoleOut = new StreamWriter(consoleOutStream, useWinApiEncoder ? ConsoleEncoding.OutputEncoding : Utility.UTF8NoBom)
+        ConsoleOut = new StreamWriter(consoleOutStream,
+                                      useWinApiEncoder ? ConsoleEncoding.OutputEncoding : Utility.UTF8NoBom)
         {
             AutoFlush = true
         };
@@ -130,6 +139,25 @@ internal class WindowsConsoleDriver : IConsoleDriver
     }
 
     public void SetConsoleTitle(string title) => ConsoleWindow.Title = title;
+
+    private bool TryCheckConsoleExists()
+    {
+        try
+        {
+            return ConsoleWidth != 0 && ConsoleHeight != 0;
+        }
+        catch (IOException)
+        {
+            //System.IO.IOException: The handle is invalid.
+            //    at System.ConsolePal.GetBufferInfo(Boolean throwOnNoConsole, Boolean & succeeded)
+            //at System.ConsolePal.get_WindowWidth()
+            //at System.Console.get_WindowWidth()
+            //at BepInEx.WindowsConsoleDriver.get_ConsoleWidth()
+            //at BepInEx.WindowsConsoleDriver.Initialize(Boolean alreadyActive)
+
+            return false;
+        }
+    }
 
     private static FileStream OpenFileStream(IntPtr handle)
     {
