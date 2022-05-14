@@ -321,6 +321,23 @@ public static class Utility
     }
 
     /// <summary>
+    /// Hash a list of strings using MD5
+    /// </summary>
+    /// <param name="strings">Strings to hash</param>
+    /// <returns>MD5 of the strings</returns>
+    public static string HashStrings(params string[] strings)
+    {
+        using var md5 = MD5.Create();
+
+        foreach (var str in strings)
+            md5.TransformBlock(Encoding.UTF8.GetBytes(str), 0, str.Length, null, 0);
+
+        md5.TransformFinalBlock(new byte[0], 0, 0);
+
+        return ByteArrayToString(md5.Hash);
+    }
+
+    /// <summary>
     ///     Convert the given array to a hex string.
     /// </summary>
     /// <param name="data">Bytes to convert.</param>
