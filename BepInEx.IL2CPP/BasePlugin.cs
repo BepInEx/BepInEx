@@ -1,6 +1,7 @@
 ﻿using BepInEx.Configuration;
 using BepInEx.Logging;
-using UnhollowerBaseLib;
+using Il2CppInterop.Runtime;
+using Logger = BepInEx.Logging.Logger;
 
 namespace BepInEx.IL2CPP;
 

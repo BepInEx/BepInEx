@@ -1,6 +1,6 @@
 ﻿using System.Collections;
+using Il2CppInterop.Runtime.Injection;
 using Il2CppSystem;
-using UnhollowerRuntimeLib;
 using ArgumentNullException = System.ArgumentNullException;
 using IEnumerator = Il2CppSystem.Collections.IEnumerator;
 using IntPtr = System.IntPtr;

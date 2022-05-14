@@ -7,8 +7,7 @@ using BepInEx.Preloader.Core;
 using BepInEx.Preloader.Core.Logging;
 using BepInEx.Preloader.Core.Patching;
 using BepInEx.Preloader.RuntimeFixes;
-using UnhollowerBaseLib;
-using UnhollowerBaseLib.Runtime;
+using Il2CppInterop.Runtime.Runtime;
 
 namespace BepInEx.IL2CPP;
 
@@ -23,12 +22,9 @@ public static class Preloader
 
     #endregion
 
-    public static string IL2CPPUnhollowedPath => ProxyAssemblyGenerator.IL2CPPUnhollowedPath;
-
     private static PreloaderConsoleListener PreloaderLog { get; set; }
 
     internal static ManualLogSource Log => PreloaderLogger.Log;
-    internal static ManualLogSource UnhollowerLog { get; set; }
 
     // TODO: This is not needed, maybe remove? (Instance is saved in IL2CPPChainloader itself)
     private static IL2CPPChainloader Chainloader { get; set; }
@@ -55,20 +51,11 @@ public static class Preloader
             ChainloaderLogHelper.PrintLogInfo(Log);
 
             Log.Log(LogLevel.Debug, $"Game executable path: {Paths.ExecutablePath}");
-            Log.Log(LogLevel.Debug, $"Unhollowed assembly directory: {IL2CPPUnhollowedPath}");
+            Log.Log(LogLevel.Debug, $"Unhollowed assembly directory: {Il2CppInteropManager.IL2CPPInteropAssemblyPath}");
             Log.Log(LogLevel.Debug, $"BepInEx root path: {Paths.BepInExRootPath}");
 
-            UnhollowerLog = Logger.CreateLogSource("Unhollower");
-            LogSupport.InfoHandler += UnhollowerLog.LogInfo;
-            LogSupport.WarningHandler += UnhollowerLog.LogWarning;
-            LogSupport.TraceHandler += UnhollowerLog.LogDebug;
-            LogSupport.ErrorHandler += UnhollowerLog.LogError;
-
             InitializeUnityVersion();
-
-            if (ProxyAssemblyGenerator.CheckIfGenerationRequired())
-                ProxyAssemblyGenerator.GenerateAssemblies();
-
+            Il2CppInteropManager.Initialize();
             UnityVersionHandler.Initialize(UnityVersion.Major, UnityVersion.Minor, UnityVersion.Build);
 
             using (var assemblyPatcher = new AssemblyPatcher())
@@ -77,7 +64,7 @@ public static class Preloader
 
                 Log.LogInfo($"{assemblyPatcher.PatcherContext.PatcherPlugins.Count} patcher plugin{(assemblyPatcher.PatcherContext.PatcherPlugins.Count == 1 ? "" : "s")} loaded");
 
-                assemblyPatcher.LoadAssemblyDirectories(IL2CPPUnhollowedPath);
+                assemblyPatcher.LoadAssemblyDirectories(Il2CppInteropManager.IL2CPPInteropAssemblyPath);
 
                 Log.LogInfo($"{assemblyPatcher.PatcherContext.PatcherPlugins.Count} assemblies discovered");
 

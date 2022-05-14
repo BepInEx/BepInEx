@@ -1,5 +1,5 @@
 ﻿using System;
-using UnhollowerRuntimeLib;
+using Il2CppInterop.Runtime.Injection;
 
 namespace BepInEx.IL2CPP.Hook;
 

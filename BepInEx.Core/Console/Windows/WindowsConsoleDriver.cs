@@ -32,8 +32,35 @@ internal class WindowsConsoleDriver : IConsoleDriver
 
     private bool useWinApiEncoder;
 
-    private int ConsoleWidth => getWindowWidth?.Invoke() ?? 0;
-    private int ConsoleHeight => getWindowHeight?.Invoke() ?? 0;
+    private int ConsoleWidth
+    {
+        get
+        {
+            try
+            {
+                return getWindowWidth?.Invoke() ?? 0;
+            }
+            catch (IOException)
+            {
+                return 0;
+            }
+        }
+    }
+
+    private int ConsoleHeight
+    {
+        get
+        {
+            try
+            {
+                return getWindowHeight?.Invoke() ?? 0;
+            }
+            catch (IOException)
+            {
+                return 0;
+            }
+        }
+    }
 
     public TextWriter StandardOut { get; private set; }
     public TextWriter ConsoleOut { get; private set; }
@@ -60,14 +87,7 @@ internal class WindowsConsoleDriver : IConsoleDriver
 
     public void CreateConsole(uint codepage)
     {
-        try
-        {
-            ConsoleWindow.Attach();
-        }
-        catch (Exception e)
-        {
-            // Can't allocate console; we can still continue on in case there is stdout set up
-        }
+        ConsoleWindow.Attach();
 
         // Make sure of ConsoleEncoding helper class because on some Monos
         // Encoding.GetEncoding throws NotImplementedException on most codepages
@@ -90,8 +110,7 @@ internal class WindowsConsoleDriver : IConsoleDriver
             AutoFlush = true
         };
 
-        var consoleOutStream =
-            OpenFileStream(ConsoleWindow.ConsoleOutHandle != IntPtr.Zero ? ConsoleWindow.ConsoleOutHandle : stdout);
+        var consoleOutStream = OpenFileStream(ConsoleWindow.ConsoleOutHandle);
         // Can't use Console.OutputEncoding because it can be null (i.e. not preference by user)
         ConsoleOut = new StreamWriter(consoleOutStream,
                                       useWinApiEncoder ? ConsoleEncoding.OutputEncoding : Utility.UTF8NoBom)
