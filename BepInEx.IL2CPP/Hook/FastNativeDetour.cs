@@ -163,12 +163,9 @@ public class FastNativeDetour : IDetour
 
     public static FastNativeDetour CreateAndApply<T>(IntPtr from,
                                                      T to,
-                                                     out T original,
-                                                     CallingConvention? callingConvention = null) where T : Delegate
+                                                     out T original) where T : Delegate
     {
-        var toPtr = callingConvention != null
-                        ? MonoExtensions.GetFunctionPointerForDelegate(to, callingConvention.Value)
-                        : Marshal.GetFunctionPointerForDelegate(to);
+        var toPtr = Marshal.GetFunctionPointerForDelegate(to);
         var result = new FastNativeDetour(from, toPtr);
         original = result.GenerateTrampoline<T>();
         result.Apply();
