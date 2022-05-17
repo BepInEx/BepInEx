@@ -30,7 +30,7 @@ A more comprehensive comparison list of features and compatibility is available 
 
 **[Latest releases](https://github.com/BepInEx/BepInEx/releases)**
 
-**[Bleeding Edge builds](https://builds.bepis.io/projects/bepinex_be)**
+**[Bleeding Edge builds](https://builds.bepinex.dev/projects/bepinex_be)**
 
 **[How to install (latest releases)](https://docs.bepinex.dev/articles/user_guide/installation/index.html)**
 
