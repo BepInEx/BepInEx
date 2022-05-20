@@ -1,9 +1,6 @@
 name: Build PR
 
 on:
-  push:
-    branches-ignore:
-      - master # For master, we use special BE build workflow
   pull_request:
     branches:
       - master
