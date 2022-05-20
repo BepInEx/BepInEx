@@ -107,10 +107,12 @@ Task("Build")
 const string DOORSTOP_VER = "4.0.0-rc.2";
 const string DOTNET_MINI_VER = "2022.03.26.1";
 const string DOORSTOP_PROXY_DLL = "winhttp.dll";
+const string DOBBY_VER = "1.0.0";
 
 var depCachePath = Directory($"./bin/{DEP_CACHE_NAME}");
 var doorstopPath = depCachePath + Directory("doorstop");
 var dotnetPath = depCachePath + Directory("dotnet");
+var dobbyPath = depCachePath + Directory("dobby");
 
 Task("DownloadDependencies")
     .Does(() =>
@@ -128,6 +130,7 @@ Task("DownloadDependencies")
 
     CreateDirectory(doorstopPath);
     CreateDirectory(dotnetPath);
+    CreateDirectory(dobbyPath);
 
     if (NeedsRedownload("NeighTools/UnityDoorstop", DOORSTOP_VER)) {
         Information("Updating Doorstop");
@@ -142,6 +145,21 @@ Task("DownloadDependencies")
         ZipUncompress(doorstopZipPathWin, doorstopPath + Directory("windows"));
         ZipUncompress(doorstopZipPathLinux, doorstopPath + Directory("unix"));
         ZipUncompress(doorstopZipPathMacOs, doorstopPath + Directory("unix"));
+    }
+
+    if (NeedsRedownload("BepInEx/Dobby", DOBBY_VER)) {
+        Information("Updating Dobby");
+        var dobbyZipPathWin = depCachePath + File("dobby_win.zip");
+        var dobbyZipPathLinux = depCachePath + File("dobby_linux.zip");
+        var dobbyZipPathMacOs = depCachePath + File("dobby_macos.zip");
+
+        DownloadFile($"https://github.com/BepInEx/Dobby/releases/download/v{DOBBY_VER}/dobby-win.zip", dobbyZipPathWin);
+        DownloadFile($"https://github.com/BepInEx/Dobby/releases/download/v{DOBBY_VER}/dobby-linux.zip", dobbyZipPathLinux);
+        DownloadFile($"https://github.com/BepInEx/Dobby/releases/download/v{DOBBY_VER}/dobby-macos.zip", dobbyZipPathMacOs);
+
+        ZipUncompress(dobbyZipPathWin, dobbyPath + Directory("windows"));
+        ZipUncompress(dobbyZipPathLinux, dobbyPath + Directory("linux"));
+        ZipUncompress(dobbyZipPathMacOs, dobbyPath + Directory("macos"));
     }
 
     if (NeedsRedownload("BepInEx/dotnet-runtime", DOTNET_MINI_VER)) {
@@ -233,6 +251,10 @@ Task("MakeDist")
 
             if (target.NeedsRuntime) {
                 CopyDirectory(dotnetPath + Directory(target.RuntimeIdentifier), Directory(distTargetDir) + Directory("dotnet"));
+
+                var dobbyTargetPath = distBepinDir + Directory("core/native/dobby");
+                CreateDirectory(dobbyTargetPath);
+                CopyDirectory(dobbyPath + Directory(target.Os), dobbyTargetPath);
             }
         }
 
