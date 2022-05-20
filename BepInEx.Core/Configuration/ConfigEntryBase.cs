@@ -64,7 +64,7 @@ public abstract class ConfigEntryBase
     /// <summary>
     ///     Types of defaultValue and definition.AcceptableValues have to be the same as settingType.
     /// </summary>
-    internal ConfigEntryBase(ConfigFile configFile,
+    internal protected ConfigEntryBase(ConfigFile configFile,
                              ConfigDefinition definition,
                              Type settingType,
                              object defaultValue,
