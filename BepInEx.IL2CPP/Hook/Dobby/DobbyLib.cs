@@ -15,7 +15,6 @@ internal static unsafe class DobbyLib
             var pathBase = Path.Combine(Paths.BepInExAssemblyDirectory, "native", "dobby");
             var (arch, ext) = NativeLibraryUtils.GetDllIdentifier();
             var libPath = Path.Combine(pathBase, $"dobby_{arch}.{ext}");
-            File.AppendAllText("log.log", $"Resolving dobby from {libPath}\n");
             if (NativeLibrary.TryLoad(libPath, out var lib))
                 args.Library = lib;
         };
