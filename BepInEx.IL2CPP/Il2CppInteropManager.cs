@@ -252,26 +252,7 @@ internal static class Il2CppInteropManager
         if (File.Exists(renameMapLocation))
         {
             Logger.LogInfo("Parsing deobfuscation rename mappings");
-
-            using var fileStream =
-                new FileStream(renameMapLocation, FileMode.Open, FileAccess.Read, FileShare.Read);
-            using var gzipStream = new GZipStream(fileStream, CompressionMode.Decompress);
-
-            using var reader = new StreamReader(gzipStream, Encoding.UTF8, false);
-            while (!reader.EndOfStream)
-            {
-                var line = reader.ReadLine();
-
-                if (string.IsNullOrWhiteSpace(line) || line.StartsWith("#"))
-                    continue;
-
-                var mapping = line.Split(';');
-
-                if (mapping.Length != 2)
-                    continue;
-
-                opts.RenameMap[mapping[0]] = mapping[1];
-            }
+            opts.ReadRenameMap(renameMapLocation);
         }
 
         Logger.LogInfo("Generating interop assemblies");
