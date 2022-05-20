@@ -8,7 +8,7 @@ namespace BepInEx.IL2CPP.Hook;
 
 internal abstract class BaseNativeDetour<T> : INativeDetour where T : BaseNativeDetour<T>
 {
-    protected static readonly ManualLogSource Logger = new(typeof(T).Name);
+    protected static readonly ManualLogSource Logger = BepInEx.Logging.Logger.CreateLogSource(typeof(T).Name);
 
     protected BaseNativeDetour(nint originalMethodPtr, nint detourMethodPtr)
     {
