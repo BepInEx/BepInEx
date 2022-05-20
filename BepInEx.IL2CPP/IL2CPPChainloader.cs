@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -76,7 +75,7 @@ public class IL2CPPChainloader : BaseChainloader<BasePlugin>
         gameAssemblyModule.BaseAddress.TryGetFunction("il2cpp_runtime_invoke", out var runtimeInvokePtr);
         PreloaderLogger.Log.Log(LogLevel.Debug, $"Runtime invoke pointer: 0x{runtimeInvokePtr.ToInt64():X}");
         RuntimeInvokeDetour =
-            NativeDetourHelper.CreateAndApply(runtimeInvokePtr, OnInvokeMethod, out originalInvoke);
+            INativeDetour.CreateAndApply(runtimeInvokePtr, OnInvokeMethod, out originalInvoke);
 
         PreloaderLogger.Log.Log(LogLevel.Debug, "Runtime invoke patched");
     }

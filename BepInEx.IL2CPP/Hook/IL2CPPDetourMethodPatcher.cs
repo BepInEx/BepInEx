@@ -142,7 +142,7 @@ public unsafe class IL2CPPDetourMethodPatcher : MethodPatcher
 
         var detourPtr =
             Marshal.GetFunctionPointerForDelegate(unmanagedTrampolineMethod.CreateDelegate(unmanagedDelegateType));
-        nativeDetour = NativeDetourHelper.Create(originalNativeMethodInfo.MethodPointer, detourPtr);
+        nativeDetour = INativeDetour.Create(originalNativeMethodInfo.MethodPointer, detourPtr);
         nativeDetour.Apply();
         modifiedNativeMethodInfo.MethodPointer = nativeDetour.TrampolinePtr;
 
