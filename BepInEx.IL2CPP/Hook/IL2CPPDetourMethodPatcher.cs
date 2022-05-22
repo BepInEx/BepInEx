@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -58,6 +58,8 @@ public unsafe class IL2CPPDetourMethodPatcher : MethodPatcher
     private static AssemblyBuilder fixedStructAssembly;
     private static ModuleBuilder fixedStructModuleBuilder;
     private static readonly Dictionary<int, Type> FixedStructCache = new();
+
+    private static readonly Dictionary<object, object> DelegateCache = new();
 
     private bool isValid;
     private INativeMethodInfoStruct modifiedNativeMethodInfo;
@@ -140,8 +142,12 @@ public unsafe class IL2CPPDetourMethodPatcher : MethodPatcher
         var unmanagedDelegateType = DelegateTypeFactory.instance.CreateDelegateType(unmanagedTrampolineMethod,
             CallingConvention.Cdecl);
 
+        var unmanagedDelegate = unmanagedTrampolineMethod.CreateDelegate(unmanagedDelegateType);
+
+        DelegateCache[Original] = unmanagedDelegate;
+
         var detourPtr =
-            Marshal.GetFunctionPointerForDelegate(unmanagedTrampolineMethod.CreateDelegate(unmanagedDelegateType));
+            Marshal.GetFunctionPointerForDelegate(unmanagedDelegate);
         nativeDetour = INativeDetour.Create(originalNativeMethodInfo.MethodPointer, detourPtr);
         nativeDetour.Apply();
         modifiedNativeMethodInfo.MethodPointer = nativeDetour.TrampolinePtr;

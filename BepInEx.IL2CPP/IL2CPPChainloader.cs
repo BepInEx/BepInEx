@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
@@ -33,6 +34,8 @@ public class IL2CPPChainloader : BaseChainloader<BasePlugin>
      "Logging.Disk", "WriteUnityLog",
      false,
      "Include unity log messages in log file output.");
+
+    private static List<object> DetourCache = new();
 
     private static INativeDetour RuntimeInvokeDetour { get; set; }
 
@@ -74,9 +77,12 @@ public class IL2CPPChainloader : BaseChainloader<BasePlugin>
 
         gameAssemblyModule.BaseAddress.TryGetFunction("il2cpp_runtime_invoke", out var runtimeInvokePtr);
         PreloaderLogger.Log.Log(LogLevel.Debug, $"Runtime invoke pointer: 0x{runtimeInvokePtr.ToInt64():X}");
-        RuntimeInvokeDetour =
-            INativeDetour.CreateAndApply(runtimeInvokePtr, OnInvokeMethod, out originalInvoke);
+        RuntimeInvokeDetourDelegate invokeMethodDetour = OnInvokeMethod;
 
+        RuntimeInvokeDetour =
+            INativeDetour.CreateAndApply(runtimeInvokePtr, invokeMethodDetour, out originalInvoke);
+        DetourCache.Add(invokeMethodDetour);
+        DetourCache.Add(originalInvoke);
         PreloaderLogger.Log.Log(LogLevel.Debug, "Runtime invoke patched");
     }
 
@@ -112,6 +118,8 @@ public class IL2CPPChainloader : BaseChainloader<BasePlugin>
         if (unhook)
         {
             RuntimeInvokeDetour.Dispose();
+
+            DetourCache.Clear();
 
             PreloaderLogger.Log.Log(LogLevel.Debug, "Runtime invoke unpatched");
         }
