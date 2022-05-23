@@ -64,7 +64,10 @@ internal class ConsoleWindow
             var currWnd = getForeground();
 
             if (!AllocConsole())
-                throw new Win32Exception("AllocConsole() failed");
+            {
+                var error = Marshal.GetLastWin32Error();
+                if (error != 5) throw new Win32Exception("AllocConsole() failed");
+            }
 
             // Restore Foreground
             setForeground(currWnd);
