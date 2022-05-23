@@ -54,17 +54,19 @@ internal class ConsoleWindow
         if (OriginalStdoutHandle == IntPtr.Zero)
             OriginalStdoutHandle = GetStdHandle(-11);
 
-        // Store Current Window
-        var currWnd = getForeground();
-
         var cur = GetConsoleWindow();
 
-        //Check for existing console before allocating
-        if (GetConsoleWindow() == IntPtr.Zero)
+        if (cur == IntPtr.Zero)
+        {
+            // Store Current Window
+            var currWnd = getForeground();
+
             if (!AllocConsole())
                 throw new Exception("AllocConsole() failed");
-        // Restore Foreground
-        setForeground(currWnd);
+
+            // Restore Foreground
+            setForeground(currWnd);
+        }
 
         ConsoleOutHandle = CreateFile("CONOUT$", 0x80000000 | 0x40000000, 2, IntPtr.Zero, 3, 0, IntPtr.Zero);
         Kon.conOut = ConsoleOutHandle;
