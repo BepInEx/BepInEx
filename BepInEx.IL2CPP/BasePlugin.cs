@@ -1,7 +1,6 @@
 ﻿using BepInEx.Configuration;
 using BepInEx.Logging;
-using Il2CppInterop.Runtime;
-using Logger = BepInEx.Logging.Logger;
+using Il2CppInterop.Runtime.InteropTypes;
 
 namespace BepInEx.IL2CPP;
 
