@@ -11,8 +11,9 @@ using BepInEx.Configuration;
 using BepInEx.Logging;
 using Cpp2IL.Core;
 using HarmonyLib;
+using Il2CppInterop.Common;
 using Il2CppInterop.Generator;
-using Il2CppInterop.Runtime;
+using Il2CppInterop.Runtime.XrefScans;
 using LibCpp2IL;
 using Mono.Cecil;
 
@@ -141,6 +142,13 @@ internal static class Il2CppInteropManager
 
         AppDomain.CurrentDomain.AssemblyResolve += ResolveInteropAssemblies;
 
+        GenerateInteropAssemblies();
+
+        XrefRuntimeScanner.Initialize();
+    }
+
+    private static void GenerateInteropAssemblies()
+    {
         if (!CheckIfGenerationRequired())
             return;
 
