@@ -4,6 +4,7 @@
 // --------------------------------------------------
 
 using System;
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 using BepInEx;
 using BepInEx.ConsoleUtil;
@@ -13,6 +14,7 @@ namespace UnityInjector.ConsoleUtil;
 
 internal class ConsoleWindow
 {
+    private const int STD_OUTPUT_HANDLE = -11;
     private const uint SC_CLOSE = 0xF060;
     private const uint MF_BYCOMMAND = 0x00000000;
 
@@ -52,7 +54,7 @@ internal class ConsoleWindow
         Initialize();
 
         if (OriginalStdoutHandle == IntPtr.Zero)
-            OriginalStdoutHandle = GetStdHandle(-11);
+            OriginalStdoutHandle = GetStdHandle(STD_OUTPUT_HANDLE);
 
         var cur = GetConsoleWindow();
 
@@ -62,7 +64,7 @@ internal class ConsoleWindow
             var currWnd = getForeground();
 
             if (!AllocConsole())
-                throw new Exception("AllocConsole() failed");
+                throw new Win32Exception("AllocConsole() failed");
 
             // Restore Foreground
             setForeground(currWnd);
@@ -71,8 +73,8 @@ internal class ConsoleWindow
         ConsoleOutHandle = CreateFile("CONOUT$", 0x80000000 | 0x40000000, 2, IntPtr.Zero, 3, 0, IntPtr.Zero);
         Kon.conOut = ConsoleOutHandle;
 
-        if (!SetStdHandle(-11, ConsoleOutHandle))
-            throw new Exception("SetStdHandle() failed");
+        if (!SetStdHandle(STD_OUTPUT_HANDLE, ConsoleOutHandle))
+            throw new Win32Exception("SetStdHandle() failed");
 
         if (OriginalStdoutHandle != IntPtr.Zero && ConsoleManager.ConfigConsoleOutRedirectType.Value ==
             ConsoleManager.ConsoleOutRedirectType.ConsoleOut)
@@ -99,15 +101,15 @@ internal class ConsoleWindow
             return;
 
         if (!CloseHandle(ConsoleOutHandle))
-            throw new Exception("CloseHandle() failed");
+            throw new Win32Exception("CloseHandle() failed");
 
         ConsoleOutHandle = IntPtr.Zero;
 
         if (!FreeConsole())
-            throw new Exception("FreeConsole() failed");
+            throw new Win32Exception("FreeConsole() failed");
 
-        if (!SetStdHandle(-11, OriginalStdoutHandle))
-            throw new Exception("SetStdHandle() failed");
+        if (!SetStdHandle(STD_OUTPUT_HANDLE, OriginalStdoutHandle))
+            throw new Win32Exception("SetStdHandle() failed");
 
         IsAttached = false;
     }
