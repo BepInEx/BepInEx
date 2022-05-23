@@ -70,7 +70,7 @@ internal class WindowsConsoleDriver : IConsoleDriver
 
     public void Initialize(bool alreadyActive, bool useManagedEncoder)
     {
-        ConsoleActive = alreadyActive || TryCheckConsoleExists();
+        ConsoleActive = alreadyActive;
         this.useManagedEncoder = useManagedEncoder;
 
         if (ConsoleActive)
@@ -119,6 +119,11 @@ internal class WindowsConsoleDriver : IConsoleDriver
             AutoFlush = true
         };
         ConsoleActive = true;
+
+        if (ReflectionHelper.IsCore)
+        {
+            Console.SetOut(ConsoleOut);
+        }
     }
 
     public void PreventClose() => ConsoleWindow.PreventClose();
@@ -141,27 +146,16 @@ internal class WindowsConsoleDriver : IConsoleDriver
 
     public void SetConsoleTitle(string title) => ConsoleWindow.Title = title;
 
-    private bool TryCheckConsoleExists()
+    private static Stream OpenFileStream(IntPtr handle)
     {
-        try
+        if (ReflectionHelper.IsCore)
         {
-            return ConsoleWidth != 0 && ConsoleHeight != 0;
+            var windowsConsoleStreamType = Type.GetType("System.ConsolePal+WindowsConsoleStream, System.Console", true);
+            var constructor = AccessTools.Constructor(windowsConsoleStreamType,
+                                                      new[] { typeof(IntPtr), typeof(FileAccess), typeof(bool) });
+            return (Stream)constructor.Invoke(new object[] { handle, FileAccess.Write, true });
         }
-        catch (IOException)
-        {
-            //System.IO.IOException: The handle is invalid.
-            //    at System.ConsolePal.GetBufferInfo(Boolean throwOnNoConsole, Boolean & succeeded)
-            //at System.ConsolePal.get_WindowWidth()
-            //at System.Console.get_WindowWidth()
-            //at BepInEx.WindowsConsoleDriver.get_ConsoleWidth()
-            //at BepInEx.WindowsConsoleDriver.Initialize(Boolean alreadyActive)
 
-            return false;
-        }
-    }
-
-    private static FileStream OpenFileStream(IntPtr handle)
-    {
         var fileHandle = new SafeFileHandle(handle, false);
         var ctorParams = AccessTools.ActualParameters(FileStreamCtor,
                                                       new object[]
