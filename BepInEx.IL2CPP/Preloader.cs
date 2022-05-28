@@ -8,7 +8,6 @@ using BepInEx.Preloader.Core;
 using BepInEx.Preloader.Core.Logging;
 using BepInEx.Preloader.Core.Patching;
 using BepInEx.Preloader.RuntimeFixes;
-using Il2CppInterop.Runtime.Runtime;
 
 namespace BepInEx.IL2CPP;
 
@@ -58,8 +57,7 @@ public static class Preloader
             Log.Log(LogLevel.Debug, $"BepInEx root path: {Paths.BepInExRootPath}");
 
             InitializeUnityVersion();
-            Il2CppInteropManager.Initialize();
-            UnityVersionHandler.Initialize(UnityVersion.Major, UnityVersion.Minor, UnityVersion.Build);
+            Il2CppInteropManager.Initialize(UnityVersion);
 
             using (var assemblyPatcher = new AssemblyPatcher())
             {

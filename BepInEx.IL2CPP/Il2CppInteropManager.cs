@@ -8,14 +8,19 @@ using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using BepInEx.Configuration;
+using BepInEx.IL2CPP.Logging;
 using BepInEx.Logging;
 using Cpp2IL.Core;
 using HarmonyLib;
 using Il2CppInterop.Common;
 using Il2CppInterop.Generator;
-using Il2CppInterop.Runtime.XrefScans;
+using Il2CppInterop.Generator.Runners;
+using Il2CppInterop.Runtime.Startup;
 using LibCpp2IL;
+using Microsoft.Extensions.Logging;
 using Mono.Cecil;
+using LogLevel = Microsoft.Extensions.Logging.LogLevel;
+using MSLoggerFactory = Microsoft.Extensions.Logging.LoggerFactory;
 
 namespace BepInEx.IL2CPP;
 
@@ -46,6 +51,8 @@ internal static class Il2CppInteropManager
 
     private static readonly ManualLogSource Logger = BepInEx.Logging.Logger.CreateLogSource("InteropManager");
 
+    private static bool initialized;
+
     public static string GameAssemblyPath => Path.Combine(Paths.GameRootPath, "GameAssembly.dll");
 
     private static string HashPath => Path.Combine(IL2CPPInteropAssemblyPath, "assembly-hash.txt");
@@ -53,6 +60,12 @@ internal static class Il2CppInteropManager
     private static string UnityBaseLibsDirectory => Path.Combine(Paths.BepInExRootPath, "unity-libs");
 
     internal static string IL2CPPInteropAssemblyPath => Path.Combine(Paths.BepInExRootPath, "interop");
+
+    private static ILoggerFactory LoggerFactory { get; } = MSLoggerFactory.Create(b =>
+    {
+        b.AddProvider(new BepInExLoggerProvider())
+         .SetMinimumLevel(LogLevel.Trace); // Each BepInEx log listener has its own filtering
+    });
 
     private static string ComputeHash()
     {
@@ -130,21 +143,20 @@ internal static class Il2CppInteropManager
                    : null;
     }
 
-    public static void Initialize()
+    public static void Initialize(Version unityVersion)
     {
-        GeneratedDatabasesUtil.DatabasesLocationOverride = IL2CPPInteropAssemblyPath;
+        if (initialized)
+            throw new InvalidOperationException("Already initialized");
+        initialized = true;
 
-        var interopLogger = BepInEx.Logging.Logger.CreateLogSource("Il2CppInterop");
-        Il2CppInterop.Runtime.Logger.InfoHandler += s => interopLogger.LogInfo(s.Trim());
-        Il2CppInterop.Runtime.Logger.WarningHandler += s => interopLogger.LogWarning(s.Trim());
-        Il2CppInterop.Runtime.Logger.TraceHandler += s => interopLogger.LogDebug(s.Trim());
-        Il2CppInterop.Runtime.Logger.ErrorHandler += s => interopLogger.LogError(s.Trim());
-
+        Environment.SetEnvironmentVariable("IL2CPP_INTEROP_DATABASES_LOCATION", IL2CPPInteropAssemblyPath);
         AppDomain.CurrentDomain.AssemblyResolve += ResolveInteropAssemblies;
 
         GenerateInteropAssemblies();
-
-        XrefRuntimeScanner.Initialize();
+        var interopLogger = LoggerFactory.CreateLogger("Il2CppInterop");
+        Il2CppInteropRuntime.Create(new() { UnityVersion = unityVersion })
+                            .AddLogger(interopLogger)
+                            .Start();
     }
 
     private static void GenerateInteropAssemblies()
@@ -205,7 +217,6 @@ internal static class Il2CppInteropManager
     {
         Logger.LogMessage("Running Cpp2IL to generate dummy assemblies");
 
-
         var metadataPath = Path.Combine(Paths.GameRootPath,
                                         $"{Paths.ProcessName}_Data",
                                         "il2cpp_data",
@@ -253,7 +264,6 @@ internal static class Il2CppInteropManager
             Source = sourceAssemblies,
             OutputDir = IL2CPPInteropAssemblyPath,
             UnityBaseLibsDir = Directory.Exists(UnityBaseLibsDirectory) ? UnityBaseLibsDirectory : null,
-            NoCopyRuntimeLibs = true
         };
 
         var renameMapLocation = Path.Combine(Paths.BepInExRootPath, "DeobfuscationMap.csv.gz");
@@ -265,7 +275,12 @@ internal static class Il2CppInteropManager
 
         Logger.LogInfo("Generating interop assemblies");
 
-        InteropAssemblyGenerator.GenerateInteropAssemblies(opts);
+        var logger = LoggerFactory.CreateLogger("Il2CppInteropGen");
+
+        Il2CppInteropGenerator.Create(opts)
+                              .AddLogger(logger)
+                              .AddInteropAssemblyGenerator()
+                              .Run();
 
         sourceAssemblies.Do(x => x.Dispose());
     }
