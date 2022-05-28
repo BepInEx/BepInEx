@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using BepInEx.Configuration;
+using BepInEx.IL2CPP.Hook;
 using BepInEx.IL2CPP.Logging;
 using BepInEx.Logging;
 using Cpp2IL.Core;
@@ -15,6 +16,7 @@ using HarmonyLib;
 using Il2CppInterop.Common;
 using Il2CppInterop.Generator;
 using Il2CppInterop.Generator.Runners;
+using Il2CppInterop.HarmonySupport;
 using Il2CppInterop.Runtime.Startup;
 using LibCpp2IL;
 using Microsoft.Extensions.Logging;
@@ -154,8 +156,13 @@ internal static class Il2CppInteropManager
 
         GenerateInteropAssemblies();
         var interopLogger = LoggerFactory.CreateLogger("Il2CppInterop");
-        Il2CppInteropRuntime.Create(new() { UnityVersion = unityVersion })
+        Il2CppInteropRuntime.Create(new RuntimeConfiguration
+                            {
+                                UnityVersion = unityVersion,
+                                DetourProvider = new Il2CppInteropDetourProvider()
+                            })
                             .AddLogger(interopLogger)
+                            .AddHarmonySupport()
                             .Start();
     }
 
@@ -263,7 +270,7 @@ internal static class Il2CppInteropManager
             GameAssemblyPath = GameAssemblyPath,
             Source = sourceAssemblies,
             OutputDir = IL2CPPInteropAssemblyPath,
-            UnityBaseLibsDir = Directory.Exists(UnityBaseLibsDirectory) ? UnityBaseLibsDirectory : null,
+            UnityBaseLibsDir = Directory.Exists(UnityBaseLibsDirectory) ? UnityBaseLibsDirectory : null
         };
 
         var renameMapLocation = Path.Combine(Paths.BepInExRootPath, "DeobfuscationMap.csv.gz");
