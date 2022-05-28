@@ -12,8 +12,6 @@ using BepInEx.IL2CPP.Utils;
 using BepInEx.Logging;
 using BepInEx.Preloader.Core;
 using BepInEx.Preloader.Core.Logging;
-using HarmonyLib.Public.Patching;
-using Il2CppInterop.Runtime.Injection;
 using Il2CppInterop.Runtime.InteropTypes;
 using MonoMod.Utils;
 using UnityEngine;
@@ -57,12 +55,8 @@ public class IL2CPPChainloader : BaseChainloader<BasePlugin>
 
     public override void Initialize(string gameExePath = null)
     {
-        PatchManager.ResolvePatcher += IL2CPPDetourMethodPatcher.TryResolve;
-
         base.Initialize(gameExePath);
         Instance = this;
-
-        ClassInjector.Detour = new UnhollowerDetourHandler();
 
         var gameAssemblyModule = Process.GetCurrentProcess().Modules.Cast<ProcessModule>()
                                         .FirstOrDefault(x => x.ModuleName.Contains("GameAssembly") ||
