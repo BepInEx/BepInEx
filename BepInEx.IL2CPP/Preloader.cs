@@ -23,7 +23,7 @@ public static class Preloader
 
     #endregion
 
-    public static string IL2CPPUnhollowedPath { get; internal set; }
+    public static string IL2CPPUnhollowedPath => ProxyAssemblyGenerator.IL2CPPUnhollowedPath;
 
     private static PreloaderConsoleListener PreloaderLog { get; set; }
 

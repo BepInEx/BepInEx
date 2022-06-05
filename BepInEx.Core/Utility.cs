@@ -336,6 +336,20 @@ public static class Utility
     }
 
     /// <summary>
+    /// Get a value of a command line argument
+    /// </summary>
+    /// <param name="arg">Argument name</param>
+    /// <returns>Next argument after the given argument name. If not found, returns null.</returns>
+    public static string GetCommandLineArgValue(string arg)
+    {
+        var args = Environment.GetCommandLineArgs();
+        for (var i = 1; i < args.Length; i++)
+            if (args[i] == arg && i + 1 < args.Length)
+                return args[i + 1];
+        return null;
+    }
+
+    /// <summary>
     ///     Try to parse given string as an assembly name
     /// </summary>
     /// <param name="fullName">Fully qualified assembly name</param>
