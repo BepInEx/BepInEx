@@ -30,6 +30,9 @@ public class UnityChainloader : BaseChainloader<BaseUnityPlugin>
 
     private string _consoleTitle;
 
+    // TODO: Remove once proper instance handling exists
+    public static UnityChainloader Instance { get; set; }
+
     /// <summary>
     ///     The GameObject that all plugins are attached to as components.
     /// </summary>
@@ -60,6 +63,8 @@ public class UnityChainloader : BaseChainloader<BaseUnityPlugin>
 
     public override void Initialize(string gameExePath = null)
     {
+        Instance = this;
+
         UnityTomlTypeConverters.AddUnityEngineConverters();
 
         ThreadingHelper.Initialize();
