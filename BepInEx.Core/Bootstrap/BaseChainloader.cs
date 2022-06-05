@@ -175,14 +175,37 @@ public abstract class BaseChainloader<TPlugin>
             Logger.Sources.Add(new HarmonyLogSource());
     }
 
-    protected virtual IList<PluginInfo> DiscoverPlugins()
+    /// <summary>
+    /// Discovers all plugins in the plugin directory without loading them.
+    /// </summary>
+    /// <remarks>
+    /// This is useful for discovering BepInEx plugin metadata.
+    /// </remarks>
+    /// <param name="path">Path from which to search the plugins.</param>
+    /// <param name="cacheName">Cache name to use. If null, results are not cached.</param>
+    /// <returns>List of discovered plugins and their metadata.</returns>
+    protected IList<PluginInfo> DiscoverPluginsFrom(string path, string cacheName = "chainloader")
     {
         var pluginsToLoad =
-            TypeLoader.FindPluginTypes(Paths.PluginPath, ToPluginInfo, HasBepinPlugins, "chainloader");
-
+            TypeLoader.FindPluginTypes(path, ToPluginInfo, HasBepinPlugins, cacheName);
         return pluginsToLoad.SelectMany(p => p.Value).ToList();
     }
 
+    /// <summary>
+    /// Discovers plugins to load.
+    /// </summary>
+    /// <returns>List of plugins to be loaded.</returns>
+    protected virtual IList<PluginInfo> DiscoverPlugins()
+    {
+        return DiscoverPluginsFrom(Paths.PluginPath);
+    }
+
+    /// <summary>
+    /// Preprocess the plugins and modify the load order.
+    /// </summary>
+    /// <remarks>Some plugins may be skipped if they cannot be loaded (wrong metadata, etc).</remarks>
+    /// <param name="plugins">Plugins to process.</param>
+    /// <returns>List of plugins to load in the correct load order.</returns>
     protected virtual IList<PluginInfo> ModifyLoadOrder(IList<PluginInfo> plugins)
     {
         // We use a sorted dictionary to ensure consistent load order
@@ -192,6 +215,13 @@ public abstract class BaseChainloader<TPlugin>
 
         foreach (var pluginInfoGroup in plugins.GroupBy(info => info.Metadata.GUID))
         {
+            if (Plugins.TryGetValue(pluginInfoGroup.Key, out var loadedPlugin))
+            {
+                Logger.Log(LogLevel.Warning,
+                           $"Skipping [{pluginInfoGroup.Key}] because a plugin with a similar GUID ([{loadedPlugin}]) has been already loaded.");
+                continue;
+            }
+
             PluginInfo loadedVersion = null;
             foreach (var pluginInfo in pluginInfoGroup.OrderByDescending(x => x.Metadata.Version))
             {
@@ -225,14 +255,18 @@ public abstract class BaseChainloader<TPlugin>
 
         foreach (var pluginInfo in pluginsByGuid.Values.ToList())
             if (pluginInfo.Incompatibilities.Any(incompatibility =>
-                                                     pluginsByGuid.ContainsKey(incompatibility.IncompatibilityGUID))
+                                                     pluginsByGuid.ContainsKey(incompatibility.IncompatibilityGUID)
+                                                  || Plugins.ContainsKey(incompatibility.IncompatibilityGUID))
                )
             {
                 pluginsByGuid.Remove(pluginInfo.Metadata.GUID);
                 dependencyDict.Remove(pluginInfo.Metadata.GUID);
 
-                var incompatiblePlugins = pluginInfo.Incompatibilities.Select(x => x.IncompatibilityGUID)
-                                                    .Where(x => pluginsByGuid.ContainsKey(x)).ToArray();
+                var incompatiblePluginsNew = pluginInfo.Incompatibilities.Select(x => x.IncompatibilityGUID)
+                                                       .Where(x => pluginsByGuid.ContainsKey(x));
+                var incompatiblePluginsExisting = pluginInfo.Incompatibilities.Select(x => x.IncompatibilityGUID)
+                                                            .Where(x => Plugins.ContainsKey(x));
+                var incompatiblePlugins = incompatiblePluginsNew.Concat(incompatiblePluginsExisting).ToArray();
                 var message =
                     $@"Could not load [{pluginInfo}] because it is incompatible with: {string.Join(", ", incompatiblePlugins)}";
                 DependencyErrors.Add(message);
@@ -245,6 +279,8 @@ public abstract class BaseChainloader<TPlugin>
                 DependencyErrors.Add(message);
                 Logger.Log(LogLevel.Warning, message);
             }
+
+        // We don't add already loaded plugins to the dependency graph as they are already loaded
 
         var emptyDependencies = new string[0];
 
@@ -259,94 +295,16 @@ public abstract class BaseChainloader<TPlugin>
         return sortedPlugins.Where(pluginsByGuid.ContainsKey).Select(x => pluginsByGuid[x]).ToList();
     }
 
+    /// <summary>
+    /// Run the chainloader and load all plugins from the plugins folder.
+    /// </summary>
     public virtual void Execute()
     {
         try
         {
             var plugins = DiscoverPlugins();
-
             Logger.Log(LogLevel.Info, $"{plugins.Count} plugin{(plugins.Count == 1 ? "" : "s")} to load");
-
-            var sortedPlugins = ModifyLoadOrder(plugins);
-
-            var invalidPlugins = new HashSet<string>();
-            var processedPlugins = new Dictionary<string, SemanticVersioning.Version>();
-            var loadedAssemblies = new Dictionary<string, Assembly>();
-
-            foreach (var plugin in sortedPlugins)
-            {
-                var dependsOnInvalidPlugin = false;
-                var missingDependencies = new List<BepInDependency>();
-                foreach (var dependency in plugin.Dependencies)
-                {
-                    static bool IsHardDependency(BepInDependency dep) =>
-                        (dep.Flags & BepInDependency.DependencyFlags.HardDependency) != 0;
-
-                    // If the dependency wasn't already processed, it's missing altogether
-                    var dependencyExists =
-                        processedPlugins.TryGetValue(dependency.DependencyGUID, out var pluginVersion);
-                    if (!dependencyExists || dependency.VersionRange != null &&
-                        !dependency.VersionRange.IsSatisfied(pluginVersion))
-                    {
-                        // If the dependency is hard, collect it into a list to show
-                        if (IsHardDependency(dependency))
-                            missingDependencies.Add(dependency);
-                        continue;
-                    }
-
-                    // If the dependency is a hard and is invalid (e.g. has missing dependencies), report that to the user
-                    if (invalidPlugins.Contains(dependency.DependencyGUID) && IsHardDependency(dependency))
-                    {
-                        dependsOnInvalidPlugin = true;
-                        break;
-                    }
-                }
-
-                processedPlugins.Add(plugin.Metadata.GUID, plugin.Metadata.Version);
-
-                if (dependsOnInvalidPlugin)
-                {
-                    var message =
-                        $"Skipping [{plugin}] because it has a dependency that was not loaded. See previous errors for details.";
-                    DependencyErrors.Add(message);
-                    Logger.Log(LogLevel.Warning, message);
-                    continue;
-                }
-
-                if (missingDependencies.Count != 0)
-                {
-                    var message = $@"Could not load [{plugin}] because it has missing dependencies: {
-                        string.Join(", ", missingDependencies.Select(s => s.VersionRange == null ? s.DependencyGUID : $"{s.DependencyGUID} ({s.VersionRange})").ToArray())
-                    }";
-                    DependencyErrors.Add(message);
-                    Logger.Log(LogLevel.Error, message);
-
-                    invalidPlugins.Add(plugin.Metadata.GUID);
-                    continue;
-                }
-
-                try
-                {
-                    Logger.Log(LogLevel.Info, $"Loading [{plugin}]");
-
-                    if (!loadedAssemblies.TryGetValue(plugin.Location, out var ass))
-                        loadedAssemblies[plugin.Location] = ass = Assembly.LoadFile(plugin.Location);
-
-                    Plugins[plugin.Metadata.GUID] = plugin;
-                    TryRunModuleCtor(plugin, ass);
-                    plugin.Instance = LoadPlugin(plugin, ass);
-
-                    //_plugins.Add((TPlugin)plugin.Instance);
-                }
-                catch (Exception ex)
-                {
-                    invalidPlugins.Add(plugin.Metadata.GUID);
-                    Plugins.Remove(plugin.Metadata.GUID);
-
-                    Logger.Log(LogLevel.Error,
-                               $"Error loading [{plugin}]: {(ex is ReflectionTypeLoadException re ? TypeLoader.TypeLoadExceptionToString(re) : ex.ToString())}");
-                }
-            }
+            LoadPlugins(plugins);
         }
         catch (Exception ex)
         {
@@ -356,10 +314,123 @@ public abstract class BaseChainloader<TPlugin>
             }
             catch { }
 
-            Logger.Log(LogLevel.Error, $"Error occurred starting the game: {ex}");
+            Logger.Log(LogLevel.Error, $"Error occurred loading plugins: {ex}");
         }
 
         Logger.Log(LogLevel.Message, "Chainloader startup complete");
+    }
+
+    private IList<PluginInfo> LoadPlugins(IList<PluginInfo> plugins)
+    {
+        var sortedPlugins = ModifyLoadOrder(plugins);
+
+        var invalidPlugins = new HashSet<string>();
+        var processedPlugins = new Dictionary<string, SemanticVersioning.Version>();
+        var loadedAssemblies = new Dictionary<string, Assembly>();
+        var loadedPlugins = new List<PluginInfo>();
+
+        foreach (var plugin in sortedPlugins)
+        {
+            var dependsOnInvalidPlugin = false;
+            var missingDependencies = new List<BepInDependency>();
+            foreach (var dependency in plugin.Dependencies)
+            {
+                static bool IsHardDependency(BepInDependency dep) =>
+                    (dep.Flags & BepInDependency.DependencyFlags.HardDependency) != 0;
+
+                // If the dependency wasn't already processed, it's missing altogether
+                var dependencyExists =
+                    processedPlugins.TryGetValue(dependency.DependencyGUID, out var pluginVersion);
+                // Alternatively, if the dependency hasn't been loaded before, it's missing too
+                if (!dependencyExists)
+                {
+                    dependencyExists = Plugins.TryGetValue(dependency.DependencyGUID, out var pluginInfo);
+                    pluginVersion = pluginInfo?.Metadata.Version;
+                }
+
+                if (!dependencyExists || dependency.VersionRange != null &&
+                    !dependency.VersionRange.IsSatisfied(pluginVersion))
+                {
+                    // If the dependency is hard, collect it into a list to show
+                    if (IsHardDependency(dependency))
+                        missingDependencies.Add(dependency);
+                    continue;
+                }
+
+                // If the dependency is a hard and is invalid (e.g. has missing dependencies), report that to the user
+                if (invalidPlugins.Contains(dependency.DependencyGUID) && IsHardDependency(dependency))
+                {
+                    dependsOnInvalidPlugin = true;
+                    break;
+                }
+            }
+
+            processedPlugins.Add(plugin.Metadata.GUID, plugin.Metadata.Version);
+
+            if (dependsOnInvalidPlugin)
+            {
+                var message =
+                    $"Skipping [{plugin}] because it has a dependency that was not loaded. See previous errors for details.";
+                DependencyErrors.Add(message);
+                Logger.Log(LogLevel.Warning, message);
+                continue;
+            }
+
+            if (missingDependencies.Count != 0)
+            {
+                var message = $@"Could not load [{plugin}] because it has missing dependencies: {
+                    string.Join(", ", missingDependencies.Select(s => s.VersionRange == null ? s.DependencyGUID : $"{s.DependencyGUID} ({s.VersionRange})").ToArray())
+                }";
+                DependencyErrors.Add(message);
+                Logger.Log(LogLevel.Error, message);
+
+                invalidPlugins.Add(plugin.Metadata.GUID);
+                continue;
+            }
+
+            try
+            {
+                Logger.Log(LogLevel.Info, $"Loading [{plugin}]");
+
+                if (!loadedAssemblies.TryGetValue(plugin.Location, out var ass))
+                    loadedAssemblies[plugin.Location] = ass = Assembly.LoadFile(plugin.Location);
+
+                Plugins[plugin.Metadata.GUID] = plugin;
+                TryRunModuleCtor(plugin, ass);
+                plugin.Instance = LoadPlugin(plugin, ass);
+                loadedPlugins.Add(plugin);
+
+                //_plugins.Add((TPlugin)plugin.Instance);
+            }
+            catch (Exception ex)
+            {
+                invalidPlugins.Add(plugin.Metadata.GUID);
+                Plugins.Remove(plugin.Metadata.GUID);
+
+                Logger.Log(LogLevel.Error,
+                           $"Error loading [{plugin}]: {(ex is ReflectionTypeLoadException re ? TypeLoader.TypeLoadExceptionToString(re) : ex.ToString())}");
+            }
+        }
+
+        return loadedPlugins;
+    }
+
+    /// <summary>
+    /// Detects and loads all plugins in the specified directories.
+    /// </summary>
+    /// <remarks>
+    /// It is better to collect all paths at once and use a single call to LoadPlugins than multiple calls.
+    /// This allows to run proper dependency resolving and to load all plugins in one go.
+    /// </remarks>
+    /// <param name="pluginsPaths">Directories to search the plugins from.</param>
+    /// <returns>List of loaded plugin infos.</returns>
+    public IList<PluginInfo> LoadPlugins(params string[] pluginsPaths)
+    {
+        // TODO: This is a temporary solution for 3rd party loaders. Instead, this should be done via metaplugins.
+        var plugins = new List<PluginInfo>();
+        foreach (var pluginsPath in pluginsPaths)
+            plugins.AddRange(DiscoverPluginsFrom(pluginsPath));
+        return LoadPlugins(plugins);
     }
 
     private static void TryRunModuleCtor(PluginInfo plugin, Assembly assembly)
