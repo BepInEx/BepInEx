@@ -41,7 +41,9 @@ readonly record struct Target(string Abi, string Os, string Cpu, bool NeedsRunti
 var targets = new Target[] {
     new("UnityMono", "windows", "x86"),
     new("UnityMono", "windows", "x64"),
-    new("UnityMono", "unix", "any"),
+    new("UnityMono", "linux", "x86"),
+    new("UnityMono", "linux", "x64"),
+    new("UnityMono", "macos", "x64"),
     new("UnityIL2CPP", "windows", "x86", true),
     new("UnityIL2CPP", "windows", "x64", true),
     new("UnityIL2CPP", "linux", "x86", true),
@@ -99,8 +101,8 @@ Task("Build")
     }
 });
 
-const string DOORSTOP_VER = "4.0.0-rc.2";
-const string DOTNET_MINI_VER = "2022.03.26.1";
+const string DOORSTOP_VER = "4.0.0-rc.3";
+const string DOTNET_MINI_VER = "2022.06.15.1";
 const string DOORSTOP_PROXY_DLL = "winhttp.dll";
 const string DOBBY_VER = "1.0.0";
 
@@ -138,8 +140,8 @@ Task("DownloadDependencies")
         DownloadFile($"https://github.com/NeighTools/UnityDoorstop/releases/download/v{DOORSTOP_VER}/doorstop_macos_release_{DOORSTOP_VER}.zip", doorstopZipPathMacOs);
 
         ZipUncompress(doorstopZipPathWin, doorstopPath + Directory("windows"));
-        ZipUncompress(doorstopZipPathLinux, doorstopPath + Directory("unix"));
-        ZipUncompress(doorstopZipPathMacOs, doorstopPath + Directory("unix"));
+        ZipUncompress(doorstopZipPathLinux, doorstopPath + Directory("linux"));
+        ZipUncompress(doorstopZipPathMacOs, doorstopPath + Directory("macos"));
     }
 
     if (NeedsRedownload("BepInEx/Dobby", DOBBY_VER)) {
@@ -214,15 +216,13 @@ Task("MakeDist")
         ConvertableDirectoryPath? doorstopTargetDir = null;
 
         if (doorstopConfigFile is not null) {
-            var doorstopOs = target.IsUnix ? "unix" : target.Os;
-            doorstopTargetDir = doorstopPath + Directory(doorstopOs) + Directory(target.IsUnix ? "libdoorstop" : target.Cpu);
-            doorstopTargetPath = $"{doorstopTargetDir + File(target.IsUnix ? "*.*" : DOORSTOP_PROXY_DLL)}";
+            doorstopTargetDir = doorstopPath + Directory(target.Os) + Directory(target.Cpu);
+            doorstopTargetPath = $"{doorstopTargetDir + File(target.IsUnix ? "libdoorstop.*" : DOORSTOP_PROXY_DLL)}";
         }
 
         var distTargetDir = distDir + Directory($"{target}");
         var distBepinDir = distTargetDir + Directory("BepInEx");
         var distDoorstopDir = distTargetDir;
-        if (target.IsUnix) distDoorstopDir += Directory("doorstop_libs");
 
         CreateDirectory(distTargetDir);
         CreateDirectory(distDoorstopDir);
@@ -234,11 +234,10 @@ Task("MakeDist")
             CopyFile(Directory("./doorstop") + doorstopConfigFile, distTargetDir + File(target.IsUnix ? "run_bepinex.sh" : "doorstop_config.ini"));
             if (target.IsUnix) {
                 CopyFiles(new GlobPattern(doorstopTargetPath), distDoorstopDir);
-                MoveFile(distDoorstopDir + File(".doorstop_version"), distTargetDir + File(".doorstop_version"));
             } else {
                 CopyFile(File(doorstopTargetPath), Directory(distDoorstopDir) + File(DOORSTOP_PROXY_DLL));
-                CopyFile(doorstopTargetDir + File(".doorstop_version"), distDoorstopDir + File(".doorstop_version"));
             }
+            CopyFile(doorstopTargetDir + File(".doorstop_version"), distDoorstopDir + File(".doorstop_version"));
 
             if (target.IsUnix) {
                 ReplaceTextInFiles(distTargetDir + File("run_bepinex.sh"), "\r\n", "\n");
@@ -267,8 +266,12 @@ Task("MakeDist")
         (ConvertableDirectoryPath originDir, ConvertableFilePath? doorstopConfigFile) = (Directory(target.Abi), null);
         if (target.Abi is var abi and ("UnityIL2CPP" or "UnityMono")) {
             originDir = Directory(abi is "UnityIL2CPP" ? "IL2CPP" : "Unity");
-            doorstopConfigFile = File(target.IsUnix ? "run_bepinex.sh" :
-                abi is "UnityIL2CPP" ? "doorstop_config_il2cpp.ini" : "doorstop_config_mono.ini");
+            // TODO: Move config file resolving to Target class
+            doorstopConfigFile = File(
+                target.IsUnix ?
+                  (abi is "UnityIL2CPP" ? "run_bepinex_il2cpp.sh" : "run_bepinex_mono.sh")
+                : (abi is "UnityIL2CPP" ? "doorstop_config_il2cpp.ini" : "doorstop_config_mono.ini")
+            );
         }
         PackageBepin(target, originDir, doorstopConfigFile);
     }
