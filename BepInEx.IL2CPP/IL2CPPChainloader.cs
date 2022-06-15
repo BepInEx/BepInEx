@@ -33,7 +33,6 @@ public class IL2CPPChainloader : BaseChainloader<BasePlugin>
      false,
      "Include unity log messages in log file output.");
 
-    private static List<object> DetourCache = new();
 
     private static INativeDetour RuntimeInvokeDetour { get; set; }
 
@@ -75,8 +74,6 @@ public class IL2CPPChainloader : BaseChainloader<BasePlugin>
 
         RuntimeInvokeDetour =
             INativeDetour.CreateAndApply(runtimeInvokePtr, invokeMethodDetour, out originalInvoke);
-        DetourCache.Add(invokeMethodDetour);
-        DetourCache.Add(originalInvoke);
         PreloaderLogger.Log.Log(LogLevel.Debug, "Runtime invoke patched");
     }
 
@@ -112,8 +109,6 @@ public class IL2CPPChainloader : BaseChainloader<BasePlugin>
         if (unhook)
         {
             RuntimeInvokeDetour.Dispose();
-
-            DetourCache.Clear();
 
             PreloaderLogger.Log.Log(LogLevel.Debug, "Runtime invoke unpatched");
         }

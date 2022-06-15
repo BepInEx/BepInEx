@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using BepInEx.Configuration;
 using BepInEx.IL2CPP.Hook.Dobby;
@@ -38,7 +40,55 @@ public interface INativeDetour : IDetour
         var detour = Create(from, toPtr);
         original = detour.GenerateTrampoline<T>();
         detour.Apply();
+
+        // TODO check if this is still needed and remove if not
+        // if (!ReflectionHelper.IsMono)
+        // {
+        //     return new CacheDetourWrapper<T>(detour, original, to);
+        // }
+
         return detour;
+    }
+
+    // Workaround for CoreCLR collecting all delegates
+    private class CacheDetourWrapper<T> : INativeDetour where T : Delegate
+    {
+        private readonly INativeDetour _wrapped;
+
+        private List<T> _cache = new();
+
+        public CacheDetourWrapper(INativeDetour wrapped, T original, T to)
+        {
+            _wrapped = wrapped;
+            _cache.Add(original);
+            _cache.Add(to);
+        }
+
+        public void Dispose()
+        {
+            _wrapped.Dispose();
+            _cache.Clear();
+        }
+
+        public void Apply() => _wrapped.Apply();
+
+        public void Undo() => _wrapped.Undo();
+
+        public void Free() => _wrapped.Free();
+
+        public MethodBase GenerateTrampoline(MethodBase signature = null) => _wrapped.GenerateTrampoline(signature);
+
+        public T GenerateTrampoline<T>() where T : Delegate => _wrapped.GenerateTrampoline<T>();
+
+        public bool IsValid => _wrapped.IsValid;
+
+        public bool IsApplied => _wrapped.IsApplied;
+
+        public nint OriginalMethodPtr => _wrapped.OriginalMethodPtr;
+
+        public nint DetourMethodPtr => _wrapped.DetourMethodPtr;
+
+        public nint TrampolinePtr => _wrapped.TrampolinePtr;
     }
 
     internal enum DetourProvider
