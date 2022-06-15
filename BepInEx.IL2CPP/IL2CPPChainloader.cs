@@ -57,18 +57,14 @@ public class IL2CPPChainloader : BaseChainloader<BasePlugin>
         base.Initialize(gameExePath);
         Instance = this;
 
-        var gameAssemblyModule = Process.GetCurrentProcess().Modules.Cast<ProcessModule>()
-                                        .FirstOrDefault(x => x.ModuleName.Contains("GameAssembly") ||
-                                                             x.ModuleName.Contains("UserAssembly"));
-
-        if (gameAssemblyModule == null)
+        if (!NativeLibrary.TryLoad("GameAssembly", typeof(IL2CPPChainloader).Assembly, null, out var il2CppHandle))
         {
             Logger.Log(LogLevel.Fatal,
-                       "Could not locate Il2Cpp game assembly (GameAssembly.dll) or (UserAssembly.dll). The game might be obfuscated or use a yet unsupported build of Unity.");
+                       "Could not locate Il2Cpp game assembly (GameAssembly.dll, UserAssembly.dll or libil2cpp.so). The game might be obfuscated or use a yet unsupported build of Unity.");
             return;
         }
 
-        gameAssemblyModule.BaseAddress.TryGetFunction("il2cpp_runtime_invoke", out var runtimeInvokePtr);
+        var runtimeInvokePtr = NativeLibrary.GetExport(il2CppHandle, "il2cpp_runtime_invoke");
         PreloaderLogger.Log.Log(LogLevel.Debug, $"Runtime invoke pointer: 0x{runtimeInvokePtr.ToInt64():X}");
         RuntimeInvokeDetourDelegate invokeMethodDetour = OnInvokeMethod;
 

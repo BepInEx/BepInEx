@@ -23,20 +23,6 @@ internal enum FunchookResult
 
 internal static unsafe class FunchookLib
 {
-    static FunchookLib()
-    {
-        NativeLibraryUtils.OnResolve += (_, args) =>
-        {
-            if (args.LibraryName != "funchook")
-                return;
-            var pathBase = Path.Combine(Paths.BepInExAssemblyDirectory, "native", "funchook");
-            var (arch, ext) = NativeLibraryUtils.GetDllIdentifier();
-            var libPath = Path.Combine(pathBase, $"funchook_{arch}.{ext}");
-            if (NativeLibrary.TryLoad(libPath, out var lib))
-                args.Library = lib;
-        };
-    }
-
     [DllImport("funchook", EntryPoint = "funchook_create", CallingConvention = CallingConvention.Cdecl)]
     public static extern nint Create();
 

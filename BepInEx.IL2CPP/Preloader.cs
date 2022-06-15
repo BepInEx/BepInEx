@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Globalization;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using BepInEx.Configuration;
 using BepInEx.Logging;
@@ -56,6 +57,8 @@ public static class Preloader
             Log.Log(LogLevel.Debug, $"Unhollowed assembly directory: {Il2CppInteropManager.IL2CPPInteropAssemblyPath}");
             Log.Log(LogLevel.Debug, $"BepInEx root path: {Paths.BepInExRootPath}");
 
+            NativeLibrary.SetDllImportResolver(typeof(Il2CppInterop.Runtime.IL2CPP).Assembly, DllImportResolver);
+
             InitializeUnityVersion();
             Il2CppInteropManager.Initialize(UnityVersion);
 
@@ -86,6 +89,16 @@ public static class Preloader
 
             throw;
         }
+    }
+    
+    private static IntPtr DllImportResolver(string libraryName, Assembly assembly, DllImportSearchPath? searchPath)
+    {
+        if (libraryName == "GameAssembly")
+        {
+            return NativeLibrary.Load(Il2CppInteropManager.GameAssemblyPath, assembly, searchPath);
+        }
+
+        return IntPtr.Zero;
     }
 
     private static void InitializeUnityVersion()
