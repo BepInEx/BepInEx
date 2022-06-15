@@ -26,10 +26,10 @@
     <ItemGroup>
         <PackageReference Include="HarmonyX" Version="2.10.0"/>
         <PackageReference Include="Iced" Version="1.17.0"/>
-        <PackageReference Include="Il2CppInterop.Generator" Version="1.0.0-pre.10"/>
-        <PackageReference Include="Il2CppInterop.HarmonySupport" Version="1.0.0-pre.10"/>
-        <PackageReference Include="Il2CppInterop.ReferenceLibs" Version="1.0.0-pre.2" IncludeAssets="compile" PrivateAssets="all"/>
-        <PackageReference Include="Il2CppInterop.Runtime" Version="1.0.0-pre.10"/>
+        <PackageReference Include="Il2CppInterop.Generator" Version="1.0.0"/>
+        <PackageReference Include="Il2CppInterop.HarmonySupport" Version="1.0.0"/>
+        <PackageReference Include="Il2CppInterop.ReferenceLibs" Version="1.0.0" IncludeAssets="compile" PrivateAssets="all"/>
+        <PackageReference Include="Il2CppInterop.Runtime" Version="1.0.0"/>
         <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.0" IncludeAssets="compile" PrivateAssets="all"/>
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.1" IncludeAssets="compile" PrivateAssets="all"/>
         <PackageReference Include="MonoMod.RuntimeDetour" Version="22.5.1.1"/>
