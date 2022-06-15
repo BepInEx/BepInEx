@@ -21,6 +21,7 @@ using Il2CppInterop.Runtime.Startup;
 using LibCpp2IL;
 using Microsoft.Extensions.Logging;
 using Mono.Cecil;
+using MonoMod.Utils;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 using MSLoggerFactory = Microsoft.Extensions.Logging.LoggerFactory;
 
@@ -55,7 +56,7 @@ internal static class Il2CppInteropManager
 
     private static bool initialized;
 
-    public static string GameAssemblyPath => Path.Combine(Paths.GameRootPath, "GameAssembly.dll");
+    public static string GameAssemblyPath => Environment.GetEnvironmentVariable("BEPINEX_GAME_ASSEMBLY_PATH") ?? Path.Combine(Paths.GameRootPath, "GameAssembly." + PlatformHelper.LibrarySuffix);
 
     private static string HashPath => Path.Combine(IL2CPPInteropAssemblyPath, "assembly-hash.txt");
 
