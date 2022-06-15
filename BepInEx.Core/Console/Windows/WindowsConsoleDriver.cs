@@ -119,11 +119,6 @@ internal class WindowsConsoleDriver : IConsoleDriver
             AutoFlush = true
         };
         ConsoleActive = true;
-
-        if (ReflectionHelper.IsCore)
-        {
-            Console.SetOut(ConsoleOut);
-        }
     }
 
     public void PreventClose() => ConsoleWindow.PreventClose();
