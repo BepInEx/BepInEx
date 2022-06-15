@@ -4,7 +4,9 @@ using System.IO;
 using System.Threading;
 using BepInEx;
 using BepInEx.IL2CPP;
+using BepInEx.IL2CPP.Utils;
 using BepInEx.Preloader.Core;
+using MonoMod.Utils;
 
 namespace Doorstop;
 
@@ -37,6 +39,29 @@ internal static class Entrypoint
         catch (Exception ex)
         {
             File.WriteAllText(silentExceptionLog, ex.ToString());
+
+            try
+            {
+                if (PlatformHelper.Is(Platform.Windows))
+                {
+                    MessageBox.Show("Failed to start BepInEx", "BepInEx");
+                }
+                else if (NotifySend.IsSupported)
+                {
+                    NotifySend.Send("Failed to start BepInEx", "Check logs for details");
+                }
+                else if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("BEPINEX_FAIL_FAST")))
+                {
+                    // Don't exit the game if we have no way of signaling to the user that a crash happened
+                    return;
+                }
+            }
+            catch (Exception)
+            {
+                // ignored
+            }
+
+            Environment.Exit(1);
         }
         finally
         {
