@@ -36,6 +36,15 @@ readonly record struct Target(string Abi, string Os, string Cpu, bool NeedsRunti
     public override string ToString() => $"{Abi}-{Os}-{Cpu}";
 
     public bool IsUnix => Os is "unix" or "linux" or "macos";
+
+    public string LibExt => Os switch {
+        "macos" => "dylib",
+        "linux" => "so",
+        "windows" => "dll",
+        _ => throw new NotSupportedException($"Target OS {Os} is not supported")
+    };
+
+    public string LibPrefix => IsUnix ? "lib" : "";
 }
 
 var targets = new Target[] {
@@ -245,10 +254,7 @@ Task("MakeDist")
 
             if (target.NeedsRuntime) {
                 CopyDirectory(dotnetPath + Directory(target.RuntimeIdentifier), Directory(distTargetDir) + Directory("dotnet"));
-
-                var dobbyTargetPath = distBepinDir + Directory("core/native/dobby");
-                CreateDirectory(dobbyTargetPath);
-                CopyDirectory(dobbyPath + Directory(target.Os), dobbyTargetPath);
+                CopyFile(dobbyPath + Directory(target.Os) + File($"{target.LibPrefix}dobby_{target.Cpu}.{target.LibExt}"), distBepinDir + Directory("core") + File($"{target.LibPrefix}dobby.{target.LibExt}"));
             }
         }
 
