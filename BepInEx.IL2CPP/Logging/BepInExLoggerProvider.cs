@@ -37,10 +37,18 @@ internal class BepInExLoggerProvider : ILoggerProvider
                                 EventId eventId,
                                 TState state,
                                 Exception exception,
-                                Func<TState, Exception, string> formatter) =>
+                                Func<TState, Exception, string> formatter)
+        {
+            var logLine = state.ToString() ?? string.Empty;
+
+            if (exception != null)
+                logLine += $"\nException: {exception}";
+
             LogEvent?.Invoke(this,
-                             new LogEventArgs(formatter(state, exception), MSLogLevelToBepInExLogLevel(logLevel),
+                             new LogEventArgs(logLine, MSLogLevelToBepInExLogLevel(logLevel),
                                               this));
+        }
+
 
         public bool IsEnabled(LogLevel logLevel) =>
             (MSLogLevelToBepInExLogLevel(logLevel) & Logger.ListenedLogLevels) != BepInExLogLevel.None;
