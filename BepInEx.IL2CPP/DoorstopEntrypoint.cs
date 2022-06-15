@@ -18,7 +18,7 @@ internal static class Entrypoint
     public static void Start()
     {
         // We set it to the current directory first as a fallback, but try to use the same location as the .exe file.
-        var silentExceptionLog = $"preloader_{DateTime.Now:yyyyMMdd_HHmmss_fff}.log";
+        var silentExceptionLog = Environment.GetEnvironmentVariable("BEPINEX_PRELOADER_LOG") ?? $"preloader_{DateTime.Now:yyyyMMdd_HHmmss_fff}.log";
         Mutex mutex = null;
 
         try
