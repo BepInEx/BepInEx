@@ -26,13 +26,20 @@ public interface INativeDetour : IDetour
         // TODO: check and provide an OS accurate provider
         new DobbyDetour(original, target);
 
-    public static INativeDetour Create(nint original, nint target) =>
-        DetourProviderType.Value switch
+    public static INativeDetour Create(nint original, nint target)
+    {
+        var detour = DetourProviderType.Value switch
         {
             DetourProvider.Dobby    => new DobbyDetour(original, target),
             DetourProvider.Funchook => new FunchookDetour(original, target),
             _                       => CreateDefault(original, target)
         };
+        if (!ReflectionHelper.IsMono)
+        {
+            return new CacheDetourWrapper(detour);
+        }
+        return detour;
+    }
 
     public static INativeDetour CreateAndApply<T>(nint from, T to, out T original)
         where T : Delegate
@@ -42,26 +49,19 @@ public interface INativeDetour : IDetour
         original = detour.GenerateTrampoline<T>();
         detour.Apply();
 
-        if (!ReflectionHelper.IsMono)
-        {
-            return new CacheDetourWrapper<T>(detour, original, to);
-        }
-
         return detour;
     }
 
     // Workaround for CoreCLR collecting all delegates
-    private class CacheDetourWrapper<T> : INativeDetour where T : Delegate
+    private class CacheDetourWrapper : INativeDetour
     {
         private readonly INativeDetour _wrapped;
 
-        private List<T> _cache = new();
+        private List<object> _cache = new();
 
-        public CacheDetourWrapper(INativeDetour wrapped, T original, T to)
+        public CacheDetourWrapper(INativeDetour wrapped)
         {
             _wrapped = wrapped;
-            _cache.Add(original);
-            _cache.Add(to);
         }
 
         public void Dispose()
@@ -78,7 +78,12 @@ public interface INativeDetour : IDetour
 
         public MethodBase GenerateTrampoline(MethodBase signature = null) => _wrapped.GenerateTrampoline(signature);
 
-        public T GenerateTrampoline<T>() where T : Delegate => _wrapped.GenerateTrampoline<T>();
+        public T GenerateTrampoline<T>() where T : Delegate
+        {
+            var trampoline = _wrapped.GenerateTrampoline<T>();
+            _cache.Add(trampoline);
+            return trampoline;
+        }
 
         public bool IsValid => _wrapped.IsValid;
 
