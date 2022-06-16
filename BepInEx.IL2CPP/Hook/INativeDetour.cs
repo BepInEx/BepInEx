@@ -6,6 +6,7 @@ using BepInEx.Configuration;
 using BepInEx.IL2CPP.Hook.Dobby;
 using BepInEx.IL2CPP.Hook.Funchook;
 using MonoMod.RuntimeDetour;
+using MonoMod.Utils;
 
 namespace BepInEx.IL2CPP.Hook;
 
