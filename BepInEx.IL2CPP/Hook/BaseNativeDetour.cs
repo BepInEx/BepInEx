@@ -10,14 +10,16 @@ internal abstract class BaseNativeDetour<T> : INativeDetour where T : BaseNative
 {
     protected static readonly ManualLogSource Logger = BepInEx.Logging.Logger.CreateLogSource(typeof(T).Name);
 
-    protected BaseNativeDetour(nint originalMethodPtr, nint detourMethodPtr)
+    protected BaseNativeDetour(nint originalMethodPtr, Delegate detourMethod)
     {
         OriginalMethodPtr = originalMethodPtr;
-        DetourMethodPtr = detourMethodPtr;
+        DetourMethod = detourMethod;
+        DetourMethodPtr = Marshal.GetFunctionPointerForDelegate(detourMethod);
     }
 
     public bool IsPrepared { get; protected set; }
     protected MethodInfo TrampolineMethod { get; set; }
+    protected Delegate DetourMethod { get; set; }
 
     public nint OriginalMethodPtr { get; }
     public nint DetourMethodPtr { get; }

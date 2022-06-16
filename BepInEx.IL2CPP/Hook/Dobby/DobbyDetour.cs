@@ -1,8 +1,10 @@
+using System;
+
 namespace BepInEx.IL2CPP.Hook.Dobby;
 
 internal class DobbyDetour : BaseNativeDetour<DobbyDetour>
 {
-    public DobbyDetour(nint originalMethodPtr, nint detourMethodPtr) : base(originalMethodPtr, detourMethodPtr) { }
+    public DobbyDetour(nint originalMethodPtr, Delegate detourMethod) : base(originalMethodPtr, detourMethod) { }
 
     protected override void ApplyImpl() => DobbyLib.Commit(OriginalMethodPtr);
 

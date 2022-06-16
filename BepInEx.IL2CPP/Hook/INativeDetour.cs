@@ -22,11 +22,11 @@ public interface INativeDetour : IDetour
     public nint DetourMethodPtr { get; }
     public nint TrampolinePtr { get; }
 
-    private static INativeDetour CreateDefault(nint original, nint target) =>
+    private static INativeDetour CreateDefault<T>(nint original, T target) where T : Delegate =>
         // TODO: check and provide an OS accurate provider
         new DobbyDetour(original, target);
 
-    public static INativeDetour Create(nint original, nint target)
+    public static INativeDetour Create<T>(nint original, T target) where T : Delegate
     {
         var detour = DetourProviderType.Value switch
         {
@@ -36,7 +36,7 @@ public interface INativeDetour : IDetour
         };
         if (!ReflectionHelper.IsMono)
         {
-            return new CacheDetourWrapper(detour);
+            return new CacheDetourWrapper(detour, target);
         }
         return detour;
     }
@@ -44,8 +44,7 @@ public interface INativeDetour : IDetour
     public static INativeDetour CreateAndApply<T>(nint from, T to, out T original)
         where T : Delegate
     {
-        var toPtr = Marshal.GetFunctionPointerForDelegate(to);
-        var detour = Create(from, toPtr);
+        var detour = Create(from, to);
         original = detour.GenerateTrampoline<T>();
         detour.Apply();
 
@@ -59,9 +58,10 @@ public interface INativeDetour : IDetour
 
         private List<object> _cache = new();
 
-        public CacheDetourWrapper(INativeDetour wrapped)
+        public CacheDetourWrapper(INativeDetour wrapped, Delegate target)
         {
             _wrapped = wrapped;
+            _cache.Add(target);
         }
 
         public void Dispose()
