@@ -7,7 +7,7 @@ internal class FunchookDetour : BaseNativeDetour<FunchookDetour>
 {
     private readonly nint funchookInstance;
 
-    public FunchookDetour(nint originalMethodPtr, nint detourMethodPtr) : base(originalMethodPtr, detourMethodPtr)
+    public FunchookDetour(nint originalMethodPtr, Delegate detourMethod) : base(originalMethodPtr, detourMethod)
     {
         funchookInstance = FunchookLib.Create();
     }

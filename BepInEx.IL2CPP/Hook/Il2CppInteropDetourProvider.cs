@@ -1,10 +1,11 @@
 ﻿using Il2CppInterop.Runtime.Injection;
+using System;
 
 namespace BepInEx.IL2CPP.Hook;
 
 internal class Il2CppInteropDetourProvider : IDetourProvider
 {
-    public IDetour Create(nint original, nint target) =>
+    public IDetour Create<TDelegate>(nint original, TDelegate target) where TDelegate : Delegate =>
         new Il2CppInteropDetour(INativeDetour.Create(original, target));
 }
 
