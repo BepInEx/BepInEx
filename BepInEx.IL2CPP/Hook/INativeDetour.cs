@@ -41,11 +41,10 @@ public interface INativeDetour : IDetour
         original = detour.GenerateTrampoline<T>();
         detour.Apply();
 
-        // TODO check if this is still needed and remove if not
-        // if (!ReflectionHelper.IsMono)
-        // {
-        //     return new CacheDetourWrapper<T>(detour, original, to);
-        // }
+        if (!ReflectionHelper.IsMono)
+        {
+            return new CacheDetourWrapper<T>(detour, original, to);
+        }
 
         return detour;
     }
