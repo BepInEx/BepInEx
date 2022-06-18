@@ -25,8 +25,7 @@ internal class WindowsPageAllocator : PageAllocator
     {
         while (true)
         {
-            var mbi = new WinApi.MEMORY_BASIC_INFORMATION();
-            if (WinApi.VirtualQuery(hint, ref mbi, Marshal.SizeOf<WinApi.MEMORY_BASIC_INFORMATION>()) == 0)
+            if (WinApi.VirtualQuery(hint, out var mbi) == 0)
             {
                 Logger.Log(LogLevel.Debug,
                            $"Skipping analysing 0x{(long) hint:X8} because VirtualQuery failed: {Win32Error()}");
@@ -113,8 +112,31 @@ internal class WindowsPageAllocator : PageAllocator
             // ReSharper restore InconsistentNaming
         }
 
-        [DllImport("kernel32", SetLastError = true)]
-        public static extern int VirtualQuery(nint lpAddress, ref MEMORY_BASIC_INFORMATION lpBuffer, int dwLength);
+        [DllImport("kernel32", EntryPoint = "VirtualQuery", SetLastError = true)]
+        static extern int VirtualQuery32(nint lpAddress, ref MEMORY_BASIC_INFORMATION lpBuffer, int dwLength);
+
+        [DllImport("kernel32", EntryPoint = "VirtualQuery", SetLastError = true)]
+        static extern int VirtualQuery64(nint lpAddress, ref MEMORY_BASIC_INFORMATION64 lpBuffer, int dwLength);
+
+        public static int VirtualQuery(nint lpAddress, out MEMORY_BASIC_INFORMATION lpBuffer)
+        {
+            lpBuffer = new MEMORY_BASIC_INFORMATION();
+            if (Environment.Is64BitProcess)
+            {
+                var mbi = new MEMORY_BASIC_INFORMATION64();
+                var res = VirtualQuery64(lpAddress, ref mbi, Marshal.SizeOf<MEMORY_BASIC_INFORMATION64>());
+                lpBuffer.BaseAddress = mbi.BaseAddress;
+                lpBuffer.AllocationBase = mbi.AllocationBase;
+                lpBuffer.AllocationProtect = mbi.AllocationProtect;
+                lpBuffer.RegionSize = mbi.RegionSize;
+                lpBuffer.State = mbi.State;
+                lpBuffer.Protect = mbi.Protect;
+                lpBuffer.Type = mbi.Type;
+                return res;
+            }
+
+            return VirtualQuery32(lpAddress, ref lpBuffer, Marshal.SizeOf<MEMORY_BASIC_INFORMATION>());
+        }
 
         [DllImport("kernel32", SetLastError = true)]
         public static extern nint VirtualAlloc(nint lpAddress,
@@ -127,15 +149,30 @@ internal class WindowsPageAllocator : PageAllocator
 
         [StructLayout(LayoutKind.Sequential)]
         // ReSharper disable once InconsistentNaming
-        public readonly struct MEMORY_BASIC_INFORMATION
+        public struct MEMORY_BASIC_INFORMATION
         {
-            public readonly nint BaseAddress;
-            public readonly nint AllocationBase;
-            public readonly uint AllocationProtect;
-            public readonly nint RegionSize;
-            public readonly PageState State;
-            public readonly uint Protect;
-            public readonly uint Type;
+            public nint BaseAddress;
+            public nint AllocationBase;
+            public uint AllocationProtect;
+            public nint RegionSize;
+            public PageState State;
+            public uint Protect;
+            public uint Type;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        // ReSharper disable once InconsistentNaming
+        struct MEMORY_BASIC_INFORMATION64
+        {
+            public nint BaseAddress;
+            public nint AllocationBase;
+            public uint AllocationProtect;
+            public uint __alignment1;
+            public nint RegionSize;
+            public PageState State;
+            public uint Protect;
+            public uint Type;
+            public int __alignment2;
         }
     }
 }
