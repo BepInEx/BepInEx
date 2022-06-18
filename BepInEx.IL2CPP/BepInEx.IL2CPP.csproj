@@ -27,9 +27,9 @@
         <PackageReference Include="BepInEx.Il2Cpp.TlsAdapter" Version="1.0.1"/>
         <PackageReference Include="HarmonyX" Version="2.10.0"/>
         <PackageReference Include="Iced" Version="1.17.0"/>
-        <PackageReference Include="Il2CppAssemblyUnhollower.BaseLib" Version="0.4.33.2"/>
-        <PackageReference Include="Il2CppAssemblyUnhollower.BaseLib.Legacy" Version="0.4.33.2"/>
-        <PackageReference Include="Il2CppAssemblyUnhollower.Lib" Version="0.4.33.2"/>
+        <PackageReference Include="Il2CppAssemblyUnhollower.BaseLib" Version="0.4.33.3"/>
+        <PackageReference Include="Il2CppAssemblyUnhollower.BaseLib.Legacy" Version="0.4.33.3"/>
+        <PackageReference Include="Il2CppAssemblyUnhollower.Lib" Version="0.4.33.3"/>
         <PackageReference Include="Il2CppDumper" Version="6.6.4"/>
         <PackageReference Include="Il2CppReferenceLibs.Core" Version="2.0.0" IncludeAssets="compile" PrivateAssets="all"/>
         <PackageReference Include="MonoMod.RuntimeDetour" Version="22.5.1.1"/>
