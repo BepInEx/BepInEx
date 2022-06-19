@@ -12,7 +12,7 @@ namespace BepInEx.IL2CPP.Hook.Allocator;
 internal class WindowsPageAllocator : PageAllocator
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static nint RoundUp(nint num, nint unit) => (num + unit - 1) & ~ (unit - 1);
+    private static nint RoundUp(nint num, nint unit) => (num + unit - 1) & ~(unit - 1);
 
     private static Win32Exception Win32Error(string message = null, int code = -1)
     {
@@ -23,6 +23,7 @@ internal class WindowsPageAllocator : PageAllocator
 
     protected override nint AllocateChunk(nint hint)
     {
+        nint chunk;
         while (true)
         {
             if (WinApi.VirtualQuery(hint, out var mbi) == 0)
@@ -38,7 +39,17 @@ internal class WindowsPageAllocator : PageAllocator
                 var d = nextAddress - mbi.BaseAddress;
                 if (d >= 0 && mbi.RegionSize - d >= ALLOCATION_UNIT)
                 {
+                    Logger.Log(LogLevel.Debug, $"Found free chunk at 0x{(long) nextAddress:X8}");
                     hint = nextAddress;
+
+                    chunk = WinApi.VirtualAlloc(hint, ALLOCATION_UNIT, WinApi.AllocationType.MEM_RESERVE,
+                                                WinApi.ProtectConstant.PAGE_NOACCESS);
+                    if (chunk == 0)
+                    {
+                        Logger.Log(LogLevel.Debug, $"Failed to reserve address: 0x{(long) hint:X8}: {Win32Error()}");
+                        goto next;
+                    }
+
                     break;
                 }
             }
@@ -47,10 +58,6 @@ internal class WindowsPageAllocator : PageAllocator
             hint = mbi.BaseAddress + mbi.RegionSize;
         }
 
-        var chunk = WinApi.VirtualAlloc(hint, ALLOCATION_UNIT, WinApi.AllocationType.MEM_RESERVE,
-                                        WinApi.ProtectConstant.PAGE_NOACCESS);
-        if (chunk == 0)
-            throw Win32Error($"Failed to reserve address: 0x{(long) hint:X8}");
         var addr = WinApi.VirtualAlloc(chunk, PAGE_SIZE, WinApi.AllocationType.MEM_COMMIT,
                                        WinApi.ProtectConstant.PAGE_READWRITE);
         if (addr == 0)
