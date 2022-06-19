@@ -26,7 +26,7 @@ internal abstract class PageAllocator
     /// <summary>
     ///     Allocation granularity on Windows (but can be reused in other implementations).
     /// </summary>
-    protected const int ALLOCATION_UNIT = 0x100000;
+    protected const int ALLOCATION_UNIT = 0x10000;
 
     protected const int PAGES_PER_UNIT = ALLOCATION_UNIT / PAGE_SIZE;
 
