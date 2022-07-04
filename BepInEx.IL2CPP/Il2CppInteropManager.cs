@@ -56,7 +56,9 @@ internal static class Il2CppInteropManager
 
     private static bool initialized;
 
-    public static string GameAssemblyPath => Environment.GetEnvironmentVariable("BEPINEX_GAME_ASSEMBLY_PATH") ?? Path.Combine(Paths.GameRootPath, "GameAssembly." + PlatformHelper.LibrarySuffix);
+    public static string GameAssemblyPath => Environment.GetEnvironmentVariable("BEPINEX_GAME_ASSEMBLY_PATH") ??
+                                             Path.Combine(Paths.GameRootPath,
+                                                          "GameAssembly." + PlatformHelper.LibrarySuffix);
 
     private static string HashPath => Path.Combine(IL2CPPInteropAssemblyPath, "assembly-hash.txt");
 
@@ -266,12 +268,16 @@ internal static class Il2CppInteropManager
 
     private static void RunIl2CppInteropGenerator(List<AssemblyDefinition> sourceAssemblies)
     {
+        // Wine doesn't seem to support parallelism properly
+        var canRunParallel = !PlatformHelper.Is(Platform.Wine);
+
         var opts = new GeneratorOptions
         {
             GameAssemblyPath = GameAssemblyPath,
             Source = sourceAssemblies,
             OutputDir = IL2CPPInteropAssemblyPath,
-            UnityBaseLibsDir = Directory.Exists(UnityBaseLibsDirectory) ? UnityBaseLibsDirectory : null
+            UnityBaseLibsDir = Directory.Exists(UnityBaseLibsDirectory) ? UnityBaseLibsDirectory : null,
+            Parallel = canRunParallel,
         };
 
         var renameMapLocation = Path.Combine(Paths.BepInExRootPath, "DeobfuscationMap.csv.gz");
