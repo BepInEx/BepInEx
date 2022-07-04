@@ -10,6 +10,7 @@ internal static class PlatformUtils
 {
     public static readonly bool ProcessIs64Bit = IntPtr.Size >= 8;
     public static Version WindowsVersion { get; set; }
+    public static Version WineVersion { get; set; }
 
     public static string LinuxArchitecture { get; set; }
     public static string LinuxKernelVersion { get; set; }
@@ -25,9 +26,7 @@ internal static class PlatformUtils
     [DllImport("ntdll.dll", SetLastError = true)]
     private static extern bool RtlGetVersion(ref WindowsOSVersionInfoExW versionInfo);
 
-
     private static bool Is(this Platform current, Platform expected) => (current & expected) == expected;
-
 
     /// <summary>
     ///     Recreation of MonoMod's PlatformHelper.DeterminePlatform method, but with libc calls instead of creating processes.
@@ -67,6 +66,14 @@ internal static class PlatformUtils
             WindowsVersion = new Version((int) windowsVersionInfo.dwMajorVersion,
                                          (int) windowsVersionInfo.dwMinorVersion, 0,
                                          (int) windowsVersionInfo.dwBuildNumber);
+
+            if (DynDll.TryOpenLibrary("ntdll.dll", out var ntdll) &&
+                ntdll.TryGetFunction("wine_get_version", out var wineGetVersion))
+            {
+                current |= Platform.Wine;
+                var getVersion = wineGetVersion.AsDelegate<GetWineVersionDelegate>();
+                WineVersion = new Version(getVersion());
+            }
         }
 
         // Is64BitOperatingSystem has been added in .NET Framework 4.0
@@ -112,6 +119,10 @@ internal static class PlatformUtils
 
         PlatformHelper.Current = current;
     }
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    [return: MarshalAs(UnmanagedType.LPStr)]
+    private delegate string GetWineVersionDelegate();
 
     [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Unicode)]
     public struct WindowsOSVersionInfoExW
