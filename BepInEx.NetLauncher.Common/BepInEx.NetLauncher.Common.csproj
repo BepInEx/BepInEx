@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFrameworks>netstandard2.1;net40</TargetFrameworks>
@@ -6,6 +6,7 @@
 
     <ItemGroup>
         <PackageReference Include="HarmonyX" Version="2.10.0"/>
+        <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="All"/>
     </ItemGroup>
 
     <ItemGroup>
