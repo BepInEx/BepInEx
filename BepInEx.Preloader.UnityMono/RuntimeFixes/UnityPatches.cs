@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using HarmonyLib;
 
-namespace BepInEx.Preloader.RuntimeFixes;
+namespace BepInEx.Preloader.UnityMono.RuntimeFixes;
 
 internal static class UnityPatches
 {

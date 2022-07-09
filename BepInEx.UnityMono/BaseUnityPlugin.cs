@@ -3,7 +3,7 @@ using BepInEx.Configuration;
 using BepInEx.Logging;
 using UnityEngine;
 
-namespace BepInEx;
+namespace BepInEx.UnityMono;
 
 /// <summary>
 ///     The base plugin type that is used by the BepInEx plugin loader.
@@ -30,7 +30,7 @@ public abstract class BaseUnityPlugin : MonoBehaviour
             Location = GetType().Assembly.Location
         };
 
-        Logger = Logging.Logger.CreateLogSource(metadata.Name);
+        Logger = BepInEx.Logging.Logger.CreateLogSource(metadata.Name);
 
         Config = new ConfigFile(Utility.CombinePaths(Paths.ConfigPath, metadata.GUID + ".cfg"), false, metadata);
     }

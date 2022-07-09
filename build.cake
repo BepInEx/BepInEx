@@ -266,7 +266,7 @@ Task("MakeDist")
     foreach (Target target in targets) {
         (ConvertableDirectoryPath originDir, ConvertableFilePath? doorstopConfigFile) = (Directory(target.Abi), null);
         if (target.Abi is var abi and ("UnityIL2CPP" or "UnityMono")) {
-            originDir = Directory(abi is "UnityIL2CPP" ? "IL2CPP" : "Unity");
+            originDir = Directory(abi is "UnityIL2CPP" ? "IL2CPP" : "UnityMono");
             // TODO: Move config file resolving to Target class
             doorstopConfigFile = File(
                 target.IsUnix ?

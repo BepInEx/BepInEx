@@ -9,9 +9,10 @@ using BepInEx.Preloader.Core;
 using BepInEx.Preloader.Core.Logging;
 using BepInEx.Preloader.Core.Patching;
 using BepInEx.Preloader.RuntimeFixes;
+using BepInEx.Preloader.UnityMono.RuntimeFixes;
 using MonoMod.Utils;
 
-namespace BepInEx.Preloader.Unity;
+namespace BepInEx.Preloader.UnityMono;
 
 /// <summary>
 ///     The main entrypoint of BepInEx, and initializes all patchers and the chainloader.

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 using HarmonyLib;
 
-namespace BepInEx.Preloader.RuntimeFixes;
+namespace BepInEx.Preloader.UnityMono.RuntimeFixes;
 
 /// <summary>
 ///     This exists because the Mono implementation of <see cref="Trace" /> is/was broken, and would call Write directly

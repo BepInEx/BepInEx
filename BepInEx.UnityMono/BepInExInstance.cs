@@ -1,6 +1,6 @@
-﻿using BepInEx.Unity.Bootstrap;
+﻿using BepInEx.UnityMono.Bootstrap;
 
-namespace BepInEx.Unity;
+namespace BepInEx.UnityMono;
 
 public static class BepInExInstance
 {

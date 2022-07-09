@@ -10,13 +10,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BepInExTests", "BepInExTest
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BepInEx.Preloader.Core", "BepInEx.Preloader.Core\BepInEx.Preloader.Core.csproj", "{15F8BC38-A761-4F93-8903-1B531AC5D9F9}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BepInEx.Unity", "BepInEx.Unity\BepInEx.Unity.csproj", "{EAE9FAE6-8011-45A3-8B6E-0C7F14210533}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BepInEx.UnityMono", "BepInEx.UnityMono\BepInEx.UnityMono.csproj", "{EAE9FAE6-8011-45A3-8B6E-0C7F14210533}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BepInEx.Preloader.Unity", "BepInEx.Preloader.Unity\BepInEx.Preloader.Unity.csproj", "{D404C973-441D-48ED-B266-C21320BA0D87}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BepInEx.Preloader.UnityMono", "BepInEx.Preloader.UnityMono\BepInEx.Preloader.UnityMono.csproj", "{D404C973-441D-48ED-B266-C21320BA0D87}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BepInEx.Core", "BepInEx.Core\BepInEx.Core.csproj", "{4FFBA620-F5ED-47F9-B90C-DAD1316FD9B9}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unity", "Unity", "{6E2DD21E-0854-4F4A-B925-D90E0016D03D}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UnityMono", "UnityMono", "{6E2DD21E-0854-4F4A-B925-D90E0016D03D}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BepInEx.NetLauncher", "BepInEx.NetLauncher\BepInEx.NetLauncher.csproj", "{490B052B-7F23-4052-AD04-613856618901}"
 EndProject
