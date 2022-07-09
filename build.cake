@@ -103,7 +103,7 @@ Task("Build")
 });
 
 const string DOORSTOP_VER = "4.0.0-rc.4";
-const string DOTNET_MINI_VER = "20220709.38";
+const string DOTNET_MINI_VER = "6.0.6";
 const string DOORSTOP_PROXY_DLL = "winhttp.dll";
 const string DOBBY_VER = "1.0.0";
 
@@ -139,7 +139,8 @@ Task("DownloadDependencies")
         DownloadFile($"https://github.com/NeighTools/UnityDoorstop/releases/download/v{DOORSTOP_VER}/doorstop_win_release_{DOORSTOP_VER}.zip", doorstopZipPathWin);
         DownloadFile($"https://github.com/NeighTools/UnityDoorstop/releases/download/v{DOORSTOP_VER}/doorstop_linux_release_{DOORSTOP_VER}.zip", doorstopZipPathLinux);
         DownloadFile($"https://github.com/NeighTools/UnityDoorstop/releases/download/v{DOORSTOP_VER}/doorstop_macos_release_{DOORSTOP_VER}.zip", doorstopZipPathMacOs);
-
+           
+        CleanDirectory(doorstopPath);
         ZipUncompress(doorstopZipPathWin, doorstopPath + Directory("windows"));
         ZipUncompress(doorstopZipPathLinux, doorstopPath + Directory("linux"));
         ZipUncompress(doorstopZipPathMacOs, doorstopPath + Directory("macos"));
@@ -154,7 +155,8 @@ Task("DownloadDependencies")
         DownloadFile($"https://github.com/BepInEx/Dobby/releases/download/v{DOBBY_VER}/dobby-win.zip", dobbyZipPathWin);
         DownloadFile($"https://github.com/BepInEx/Dobby/releases/download/v{DOBBY_VER}/dobby-linux.zip", dobbyZipPathLinux);
         DownloadFile($"https://github.com/BepInEx/Dobby/releases/download/v{DOBBY_VER}/dobby-macos.zip", dobbyZipPathMacOs);
-
+        
+        CleanDirectory(dobbyPath);
         ZipUncompress(dobbyZipPathWin, dobbyPath + Directory("windows"));
         ZipUncompress(dobbyZipPathLinux, dobbyPath + Directory("linux"));
         ZipUncompress(dobbyZipPathMacOs, dobbyPath + Directory("macos"));
@@ -166,7 +168,8 @@ Task("DownloadDependencies")
         var dotnetZipPath = depCachePath + File("dotnet-mini.zip");
 
         DownloadFile($"https://github.com/BepInEx/dotnet-runtime/releases/download/{DOTNET_MINI_VER}/mini-coreclr-Release.zip", dotnetZipPath);
-
+        
+        CleanDirectory(dotnetPath);
         ZipUncompress(dotnetZipPath, dotnetPath);
     }
 
