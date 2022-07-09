@@ -26,6 +26,12 @@ internal static class PlatformUtils
     [DllImport("ntdll.dll", SetLastError = true)]
     private static extern bool RtlGetVersion(ref WindowsOSVersionInfoExW versionInfo);
 
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern IntPtr LoadLibrary(string libraryName);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
+
     private static bool Is(this Platform current, Platform expected) => (current & expected) == expected;
 
     /// <summary>
@@ -67,12 +73,16 @@ internal static class PlatformUtils
                                          (int) windowsVersionInfo.dwMinorVersion, 0,
                                          (int) windowsVersionInfo.dwBuildNumber);
 
-            if (DynDll.TryOpenLibrary("ntdll.dll", out var ntdll) &&
-                ntdll.TryGetFunction("wine_get_version", out var wineGetVersion))
+            var ntDll = LoadLibrary("ntdll.dll");
+            if (ntDll != IntPtr.Zero)
             {
-                current |= Platform.Wine;
-                var getVersion = wineGetVersion.AsDelegate<GetWineVersionDelegate>();
-                WineVersion = new Version(getVersion());
+                var wineGetVersion = GetProcAddress(ntDll, "wine_get_version");
+                if (wineGetVersion != IntPtr.Zero)
+                {
+                    current |= Platform.Wine;
+                    var getVersion = wineGetVersion.AsDelegate<GetWineVersionDelegate>();
+                    WineVersion = new Version(getVersion());
+                }
             }
         }
 
