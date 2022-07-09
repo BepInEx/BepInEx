@@ -44,7 +44,7 @@ public static class ChainloaderLogHelper
             ConsoleManager.SetConsoleTitle(consoleTitle);
 
         if (!string.IsNullOrEmpty(bepinVersion.Build))
-            log.Log(LogLevel.Message, $"Build information: {bepinVersion.Build}");
+            log.Log(LogLevel.Message, $"Built from commit {bepinVersion.Build}");
 
         Logger.Log(LogLevel.Info, $"System platform: {GetPlatformString()}");
         Logger.Log(LogLevel.Info,
