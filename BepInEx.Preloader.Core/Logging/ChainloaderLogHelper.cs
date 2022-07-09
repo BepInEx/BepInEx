@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using BepInEx.Logging;
-using BepInEx.Shared;
 using MonoMod.Utils;
 
 namespace BepInEx.Preloader.Core.Logging;
@@ -35,20 +34,17 @@ public static class ChainloaderLogHelper
 
     public static void PrintLogInfo(ManualLogSource log)
     {
-        var consoleTitle = $"BepInEx {Paths.BepInExVersion} - {Paths.ProcessName}";
+        var bepinVersion = Paths.BepInExVersion;
+        var versionMini = new SemanticVersioning.Version(bepinVersion.Major, bepinVersion.Minor, bepinVersion.Patch,
+                                                         bepinVersion.PreRelease);
+        var consoleTitle = $"BepInEx {versionMini} - {Paths.ProcessName}";
         log.Log(LogLevel.Message, consoleTitle);
 
         if (ConsoleManager.ConsoleActive)
             ConsoleManager.SetConsoleTitle(consoleTitle);
 
-        //See BuildInfoAttribute for more information about this section.
-        var attributes = typeof(BuildInfoAttribute).Assembly.GetCustomAttributes(typeof(BuildInfoAttribute), false);
-
-        if (attributes.Length > 0)
-        {
-            var attribute = (BuildInfoAttribute) attributes[0];
-            log.Log(LogLevel.Message, attribute.Info);
-        }
+        if (!string.IsNullOrEmpty(bepinVersion.Build))
+            log.Log(LogLevel.Message, $"Build information: {bepinVersion.Build}");
 
         Logger.Log(LogLevel.Info, $"System platform: {GetPlatformString()}");
         Logger.Log(LogLevel.Info,

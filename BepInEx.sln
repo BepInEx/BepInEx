@@ -31,8 +31,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Markdown", "Markdown", "{68
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "BepInEx.Shared", "BepInEx.Shared\BepInEx.Shared.shproj", "{5C7847FB-C16D-47BD-BB17-1045669F9AA7}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BepInEx.NetLauncher.Common", "BepInEx.NetLauncher.Common\BepInEx.NetLauncher.Common.csproj", "{76EB1952-7826-471C-9CF3-815D094DA077}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BepInEx.NetCore", "BepInEx.NetCore\BepInEx.NetCore.csproj", "{08083F40-98AA-4176-BA01-817C18C35C7F}"
@@ -40,12 +38,17 @@ EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "BepInEx.NetLauncher.Shared", "BepInEx.NetLauncher.Shared\BepInEx.NetLauncher.Shared.shproj", "{067BCC8C-FC25-4929-B4F4-C6A5A7496994}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Scripts", "Scripts", "{A6DDBD9E-773C-437A-88AA-995BC5FE90DF}"
-    ProjectSection(SolutionItems) = preProject
-        build.bat = build.bat
-        build.sh = build.sh
-        build.ps1 = build.ps1
-        build.cake = build.cake
-    EndProjectSection
+				ProjectSection(SolutionItems) = preProject
+								build.bat = build.bat
+								build.sh = build.sh
+								build.ps1 = build.ps1
+								build.cake = build.cake
+				EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{12081C35-76DF-450C-AC83-1E1CB84516AA}"
+	ProjectSection(SolutionItems) = preProject
+		Directory.Build.props = Directory.Build.props
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -146,6 +149,8 @@ Global
 		{76EB1952-7826-471C-9CF3-815D094DA077} = {6EC98884-A3DC-4828-85EF-5F10F7519429}
 		{08083F40-98AA-4176-BA01-817C18C35C7F} = {6EC98884-A3DC-4828-85EF-5F10F7519429}
 		{067BCC8C-FC25-4929-B4F4-C6A5A7496994} = {6EC98884-A3DC-4828-85EF-5F10F7519429}
+		{68C57430-3E92-4B50-A9A5-208FE9CCD914} = {12081C35-76DF-450C-AC83-1E1CB84516AA}
+		{A6DDBD9E-773C-437A-88AA-995BC5FE90DF} = {12081C35-76DF-450C-AC83-1E1CB84516AA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {55AC11EF-F568-4C79-A356-7ED9510145B1}

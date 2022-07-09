@@ -1,23 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <Description>BepInEx Core library</Description>
-        <TargetFrameworks>net35;netstandard2.0;netstandard2.1</TargetFrameworks>
+        <TargetFrameworks>net35;netstandard2.0</TargetFrameworks>
         <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
         <AssemblyTitle>BepInEx</AssemblyTitle>
         <Product>BepInEx</Product>
-        <LangVersion>10</LangVersion>
         <OutputPath>..\bin\Core\</OutputPath>
-        <DocumentationFile>$(OutputPath)\$(TargetFramework)\BepInEx.Core.xml</DocumentationFile>
         <Description>Unity plugin injection framework</Description>
         <!-- Force nuget assembly output on netstandard2.1 -->
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-    </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-        <DebugType>none</DebugType>
-        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
-        <DebugType>portable</DebugType>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="All"/>
@@ -28,7 +19,6 @@
     <ItemGroup>
         <Compile Remove="Contract\IPlugin.cs"/>
     </ItemGroup>
-    <Import Project="..\BepInEx.Shared\BepInEx.Shared.projitems" Label="Shared"/>
 
     <!-- CopyLocalLockFileAssemblies causes to also output shared assemblies: https://github.com/NuGet/Home/issues/4837#issuecomment-354536302 -->
     <!-- Since all core assemblies usually follow naming of System.*, we just delete them for now -->

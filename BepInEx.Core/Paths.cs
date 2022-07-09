@@ -11,6 +11,10 @@ namespace BepInEx;
 /// </summary>
 public static class Paths
 {
+    // TODO: Why is this in Paths?
+    /// <summary>
+    ///    BepInEx version.
+    /// </summary>
     public static Version BepInExVersion { get; } =
         Version.Parse(MetadataHelper.GetAttributes<AssemblyInformationalVersionAttribute>(typeof(Paths).Assembly)[0]
                                     .InformationalVersion);
