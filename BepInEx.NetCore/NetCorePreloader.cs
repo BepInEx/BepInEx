@@ -1,5 +1,7 @@
 using System;
 using System.Diagnostics;
+using System.IO;
+using System.Reflection;
 using BepInEx.Bootstrap;
 using BepInEx.Logging;
 using BepInEx.NetLauncher.Common;
@@ -50,7 +52,7 @@ namespace BepInEx.NetCore
 
             Log.LogMessage("Preloader started");
 
-            using (var assemblyPatcher = new AssemblyPatcher())
+            using (var assemblyPatcher = new AssemblyPatcher((data, _) => Assembly.Load(data)))
             {
                 assemblyPatcher.AddPatchersFromDirectory(Paths.PatcherPluginPath);
 

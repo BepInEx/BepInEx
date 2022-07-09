@@ -5,6 +5,7 @@ using System.Reflection;
 using BepInEx.Preloader.Core;
 using BepInEx.Preloader.RuntimeFixes;
 using BepInEx.Preloader.UnityMono.RuntimeFixes;
+using BepInEx.Preloader.UnityMono.Utils;
 
 namespace BepInEx.Preloader.UnityMono;
 
@@ -29,7 +30,7 @@ internal static class UnityPreloaderRunner
         foreach (var criticalAssembly in CriticalAssemblies)
             try
             {
-                Assembly.LoadFile(Path.Combine(Paths.BepInExAssemblyDirectory, criticalAssembly));
+                MonoAssemblyHelper.Load(Path.Combine(Paths.BepInExAssemblyDirectory, criticalAssembly));
             }
             catch (Exception)
             {
@@ -94,9 +95,9 @@ internal static class UnityPreloaderRunner
         if (foundAssembly != null)
             return foundAssembly;
 
-        if (Utility.TryResolveDllAssembly(assemblyName, Paths.BepInExAssemblyDirectory, out foundAssembly)
-         || Utility.TryResolveDllAssembly(assemblyName, Paths.PatcherPluginPath, out foundAssembly)
-         || Utility.TryResolveDllAssembly(assemblyName, Paths.PluginPath, out foundAssembly))
+        if (MonoAssemblyHelper.TryResolveDllAssembly(assemblyName, Paths.BepInExAssemblyDirectory, out foundAssembly)
+         || MonoAssemblyHelper.TryResolveDllAssembly(assemblyName, Paths.PatcherPluginPath, out foundAssembly)
+         || MonoAssemblyHelper.TryResolveDllAssembly(assemblyName, Paths.PluginPath, out foundAssembly))
             return foundAssembly;
 
         return null;
