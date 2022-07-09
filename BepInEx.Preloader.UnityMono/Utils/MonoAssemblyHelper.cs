@@ -78,7 +78,6 @@ internal static class MonoAssemblyHelper
         public unsafe Assembly Load(string fullPath)
         {
             var assembly = GetAssemblyByName(AssemblyName);
-            File.AppendAllText("log.log", $"Load 1: {assembly?.FullName}\n");
             if (assembly != null)
                 return assembly;
 
@@ -91,9 +90,7 @@ internal static class MonoAssemblyHelper
                 mono_assembly_load_from_full(image, fullPath, out status, false);
                 if (status != MonoImageOpenStatus.MONO_IMAGE_OK)
                     throw new BadImageFormatException($"Failed to load assembly {fullPath}: {status}");
-                var ass = GetAssemblyByName(AssemblyName);
-                File.AppendAllText("log.log", $"Load 2: {ass?.FullName}\n");
-                return ass;
+                return GetAssemblyByName(AssemblyName);
             }
         }
     }
