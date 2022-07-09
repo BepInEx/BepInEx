@@ -7,7 +7,7 @@ using BepInEx.Logging;
 using UnityEngine;
 using Logger = BepInEx.Logging.Logger;
 
-namespace BepInEx.Unity.Logging
+namespace BepInEx.UnityMono.Logging
 {
     /// <summary>
     ///     Logs entries using Unity specific outputs.

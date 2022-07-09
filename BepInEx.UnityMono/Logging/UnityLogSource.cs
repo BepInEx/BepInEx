@@ -3,7 +3,7 @@ using System.Reflection;
 using BepInEx.Logging;
 using UnityEngine;
 
-namespace BepInEx.Unity.Logging;
+namespace BepInEx.UnityMono.Logging;
 
 /// <summary>
 ///     Logs entries using Unity specific outputs.

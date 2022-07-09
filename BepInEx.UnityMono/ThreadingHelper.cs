@@ -8,7 +8,7 @@ using BepInEx.Logging;
 using UnityEngine;
 using Logger = BepInEx.Logging.Logger;
 
-namespace BepInEx;
+namespace BepInEx.UnityMono;
 
 /// <summary>
 ///     Provides methods for running code on other threads and synchronizing with the main thread.

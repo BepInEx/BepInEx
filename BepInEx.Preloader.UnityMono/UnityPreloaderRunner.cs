@@ -4,8 +4,9 @@ using System.Linq;
 using System.Reflection;
 using BepInEx.Preloader.Core;
 using BepInEx.Preloader.RuntimeFixes;
+using BepInEx.Preloader.UnityMono.RuntimeFixes;
 
-namespace BepInEx.Preloader.Unity;
+namespace BepInEx.Preloader.UnityMono;
 
 internal static class UnityPreloaderRunner
 {

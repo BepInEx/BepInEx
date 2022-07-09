@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
@@ -7,7 +7,7 @@ using BepInEx.Bootstrap;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using BepInEx.Preloader.Core.Logging;
-using BepInEx.Unity.Logging;
+using BepInEx.UnityMono.Logging;
 using MonoMod.Utils;
 using UnityEngine;
 using Logger = BepInEx.Logging.Logger;
@@ -16,7 +16,7 @@ using Object = UnityEngine.Object;
 [assembly: InternalsVisibleTo("UnityEngine")]
 [assembly: InternalsVisibleTo("UnityEngine.Core")]
 
-namespace BepInEx.Unity.Bootstrap;
+namespace BepInEx.UnityMono.Bootstrap;
 
 /// <summary>
 ///     The manager and loader for all plugins, and the entry point for BepInEx plugin system.

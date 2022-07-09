@@ -9,7 +9,7 @@ using BepInEx.Preloader.Core.Patching;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
-namespace BepInEx.Preloader.Unity;
+namespace BepInEx.Preloader.UnityMono;
 
 [PatcherPluginInfo("io.bepinex.entrypointpatcher", "BepInEx Entrypoint", "1.0")]
 internal class EntrypointPatcher : BasePatcher
@@ -56,7 +56,7 @@ internal class EntrypointPatcher : BasePatcher
         if (entryType == null)
             throw new Exception("The entrypoint type is invalid! Please check your config/BepInEx.cfg file");
 
-        var chainloaderAssemblyPath = Path.Combine(Paths.BepInExAssemblyDirectory, "BepInEx.Unity.dll");
+        var chainloaderAssemblyPath = Path.Combine(Paths.BepInExAssemblyDirectory, "BepInEx.UnityMono.dll");
 
         var readerParameters = new ReaderParameters
         {

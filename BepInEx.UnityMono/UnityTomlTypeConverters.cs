@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using BepInEx.Configuration;
 using UnityEngine;
 
-namespace BepInEx.Unity;
+namespace BepInEx.UnityMono;
 
 /// <summary>
 ///     Config types that are unity specific

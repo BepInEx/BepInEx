@@ -1,8 +1,9 @@
 ﻿using System;
 using System.IO;
 using BepInEx.Preloader.Core;
-using BepInEx.Preloader.Unity;
+using BepInEx.Preloader.UnityMono;
 
+// ReSharper disable once CheckNamespace
 namespace Doorstop;
 
 internal static class Entrypoint
@@ -24,9 +25,9 @@ internal static class Entrypoint
 
             // In some versions of Unity 4, Mono tries to resolve BepInEx.dll prematurely because of the call to Paths.SetExecutablePath
             // To prevent that, we have to use reflection and a separate startup class so that we can install required assembly resolvers before the main code
-            typeof(Doorstop.Entrypoint).Assembly.GetType($"BepInEx.Preloader.Unity.{nameof(UnityPreloaderRunner)}")
-                                       ?.GetMethod(nameof(UnityPreloaderRunner.PreloaderPreMain))
-                                       ?.Invoke(null, null);
+            typeof(Entrypoint).Assembly.GetType($"BepInEx.Preloader.UnityMono.{nameof(UnityPreloaderRunner)}")
+                              ?.GetMethod(nameof(UnityPreloaderRunner.PreloaderPreMain))
+                              ?.Invoke(null, null);
         }
         catch (Exception ex)
         {

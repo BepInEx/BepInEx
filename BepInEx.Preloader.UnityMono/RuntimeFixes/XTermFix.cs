@@ -7,7 +7,7 @@ using MonoMod.RuntimeDetour;
 using MonoMod.RuntimeDetour.Platforms;
 using MonoMod.Utils;
 
-namespace BepInEx.Preloader.RuntimeFixes;
+namespace BepInEx.Preloader.UnityMono.RuntimeFixes;
 
 internal static class XTermFix
 {

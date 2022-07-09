@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using BepInEx.Configuration;
 using BepInEx.Logging;
 using UnityEngine;
 using Logger = BepInEx.Logging.Logger;
 
-namespace BepInEx.Configuration;
+namespace BepInEx.UnityMono.Configuration;
 
 /// <summary>
 ///     A keyboard shortcut that can be used in Update method to check if user presses a key combo. The shortcut is only
@@ -54,7 +55,7 @@ public struct KeyboardShortcut
     /// <param name="mainKey">Main key to press</param>
     /// <param name="modifiers">Keys that should be held down before main key is registered</param>
     public KeyboardShortcut(KeyCode mainKey, params KeyCode[] modifiers) : this(new[] { mainKey }.Concat(modifiers)
-                                                                                                 .ToArray())
+                                                                                    .ToArray())
     {
         if (mainKey == KeyCode.None && modifiers.Any())
             throw new
