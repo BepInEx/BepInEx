@@ -13,7 +13,6 @@ var cleanDependencyCache = Argument("clean_build_cache", false);
 var lastBuildCommit = Argument("last_build_commit", "");
 var nugetPushSource = Argument("nuget_push_source", "https://nuget.bepinex.dev/v3/index.json");
 var nugetPushKey = Argument("nuget_push_key", "");
-var customBuildVersion = Argument("build_version", "");
 
 var buildVersion = "";
 var currentCommit = RunGit("rev-parse HEAD");
@@ -83,9 +82,8 @@ Task("Build")
     .IsDependentOn("Cleanup")
     .Does(() =>
 {
-    var bepinExProperties = Directory("./BepInEx.Shared");
-
-    buildVersion = FindRegexMatchGroupInFile(bepinExProperties + File("BepInEx.Shared.projitems"), @"\<Version\>([0-9]+\.[0-9]+\.[0-9]+)\<\/Version\>", 1, System.Text.RegularExpressions.RegexOptions.None).Value;
+    // Used in later phases
+    buildVersion = FindRegexMatchGroupInFile(File("Directory.Build.props"), @"\<VersionPrefix\>([0-9]+\.[0-9]+\.[0-9]+)\<\/VersionPrefix\>", 1, System.Text.RegularExpressions.RegexOptions.None).Value;
 
     var buildSettings = new DotNetBuildSettings {
         Configuration = "Release",
@@ -93,21 +91,10 @@ Task("Build")
     };
 
     if (isBleedingEdge) {
-        buildSettings.MSBuildSettings.Properties["BuildInfo"] = new[] {
-            TransformText("BLEEDING EDGE Build #<%buildNumber%> from <%shortCommit%> at <%branchName%>")
-                .WithToken("buildNumber", buildId)
-                .WithToken("shortCommit", currentCommit)
-                .WithToken("branchName", currentBranch)
-                .ToString()
-        };
-
-        buildSettings.MSBuildSettings.Properties["AssemblyVersion"] = new[] { buildVersion + "." + buildId };
-        buildVersion += "-be." + buildId;
-        buildSettings.MSBuildSettings.Properties["Version"] = new[] { buildVersion };
-    } else if (!string.IsNullOrEmpty(customBuildVersion))
-    {
-        buildVersion = customBuildVersion;
-        buildSettings.MSBuildSettings.Properties["Version"] = new[] { buildVersion };
+        buildSettings.MSBuildSettings.Properties["VersionSuffix"] = new[] { $"be.{buildId}" };
+        buildSettings.MSBuildSettings.Properties["SourceRevisionId"] = new[] { currentCommit };
+        buildSettings.MSBuildSettings.Properties["RepositoryBranch"] = new[] { currentBranch };
+        buildVersion += $"-be.{buildId}+{currentCommitShort}";
     }
 
     foreach (var file in GetFiles("./BepInEx.*/*.csproj")) {
@@ -116,7 +103,7 @@ Task("Build")
 });
 
 const string DOORSTOP_VER = "4.0.0-rc.4";
-const string DOTNET_MINI_VER = "2022.06.15.1";
+const string DOTNET_MINI_VER = "20220709.38";
 const string DOORSTOP_PROXY_DLL = "winhttp.dll";
 const string DOBBY_VER = "1.0.0";
 
@@ -178,7 +165,7 @@ Task("DownloadDependencies")
 
         var dotnetZipPath = depCachePath + File("dotnet-mini.zip");
 
-        DownloadFile($"https://github.com/BepInEx/dotnet-runtime/releases/download/{DOTNET_MINI_VER}/dotnet-mini.zip", dotnetZipPath);
+        DownloadFile($"https://github.com/BepInEx/dotnet-runtime/releases/download/{DOTNET_MINI_VER}/mini-coreclr-Release.zip", dotnetZipPath);
 
         ZipUncompress(dotnetZipPath, dotnetPath);
     }
@@ -294,11 +281,10 @@ Task("Pack")
     .Does(() =>
 {
     var distDir = Directory("./bin/dist");
-    var commitSuffix = isBleedingEdge ? $"+{currentCommitShort}" : "";
 
     Information("Packing BepInEx");
     foreach (Target target in targets) {
-        ZipCompress(distDir + Directory($"{target}"), distDir + File($"BepInEx-{target}-{buildVersion}{commitSuffix}.zip"));
+        ZipCompress(distDir + Directory($"{target}"), distDir + File($"BepInEx-{target}-{buildVersion}.zip"));
     }
 
     if(isBleedingEdge) {
@@ -332,7 +318,7 @@ Task("Pack")
                     var cpu => $" {cpu}",
                 };
                 return new Dictionary<string, object>() {
-                    ["file"] = $"BepInEx-{target}-{buildVersion}{commitSuffix}.zip",
+                    ["file"] = $"BepInEx-{target}-{buildVersion}.zip",
                     ["description"] = $"BepInEx {abiName} for {osName}{cpuOsNameSuffix} {abiGamesPrefix}games{osGamesSuffix}",
                 };
             }).ToArray(),
