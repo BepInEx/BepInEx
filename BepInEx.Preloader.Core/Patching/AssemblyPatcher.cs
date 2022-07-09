@@ -22,6 +22,13 @@ public class AssemblyPatcher : IDisposable
 {
     private static readonly string CurrentAssemblyName = Assembly.GetExecutingAssembly().GetName().Name;
 
+    private Func<byte[], string, Assembly> assemblyLoader;
+
+    public AssemblyPatcher(Func<byte[], string, Assembly> assemblyLoader)
+    {
+        this.assemblyLoader = assemblyLoader;
+    }
+
     /// <summary>
     ///     The context of this assembly patcher instance that is passed to all patcher plugins.
     /// </summary>
@@ -49,6 +56,8 @@ public class AssemblyPatcher : IDisposable
             assembly.Value.Dispose();
 
         PatcherContext.AvailableAssemblies.Clear();
+
+        PatcherContext.AvailableAssembliesPaths.Clear();
 
         // Clear to allow GC collection.
         PatcherContext.PatcherPlugins.Clear();
@@ -251,7 +260,9 @@ public class AssemblyPatcher : IDisposable
                 continue;
             }
 
-            PatcherContext.AvailableAssemblies.Add(Path.GetFileName(assemblyPath), assembly);
+            var fileName = Path.GetFileName(assemblyPath);
+            PatcherContext.AvailableAssemblies.Add(fileName, assembly);
+            PatcherContext.AvailableAssembliesPaths.Add(fileName, assemblyPath);
 
             Logger.LogDebug($"Assembly loaded: {Path.GetFileName(assemblyPath)}");
 
@@ -491,7 +502,8 @@ public class AssemblyPatcher : IDisposable
                 {
                     using var assemblyStream = new MemoryStream();
                     assembly.Write(assemblyStream);
-                    loadedAssembly = Assembly.Load(assemblyStream.ToArray());
+                    loadedAssembly = assemblyLoader(assemblyStream.ToArray(),
+                                                    PatcherContext.AvailableAssembliesPaths[filename]);
                 }
 
                 PatcherContext.LoadedAssemblies.Add(filename, loadedAssembly);

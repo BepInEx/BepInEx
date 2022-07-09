@@ -62,7 +62,7 @@ public static class Preloader
             InitializeUnityVersion();
             Il2CppInteropManager.Initialize(UnityVersion);
 
-            using (var assemblyPatcher = new AssemblyPatcher())
+            using (var assemblyPatcher = new AssemblyPatcher((data, _) => Assembly.Load(data)))
             {
                 assemblyPatcher.AddPatchersFromDirectory(Paths.PatcherPluginPath);
 
@@ -90,7 +90,7 @@ public static class Preloader
             throw;
         }
     }
-    
+
     private static IntPtr DllImportResolver(string libraryName, Assembly assembly, DllImportSearchPath? searchPath)
     {
         if (libraryName == "GameAssembly")

@@ -71,6 +71,11 @@ public class PatcherContext
     public Dictionary<string, AssemblyDefinition> AvailableAssemblies { get; } = new();
 
     /// <summary>
+    ///     <para>Contains a mapping of available assembly name to their original filenames.</para>
+    /// </summary>
+    public Dictionary<string, string> AvailableAssembliesPaths { get; } = new();
+
+    /// <summary>
     ///     <para>Contains a dictionary of assemblies that have been loaded as part of executing this assembly patcher.</para>
     ///     <para>
     ///         The key is the same key as used in <see cref="LoadedAssemblies" />, while the value is the actual assembly

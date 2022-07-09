@@ -10,6 +10,7 @@ using BepInEx.Preloader.Core.Logging;
 using BepInEx.Preloader.Core.Patching;
 using BepInEx.Preloader.RuntimeFixes;
 using BepInEx.Preloader.UnityMono.RuntimeFixes;
+using BepInEx.Preloader.UnityMono.Utils;
 using MonoMod.Utils;
 
 namespace BepInEx.Preloader.UnityMono;
@@ -77,7 +78,7 @@ internal static class UnityPreloader
 
             TypeLoader.SearchDirectories.UnionWith(Paths.DllSearchPaths);
 
-            using (var assemblyPatcher = new AssemblyPatcher())
+            using (var assemblyPatcher = new AssemblyPatcher(MonoAssemblyHelper.LoadFromMemory))
             {
                 assemblyPatcher.AddPatchersFromDirectory(Paths.BepInExAssemblyDirectory);
                 assemblyPatcher.AddPatchersFromDirectory(Paths.PatcherPluginPath);

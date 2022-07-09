@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using BepInEx.Bootstrap;
 using BepInEx.Logging;
 using BepInEx.NetLauncher.Common;
@@ -25,7 +26,7 @@ namespace BepInEx.NetCore
             Paths.SetExecutablePath(entrypointAssemblyPath);
 
             TypeLoader.SearchDirectories.Add(Path.GetDirectoryName(entrypointAssemblyPath));
-            
+
             Logger.Sources.Add(TraceLogSource.CreateSource());
 
             ChainloaderLogHelper.PrintLogInfo(Log);
@@ -37,12 +38,12 @@ namespace BepInEx.NetCore
 
             using (var entrypointAssembly = AssemblyDefinition.ReadAssembly(entrypointAssemblyPath))
                 executableInfo = AssemblyBuildInfo.DetermineInfo(entrypointAssembly);
-            
+
             Log.LogInfo($"Game executable build architecture: {executableInfo}");
 
             Log.Log(LogLevel.Message, "Preloader started");
 
-            using (var assemblyPatcher = new AssemblyPatcher())
+            using (var assemblyPatcher = new AssemblyPatcher((data, _) => Assembly.Load(data)))
             {
                 assemblyPatcher.AddPatchersFromDirectory(Paths.PatcherPluginPath);
 
@@ -51,7 +52,8 @@ namespace BepInEx.NetCore
 
                 assemblyPatcher.LoadAssemblyDirectories(new[] { Paths.GameRootPath }, new[] { "dll", "exe" });
 
-                Log.Log(LogLevel.Info, $"{assemblyPatcher.PatcherContext.AvailableAssemblies.Count} assemblies discovered");
+                Log.Log(LogLevel.Info,
+                        $"{assemblyPatcher.PatcherContext.AvailableAssemblies.Count} assemblies discovered");
 
                 assemblyPatcher.PatchAndLoad();
             }
