@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using BepInEx.Preloader.Core;
 using BepInEx.Preloader.Unity;
