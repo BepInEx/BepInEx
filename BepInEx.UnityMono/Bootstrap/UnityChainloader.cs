@@ -7,8 +7,8 @@ using BepInEx.Bootstrap;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using BepInEx.Preloader.Core.Logging;
+using BepInEx.Unity.Core;
 using BepInEx.UnityMono.Logging;
-using MonoMod.Utils;
 using UnityEngine;
 using Logger = BepInEx.Logging.Logger;
 using Object = UnityEngine.Object;
@@ -92,7 +92,7 @@ public class UnityChainloader : BaseChainloader<BaseUnityPlugin>
             UnityTomlTypeConverters.AddUnityEngineConverters();
 
             Logger.Log(LogLevel.Debug, "Initializing ThreadingHelper");
-            //ThreadingHelper.Initialize();
+            ThreadingHelper.Initialize();
 
             Logger.Log(LogLevel.Debug, "Creating Manager object");
             ManagerObject = new GameObject("BepInEx_Manager") { hideFlags = HideFlags.HideAndDontSave };

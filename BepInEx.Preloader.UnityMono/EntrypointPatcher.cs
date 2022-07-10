@@ -6,6 +6,7 @@ using BepInEx.Bootstrap;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using BepInEx.Preloader.Core.Patching;
+using BepInEx.Unity.Core;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
@@ -16,20 +17,23 @@ internal class EntrypointPatcher : BasePatcher
 {
     private static readonly ConfigEntry<string> ConfigEntrypointAssembly = ConfigFile.CoreConfig.Bind(
      "Preloader.Entrypoint", "Assembly",
-     UnityPreloader.IsPostUnity2017
-         ? "UnityEngine.CoreModule.dll"
-         : "UnityEngine.dll",
+     DefaultEntrypointAssembly,
      "The local filename of the assembly to target.");
 
     private static readonly ConfigEntry<string> ConfigEntrypointType = ConfigFile.CoreConfig.Bind(
      "Preloader.Entrypoint", "Type",
-     "Application",
+     DefaultEntrypointType,
      "The name of the type in the entrypoint assembly to search for the entrypoint method.");
 
     private static readonly ConfigEntry<string> ConfigEntrypointMethod = ConfigFile.CoreConfig.Bind(
      "Preloader.Entrypoint", "Method",
      ".cctor",
      "The name of the method in the specified entrypoint assembly and type to hook and load Chainloader from.");
+
+    private static string DefaultEntrypointAssembly =>
+        UnityInfo.Version.IsLess(2017) ? "UnityEngine.dll" : "UnityEngine.CoreModule.dll";
+
+    private static string DefaultEntrypointType => UnityInfo.Version.IsLess(5) ? "MonoBehaviour" : "Application";
 
     private bool HasLoaded { get; set; }
 

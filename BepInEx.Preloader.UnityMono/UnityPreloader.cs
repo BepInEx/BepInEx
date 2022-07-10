@@ -35,9 +35,6 @@ internal static class UnityPreloader
 
     private static ManualLogSource Log => PreloaderLogger.Log;
 
-    public static bool IsPostUnity2017 { get; } =
-        File.Exists(Path.Combine(Paths.ManagedPath, "UnityEngine.CoreModule.dll"));
-
     public static void Run()
     {
         try
