@@ -11,12 +11,6 @@ namespace BepInEx.Preloader.UnityMono.Utils;
 
 internal static class MonoAssemblyHelper
 {
-    [DynDllImport("mono", "mono_image_open_from_data_with_name")]
-    private static ImageOpenDelegate ImageOpen;
-
-    [DynDllImport("mono", "mono_assembly_load_from_full")]
-    private static AssemblyLoadDelegate AssemblyLoad;
-
     static MonoAssemblyHelper()
     {
         // We can't use mono's __Internal because on Windows it will use GetModuleHandleW(NULL) that will
@@ -104,15 +98,22 @@ internal static class MonoAssemblyHelper
 
             fixed (byte* data = &AssemblyData[0])
             {
-                var image = ImageOpen((nint) data, (uint) AssemblyData.Length, true,
+                var image = imageOpen((nint) data, (uint) AssemblyData.Length, true,
                                       out var status, false, fullPath);
                 if (status != MonoImageOpenStatus.MONO_IMAGE_OK)
                     throw new BadImageFormatException($"Failed to load image {fullPath}: {status}");
-                AssemblyLoad(image, fullPath, out status, false);
+                assemblyLoad(image, fullPath, out status, false);
                 if (status != MonoImageOpenStatus.MONO_IMAGE_OK)
                     throw new BadImageFormatException($"Failed to load assembly {fullPath}: {status}");
                 return GetAssemblyByName(AssemblyName);
             }
         }
     }
+#pragma warning disable CS0649
+    [DynDllImport("mono", "mono_image_open_from_data_with_name")]
+    private static ImageOpenDelegate imageOpen;
+
+    [DynDllImport("mono", "mono_assembly_load_from_full")]
+    private static AssemblyLoadDelegate assemblyLoad;
+#pragma warning restore CS0649
 }
