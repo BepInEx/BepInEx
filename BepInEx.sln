@@ -50,6 +50,14 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{12081C
 		Directory.Build.props = Directory.Build.props
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Doorstop", "Doorstop", "{C76B3E16-93A8-4CD7-95A2-18EBF2437001}"
+	ProjectSection(SolutionItems) = preProject
+		doorstop\doorstop_config_il2cpp.ini = doorstop\doorstop_config_il2cpp.ini
+		doorstop\doorstop_config_mono.ini = doorstop\doorstop_config_mono.ini
+		doorstop\run_bepinex_il2cpp.sh = doorstop\run_bepinex_il2cpp.sh
+		doorstop\run_bepinex_mono.sh = doorstop\run_bepinex_mono.sh
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		BepInEx.NetLauncher.Shared\BepInEx.NetLauncher.Shared.projitems*{067bcc8c-fc25-4929-b4f4-c6a5a7496994}*SharedItemsImports = 13
@@ -151,6 +159,7 @@ Global
 		{067BCC8C-FC25-4929-B4F4-C6A5A7496994} = {6EC98884-A3DC-4828-85EF-5F10F7519429}
 		{68C57430-3E92-4B50-A9A5-208FE9CCD914} = {12081C35-76DF-450C-AC83-1E1CB84516AA}
 		{A6DDBD9E-773C-437A-88AA-995BC5FE90DF} = {12081C35-76DF-450C-AC83-1E1CB84516AA}
+		{C76B3E16-93A8-4CD7-95A2-18EBF2437001} = {12081C35-76DF-450C-AC83-1E1CB84516AA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {55AC11EF-F568-4C79-A356-7ED9510145B1}
