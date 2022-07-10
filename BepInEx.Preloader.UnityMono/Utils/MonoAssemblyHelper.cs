@@ -3,25 +3,32 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using BepInEx.Preloader.Core;
 using Mono.Cecil;
+using MonoMod.Utils;
 
 namespace BepInEx.Preloader.UnityMono.Utils;
 
 internal static class MonoAssemblyHelper
 {
-    [DllImport("__Internal", CallingConvention = CallingConvention.Cdecl)]
-    private static extern nint mono_image_open_from_data_with_name(nint data,
-                                                                   uint dataLength,
-                                                                   bool needCopy,
-                                                                   out MonoImageOpenStatus status,
-                                                                   bool refOnly,
-                                                                   [MarshalAs(UnmanagedType.LPStr)] string name);
+    [DynDllImport("mono", "mono_image_open_from_data_with_name")]
+    private static ImageOpenDelegate ImageOpen;
 
-    [DllImport("__Internal", CallingConvention = CallingConvention.Cdecl)]
-    private static extern nint mono_assembly_load_from_full(nint image,
-                                                            [MarshalAs(UnmanagedType.LPStr)] string fileName,
-                                                            out MonoImageOpenStatus status,
-                                                            bool refOnly);
+    [DynDllImport("mono", "mono_assembly_load_from_full")]
+    private static AssemblyLoadDelegate AssemblyLoad;
+
+    static MonoAssemblyHelper()
+    {
+        // We can't use mono's __Internal because on Windows it will use GetModuleHandleW(NULL) that will
+        // in turn return the module to the EXE and not mono.dll (at least on Unity versions < 5).
+        typeof(MonoAssemblyHelper).ResolveDynDllImports(new()
+        {
+            ["mono"] = new()
+            {
+                EnvVars.DOORSTOP_MONO_LIB_PATH
+            }
+        });
+    }
 
     private static ReadAssemblyResult ReadAssemblyData(string filePath)
     {
@@ -62,6 +69,20 @@ internal static class MonoAssemblyHelper
         return ReadAssemblyData(fullPath).Load(fullPath);
     }
 
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate nint ImageOpenDelegate(nint data,
+                                            uint dataLength,
+                                            bool needCopy,
+                                            out MonoImageOpenStatus status,
+                                            bool refOnly,
+                                            [MarshalAs(UnmanagedType.LPStr)] string name);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate nint AssemblyLoadDelegate(nint image,
+                                               [MarshalAs(UnmanagedType.LPStr)] string fileName,
+                                               out MonoImageOpenStatus status,
+                                               bool refOnly);
+
     private enum MonoImageOpenStatus
     {
         MONO_IMAGE_OK,
@@ -83,11 +104,11 @@ internal static class MonoAssemblyHelper
 
             fixed (byte* data = &AssemblyData[0])
             {
-                var image = mono_image_open_from_data_with_name((nint) data, (uint) AssemblyData.Length, true,
-                                                                out var status, false, fullPath);
+                var image = ImageOpen((nint) data, (uint) AssemblyData.Length, true,
+                                      out var status, false, fullPath);
                 if (status != MonoImageOpenStatus.MONO_IMAGE_OK)
                     throw new BadImageFormatException($"Failed to load image {fullPath}: {status}");
-                mono_assembly_load_from_full(image, fullPath, out status, false);
+                AssemblyLoad(image, fullPath, out status, false);
                 if (status != MonoImageOpenStatus.MONO_IMAGE_OK)
                     throw new BadImageFormatException($"Failed to load assembly {fullPath}: {status}");
                 return GetAssemblyByName(AssemblyName);
