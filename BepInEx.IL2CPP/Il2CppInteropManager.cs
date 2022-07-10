@@ -44,7 +44,7 @@ internal static class Il2CppInteropManager
      "https://unity.bepinex.dev/libraries/{VERSION}.zip",
      new StringBuilder()
          .AppendLine("URL to the ZIP of managed Unity base libraries.")
-         .AppendLine("The base libraries are used by Il2CppInterop to generate unhollowed Unity assemblies.")
+         .AppendLine("The base libraries are used by Il2CppInterop to generate interop assemblies.")
          .AppendLine("The URL can include {VERSION} template which will be replaced with the game's Unity engine version.")
          .ToString());
 

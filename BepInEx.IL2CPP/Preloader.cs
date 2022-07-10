@@ -43,9 +43,9 @@ public static class Preloader
             Logger.Log(LogLevel.Info, $"Runtime version: {Environment.Version}");
             Logger.Log(LogLevel.Info, $"Runtime information: {RuntimeInformation.FrameworkDescription}");
 
-            Log.Log(LogLevel.Debug, $"Game executable path: {Paths.ExecutablePath}");
-            Log.Log(LogLevel.Debug, $"Unhollowed assembly directory: {Il2CppInteropManager.IL2CPPInteropAssemblyPath}");
-            Log.Log(LogLevel.Debug, $"BepInEx root path: {Paths.BepInExRootPath}");
+            Logger.Log(LogLevel.Debug, $"Game executable path: {Paths.ExecutablePath}");
+            Logger.Log(LogLevel.Debug, $"Interop assembly directory: {Il2CppInteropManager.IL2CPPInteropAssemblyPath}");
+            Logger.Log(LogLevel.Debug, $"BepInEx root path: {Paths.BepInExRootPath}");
 
             NativeLibrary.SetDllImportResolver(typeof(Il2CppInterop.Runtime.IL2CPP).Assembly, DllImportResolver);
 
