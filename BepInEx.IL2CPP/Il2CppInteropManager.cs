@@ -11,6 +11,7 @@ using BepInEx.Configuration;
 using BepInEx.IL2CPP.Hook;
 using BepInEx.IL2CPP.Logging;
 using BepInEx.Logging;
+using BepInEx.Unity.Core;
 using Cpp2IL.Core;
 using HarmonyLib;
 using Il2CppInterop.Common;
@@ -148,7 +149,7 @@ internal static class Il2CppInteropManager
                    : null;
     }
 
-    public static void Initialize(Version unityVersion)
+    public static void Initialize()
     {
         if (initialized)
             throw new InvalidOperationException("Already initialized");
@@ -159,9 +160,11 @@ internal static class Il2CppInteropManager
 
         GenerateInteropAssemblies();
         var interopLogger = LoggerFactory.CreateLogger("Il2CppInterop");
+
+        var unityVersion = UnityInfo.Version;
         Il2CppInteropRuntime.Create(new RuntimeConfiguration
                             {
-                                UnityVersion = unityVersion,
+                                UnityVersion = new Version(unityVersion.Major, unityVersion.Minor, unityVersion.Build),
                                 DetourProvider = new Il2CppInteropDetourProvider()
                             })
                             .AddLogger(interopLogger)
@@ -180,8 +183,7 @@ internal static class Il2CppInteropManager
             Directory.EnumerateFiles(IL2CPPInteropAssemblyPath, "*.dll").Do(File.Delete);
 
             AppDomain.CurrentDomain.AddCecilPlatformAssemblies(UnityBaseLibsDirectory);
-            var unityVersion = Preloader.UnityVersion.ToString(3);
-            DownloadUnityAssemblies(unityVersion);
+            DownloadUnityAssemblies();
             var dummyAssemblies = RunCpp2Il();
 
             if (DumpDummyAssemblies.Value)
@@ -202,10 +204,12 @@ internal static class Il2CppInteropManager
         }
     }
 
-    private static void DownloadUnityAssemblies(string unityVersion)
+    private static void DownloadUnityAssemblies()
     {
+        var unityVersion = UnityInfo.Version;
         var source =
-            UnityBaseLibrariesSource.Value.Replace("{VERSION}", unityVersion);
+            UnityBaseLibrariesSource.Value.Replace("{VERSION}",
+                                                   $"{unityVersion.Major}.{unityVersion.Minor}.{unityVersion.Build}");
 
         if (!string.IsNullOrEmpty(source))
         {
@@ -249,10 +253,13 @@ internal static class Il2CppInteropManager
         Cpp2IL.Core.Logger.ErrorLog += (message, s) =>
             cpp2IlLogger.LogError($"[{s}] {message.Trim()}");
 
-        var cpp2IlUnityVersion =
-            Cpp2IlApi.DetermineUnityVersion(Paths.ExecutablePath,
-                                            Path.Combine(Paths.GameRootPath, $"{Paths.ProcessName}_Data"));
-        Cpp2IlApi.InitializeLibCpp2Il(GameAssemblyPath, metadataPath, cpp2IlUnityVersion, false);
+        var unityVersion = UnityInfo.Version;
+        Cpp2IlApi.InitializeLibCpp2Il(GameAssemblyPath, metadataPath, new int[]
+        {
+            unityVersion.Major,
+            unityVersion.Minor,
+            unityVersion.Build,
+        }, false);
         sourceAssemblies = Cpp2IlApi.MakeDummyDLLs();
         Cpp2IlApi.RunAttributeRestorationForAllAssemblies(null,
                                                           LibCpp2IlMain.MetadataVersion >= 29 ||
