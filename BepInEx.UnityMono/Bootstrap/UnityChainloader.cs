@@ -81,7 +81,6 @@ public class UnityChainloader : BaseChainloader<BaseUnityPlugin>
         }
     }
 
-
     public override void Initialize(string gameExePath = null)
     {
         try
@@ -124,11 +123,13 @@ public class UnityChainloader : BaseChainloader<BaseUnityPlugin>
 
         Logger.Listeners.Add(new UnityLogListener());
 
-        if (!PlatformHelper.Is(Platform.Windows)) Logger.Log(LogLevel.Info, $"Detected Unity version: v{UnityVersion}");
-
+        // Update version info from runtime in case it wasn't set yet
+        var prevVersion = UnityInfo.Version;
+        UnityInfo.SetRuntimeUnityVersion(UnityVersion);
+        if (UnityInfo.Version != prevVersion)
+            Logger.Log(LogLevel.Info, $"UnityPlayer version: {UnityInfo.Version}");
 
         if (!ConfigDiskWriteUnityLog.Value) DiskLogListener.BlacklistedSources.Add("Unity Log");
-
 
         ChainloaderLogHelper.RewritePreloaderLogs();
 

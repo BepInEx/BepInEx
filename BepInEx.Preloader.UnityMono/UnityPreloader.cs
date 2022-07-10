@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using BepInEx.Bootstrap;
@@ -11,7 +10,7 @@ using BepInEx.Preloader.Core.Patching;
 using BepInEx.Preloader.RuntimeFixes;
 using BepInEx.Preloader.UnityMono.RuntimeFixes;
 using BepInEx.Preloader.UnityMono.Utils;
-using MonoMod.Utils;
+using BepInEx.Unity.Core;
 
 namespace BepInEx.Preloader.UnityMono;
 
@@ -44,6 +43,7 @@ internal static class UnityPreloader
         try
         {
             HarmonyBackendFix.Initialize();
+            UnityInfo.Initialize(Paths.ExecutablePath, Paths.GameDataPath);
 
             ConsoleManager.Initialize(false, false);
             AllocateConsole();
@@ -61,8 +61,7 @@ internal static class UnityPreloader
             Logger.Listeners.Add(PreloaderLog);
 
             ChainloaderLogHelper.PrintLogInfo(Log);
-
-            Log.Log(LogLevel.Info, $"Running under Unity v{GetUnityVersion()}");
+            Log.Log(LogLevel.Info, $"Running under Unity {UnityInfo.Version}");
             Log.Log(LogLevel.Info, $"CLR runtime version: {Environment.Version}");
             Log.Log(LogLevel.Info, $"Supports SRE: {Utility.CLRSupportsDynamicAssemblies}");
 
@@ -152,13 +151,5 @@ internal static class UnityPreloader
             Log.LogError("Failed to allocate console!");
             Log.LogError(ex);
         }
-    }
-
-    public static string GetUnityVersion()
-    {
-        if (PlatformHelper.Is(Platform.Windows))
-            return FileVersionInfo.GetVersionInfo(Paths.ExecutablePath).FileVersion;
-
-        return $"Unknown ({(IsPostUnity2017 ? "post" : "pre")}-2017)";
     }
 }

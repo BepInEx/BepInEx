@@ -14,6 +14,7 @@
     <ItemGroup>
         <ProjectReference Include="..\BepInEx.Core\BepInEx.Core.csproj"/>
         <ProjectReference Include="..\BepInEx.Preloader.Core\BepInEx.Preloader.Core.csproj"/>
+        <ProjectReference Include="..\BepInEx.Unity.Core\BepInEx.Unity.Core.csproj"/>
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="All"/>
