@@ -12,6 +12,7 @@
     <ItemGroup>
         <ProjectReference Include="..\BepInEx.Core\BepInEx.Core.csproj"/>
         <ProjectReference Include="..\BepInEx.Preloader.Core\BepInEx.Preloader.Core.csproj" PrivateAssets="All"/>
+        <ProjectReference Include="..\BepInEx.Unity.Core\BepInEx.Unity.Core.csproj"/>
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="HarmonyX" Version="2.10.0"/>

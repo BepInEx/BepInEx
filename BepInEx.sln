@@ -58,6 +58,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Doorstop", "Doorstop", "{C7
 		doorstop\run_bepinex_mono.sh = doorstop\run_bepinex_mono.sh
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unity", "Unity", "{BF8F4E07-3B89-4152-89F4-9EF9D4AAA1E0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BepInEx.Unity.Core", "BepInEx.Unity.Core\BepInEx.Unity.Core.csproj", "{C32E74A3-C0BD-42DE-9E2F-D033D496ACB9}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		BepInEx.NetLauncher.Shared\BepInEx.NetLauncher.Shared.projitems*{067bcc8c-fc25-4929-b4f4-c6a5a7496994}*SharedItemsImports = 13
@@ -145,6 +149,14 @@ Global
 		{08083F40-98AA-4176-BA01-817C18C35C7F}.Release_Unity|Any CPU.Build.0 = Release|Any CPU
 		{08083F40-98AA-4176-BA01-817C18C35C7F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{08083F40-98AA-4176-BA01-817C18C35C7F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C32E74A3-C0BD-42DE-9E2F-D033D496ACB9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C32E74A3-C0BD-42DE-9E2F-D033D496ACB9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C32E74A3-C0BD-42DE-9E2F-D033D496ACB9}.Release_NetFramework|Any CPU.ActiveCfg = Debug|Any CPU
+		{C32E74A3-C0BD-42DE-9E2F-D033D496ACB9}.Release_NetFramework|Any CPU.Build.0 = Debug|Any CPU
+		{C32E74A3-C0BD-42DE-9E2F-D033D496ACB9}.Release_Unity|Any CPU.ActiveCfg = Debug|Any CPU
+		{C32E74A3-C0BD-42DE-9E2F-D033D496ACB9}.Release_Unity|Any CPU.Build.0 = Debug|Any CPU
+		{C32E74A3-C0BD-42DE-9E2F-D033D496ACB9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C32E74A3-C0BD-42DE-9E2F-D033D496ACB9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -160,6 +172,9 @@ Global
 		{68C57430-3E92-4B50-A9A5-208FE9CCD914} = {12081C35-76DF-450C-AC83-1E1CB84516AA}
 		{A6DDBD9E-773C-437A-88AA-995BC5FE90DF} = {12081C35-76DF-450C-AC83-1E1CB84516AA}
 		{C76B3E16-93A8-4CD7-95A2-18EBF2437001} = {12081C35-76DF-450C-AC83-1E1CB84516AA}
+		{D5F47CFC-E4F3-46EE-B4F3-2474CF7D9E2C} = {BF8F4E07-3B89-4152-89F4-9EF9D4AAA1E0}
+		{6E2DD21E-0854-4F4A-B925-D90E0016D03D} = {BF8F4E07-3B89-4152-89F4-9EF9D4AAA1E0}
+		{C32E74A3-C0BD-42DE-9E2F-D033D496ACB9} = {BF8F4E07-3B89-4152-89F4-9EF9D4AAA1E0}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {55AC11EF-F568-4C79-A356-7ED9510145B1}
