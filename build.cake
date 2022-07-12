@@ -55,7 +55,6 @@ var targets = new Target[] {
     new("UnityMono", "macos", "x64"),
     new("UnityIL2CPP", "windows", "x86", true),
     new("UnityIL2CPP", "windows", "x64", true),
-    new("UnityIL2CPP", "linux", "x86", true),
     new("UnityIL2CPP", "linux", "x64", true),
     new("UnityIL2CPP", "macos", "x64", true),
     new("NetLauncher", "windows", "any"),
