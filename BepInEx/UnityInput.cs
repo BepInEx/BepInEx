@@ -12,7 +12,7 @@ namespace BepInEx
 	/// It can use either Input or Unity.InputSystem, depending on what's available. Input is preferred.
 	/// WARNING: Use only inside of Unity's main thread!
 	/// </summary>
-	public class InputWrap
+	public class UnityInput
 	{
 		private static IInputSystem _current;
 		/// <summary>
@@ -28,16 +28,16 @@ namespace BepInEx
 					{
 						Input.GetKeyDown(KeyCode.A);
 						_current = new LegacyInputSystem();
-						Logging.Logger.LogDebug("[InputWrap] Using LegacyInputSystem");
+						Logging.Logger.LogDebug("[UnityInput] Using LegacyInputSystem");
 					}
 					catch (InvalidOperationException)
 					{
 						_current = new NewInputSystem();
-						Logging.Logger.LogDebug("[InputWrap] Using NewInputSystem");
+						Logging.Logger.LogDebug("[UnityInput] Using NewInputSystem");
 					}
 					catch (Exception ex)
 					{
-						Logging.Logger.LogWarning("[InputWrap] Failed to detect available input systems - " + ex);
+						Logging.Logger.LogWarning("[UnityInput] Failed to detect available input systems - " + ex);
 					}
 				}
 				return _current;

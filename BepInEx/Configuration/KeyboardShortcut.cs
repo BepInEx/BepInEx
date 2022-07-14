@@ -38,7 +38,7 @@ namespace BepInEx.Configuration
 		/// <summary>
 		/// All KeyCode values that can be used in a keyboard shortcut.
 		/// </summary>
-		[Obsolete("Use InputWrap.Current.SupportedKeyCodes instead")]
+		[Obsolete("Use UnityInput.Current.SupportedKeyCodes instead")]
 		public static readonly IEnumerable<KeyCode> AllKeyCodes = (KeyCode[])Enum.GetValues(typeof(KeyCode));
 
 		// Don't block hotkeys if mouse is being pressed, e.g. when shooting and trying to strafe
@@ -116,7 +116,7 @@ namespace BepInEx.Configuration
 			var mainKey = MainKey;
 			if (mainKey == KeyCode.None) return false;
 
-			return InputWrap.Current.GetKeyDown(mainKey) && ModifierKeyTest();
+			return UnityInput.Current.GetKeyDown(mainKey) && ModifierKeyTest();
 		}
 
 		/// <summary>
@@ -127,7 +127,7 @@ namespace BepInEx.Configuration
 			var mainKey = MainKey;
 			if (mainKey == KeyCode.None) return false;
 
-			return InputWrap.Current.GetKey(mainKey) && ModifierKeyTest();
+			return UnityInput.Current.GetKey(mainKey) && ModifierKeyTest();
 		}
 
 		/// <summary>
@@ -138,7 +138,7 @@ namespace BepInEx.Configuration
 			var mainKey = MainKey;
 			if (mainKey == KeyCode.None) return false;
 
-			return InputWrap.Current.GetKeyUp(mainKey) && ModifierKeyTest();
+			return UnityInput.Current.GetKeyUp(mainKey) && ModifierKeyTest();
 		}
 
 		private bool ModifierKeyTest()
@@ -146,14 +146,14 @@ namespace BepInEx.Configuration
 			var allKeys = _allKeys;
 			var mainKey = MainKey;
 
-			bool allModifiersPressed = allKeys.All(c => c == mainKey || InputWrap.Current.GetKey(c));
+			bool allModifiersPressed = allKeys.All(c => c == mainKey || UnityInput.Current.GetKey(c));
 			if (!allModifiersPressed) return false;
 
-			// Lazy init to make sure the game is initialized and we're in main thread before calling InputWrap.Current
+			// Lazy init to make sure the game is initialized and we're in main thread before calling UnityInput.Current
 			if (_modifierBlockKeyCodes == null)
-				_modifierBlockKeyCodes = InputWrap.Current.SupportedKeyCodes.Except(new[] { KeyCode.Mouse0, KeyCode.Mouse1, KeyCode.Mouse2, KeyCode.Mouse3, KeyCode.Mouse4, KeyCode.Mouse5, KeyCode.Mouse6, KeyCode.None }).ToArray();
+				_modifierBlockKeyCodes = UnityInput.Current.SupportedKeyCodes.Except(new[] { KeyCode.Mouse0, KeyCode.Mouse1, KeyCode.Mouse2, KeyCode.Mouse3, KeyCode.Mouse4, KeyCode.Mouse5, KeyCode.Mouse6, KeyCode.None }).ToArray();
 			
-			bool noOtherModifiersPressed = _modifierBlockKeyCodes.All(c => !InputWrap.Current.GetKey(c) || allKeys.Contains(c));
+			bool noOtherModifiersPressed = _modifierBlockKeyCodes.All(c => !UnityInput.Current.GetKey(c) || allKeys.Contains(c));
 			return noOtherModifiersPressed;
 		}
 

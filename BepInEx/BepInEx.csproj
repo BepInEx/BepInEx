@@ -75,7 +75,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="InputWrap.cs" />
+    <Compile Include="UnityInput.cs" />
     <Compile Include="Configuration\AcceptableValueBase.cs" />
     <Compile Include="Configuration\AcceptableValueList.cs" />
     <Compile Include="Configuration\AcceptableValueRange.cs" />
