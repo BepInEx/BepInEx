@@ -66,12 +66,16 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="Unity.InputSystem, Version=1.5.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Unity.InputSystem.1.5.0\lib\net35\Unity.InputSystem.dll</HintPath>
+    </Reference>
     <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\UnityEngine.Core.5.6.1\lib\net35\UnityEngine.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="UnityInput.cs" />
     <Compile Include="Configuration\AcceptableValueBase.cs" />
     <Compile Include="Configuration\AcceptableValueList.cs" />
     <Compile Include="Configuration\AcceptableValueRange.cs" />
