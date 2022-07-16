@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("BepInEx.Preloader.UnityMono")]
-[assembly: InternalsVisibleTo("BepInEx.NetLauncher")]
-[assembly: InternalsVisibleTo("BepInEx.NetCore")]
-[assembly: InternalsVisibleTo("BepInEx.IL2CPP")]
+[assembly: InternalsVisibleTo("BepInEx.Unity.Mono.Preloader")]
+[assembly: InternalsVisibleTo("BepInEx.NET.Framework.Launcher")]
+[assembly: InternalsVisibleTo("BepInEx.NET.CoreCLR")]
+[assembly: InternalsVisibleTo("BepInEx.Unity.IL2CPP")]

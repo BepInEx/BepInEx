@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using BepInEx.Unity.Mono.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using UEC::UnityEngine;
 
