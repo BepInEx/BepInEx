@@ -13,13 +13,14 @@
         <RepositoryUrl>https://github.com/BepInEx/BepInEx</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <Copyright>Copyright © 2022 BepInEx Team</Copyright>
-        <PackageOutputPath>../bin/NuGet</PackageOutputPath>
+        <BuildDir>$(SolutionDir)bin</BuildDir>
+        <PackageOutputPath>$(BuildDir)/NuGet</PackageOutputPath>
         <PackageIcon>logo.png</PackageIcon>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     </PropertyGroup>
     <ItemGroup>
-        <None Include="..\assets\logo.png" Pack="true" Visible="false" PackagePath=""/>
+        <None Include="$(SolutionDir)\Assets\logos\logo.png" Pack="true" Visible="false" PackagePath=""/>
     </ItemGroup>
 </Project>

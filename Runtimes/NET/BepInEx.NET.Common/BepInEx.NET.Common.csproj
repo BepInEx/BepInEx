@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>netstandard2.1;net40</TargetFrameworks>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="HarmonyX" Version="2.10.0"/>
+        <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="All"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\..\BepInEx.Core\BepInEx.Core.csproj"/>
+        <ProjectReference Include="..\..\..\BepInEx.Preloader.Core\BepInEx.Preloader.Core.csproj"/>
+    </ItemGroup>
+
+</Project>

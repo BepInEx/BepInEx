@@ -1,0 +1,5 @@
+<Project>
+    <PropertyGroup Condition="'$(DistributionIdentifier)' != ''">
+        <OutDir>$(BuildDir)/$(DistributionIdentifier)/</OutDir>
+    </PropertyGroup>
+</Project>

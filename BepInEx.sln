@@ -10,57 +10,52 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BepInExTests", "BepInExTest
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BepInEx.Preloader.Core", "BepInEx.Preloader.Core\BepInEx.Preloader.Core.csproj", "{15F8BC38-A761-4F93-8903-1B531AC5D9F9}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BepInEx.UnityMono", "BepInEx.UnityMono\BepInEx.UnityMono.csproj", "{EAE9FAE6-8011-45A3-8B6E-0C7F14210533}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BepInEx.Unity.Mono", "Runtimes\Unity\BepInEx.Unity.Mono\BepInEx.Unity.Mono.csproj", "{EAE9FAE6-8011-45A3-8B6E-0C7F14210533}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BepInEx.Preloader.UnityMono", "BepInEx.Preloader.UnityMono\BepInEx.Preloader.UnityMono.csproj", "{D404C973-441D-48ED-B266-C21320BA0D87}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BepInEx.Unity.Mono.Preloader", "Runtimes\Unity\BepInEx.Unity.Mono.Preloader\BepInEx.Unity.Mono.Preloader.csproj", "{D404C973-441D-48ED-B266-C21320BA0D87}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BepInEx.Core", "BepInEx.Core\BepInEx.Core.csproj", "{4FFBA620-F5ED-47F9-B90C-DAD1316FD9B9}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UnityMono", "UnityMono", "{6E2DD21E-0854-4F4A-B925-D90E0016D03D}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Mono", "Mono", "{6E2DD21E-0854-4F4A-B925-D90E0016D03D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BepInEx.NetLauncher", "BepInEx.NetLauncher\BepInEx.NetLauncher.csproj", "{490B052B-7F23-4052-AD04-613856618901}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BepInEx.NET.Framework.Launcher", "Runtimes\NET\BepInEx.NET.Framework.Launcher\BepInEx.NET.Framework.Launcher.csproj", "{490B052B-7F23-4052-AD04-613856618901}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NetFramework", "NetFramework", "{6EC98884-A3DC-4828-85EF-5F10F7519429}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NET", "NET", "{6EC98884-A3DC-4828-85EF-5F10F7519429}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "IL2CPP", "IL2CPP", "{D5F47CFC-E4F3-46EE-B4F3-2474CF7D9E2C}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BepInEx.IL2CPP", "BepInEx.IL2CPP\BepInEx.IL2CPP.csproj", "{429D5F83-7FEC-4D09-AB82-E868EB61AF59}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BepInEx.Unity.IL2CPP", "Runtimes\Unity\BepInEx.Unity.IL2CPP\BepInEx.Unity.IL2CPP.csproj", "{429D5F83-7FEC-4D09-AB82-E868EB61AF59}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Markdown", "Markdown", "{68C57430-3E92-4B50-A9A5-208FE9CCD914}"
 	ProjectSection(SolutionItems) = preProject
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BepInEx.NetLauncher.Common", "BepInEx.NetLauncher.Common\BepInEx.NetLauncher.Common.csproj", "{76EB1952-7826-471C-9CF3-815D094DA077}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BepInEx.NET.Common", "Runtimes\NET\BepInEx.NET.Common\BepInEx.NET.Common.csproj", "{76EB1952-7826-471C-9CF3-815D094DA077}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BepInEx.NetCore", "BepInEx.NetCore\BepInEx.NetCore.csproj", "{08083F40-98AA-4176-BA01-817C18C35C7F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BepInEx.NET.CoreCLR", "Runtimes\NET\BepInEx.NET.CoreCLR\BepInEx.NET.CoreCLR.csproj", "{08083F40-98AA-4176-BA01-817C18C35C7F}"
 EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "BepInEx.NetLauncher.Shared", "BepInEx.NetLauncher.Shared\BepInEx.NetLauncher.Shared.shproj", "{067BCC8C-FC25-4929-B4F4-C6A5A7496994}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Scripts", "Scripts", "{A6DDBD9E-773C-437A-88AA-995BC5FE90DF}"
-				ProjectSection(SolutionItems) = preProject
-								build.bat = build.bat
-								build.sh = build.sh
-								build.ps1 = build.ps1
-								build.cake = build.cake
-				EndProjectSection
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "BepInEx.NET.Shared", "Runtimes\NET\BepInEx.NET.Shared\BepInEx.NET.Shared.shproj", "{067BCC8C-FC25-4929-B4F4-C6A5A7496994}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{12081C35-76DF-450C-AC83-1E1CB84516AA}"
 	ProjectSection(SolutionItems) = preProject
 		Directory.Build.props = Directory.Build.props
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Doorstop", "Doorstop", "{C76B3E16-93A8-4CD7-95A2-18EBF2437001}"
-	ProjectSection(SolutionItems) = preProject
-		doorstop\doorstop_config_il2cpp.ini = doorstop\doorstop_config_il2cpp.ini
-		doorstop\doorstop_config_mono.ini = doorstop\doorstop_config_mono.ini
-		doorstop\run_bepinex_il2cpp.sh = doorstop\run_bepinex_il2cpp.sh
-		doorstop\run_bepinex_mono.sh = doorstop\run_bepinex_mono.sh
+		Directory.Build.targets = Directory.Build.targets
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unity", "Unity", "{BF8F4E07-3B89-4152-89F4-9EF9D4AAA1E0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BepInEx.Unity.Core", "BepInEx.Unity.Core\BepInEx.Unity.Core.csproj", "{C32E74A3-C0BD-42DE-9E2F-D033D496ACB9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BepInEx.Unity.Common", "Runtimes\Unity\BepInEx.Unity.Common\BepInEx.Unity.Common.csproj", "{C32E74A3-C0BD-42DE-9E2F-D033D496ACB9}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "_build", "build\_build.csproj", "{8AC60656-4159-4EFA-A43D-B132564697F3}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "IL2CPP", "IL2CPP", "{E4E75C18-4156-4213-A20C-8677EF6B5312}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Doorstop", "Doorstop", "{CE06453E-44E7-4D50-9A68-AA15F4C1C8D1}"
+	ProjectSection(SolutionItems) = preProject
+		Runtimes\Unity\Doorstop\doorstop_config_il2cpp.ini = Runtimes\Unity\Doorstop\doorstop_config_il2cpp.ini
+		Runtimes\Unity\Doorstop\doorstop_config_mono.ini = Runtimes\Unity\Doorstop\doorstop_config_mono.ini
+		Runtimes\Unity\Doorstop\run_bepinex_il2cpp.sh = Runtimes\Unity\Doorstop\run_bepinex_il2cpp.sh
+		Runtimes\Unity\Doorstop\run_bepinex_mono.sh = Runtimes\Unity\Doorstop\run_bepinex_mono.sh
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -83,6 +78,8 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8AC60656-4159-4EFA-A43D-B132564697F3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8AC60656-4159-4EFA-A43D-B132564697F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E7CD429A-D057-48E3-8C51-E5C934E8E07B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E7CD429A-D057-48E3-8C51-E5C934E8E07B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E7CD429A-D057-48E3-8C51-E5C934E8E07B}.Release_NetFramework|Any CPU.ActiveCfg = Release|Any CPU
@@ -165,16 +162,15 @@ Global
 		{EAE9FAE6-8011-45A3-8B6E-0C7F14210533} = {6E2DD21E-0854-4F4A-B925-D90E0016D03D}
 		{D404C973-441D-48ED-B266-C21320BA0D87} = {6E2DD21E-0854-4F4A-B925-D90E0016D03D}
 		{490B052B-7F23-4052-AD04-613856618901} = {6EC98884-A3DC-4828-85EF-5F10F7519429}
-		{429D5F83-7FEC-4D09-AB82-E868EB61AF59} = {D5F47CFC-E4F3-46EE-B4F3-2474CF7D9E2C}
 		{76EB1952-7826-471C-9CF3-815D094DA077} = {6EC98884-A3DC-4828-85EF-5F10F7519429}
 		{08083F40-98AA-4176-BA01-817C18C35C7F} = {6EC98884-A3DC-4828-85EF-5F10F7519429}
 		{067BCC8C-FC25-4929-B4F4-C6A5A7496994} = {6EC98884-A3DC-4828-85EF-5F10F7519429}
 		{68C57430-3E92-4B50-A9A5-208FE9CCD914} = {12081C35-76DF-450C-AC83-1E1CB84516AA}
-		{A6DDBD9E-773C-437A-88AA-995BC5FE90DF} = {12081C35-76DF-450C-AC83-1E1CB84516AA}
-		{C76B3E16-93A8-4CD7-95A2-18EBF2437001} = {12081C35-76DF-450C-AC83-1E1CB84516AA}
-		{D5F47CFC-E4F3-46EE-B4F3-2474CF7D9E2C} = {BF8F4E07-3B89-4152-89F4-9EF9D4AAA1E0}
 		{6E2DD21E-0854-4F4A-B925-D90E0016D03D} = {BF8F4E07-3B89-4152-89F4-9EF9D4AAA1E0}
 		{C32E74A3-C0BD-42DE-9E2F-D033D496ACB9} = {BF8F4E07-3B89-4152-89F4-9EF9D4AAA1E0}
+		{E4E75C18-4156-4213-A20C-8677EF6B5312} = {BF8F4E07-3B89-4152-89F4-9EF9D4AAA1E0}
+		{429D5F83-7FEC-4D09-AB82-E868EB61AF59} = {E4E75C18-4156-4213-A20C-8677EF6B5312}
+		{CE06453E-44E7-4D50-9A68-AA15F4C1C8D1} = {BF8F4E07-3B89-4152-89F4-9EF9D4AAA1E0}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {55AC11EF-F568-4C79-A356-7ED9510145B1}
