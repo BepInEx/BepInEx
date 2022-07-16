@@ -4,7 +4,7 @@
         <TargetFramework>net6.0</TargetFramework>
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <DistributionIdentifier>Unity.IL2CPP</DistributionIdentifier>
+        <OutputPath>$(BuildDir)/Unity.IL2CPP</OutputPath>
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     </PropertyGroup>
     <ItemGroup>

@@ -3,11 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.32112.339
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BepInExTests", "BepInExTests\BepInExTests.csproj", "{E7CD429A-D057-48E3-8C51-E5C934E8E07B}"
-	ProjectSection(ProjectDependencies) = postProject
-		{4FFBA620-F5ED-47F9-B90C-DAD1316FD9B9} = {4FFBA620-F5ED-47F9-B90C-DAD1316FD9B9}
-	EndProjectSection
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BepInEx.Preloader.Core", "BepInEx.Preloader.Core\BepInEx.Preloader.Core.csproj", "{15F8BC38-A761-4F93-8903-1B531AC5D9F9}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BepInEx.Unity.Mono", "Runtimes\Unity\BepInEx.Unity.Mono\BepInEx.Unity.Mono.csproj", "{EAE9FAE6-8011-45A3-8B6E-0C7F14210533}"
@@ -38,14 +33,11 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{12081C35-76DF-450C-AC83-1E1CB84516AA}"
 	ProjectSection(SolutionItems) = preProject
 		Directory.Build.props = Directory.Build.props
-		Directory.Build.targets = Directory.Build.targets
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unity", "Unity", "{BF8F4E07-3B89-4152-89F4-9EF9D4AAA1E0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BepInEx.Unity.Common", "Runtimes\Unity\BepInEx.Unity.Common\BepInEx.Unity.Common.csproj", "{C32E74A3-C0BD-42DE-9E2F-D033D496ACB9}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "_build", "build\_build.csproj", "{8AC60656-4159-4EFA-A43D-B132564697F3}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "IL2CPP", "IL2CPP", "{E4E75C18-4156-4213-A20C-8677EF6B5312}"
 EndProject
@@ -56,6 +48,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Doorstop", "Doorstop", "{CE
 		Runtimes\Unity\Doorstop\run_bepinex_il2cpp.sh = Runtimes\Unity\Doorstop\run_bepinex_il2cpp.sh
 		Runtimes\Unity\Doorstop\run_bepinex_mono.sh = Runtimes\Unity\Doorstop\run_bepinex_mono.sh
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Build", "build\Build.csproj", "{0C38DDF2-EAAA-43FA-BA0A-985636AC6040}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -78,13 +72,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{8AC60656-4159-4EFA-A43D-B132564697F3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8AC60656-4159-4EFA-A43D-B132564697F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E7CD429A-D057-48E3-8C51-E5C934E8E07B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E7CD429A-D057-48E3-8C51-E5C934E8E07B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E7CD429A-D057-48E3-8C51-E5C934E8E07B}.Release_NetFramework|Any CPU.ActiveCfg = Release|Any CPU
-		{E7CD429A-D057-48E3-8C51-E5C934E8E07B}.Release_Unity|Any CPU.ActiveCfg = Release|Any CPU
-		{E7CD429A-D057-48E3-8C51-E5C934E8E07B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{15F8BC38-A761-4F93-8903-1B531AC5D9F9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{15F8BC38-A761-4F93-8903-1B531AC5D9F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{15F8BC38-A761-4F93-8903-1B531AC5D9F9}.Release_NetFramework|Any CPU.ActiveCfg = Release|Any CPU
@@ -154,6 +141,12 @@ Global
 		{C32E74A3-C0BD-42DE-9E2F-D033D496ACB9}.Release_Unity|Any CPU.Build.0 = Debug|Any CPU
 		{C32E74A3-C0BD-42DE-9E2F-D033D496ACB9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C32E74A3-C0BD-42DE-9E2F-D033D496ACB9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0C38DDF2-EAAA-43FA-BA0A-985636AC6040}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0C38DDF2-EAAA-43FA-BA0A-985636AC6040}.Release_NetFramework|Any CPU.ActiveCfg = Debug|Any CPU
+		{0C38DDF2-EAAA-43FA-BA0A-985636AC6040}.Release_NetFramework|Any CPU.Build.0 = Debug|Any CPU
+		{0C38DDF2-EAAA-43FA-BA0A-985636AC6040}.Release_Unity|Any CPU.ActiveCfg = Debug|Any CPU
+		{0C38DDF2-EAAA-43FA-BA0A-985636AC6040}.Release_Unity|Any CPU.Build.0 = Debug|Any CPU
+		{0C38DDF2-EAAA-43FA-BA0A-985636AC6040}.Release|Any CPU.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
