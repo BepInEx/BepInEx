@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using Nuke.Common.IO;
-using static Nuke.Common.IO.SerializationTasks;
+using Cake.Core.IO;
+using Cake.Json;
 
-readonly record struct DependencyCache(AbsolutePath CacheFile)
+readonly record struct DependencyCache(BuildContext Ctx, FilePath CacheFile)
 {
     readonly IDictionary<string, string> cache =
-        CacheFile.Exists()
-            ? JsonDeserialize<Dictionary<string, string>>(File.ReadAllText(CacheFile))
+        File.Exists(CacheFile.FullPath)
+            ? Ctx.DeserializeJsonFromFile<Dictionary<string, string>>(CacheFile.FullPath)
             : new Dictionary<string, string>();
 
     public void Refresh(string name, string key, Action process)
@@ -18,5 +18,5 @@ readonly record struct DependencyCache(AbsolutePath CacheFile)
         cache[name] = key;
     }
 
-    public void Save() => File.WriteAllText(CacheFile, JsonSerialize(cache));
+    public void Save() => Ctx.SerializeJsonToPrettyFile(CacheFile.FullPath, cache);
 }

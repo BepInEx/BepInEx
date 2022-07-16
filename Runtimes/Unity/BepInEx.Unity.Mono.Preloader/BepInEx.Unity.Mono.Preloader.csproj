@@ -5,7 +5,7 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(TargetFramework)' == 'net35'">
         <!-- Output only net35 version to distribution; netstadnard is only used for generating NuGet package -->
-        <DistributionIdentifier>Unity.IL2CPP</DistributionIdentifier>
+        <OutputPath>$(BuildDir)/Unity.Mono</OutputPath>
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     </PropertyGroup>
     <ItemGroup>

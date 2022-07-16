@@ -6,7 +6,7 @@
         <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
         <PlatformTarget>x86</PlatformTarget>
-        <DistributionIdentifier>NET.Framework</DistributionIdentifier>
+        <OutputPath>$(BuildDir)/NET.Framework</OutputPath>
     </PropertyGroup>
     <ItemGroup>
         <ProjectReference Include="..\..\..\BepInEx.Core\BepInEx.Core.csproj"/>
