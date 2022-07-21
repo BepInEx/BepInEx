@@ -41,6 +41,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+	<PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <Reference Include="0Harmony, Version=2.9.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>$(SolutionDir)\packages\HarmonyX.2.9.0\lib\net35\0Harmony.dll</HintPath>
       <Private>True</Private>
@@ -72,6 +73,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Contract\ThunderstoreV1Manifest.cs" />
     <Compile Include="UnityInput.cs" />
     <Compile Include="Configuration\AcceptableValueBase.cs" />
     <Compile Include="Configuration\AcceptableValueList.cs" />
