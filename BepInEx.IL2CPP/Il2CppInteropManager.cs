@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using BepInEx.Configuration;
 using BepInEx.IL2CPP.Hook;
 using BepInEx.IL2CPP.Logging;
@@ -46,6 +47,15 @@ internal static class Il2CppInteropManager
          .AppendLine("URL to the ZIP of managed Unity base libraries.")
          .AppendLine("The base libraries are used by Il2CppInterop to generate interop assemblies.")
          .AppendLine("The URL can include {VERSION} template which will be replaced with the game's Unity engine version.")
+         .ToString());
+
+    private static readonly ConfigEntry<string> ConfigUnhollowerDeobfuscationRegex = ConfigFile.CoreConfig.Bind(
+     "IL2CPP", "UnhollowerDeobfuscationRegex",
+     string.Empty,
+     new StringBuilder()
+         .AppendLine("The RegEx string to pass to Il2CppAssemblyUnhollower for renaming obfuscated names.")
+         .AppendLine("All types and members matching this RegEx will get a name based on their signature,")
+         .AppendLine("resulting in names that persist after game updates.")
          .ToString());
 
     private static readonly ConfigEntry<bool> DumpDummyAssemblies = ConfigFile.CoreConfig.Bind(
@@ -285,6 +295,9 @@ internal static class Il2CppInteropManager
             OutputDir = IL2CPPInteropAssemblyPath,
             UnityBaseLibsDir = Directory.Exists(UnityBaseLibsDirectory) ? UnityBaseLibsDirectory : null,
             Parallel = canRunParallel,
+            ObfuscatedNamesRegex = !string.IsNullOrEmpty(ConfigUnhollowerDeobfuscationRegex.Value)
+                                       ? new Regex(ConfigUnhollowerDeobfuscationRegex.Value)
+                                       : null,
         };
 
         var renameMapLocation = Path.Combine(Paths.BepInExRootPath, "DeobfuscationMap.csv.gz");
