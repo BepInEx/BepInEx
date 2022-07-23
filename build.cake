@@ -101,7 +101,7 @@ Task("Build")
     }
 });
 
-const string DOORSTOP_VER = "4.0.0-rc.6";
+const string DOORSTOP_VER = "4.0.0-rc.7";
 const string DOTNET_MINI_VER = "6.0.6";
 const string DOORSTOP_PROXY_DLL = "winhttp.dll";
 const string DOBBY_VER = "1.0.0";
