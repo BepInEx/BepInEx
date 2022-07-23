@@ -499,10 +499,11 @@ namespace BepInEx.Bootstrap
 					var thunderstoreManifestV1 = JsonConvert.DeserializeObject<ThunderstoreManifestV1>(File.ReadAllText(manifestPath));
 
 					const string InvalidTeamName = "|";
-					var team = InvalidTeamName;
-					var directoryName = new DirectoryInfo(Path.GetDirectoryName(manifestPath)).Name;
 					const char separator = '-';
 					var teamNameDelimiter = separator + thunderstoreManifestV1.Name;
+
+					var team = InvalidTeamName;
+					var directoryName = new DirectoryInfo(Path.GetDirectoryName(manifestPath)).Name;
 					if (directoryName.Contains(teamNameDelimiter))
 					{
 						team = directoryName.Split(new string[] { teamNameDelimiter }, StringSplitOptions.RemoveEmptyEntries)[0];
