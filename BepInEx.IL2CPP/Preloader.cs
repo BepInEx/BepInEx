@@ -1,6 +1,7 @@
 using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using BepInEx.IL2CPP.RuntimeFixes;
 using BepInEx.Logging;
 using BepInEx.Preloader.Core;
 using BepInEx.Preloader.Core.Logging;
@@ -37,6 +38,8 @@ public static class Preloader
                 ConsoleManager.CreateConsole();
                 Logger.Listeners.Add(new ConsoleLogListener());
             }
+
+            RedirectStdErrFix.Apply();
 
             ChainloaderLogHelper.PrintLogInfo(Log);
 
