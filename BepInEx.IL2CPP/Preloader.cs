@@ -24,6 +24,7 @@ public static class Preloader
         try
         {
             HarmonyBackendFix.Initialize();
+            ConsoleSetOutFix.Apply();
             UnityInfo.Initialize(Paths.ExecutablePath, Paths.GameDataPath);
 
             ConsoleManager.Initialize(false, true);
