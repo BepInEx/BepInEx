@@ -39,7 +39,7 @@ namespace BepInEx.Preloader.Patching
 		private static readonly string DumpedAssembliesPath = Utility.CombinePaths(Paths.BepInExRootPath, "DumpedAssemblies", Paths.ProcessName);
 
 		private static readonly  Dictionary<string, string> DumpedAssemblyPaths = new Dictionary<string, string>();
-		
+
 		/// <summary>
 		///     Adds a single assembly patcher to the pool of applicable patches.
 		/// </summary>
@@ -86,80 +86,110 @@ namespace BepInEx.Preloader.Patching
 		/// </summary>
 		/// <param name="directory">Directory to search patcher DLLs from.</param>
 		public static void AddPatchersFromDirectory(string directory)
-		{
-			if (!Directory.Exists(directory))
-				return;
+        {
+            if (!Directory.Exists(directory))
+                return;
 
-			var sortedPatchers = new SortedDictionary<string, PatcherPlugin>();
+            CleanUpOldBepGui(directory);
 
-			var patchers = TypeLoader.FindPluginTypes(directory, ToPatcherPlugin);
+            var sortedPatchers = new SortedDictionary<string, PatcherPlugin>();
 
-			foreach (var keyValuePair in patchers)
-			{
-				var assemblyPath = keyValuePair.Key;
-				var patcherCollection = keyValuePair.Value;
+            var patchers = TypeLoader.FindPluginTypes(directory, ToPatcherPlugin);
 
-				if(patcherCollection.Count == 0)
-					continue;
+            foreach (var keyValuePair in patchers)
+            {
+                var assemblyPath = keyValuePair.Key;
+                var patcherCollection = keyValuePair.Value;
 
-				var ass = Assembly.LoadFile(assemblyPath);
+                if (patcherCollection.Count == 0)
+                    continue;
 
-				foreach (var patcherPlugin in patcherCollection)
+                var ass = Assembly.LoadFile(assemblyPath);
+
+                foreach (var patcherPlugin in patcherCollection)
+                {
+                    try
+                    {
+                        var type = ass.GetType(patcherPlugin.TypeName);
+
+                        var methods = type.GetMethods(ALL);
+
+                        patcherPlugin.Initializer = CreateDelegate<Action>(methods.FirstOrDefault(m => m.Name.Equals("Initialize", StringComparison.InvariantCultureIgnoreCase) &&
+                                                                                                       m.GetParameters().Length == 0 &&
+                                                                                                       m.ReturnType == typeof(void)));
+
+                        patcherPlugin.Finalizer = CreateDelegate<Action>(methods.FirstOrDefault(m => m.Name.Equals("Finish", StringComparison.InvariantCultureIgnoreCase) &&
+                                                                                                     m.GetParameters().Length == 0 &&
+                                                                                                     m.ReturnType == typeof(void)));
+
+                        patcherPlugin.TargetDLLs = CreateDelegate<Func<IEnumerable<string>>>(type.GetProperty("TargetDLLs", ALL).GetGetMethod());
+
+                        var patcher = methods.FirstOrDefault(m => m.Name.Equals("Patch", StringComparison.CurrentCultureIgnoreCase) &&
+                                                                  m.ReturnType == typeof(void) &&
+                                                                  m.GetParameters().Length == 1 &&
+                                                                  (m.GetParameters()[0].ParameterType == typeof(AssemblyDefinition) ||
+                                                                   m.GetParameters()[0].ParameterType == typeof(AssemblyDefinition).MakeByRefType()));
+
+                        patcherPlugin.Patcher = (ref AssemblyDefinition pAss) =>
+                        {
+                            //we do the array fuckery here to get the ref result out
+                            object[] args = { pAss };
+
+                            patcher.Invoke(null, args);
+
+                            pAss = (AssemblyDefinition)args[0];
+                        };
+
+                        sortedPatchers.Add($"{ass.GetName().Name}/{type.FullName}", patcherPlugin);
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.LogError($"Failed to load patcher [{patcherPlugin.TypeName}]: {e.Message}");
+                        if (e is ReflectionTypeLoadException re)
+                            Logger.LogDebug(TypeLoader.TypeLoadExceptionToString(re));
+                        else
+                            Logger.LogDebug(e.ToString());
+                    }
+                }
+
+                var assName = ass.GetName();
+                Logger.Log(patcherCollection.Any() ? LogLevel.Info : LogLevel.Debug,
+                    $"Loaded {patcherCollection.Count} patcher method{(patcherCollection.Count == 1 ? "" : "s")} from [{assName.Name} {assName.Version}]");
+            }
+
+            foreach (KeyValuePair<string, PatcherPlugin> patcher in sortedPatchers)
+                AddPatcher(patcher.Value);
+        }
+
+        private static void CleanUpOldBepGui(string directory)
+        {
+            var deletedOldBepGui = false;
+            try
+            {
+                // Remove old BepInEx GUI otherwise both will get loaded
+                foreach (var directoryPath in Directory.GetDirectories(directory, $"BepInEx_GUI_*_v0*", SearchOption.AllDirectories))
+                {
+                    Logger.LogInfo($"Deleting folder: {directoryPath}");
+                    Directory.Delete(directoryPath, true);
+                    deletedOldBepGui = true;
+                }
+
+				if (deletedOldBepGui)
 				{
-					try
+					Logger.LogInfo($"Removing old Bep Gui config");
+					foreach (var file in Directory.GetFiles(Paths.ConfigPath, $"BepInEx.GUI.cfg", SearchOption.AllDirectories))
 					{
-						var type = ass.GetType(patcherPlugin.TypeName);
-
-						var methods = type.GetMethods(ALL);
-
-						patcherPlugin.Initializer = CreateDelegate<Action>(methods.FirstOrDefault(m => m.Name.Equals("Initialize", StringComparison.InvariantCultureIgnoreCase) &&
-																									   m.GetParameters().Length == 0 &&
-																									   m.ReturnType == typeof(void)));
-
-						patcherPlugin.Finalizer = CreateDelegate<Action>(methods.FirstOrDefault(m => m.Name.Equals("Finish", StringComparison.InvariantCultureIgnoreCase) &&
-																									 m.GetParameters().Length == 0 &&
-																									 m.ReturnType == typeof(void)));
-
-						patcherPlugin.TargetDLLs = CreateDelegate<Func<IEnumerable<string>>>(type.GetProperty("TargetDLLs", ALL).GetGetMethod());
-
-						var patcher = methods.FirstOrDefault(m => m.Name.Equals("Patch", StringComparison.CurrentCultureIgnoreCase) &&
-																  m.ReturnType == typeof(void) &&
-																  m.GetParameters().Length == 1 &&
-																  (m.GetParameters()[0].ParameterType == typeof(AssemblyDefinition) ||
-																   m.GetParameters()[0].ParameterType == typeof(AssemblyDefinition).MakeByRefType()));
-
-						patcherPlugin.Patcher = (ref AssemblyDefinition pAss) =>
-						{
-							//we do the array fuckery here to get the ref result out
-							object[] args = { pAss };
-
-							patcher.Invoke(null, args);
-
-							pAss = (AssemblyDefinition)args[0];
-						};
-
-						sortedPatchers.Add($"{ass.GetName().Name}/{type.FullName}", patcherPlugin);
-					}
-					catch (Exception e)
-					{
-						Logger.LogError($"Failed to load patcher [{patcherPlugin.TypeName}]: {e.Message}");
-						if (e is ReflectionTypeLoadException re)
-							Logger.LogDebug(TypeLoader.TypeLoadExceptionToString(re));
-						else
-							Logger.LogDebug(e.ToString());
+						File.Delete(file);
 					}
 				}
-
-				var assName = ass.GetName();
-				Logger.Log(patcherCollection.Any() ? LogLevel.Info : LogLevel.Debug,
-					$"Loaded {patcherCollection.Count} patcher method{(patcherCollection.Count == 1 ? "" : "s")} from [{assName.Name} {assName.Version}]");
 			}
+            catch (Exception e)
+            {
+				Logger.LogDebug(e);
+			}
+        }
 
-			foreach (KeyValuePair<string, PatcherPlugin> patcher in sortedPatchers)
-				AddPatcher(patcher.Value);
-		}
-
-		private static void InitializePatchers()
+        private static void InitializePatchers()
 		{
 			foreach (var assemblyPatcher in PatcherPluginsSafe)
 			{
@@ -228,7 +258,7 @@ namespace BepInEx.Preloader.Patching
 
 				//NOTE: this is special case here because the dependency handling for System.dll is a bit wonky
 				//System has an assembly reference to itself, and it also has a reference to Mono.Security causing a circular dependency
-				//It's also generally dangerous to change system.dll since so many things rely on it, 
+				//It's also generally dangerous to change system.dll since so many things rely on it,
 				// and it's already loaded into the appdomain since this loader references it, so we might as well skip it
 				if (assembly.Name.Name == "System" || assembly.Name.Name == "mscorlib") //mscorlib is already loaded into the appdomain so it can't be patched
 				{
@@ -271,7 +301,7 @@ namespace BepInEx.Preloader.Patching
 							invalidAssemblies.Add(targetDll);
 							continue;
 						}
-						
+
 						assemblies[targetDll] = assembly;
 						patchedAssemblies.Add(targetDll);
 
