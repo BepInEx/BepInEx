@@ -1,86 +1,70 @@
 name: Build Bleeding Edge
 
 on:
-  push:
-    branches:
-      - master
+    push:
+        branches:
+            - master
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check BE status
-        id: be_status
-        if: ${{ github.repository_owner == 'BepInEx' }} # Only generate BE builds on main repo, forks should only get artifacts
-        run: |
-          echo "Generating Bleeding Edge build!"
-          echo "::set-output name=is_be::true"
-      - uses: actions/checkout@v2.3.5
-        with:
-          fetch-depth: 0 # Need to fetch all for proper history
-      - uses: nrwl/last-successful-commit-action@v1
-        id: last_successful_commit
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        if: ${{ steps.be_status.outputs.is_be == 'true' && env.GITHUB_TOKEN != null }}
-        with:
-          branch: master
-          workflow_id: build_be.yml
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Print build info
-        id: info
-        env:
-          LAST_BUILD_HASH: ${{ steps.last_successful_commit.outputs.commit_hash }}
-        run: |
-          cur_build=$((GITHUB_RUN_NUMBER + 500)); # Increment number to not collide with Jenkins CI builds
-          echo "Current hash: ${GITHUB_SHA}; Last successful build: ${LAST_BUILD_HASH}"
-          echo "Build number: ${cur_build}"
-          echo "::set-output name=build_id::${cur_build}"
-          echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
-      - uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: "6.0.x"
-      - name: Build
-        env:
-          BEPIN_DEV_NUGET_KEY: ${{ secrets.BEPIN_DEV_NUGET_KEY }}
-        run: |
-          ./build.sh --target=Pack --bleeding_edge=${{ steps.be_status.outputs.is_be == 'true' }} --build_id=${{ steps.info.outputs.build_id || 0 }} --last_build_commit=\"${{ steps.last_successful_commit.outputs.commit_hash }}\" --nuget_push_key=\"${BEPIN_DEV_NUGET_KEY}\"
-      - name: Upload to BepisBuilds
-        env:
-          BEPISBUILDS_HOST: ${{ secrets.BEPISBUILDS_HOST }}
-          BEPISBUILDS_AUTH: ${{ secrets.BEPISBUILDS_AUTH }}
-          BEPISBUILDS_PORT: ${{ secrets.BEPISBUILDS_PORT }}
-        if: ${{ steps.be_status.outputs.is_be == 'true' && env.BEPISBUILDS_HOST != null }}
-        run: |
-          artifacts_list=$(ls ./bin/dist/*.* | tr '\n' ','); artifacts_list=${artifacts_list::-1};
-          curl --upload-file "{${artifacts_list}}" --ftp-pasv --ftp-skip-pasv-ip --ftp-create-dirs --ftp-method singlecwd --disable-epsv "ftp://${BEPISBUILDS_AUTH}@${BEPISBUILDS_HOST}:${BEPISBUILDS_PORT}/bepinex_be/artifacts/${{ steps.info.outputs.build_id }}/"
-      - name: Generate changelog
-        id: generate_changelog
-        if: ${{ steps.be_status.outputs.is_be == 'true' }}
-        run: |
-          changelog=$(git --no-pager log --no-merges --pretty="format:- (\`%h\`) [%an] %s" ${{ steps.last_successful_commit.outputs.commit_hash }}..HEAD | sed ':a;N;$!ba;s/"/\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
-          echo "::set-output name=changelog::$changelog"
-      - name: Notify success
-        uses: joelwmale/webhook-action@2.1.0
-        env:
-          BEPINEX_DISCORD_WEBHOOK: ${{ secrets.BEPINEX_DISCORD_WEBHOOK }}
-        if: ${{ steps.be_status.outputs.is_be == 'true' && env.BEPINEX_DISCORD_WEBHOOK != null }}
-        with:
-          url: ${{ secrets.BEPINEX_DISCORD_WEBHOOK }}
-          body: |
-            {
-              "embeds": [
-                {
-                  "title": "BepInEx Bleeding Edge build #${{ steps.info.outputs.build_id }}",
-                  "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
-                  "color": 1559874,
-                  "description": "Changelog:\n\n${{ steps.generate_changelog.outputs.changelog }}\n\n[**Artifacts on BepInBuilds**](https://builds.bepinex.dev/projects/bepinex_be)"
-                }
-              ]
-            }
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v2.2.4
-        with:
-          path: "./bin/dist/*.zip"
-          name: "BepInEx_CI_${{ steps.info.outputs.sha_short }}_${{ steps.info.outputs.build_id || 0 }}"
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            -   uses: actions/checkout@v2.3.5
+                with:
+                    fetch-depth: 0 # Need to fetch all for proper history
+            -   name: Collect build info
+                id: info
+                uses: actions/github-script@v6
+                with:
+                    script: |
+                        core.setOutput("is_be", context.repo.owner == "BepInEx");
+                        core.setOutput("sha_short", await exec.exec("git", ["rev-parse", "--short", "HEAD"]));
+                        core.setOutput("build_id", context.run.runNumber + 500); // builds.bepinex.dev build numbers start at 500
+            -   uses: nrwl/last-successful-commit-action@v1
+                id: last_successful_commit
+                if: ${{ steps.info.outputs.is_be == 'true' && env.GITHUB_TOKEN != null }}
+                with:
+                    branch: master
+                    workflow_id: build_be.yml
+                    github_token: ${{ secrets.GITHUB_TOKEN }}
+            -   uses: actions/setup-dotnet@v1
+                with:
+                    dotnet-version: "6.0.x"
+            -   name: Build
+                run: |
+                    ./build.sh --target Publish --bleeding-edge ${{ steps.info.outputs.is_be }} --build-id ${{ steps.info.outputs.build_id }} --last-build-commit \"${{ steps.last_successful_commit.outputs.commit_hash }}\" --nuget-api-key \"${{ secrets.BEPIN_DEV_NUGET_KEY }}\"
+            -   name: Upload to BepinBuilds
+                if: ${{ steps.info.outputs.is_be == 'true' && secrets.BEPISBUILDS_HOST != null }}
+                run: |
+                    artifacts_list=$(ls ./bin/dist/*.* | tr '\n' ','); artifacts_list=${artifacts_list::-1};
+                    curl --upload-file "{${artifacts_list}}" --ftp-pasv --ftp-skip-pasv-ip --ftp-create-dirs --ftp-method singlecwd --disable-epsv "ftp://${{ secrets.BEPISBUILDS_AUTH }}@${{ secrets.BEPISBUILDS_HOST }}:${{ secrets.BEPISBUILDS_PORT }}/bepinex_be/artifacts/${{ steps.info.outputs.build_id }}/"
+            -   name: Generate changelog
+                id: generate_changelog
+                if: ${{ steps.info.outputs.is_be == 'true' }}
+                run: |
+                    changelog=$(git --no-pager log --no-merges --pretty="format:- (\`%h\`) [%an] %s" ${{ steps.last_successful_commit.outputs.commit_hash }}..HEAD | sed ':a;N;$!ba;s/"/\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
+                    echo "::set-output name=changelog::$changelog"
+            -   name: Notify success
+                uses: joelwmale/webhook-action@2.1.0
+                env:
+                    BEPINEX_DISCORD_WEBHOOK: ${{ secrets.BEPINEX_DISCORD_WEBHOOK }}
+                if: ${{ steps.info.outputs.is_be == 'true' && env.BEPINEX_DISCORD_WEBHOOK != null }}
+                with:
+                    url: ${{ secrets.BEPINEX_DISCORD_WEBHOOK }}
+                    body: |
+                        {
+                          "embeds": [
+                            {
+                              "title": "BepInEx Bleeding Edge build #${{ steps.info.outputs.build_id }}",
+                              "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+                              "color": 1559874,
+                              "description": "Changelog:\n\n${{ steps.generate_changelog.outputs.changelog }}\n\n[**Artifacts on BepInBuilds**](https://builds.bepinex.dev/projects/bepinex_be)"
+                            }
+                          ]
+                        }
+            -   name: Upload Artifacts
+                uses: actions/upload-artifact@v2.2.4
+                with:
+                    path: "./bin/dist/*.zip"
+                    name: "BepInEx_CI_${{ steps.info.outputs.sha_short }}_${{ steps.info.outputs.build_id || 0 }}"
       
