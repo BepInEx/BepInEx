@@ -1,6 +1,5 @@
 using System;
 using System.Diagnostics;
-using System.IO;
 using BepInEx.Bootstrap;
 using BepInEx.Logging;
 using BepInEx.NetLauncher.Common;
@@ -20,38 +19,46 @@ namespace BepInEx.NetCore
             var preloaderListener = new PreloaderConsoleListener();
             Logger.Listeners.Add(preloaderListener);
 
-            var entrypointAssemblyPath = Path.ChangeExtension(Process.GetCurrentProcess().MainModule.FileName, "dll");
+            string entrypointAssemblyPath = !Paths.ExecutablePath.EndsWith(StartupHook.DoesNotExistPath) ? Paths.ExecutablePath : null;
 
-            Paths.SetExecutablePath(entrypointAssemblyPath);
-
-            TypeLoader.SearchDirectories.Add(Path.GetDirectoryName(entrypointAssemblyPath));
+            TypeLoader.SearchDirectories.Add(Paths.GameRootPath);
             
             Logger.Sources.Add(TraceLogSource.CreateSource());
 
             ChainloaderLogHelper.PrintLogInfo(Log);
 
-            Log.Log(LogLevel.Info, $"CLR runtime version: {Environment.Version}");
+            Log.LogInfo($"CLR runtime version: {Environment.Version}");
+
+            Log.LogInfo($"Current executable: {Process.GetCurrentProcess().MainModule.FileName}");
+            Log.LogInfo($"Entrypoint assembly: {entrypointAssemblyPath ?? "<does not exist>"}");
+            Log.LogInfo($"Launch arguments: {string.Join(' ', Environment.GetCommandLineArgs())}");
 
 
             AssemblyBuildInfo executableInfo;
 
-            using (var entrypointAssembly = AssemblyDefinition.ReadAssembly(entrypointAssemblyPath))
-                executableInfo = AssemblyBuildInfo.DetermineInfo(entrypointAssembly);
-            
-            Log.LogInfo($"Game executable build architecture: {executableInfo}");
+            if (entrypointAssemblyPath != null)
+            {
+                using (var entrypointAssembly = AssemblyDefinition.ReadAssembly(entrypointAssemblyPath))
+                    executableInfo = AssemblyBuildInfo.DetermineInfo(entrypointAssembly);
 
-            Log.Log(LogLevel.Message, "Preloader started");
+                Log.LogInfo($"Game executable build architecture: {executableInfo}");
+            }
+            else
+            {
+                Log.LogWarning("Game assembly is unknown, can't determine build architecture");
+            }
+
+            Log.LogMessage("Preloader started");
 
             using (var assemblyPatcher = new AssemblyPatcher())
             {
                 assemblyPatcher.AddPatchersFromDirectory(Paths.PatcherPluginPath);
 
-                Log.Log(LogLevel.Info,
-                        $"{assemblyPatcher.PatcherContext.PatchDefinitions.Count} patcher definition(s) loaded");
+                Log.LogInfo($"{assemblyPatcher.PatcherContext.PatchDefinitions.Count} patcher definition(s) loaded");
 
                 assemblyPatcher.LoadAssemblyDirectories(new[] { Paths.GameRootPath }, new[] { "dll", "exe" });
 
-                Log.Log(LogLevel.Info, $"{assemblyPatcher.PatcherContext.AvailableAssemblies.Count} assemblies discovered");
+                Log.LogInfo($"{assemblyPatcher.PatcherContext.AvailableAssemblies.Count} assemblies discovered");
 
                 assemblyPatcher.PatchAndLoad();
             }
