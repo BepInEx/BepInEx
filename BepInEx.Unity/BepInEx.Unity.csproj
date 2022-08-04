@@ -7,7 +7,7 @@
         <LangVersion>10</LangVersion>
     </PropertyGroup>
     <PropertyGroup Condition="'$(TargetFramework)' == 'net35'">
-        <!-- Output only net35 version to distribution; netstadnard is only used for generating NuGet package -->
+        <!-- Output only net35 version to distribution; netstandard is only used for generating NuGet package -->
         <OutputPath>..\bin\Unity\</OutputPath>
         <DocumentationFile>$(OutputPath)\BepInEx.Unity.xml</DocumentationFile>
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>

@@ -110,8 +110,7 @@ internal class EntrypointPatcher : BasePatcher
                 var ins = il.Body.Instructions.First();
 
                 il.InsertBefore(ins,
-                                il.Create(OpCodes
-                                              .Ldnull)); // gameExePath (always null, we initialize the Paths class in Entrypoint)
+                                il.Create(OpCodes.Ldnull)); // gameExePath (always null, we initialize the Paths class in Entrypoint)
 
                 il.InsertBefore(ins,
                                 il.Create(OpCodes.Call,

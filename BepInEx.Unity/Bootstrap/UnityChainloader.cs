@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+using System;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -10,6 +11,10 @@ using BepInEx.Unity.Logging;
 using MonoMod.Utils;
 using UnityEngine;
 using Logger = BepInEx.Logging.Logger;
+using Object = UnityEngine.Object;
+
+[assembly: InternalsVisibleTo("UnityEngine")]
+[assembly: InternalsVisibleTo("UnityEngine.Core")]
 
 namespace BepInEx.Unity.Bootstrap;
 
@@ -53,31 +58,81 @@ public class UnityChainloader : BaseChainloader<BaseUnityPlugin>
         get => Application.unityVersion;
     }
 
-    private static void StaticStart(string gameExePath = null)
+    private static Version UnityVersionAsVersion => new Version(UnityVersion.Substring(0, UnityVersion.LastIndexOf('.') + 2));
+
+    private static bool staticStartHasBeenCalled = false;
+
+    /// <summary>
+    /// This method is public so that BepInEx can correctly initialize on some versions of Unity that do not respect InternalsVisibleToAttribute. Do not call this yourself
+    /// </summary>
+    [Obsolete("This method is public so that BepInEx can correctly initialize on some versions of Unity that do not respect InternalsVisibleToAttribute. DO NOT CALL", true)]
+    public static void StaticStart(string gameExePath = null)
     {
-        var instance = new UnityChainloader();
-        instance.Initialize(gameExePath);
-        instance.Execute();
+        try
+        {
+            if (staticStartHasBeenCalled)
+                throw new InvalidOperationException("Cannot call StaticStart again");
+
+            Logger.Log(LogLevel.Debug, "Entering chainloader StaticStart");
+
+            var instance = new UnityChainloader();
+            instance.Initialize(gameExePath);
+            instance.Execute();
+
+            staticStartHasBeenCalled = true;
+
+            Logger.Log(LogLevel.Debug, "Exiting chainloader StaticStart");
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(LogLevel.Fatal, $"Unable to complete chainloader StaticStart: {ex.Message}");
+            Logger.Log(LogLevel.Fatal, ex.StackTrace);
+        }
     }
 
 
     public override void Initialize(string gameExePath = null)
     {
-        Instance = this;
+        try
+        {
+            Logger.Log(LogLevel.Debug, "Entering chainloader initialize");
 
-        UnityTomlTypeConverters.AddUnityEngineConverters();
+            Instance = this;
 
-        ThreadingHelper.Initialize();
+            UnityTomlTypeConverters.AddUnityEngineConverters();
 
-        ManagerObject = new GameObject("BepInEx_Manager") { hideFlags = HideFlags.HideAndDontSave };
-        Object.DontDestroyOnLoad(ManagerObject);
+            Logger.Log(LogLevel.Debug, "Creating Manager object");
 
-        var productNameProp =
-            typeof(Application).GetProperty("productName", BindingFlags.Public | BindingFlags.Static);
-        _consoleTitle =
-            $"{CurrentAssemblyName} {CurrentAssemblyVersion} - {productNameProp?.GetValue(null, null) ?? Path.GetFileNameWithoutExtension(Process.GetCurrentProcess().ProcessName)}";
+            ManagerObject = new GameObject("BepInEx_Manager") { hideFlags = HideFlags.HideAndDontSave };
+            Object.DontDestroyOnLoad(ManagerObject);
 
-        base.Initialize(gameExePath);
+            Logger.Log(LogLevel.Debug, "Getting game product name");
+
+            var productNameProp = typeof(Application).GetProperty("productName", BindingFlags.Public | BindingFlags.Static);
+
+            _consoleTitle = $"{CurrentAssemblyName} {CurrentAssemblyVersion} - {productNameProp?.GetValue(null, null) ?? Path.GetFileNameWithoutExtension(Process.GetCurrentProcess().ProcessName)}";
+
+            if (UnityVersionAsVersion.Major >= 5)
+            {
+                Logger.Log(LogLevel.Debug, "Initializing ThreadingHelper");
+                ThreadingHelper.Initialize();
+            }
+            else
+            {
+                Logger.Log(LogLevel.Debug, "Skipping ThreadingHelper init due to unity version (<= 4)");
+            }
+
+            Logger.Log(LogLevel.Debug, "Falling back to BaseChainloader initializer");
+
+            base.Initialize(gameExePath);
+
+            Logger.Log(LogLevel.Debug, "Exiting chainloader initialize");
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(LogLevel.Fatal, $"Unable to complete chainloader init: {ex.Message}");
+            Logger.Log(LogLevel.Fatal, ex.StackTrace);
+        }
     }
 
     protected override void InitializeLoggers()
