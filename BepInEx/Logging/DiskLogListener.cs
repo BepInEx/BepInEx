@@ -20,6 +20,11 @@ namespace BepInEx.Logging
 		public TextWriter LogWriter { get; protected set; }
 
 		/// <summary>
+		/// Full path to the used disk file.
+		/// </summary>
+		public string FileFullPath { get; }
+
+		/// <summary>
 		/// Timer for flushing the logs to a file.
 		/// </summary>
 		public Timer FlushTimer { get; protected set; }
@@ -44,8 +49,8 @@ namespace BepInEx.Logging
 			int counter = 1;
 
 			FileStream fileStream;
-
-			while (!Utility.TryOpenFileStream(Path.Combine(Paths.BepInExRootPath, localPath), appendLog ? FileMode.Append : FileMode.Create, out fileStream, share: FileShare.Read, access: FileAccess.Write))
+			var fullPath = Path.Combine(Paths.BepInExRootPath, localPath);
+			while (!Utility.TryOpenFileStream(fullPath, appendLog ? FileMode.Append : FileMode.Create, out fileStream, share: FileShare.Read, access: FileAccess.Write))
 			{
 				if (counter == 5)
 				{
@@ -56,11 +61,12 @@ namespace BepInEx.Logging
 
 				Logger.LogWarning($"Couldn't open log file '{localPath}' for writing, trying another...");
 
-				localPath = $"LogOutput.log.{counter++}";
+				localPath = $"{localPath}.{counter++}";
+				fullPath = Path.Combine(Paths.BepInExRootPath, localPath);
 			}
 
 			LogWriter = TextWriter.Synchronized(new StreamWriter(fileStream, Utility.UTF8NoBom));
-
+			FileFullPath = fullPath;
 
 			FlushTimer = new Timer(o => { LogWriter?.Flush(); }, null, 2000, 2000);
 		}
