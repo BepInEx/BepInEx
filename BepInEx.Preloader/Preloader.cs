@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using BepInEx.Bootstrap;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using BepInEx.Preloader.Patching;
@@ -46,9 +47,11 @@ namespace BepInEx.Preloader
 
 				Logger.InitializeInternalLoggers();
 				Logger.Sources.Add(TraceLogSource.CreateSource());
-				
+
 				PreloaderLog = new PreloaderConsoleListener();
 				Logger.Listeners.Add(PreloaderLog);
+
+				Chainloader.InitDiskLogging();
 
 				Version version = typeof(Paths).Assembly.GetName().Version;
 

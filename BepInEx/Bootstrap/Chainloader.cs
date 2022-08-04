@@ -41,8 +41,14 @@ namespace BepInEx.Bootstrap
 			get => Application.unityVersion;
 		}
 
-		// Check above for NoInlining reasoning
-		private static bool IsHeadless
+        internal static void InitDiskLogging()
+        {
+			if (ConfigDiskLogging.Value)
+				Logger.Listeners.Add(new DiskLogListener("LogOutput.log", ConfigDiskConsoleDisplayedLevel.Value, ConfigDiskAppend.Value, ConfigDiskWriteUnityLog.Value));
+		}
+
+        // Check above for NoInlining reasoning
+        private static bool IsHeadless
 		{
 			get
 			{
@@ -118,9 +124,6 @@ namespace BepInEx.Bootstrap
 			}
 
 			Logger.InitializeInternalLoggers();
-
-			if (ConfigDiskLogging.Value)
-				Logger.Listeners.Add(new DiskLogListener("LogOutput.log", ConfigDiskConsoleDisplayedLevel.Value, ConfigDiskAppend.Value, ConfigDiskWriteUnityLog.Value));
 
 			if (!TraceLogSource.IsListening)
 				Logger.Sources.Add(TraceLogSource.CreateSource());
