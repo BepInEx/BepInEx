@@ -21,6 +21,6 @@
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     </PropertyGroup>
     <ItemGroup>
-        <None Include="$(SolutionDir)\Assets\logos\logo.png" Pack="true" Visible="false" PackagePath=""/>
+        <None Include="$(SolutionDir)\assets\logos\logo.png" Pack="true" Visible="false" PackagePath=""/>
     </ItemGroup>
 </Project>
