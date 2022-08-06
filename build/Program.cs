@@ -25,6 +25,13 @@ return new CakeHost()
 
 public class BuildContext : FrostingContext
 {
+    public enum ProjectBuildType
+    {
+        Release,
+        Development,
+        BleedingEdge
+    }
+
     public const string DoorstopVersion = "4.0.0-rc.5";
     public const string DotnetRuntimeVersion = "6.0.6-test";
     public const string DobbyVersion = "1.0.0";
@@ -60,14 +67,14 @@ public class BuildContext : FrostingContext
         VersionPrefix = props.GetPropertyValue("VersionPrefix");
         CurrentCommit = ctx.GitLogTip(RootDirectory);
 
-        BleedingEdge = ctx.Argument("bleeding-edge", false);
+        BuildType = ctx.Argument("build-type", ProjectBuildType.Development);
         BuildId = ctx.Argument("build-id", -1);
         LastBuildCommit = ctx.Argument("last-build-commit", "");
         NugetApiKey = ctx.Argument("nuget-api-key", "");
         NugetSource = ctx.Argument("nuget-source", "https://nuget.bepinex.dev/v3/index.json");
     }
 
-    public bool BleedingEdge { get; }
+    public ProjectBuildType BuildType { get; }
     public int BuildId { get; }
     public string LastBuildCommit { get; }
     public string NugetApiKey { get; }
@@ -81,8 +88,20 @@ public class BuildContext : FrostingContext
     public string VersionPrefix { get; }
     public GitCommit CurrentCommit { get; }
 
+    public string VersionSuffix => BuildType switch
+    {
+        ProjectBuildType.Release      => "",
+        ProjectBuildType.Development  => "dev",
+        ProjectBuildType.BleedingEdge => $"be.{BuildId}",
+        var _                         => throw new ArgumentOutOfRangeException()
+    };
+
     public string BuildPackageVersion =>
-        $"{VersionPrefix}{(BleedingEdge ? $"-be.{BuildId}+{this.GitShortenSha(RootDirectory, CurrentCommit)}" : "")}";
+        VersionPrefix + BuildType switch
+        {
+            ProjectBuildType.Release => "",
+            var _                    => $"-{VersionSuffix}+{this.GitShortenSha(RootDirectory, CurrentCommit)}",
+        };
 
     public static string DoorstopZipUrl(string arch) =>
         $"https://github.com/NeighTools/UnityDoorstop/releases/download/v{DoorstopVersion}/doorstop_{arch}_release_{DoorstopVersion}.zip";
@@ -116,11 +135,11 @@ public sealed class CompileTask : FrostingTask<BuildContext>
         {
             Configuration = "Release"
         };
-        if (ctx.BleedingEdge)
+        if (ctx.BuildType != BuildContext.ProjectBuildType.Release)
         {
             buildSettings.MSBuildSettings = new()
             {
-                VersionSuffix = $"be.{ctx.BuildId}",
+                VersionSuffix = ctx.VersionSuffix,
                 Properties =
                 {
                     ["SourceRevisionId"] = new[] { ctx.CurrentCommit.Sha },
@@ -272,7 +291,8 @@ public sealed class MakeDistTask : FrostingTask<BuildContext>
 [TaskName("PushNuGet")]
 public sealed class PushNuGetTask : FrostingTask<BuildContext>
 {
-    public override bool ShouldRun(BuildContext ctx) => !string.IsNullOrWhiteSpace(ctx.NugetApiKey);
+    public override bool ShouldRun(BuildContext ctx) => !string.IsNullOrWhiteSpace(ctx.NugetApiKey) &&
+                                                        ctx.BuildType != BuildContext.ProjectBuildType.Development;
 
     public override void Run(BuildContext ctx)
     {
