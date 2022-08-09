@@ -221,7 +221,7 @@ public class ConfigFile : IDictionary<ConfigDefinition, ConfigEntryBase>
     ///     Returns the ConfigEntryBase values that the ConfigFile contains.
     ///     <para>Creates a new array when the property is accessed. Thread-safe.</para>
     /// </summary>
-    ICollection<ConfigEntryBase> IDictionary<ConfigDefinition, ConfigEntryBase>.Values
+    public ICollection<ConfigEntryBase> Values
     {
         get
         {
