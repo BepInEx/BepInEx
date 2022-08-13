@@ -66,7 +66,7 @@ A more comprehensive comparison list of features and compatibility is available 
 
 - [SamboyCoding/Cpp2IL](https://github.com/SamboyCoding/Cpp2IL) - v2022.0.5
 - [BepInEx/Il2CppInterop](https://github.com/BepInEx/Il2CppInterop) - v1.0.0
-- [BepInEx/dotnet-runtime](https://github.com/BepInEx/dotnet-runtime) - Build 2022.06.15.1 (based on .NET 6.0.7)
+- [BepInEx/dotnet-runtime](https://github.com/BepInEx/dotnet-runtime) - v6.0.7
 
 ## License
 
