@@ -255,9 +255,18 @@ doorstop_directory="${BASEDIR}/"
 doorstop_name="libdoorstop.${lib_extension}"
 
 export LD_LIBRARY_PATH="${doorstop_directory}:${corlib_dir}:${LD_LIBRARY_PATH}"
-export LD_PRELOAD="${doorstop_name}:${LD_PRELOAD}"
-export DYLD_LIBRARY_PATH="${doorstop_directory}:${corlib_dir}:${DYLD_LIBRARY_PATH}"
-export DYLD_INSERT_LIBRARIES="${doorstop_name}:${DYLD_INSERT_LIBRARIES}"
+if [ -z "$LD_PRELOAD" ]; then
+    export LD_PRELOAD="${doorstop_name}"
+else
+    export LD_PRELOAD="${doorstop_name}:${LD_PRELOAD}"
+fi
+
+export DYLD_LIBRARY_PATH="${doorstop_directory}:${DYLD_LIBRARY_PATH}"
+if [ -z "$DYLD_INSERT_LIBRARIES" ]; then
+    export DYLD_INSERT_LIBRARIES="${doorstop_name}"
+else
+    export DYLD_INSERT_LIBRARIES="${doorstop_name}:${DYLD_INSERT_LIBRARIES}"
+fi
 
 # shellcheck disable=SC2086
 exec "$executable_path" $rest_args

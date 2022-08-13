@@ -32,7 +32,7 @@ public class BuildContext : FrostingContext
         BleedingEdge
     }
 
-    public const string DoorstopVersion = "4.0.0-rc.5";
+    public const string DoorstopVersion = "4.0.0";
     public const string DotnetRuntimeVersion = "6.0.7";
     public const string DobbyVersion = "1.0.0";
 
