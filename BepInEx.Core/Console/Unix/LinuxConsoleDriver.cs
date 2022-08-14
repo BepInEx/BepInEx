@@ -46,7 +46,7 @@ internal class LinuxConsoleDriver : IConsoleDriver
         // Not supported by all distros
     }
 
-    public void Initialize(bool alreadyActive, bool useWinApiEncoder)
+    public void Initialize(bool alreadyActive, bool useManagedEncoder)
     {
         // Console is always considered active on Unix
         ConsoleActive = true;

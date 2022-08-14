@@ -176,10 +176,10 @@ public static class Utility
     /// <param name="directory">Directory to search the assembly from.</param>
     /// <param name="assembly">The loaded assembly.</param>
     /// <returns>True, if the assembly was found and loaded. Otherwise, false.</returns>
-    private static bool TryResolveDllAssembly<T>(AssemblyName assemblyName,
-                                                 string directory,
-                                                 Func<string, T> loader,
-                                                 out T assembly) where T : class
+    public static bool TryResolveDllAssembly<T>(AssemblyName assemblyName,
+                                                string directory,
+                                                Func<string, T> loader,
+                                                out T assembly) where T : class
     {
         assembly = null;
 
@@ -314,6 +314,23 @@ public static class Utility
         int read;
         while ((read = stream.Read(buf, 0, buf.Length)) > 0)
             md5.TransformBlock(buf, 0, read, buf, 0);
+
+        md5.TransformFinalBlock(new byte[0], 0, 0);
+
+        return ByteArrayToString(md5.Hash);
+    }
+
+    /// <summary>
+    /// Hash a list of strings using MD5
+    /// </summary>
+    /// <param name="strings">Strings to hash</param>
+    /// <returns>MD5 of the strings</returns>
+    public static string HashStrings(params string[] strings)
+    {
+        using var md5 = MD5.Create();
+
+        foreach (var str in strings)
+            md5.TransformBlock(Encoding.UTF8.GetBytes(str), 0, str.Length, null, 0);
 
         md5.TransformFinalBlock(new byte[0], 0, 0);
 

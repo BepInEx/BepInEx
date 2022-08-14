@@ -1,0 +1,79 @@
+name: Build
+
+on: push
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            -   uses: actions/checkout@v3
+                with:
+                    fetch-depth: 0 # Need to fetch all for proper history
+            -   name: Collect build info
+                id: info
+                uses: actions/github-script@v6
+                with:
+                    script: |
+                        let buildType = "Development";
+                        if (context.ref == "refs/heads/master" && context.repo.owner == "BepInEx") {
+                            buildType = "BleedingEdge";
+                        }
+                        core.setOutput("build_type", buildType);
+                        let shortHash = "";
+                        await exec.exec("git", ["rev-parse", "--short", "HEAD"], {
+                            listeners: {
+                                stdout: d => shortHash += d.toString().trim(),
+                            }
+                        });
+                        core.setOutput("sha_short", shortHash);
+                        core.setOutput("build_id", context.runNumber + 600); // builds.bepinex.dev build numbers start at 500
+            -   uses: nrwl/last-successful-commit-action@v1
+                id: last_successful_commit
+                if: ${{ steps.info.outputs.build_type == 'BleedingEdge' && env.GITHUB_TOKEN != null }}
+                with:
+                    branch: master
+                    workflow_id: build_be.yml
+                    github_token: ${{ secrets.GITHUB_TOKEN }}
+            -   uses: actions/setup-dotnet@v1
+                with:
+                    dotnet-version: "6.0.x"
+            -   name: Build
+                run: |
+                    ./build.sh --target Publish --build-type ${{ steps.info.outputs.build_type }} --build-id ${{ steps.info.outputs.build_id }} --last-build-commit \"${{ steps.last_successful_commit.outputs.commit_hash }}\" --nuget-api-key \"${{ secrets.BEPIN_DEV_NUGET_KEY }}\"
+            -   name: Upload to BepinBuilds
+                env:
+                    BEPISBUILDS_HOST: ${{ secrets.BEPISBUILDS_HOST }}
+                if: ${{ steps.info.outputs.build_type == 'BleedingEdge' && env.BEPISBUILDS_HOST != null }}
+                run: |
+                    artifacts_list=$(ls ./bin/dist/*.* | tr '\n' ','); artifacts_list=${artifacts_list::-1};
+                    curl --upload-file "{${artifacts_list}}" --ftp-pasv --ftp-skip-pasv-ip --ftp-create-dirs --ftp-method singlecwd --disable-epsv "ftp://${{ secrets.BEPISBUILDS_AUTH }}@${{ secrets.BEPISBUILDS_HOST }}:${{ secrets.BEPISBUILDS_PORT }}/bepinex_be/artifacts/${{ steps.info.outputs.build_id }}/"
+            -   name: Generate changelog
+                id: generate_changelog
+                if: ${{ steps.info.outputs.build_type == 'BleedingEdge' }}
+                run: |
+                    changelog=$(git --no-pager log --no-merges --pretty="format:- (\`%h\`) [%an] %s" ${{ steps.last_successful_commit.outputs.commit_hash }}..HEAD | sed ':a;N;$!ba;s/"/\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
+                    echo "::set-output name=changelog::$changelog"
+            -   name: Notify success
+                uses: joelwmale/webhook-action@2.1.0
+                env:
+                    BEPINEX_DISCORD_WEBHOOK: ${{ secrets.BEPINEX_DISCORD_WEBHOOK }}
+                if: ${{ steps.info.outputs.build_type == 'BleedingEdge' && env.BEPINEX_DISCORD_WEBHOOK != null }}
+                with:
+                    url: ${{ secrets.BEPINEX_DISCORD_WEBHOOK }}
+                    body: |
+                        {
+                          "embeds": [
+                            {
+                              "title": "BepInEx Bleeding Edge build #${{ steps.info.outputs.build_id }}",
+                              "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+                              "color": 1559874,
+                              "description": "Changelog:\n\n${{ steps.generate_changelog.outputs.changelog }}\n\n[**Artifacts on BepInBuilds**](https://builds.bepinex.dev/projects/bepinex_be)"
+                            }
+                          ]
+                        }
+            -   name: Upload Artifacts
+                uses: actions/upload-artifact@v2.2.4
+                with:
+                    path: "./bin/dist/*.zip"
+                    name: "BepInEx_CI_${{ steps.info.outputs.build_type }}_${{ steps.info.outputs.sha_short }}_${{ steps.info.outputs.build_id || 0 }}"
+      

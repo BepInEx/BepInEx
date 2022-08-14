@@ -3,32 +3,52 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using BepInEx.Logging;
-using BepInEx.Shared;
 using MonoMod.Utils;
 
 namespace BepInEx.Preloader.Core.Logging;
 
 public static class ChainloaderLogHelper
 {
+    private static Dictionary<string, string> MacOSVersions { get; } = new()
+    {
+        // https://en.wikipedia.org/wiki/Darwin_%28operating_system%29#Release_history
+        ["16.0.0"] = "10.12",
+        ["16.5.0"] = "10.12.4",
+        ["16.6.0"] = "10.12.6",
+        ["17.5.0"] = "10.13.4",
+        ["17.6.0"] = "10.13.5",
+        ["17.7.0"] = "10.13.6",
+        ["18.2.0"] = "10.14.1",
+        ["19.2.0"] = "10.15.2",
+        ["19.3.0"] = "10.15.3",
+        ["19.5.0"] = "10.15.5.1",
+        ["20.1.0"] = "11.0",
+        ["20.2.0"] = "11.1",
+        ["20.3.0"] = "11.2",
+        ["20.4.0"] = "11.3",
+        ["20.5.0"] = "11.4",
+        ["21.0.1"] = "12.0",
+        ["21.1.0"] = "12.0.1",
+        ["21.2.0"] = "12.1",
+    };
+
     public static void PrintLogInfo(ManualLogSource log)
     {
-        var consoleTitle = $"BepInEx {Paths.BepInExVersion} - {Paths.ProcessName}";
+        var bepinVersion = Paths.BepInExVersion;
+        var versionMini = new SemanticVersioning.Version(bepinVersion.Major, bepinVersion.Minor, bepinVersion.Patch,
+                                                         bepinVersion.PreRelease);
+        var consoleTitle = $"BepInEx {versionMini} - {Paths.ProcessName}";
         log.Log(LogLevel.Message, consoleTitle);
 
         if (ConsoleManager.ConsoleActive)
             ConsoleManager.SetConsoleTitle(consoleTitle);
 
-        //See BuildInfoAttribute for more information about this section.
-        var attributes = typeof(BuildInfoAttribute).Assembly.GetCustomAttributes(typeof(BuildInfoAttribute), false);
-        
-        if (attributes.Length > 0)
-        {
-            var attribute = (BuildInfoAttribute) attributes[0];
-            log.Log(LogLevel.Message, attribute.Info);
-        }
+        if (!string.IsNullOrEmpty(bepinVersion.Build))
+            log.Log(LogLevel.Message, $"Built from commit {bepinVersion.Build}");
 
         Logger.Log(LogLevel.Info, $"System platform: {GetPlatformString()}");
-        Logger.Log(LogLevel.Info, $"Process bitness: {(PlatformUtils.ProcessIs64Bit ? "64-bit (x64)" : "32-bit (x86)")}");
+        Logger.Log(LogLevel.Info,
+                   $"Process bitness: {(PlatformUtils.ProcessIs64Bit ? "64-bit (x64)" : "32-bit (x86)")}");
     }
 
     private static string GetPlatformString()
@@ -73,6 +93,9 @@ public static class ChainloaderLogHelper
                 builder.Append("Vista");
             else if (osVersion.Major <= 5)
                 builder.Append("XP");
+
+            if (PlatformHelper.Is(Platform.Wine))
+                builder.AppendFormat(" (Wine {0})", PlatformUtils.WineVersion);
         }
         else if (PlatformHelper.Is(Platform.MacOS))
         {
@@ -117,29 +140,6 @@ public static class ChainloaderLogHelper
 
         return builder.ToString();
     }
-
-    private static Dictionary<string, string> MacOSVersions { get; } = new()
-    {
-        // https://en.wikipedia.org/wiki/Darwin_%28operating_system%29#Release_history
-        ["16.0.0"] = "10.12",
-        ["16.5.0"] = "10.12.4",
-        ["16.6.0"] = "10.12.6",
-        ["17.5.0"] = "10.13.4",
-        ["17.6.0"] = "10.13.5",
-        ["17.7.0"] = "10.13.6",
-        ["18.2.0"] = "10.14.1",
-        ["19.2.0"] = "10.15.2",
-        ["19.3.0"] = "10.15.3",
-        ["19.5.0"] = "10.15.5.1",
-        ["20.1.0"] = "11.0",
-        ["20.2.0"] = "11.1",
-        ["20.3.0"] = "11.2",
-        ["20.4.0"] = "11.3",
-        ["20.5.0"] = "11.4",
-        ["21.0.1"] = "12.0",
-        ["21.1.0"] = "12.0.1",
-        ["21.2.0"] = "12.1",
-    };
 
     public static void RewritePreloaderLogs()
     {

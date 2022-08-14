@@ -1,0 +1,26 @@
+<Project>
+    <PropertyGroup>
+        <VersionPrefix>6.0.0</VersionPrefix>
+        <Authors>BepInEx</Authors>
+        <LangVersion>latest</LangVersion>
+        <Nullable>disable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <PackageLicenseExpression>LGPL-2.1-only</PackageLicenseExpression>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <DebugType>embedded</DebugType>
+        <Configurations>Debug;Release</Configurations>
+        <PackageProjectUrl>https://github.com/BepInEx/BepInEx</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/BepInEx/BepInEx</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <Copyright>Copyright © 2022 BepInEx Team</Copyright>
+        <BuildDir>$(SolutionDir)bin</BuildDir>
+        <PackageOutputPath>$(BuildDir)/NuGet</PackageOutputPath>
+        <PackageIcon>logo.png</PackageIcon>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    </PropertyGroup>
+    <ItemGroup>
+        <None Include="$(SolutionDir)\assets\logos\logo.png" Pack="true" Visible="false" PackagePath=""/>
+    </ItemGroup>
+</Project>

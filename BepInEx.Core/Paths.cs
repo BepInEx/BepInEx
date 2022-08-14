@@ -11,14 +11,23 @@ namespace BepInEx;
 /// </summary>
 public static class Paths
 {
+    // TODO: Why is this in Paths?
+    /// <summary>
+    ///    BepInEx version.
+    /// </summary>
     public static Version BepInExVersion { get; } =
         Version.Parse(MetadataHelper.GetAttributes<AssemblyInformationalVersionAttribute>(typeof(Paths).Assembly)[0]
                                     .InformationalVersion);
 
     /// <summary>
-    ///     The path to the Managed folder of the currently running Unity game.
+    ///     The path to the Managed folder that contains the main managed assemblies.
     /// </summary>
     public static string ManagedPath { get; private set; }
+
+    /// <summary>
+    ///     The path to the game data folder of the currently running Unity game.
+    /// </summary>
+    public static string GameDataPath { get; private set; }
 
     /// <summary>
     ///     The directory that the core BepInEx DLLs reside in.
@@ -87,6 +96,7 @@ public static class Paths
     public static void SetExecutablePath(string executablePath,
                                          string bepinRootPath = null,
                                          string managedPath = null,
+                                         bool gameDataRelativeToManaged = false,
                                          string[] dllSearchPath = null)
     {
         ExecutablePath = executablePath;
@@ -96,7 +106,10 @@ public static class Paths
                            ? Utility.ParentDirectory(executablePath, 4)
                            : Path.GetDirectoryName(executablePath);
 
-        ManagedPath = managedPath ?? Utility.CombinePaths(GameRootPath, $"{ProcessName}_Data", "Managed");
+        GameDataPath = managedPath != null && gameDataRelativeToManaged
+                           ? Path.GetDirectoryName(managedPath)
+                           : Path.Combine(GameRootPath, $"{ProcessName}_Data");
+        ManagedPath = managedPath ?? Path.Combine(GameDataPath, "Managed");
         BepInExRootPath = bepinRootPath ?? Path.Combine(GameRootPath, "BepInEx");
         ConfigPath = Path.Combine(BepInExRootPath, "config");
         BepInExConfigPath = Path.Combine(ConfigPath, "BepInEx.cfg");

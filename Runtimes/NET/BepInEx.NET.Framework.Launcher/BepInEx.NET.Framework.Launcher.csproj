@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <Description>BepInEx support library for .NET Framework games</Description>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net452</TargetFramework>
+        <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+        <PlatformTarget>x86</PlatformTarget>
+        <OutputPath>$(BuildDir)/NET.Framework</OutputPath>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\..\..\BepInEx.Core\BepInEx.Core.csproj"/>
+        <ProjectReference Include="..\BepInEx.NET.Common\BepInEx.NET.Common.csproj"/>
+        <ProjectReference Include="..\..\..\BepInEx.Preloader.Core\BepInEx.Preloader.Core.csproj" PrivateAssets="All"/>
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="HarmonyX" Version="2.10.0"/>
+        <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="All"/>
+    </ItemGroup>
+    <Import Project="..\BepInEx.NET.Shared\BepInEx.NET.Shared.projitems" Label="Shared"/>
+</Project>

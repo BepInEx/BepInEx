@@ -28,7 +28,7 @@ public static class ConsoleManager
 
     public static readonly ConfigEntry<bool> ConfigConsoleEnabled = ConfigFile.CoreConfig.Bind(
      "Logging.Console", "Enabled",
-     false,
+     true,
      "Enables showing a console for log output.");
 
     public static readonly ConfigEntry<bool> ConfigPreventClose = ConfigFile.CoreConfig.Bind(
@@ -94,7 +94,7 @@ public static class ConsoleManager
     public static TextWriter ConsoleStream => Driver?.ConsoleOut;
 
 
-    public static void Initialize(bool alreadyActive, bool useWinApiEncoder)
+    public static void Initialize(bool alreadyActive, bool useManagedEncoder)
     {
         if (PlatformHelper.Is(Platform.Unix))
             Driver = new LinuxConsoleDriver();
@@ -104,7 +104,7 @@ public static class ConsoleManager
             throw new PlatformNotSupportedException("Was unable to determine console driver for platform " +
                                                     PlatformHelper.Current);
 
-        Driver.Initialize(alreadyActive, useWinApiEncoder);
+        Driver.Initialize(alreadyActive, useManagedEncoder);
     }
 
     private static void DriverCheck()

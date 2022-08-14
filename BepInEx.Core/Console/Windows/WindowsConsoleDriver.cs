@@ -30,10 +30,37 @@ internal class WindowsConsoleDriver : IConsoleDriver
                                                 .PropertyGetter(typeof(Console), nameof(Console.WindowWidth))
                                                 ?.CreateDelegate<Func<int>>();
 
-    private bool useWinApiEncoder;
+    private bool useManagedEncoder;
 
-    private int ConsoleWidth => getWindowWidth?.Invoke() ?? 0;
-    private int ConsoleHeight => getWindowHeight?.Invoke() ?? 0;
+    private int ConsoleWidth
+    {
+        get
+        {
+            try
+            {
+                return getWindowWidth?.Invoke() ?? 0;
+            }
+            catch (IOException)
+            {
+                return 0;
+            }
+        }
+    }
+
+    private int ConsoleHeight
+    {
+        get
+        {
+            try
+            {
+                return getWindowHeight?.Invoke() ?? 0;
+            }
+            catch (IOException)
+            {
+                return 0;
+            }
+        }
+    }
 
     public TextWriter StandardOut { get; private set; }
     public TextWriter ConsoleOut { get; private set; }
@@ -41,10 +68,10 @@ internal class WindowsConsoleDriver : IConsoleDriver
     public bool ConsoleActive { get; private set; }
     public bool ConsoleIsExternal => true;
 
-    public void Initialize(bool alreadyActive, bool useWinApiEncoder)
+    public void Initialize(bool alreadyActive, bool useManagedEncoder)
     {
-        ConsoleActive = alreadyActive || TryCheckConsoleExists();
-        this.useWinApiEncoder = useWinApiEncoder;
+        ConsoleActive = alreadyActive;
+        this.useManagedEncoder = useManagedEncoder;
 
         if (ConsoleActive)
         {
@@ -60,19 +87,13 @@ internal class WindowsConsoleDriver : IConsoleDriver
 
     public void CreateConsole(uint codepage)
     {
-        try
-        {
-            ConsoleWindow.Attach();
-        }
-        catch (Exception e)
-        {
-            // Can't allocate console; we can still continue on in case there is stdout set up
-        }
+        ConsoleWindow.Attach();
 
         // Make sure of ConsoleEncoding helper class because on some Monos
         // Encoding.GetEncoding throws NotImplementedException on most codepages
         // NOTE: We don't set Console.OutputEncoding because it resets any existing Console.Out writers
-        ConsoleEncoding.ConsoleCodePage = codepage;
+        if (!useManagedEncoder)
+            ConsoleEncoding.ConsoleCodePage = codepage;
 
         // If stdout exists, write to it, otherwise make it the same as console out
         // Not sure if this is needed? Does the original Console.Out still work?
@@ -90,11 +111,10 @@ internal class WindowsConsoleDriver : IConsoleDriver
             AutoFlush = true
         };
 
-        var consoleOutStream =
-            OpenFileStream(ConsoleWindow.ConsoleOutHandle != IntPtr.Zero ? ConsoleWindow.ConsoleOutHandle : stdout);
+        var consoleOutStream = OpenFileStream(ConsoleWindow.ConsoleOutHandle);
         // Can't use Console.OutputEncoding because it can be null (i.e. not preference by user)
         ConsoleOut = new StreamWriter(consoleOutStream,
-                                      useWinApiEncoder ? ConsoleEncoding.OutputEncoding : Utility.UTF8NoBom)
+                                      useManagedEncoder ? Utility.UTF8NoBom : ConsoleEncoding.OutputEncoding)
         {
             AutoFlush = true
         };
@@ -121,27 +141,16 @@ internal class WindowsConsoleDriver : IConsoleDriver
 
     public void SetConsoleTitle(string title) => ConsoleWindow.Title = title;
 
-    private bool TryCheckConsoleExists()
+    private static Stream OpenFileStream(IntPtr handle)
     {
-        try
+        if (ReflectionHelper.IsCore)
         {
-            return ConsoleWidth != 0 && ConsoleHeight != 0;
+            var windowsConsoleStreamType = Type.GetType("System.ConsolePal+WindowsConsoleStream, System.Console", true);
+            var constructor = AccessTools.Constructor(windowsConsoleStreamType,
+                                                      new[] { typeof(IntPtr), typeof(FileAccess), typeof(bool) });
+            return (Stream)constructor.Invoke(new object[] { handle, FileAccess.Write, true });
         }
-        catch (IOException)
-        {
-            //System.IO.IOException: The handle is invalid.
-            //    at System.ConsolePal.GetBufferInfo(Boolean throwOnNoConsole, Boolean & succeeded)
-            //at System.ConsolePal.get_WindowWidth()
-            //at System.Console.get_WindowWidth()
-            //at BepInEx.WindowsConsoleDriver.get_ConsoleWidth()
-            //at BepInEx.WindowsConsoleDriver.Initialize(Boolean alreadyActive)
 
-            return false;
-        }
-    }
-
-    private static FileStream OpenFileStream(IntPtr handle)
-    {
         var fileHandle = new SafeFileHandle(handle, false);
         var ctorParams = AccessTools.ActualParameters(FileStreamCtor,
                                                       new object[]
