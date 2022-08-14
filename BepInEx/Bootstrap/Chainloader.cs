@@ -29,13 +29,13 @@ namespace BepInEx.Bootstrap
 
 		private static readonly List<BaseUnityPlugin> _plugins = new List<BaseUnityPlugin>();
 
-		// In some rare cases calling Application.unityVersion seems to cause MissingMethodException
-		// if a preloader patch applies Harmony patch to Chainloader.Initialize.
-		// The issue could be related to BepInEx being compiled against Unity 5.6 version of UnityEngine.dll,
-		// but the issue is apparently present with both official Harmony and HarmonyX
-		// We specifically prevent inlining to prevent early resolving
-		// TODO: Figure out better version obtaining mechanism (e.g. from globalmanagers)
-		private static string UnityVersion
+        // In some rare cases calling Application.unityVersion seems to cause MissingMethodException
+        // if a preloader patch applies Harmony patch to Chainloader.Initialize.
+        // The issue could be related to BepInEx being compiled against Unity 5.6 version of UnityEngine.dll,
+        // but the issue is apparently present with both official Harmony and HarmonyX
+        // We specifically prevent inlining to prevent early resolving
+        // TODO: Figure out better version obtaining mechanism (e.g. from globalmanagers)
+        private static string UnityVersion
 		{
 			[MethodImpl(MethodImplOptions.NoInlining)]
 			get => Application.unityVersion;
@@ -44,8 +44,10 @@ namespace BepInEx.Bootstrap
         internal static void InitDiskLogging()
         {
 			if (ConfigDiskLogging.Value)
-				Logger.Listeners.Add(new DiskLogListener("LogOutput.log", ConfigDiskConsoleDisplayedLevel.Value, ConfigDiskAppend.Value, ConfigDiskWriteUnityLog.Value));
-		}
+			{
+                Logger.Listeners.Add(new DiskLogListener("LogOutput.log", ConfigDiskConsoleDisplayedLevel.Value, ConfigDiskAppend.Value, ConfigDiskWriteUnityLog.Value));
+            }
+        }
 
         // Check above for NoInlining reasoning
         private static bool IsHeadless
@@ -163,12 +165,16 @@ namespace BepInEx.Bootstrap
 
 			// Temporarily disable the console log listener (if there is one from preloader) as we replay the preloader logs
 			var logListener = Logger.Listeners.FirstOrDefault(logger => logger is ConsoleLogListener);
+			var diskLogListener = Logger.Listeners.FirstOrDefault(logger => logger is DiskLogListener);
 
 			if (logListener != null)
 				Logger.Listeners.Remove(logListener);
 
-			// Write preloader log events if there are any, including the original log source name
-			var preloaderLogSource = Logger.CreateLogSource("Preloader");
+			if (diskLogListener != null)
+				Logger.Listeners.Remove(diskLogListener);
+
+            // Write preloader log events if there are any, including the original log source name
+            var preloaderLogSource = Logger.CreateLogSource("Preloader");
 
 			foreach (var preloaderLogEvent in preloaderLogEvents)
 				Logger.InternalLogEvent(preloaderLogSource, preloaderLogEvent);
@@ -177,9 +183,12 @@ namespace BepInEx.Bootstrap
 
 			Logger.Listeners.Remove(unityLogger);
 
-			if (logListener != null)
+            if (diskLogListener != null)
+                Logger.Listeners.Add(diskLogListener);
+
+            if (logListener != null)
 				Logger.Listeners.Add(logListener);
-		}
+        }
 
 		private static Regex allowedGuidRegex { get; } = new Regex(@"^[a-zA-Z0-9\._\-]+$");
 
