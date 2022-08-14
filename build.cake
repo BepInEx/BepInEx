@@ -12,6 +12,7 @@ var cleanDependencyCache = Argument("clean_build_cache", false);
 var lastBuildCommit = Argument("last_build_commit", "");
 var nugetPushSource = Argument("nuget_push_source", "https://nuget.bepinex.dev/v3/index.json");
 var nugetPushKey = Argument("nuget_push_key", "");
+var customBuildVersion = Argument("build_version", "");
 
 var buildVersion = "";
 var currentCommit = RunGit("rev-parse HEAD");
@@ -68,6 +69,10 @@ Task("Build")
 
         buildSettings.MSBuildSettings.Properties["AssemblyVersion"] = new[] { buildVersion + "." + buildId };
         buildVersion += "-be." + buildId;
+        buildSettings.MSBuildSettings.Properties["Version"] = new[] { buildVersion };
+    } else if (!string.IsNullOrEmpty(customBuildVersion))
+    {
+        buildVersion = customBuildVersion;
         buildSettings.MSBuildSettings.Properties["Version"] = new[] { buildVersion };
     }
 
