@@ -29,10 +29,10 @@ jobs:
                         core.setOutput("build_id", context.runNumber + 600); // builds.bepinex.dev build numbers start at 500
             -   uses: nrwl/last-successful-commit-action@v1
                 id: last_successful_commit
-                if: ${{ steps.info.outputs.build_type == 'BleedingEdge' && env.GITHUB_TOKEN != null }}
+                if: ${{ steps.info.outputs.build_type == 'BleedingEdge' }}
                 with:
                     branch: master
-                    workflow_id: build_be.yml
+                    workflow_id: build.yml
                     github_token: ${{ secrets.GITHUB_TOKEN }}
             -   uses: actions/setup-dotnet@v1
                 with:
@@ -45,7 +45,7 @@ jobs:
                     BEPISBUILDS_HOST: ${{ secrets.BEPISBUILDS_HOST }}
                 if: ${{ steps.info.outputs.build_type == 'BleedingEdge' && env.BEPISBUILDS_HOST != null }}
                 run: |
-                    artifacts_list=$(ls ./bin/dist/*.* | tr '\n' ','); artifacts_list=${artifacts_list::-1};
+                    artifacts_list=$(find ./bin/dist -maxdepth 1 -type f | tr '\n' ','); artifacts_list=${artifacts_list::-1};
                     curl --upload-file "{${artifacts_list}}" --ftp-pasv --ftp-skip-pasv-ip --ftp-create-dirs --ftp-method singlecwd --disable-epsv "ftp://${{ secrets.BEPISBUILDS_AUTH }}@${{ secrets.BEPISBUILDS_HOST }}:${{ secrets.BEPISBUILDS_PORT }}/bepinex_be/artifacts/${{ steps.info.outputs.build_id }}/"
             -   name: Generate changelog
                 id: generate_changelog
