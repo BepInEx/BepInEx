@@ -302,7 +302,7 @@ public sealed class PushNuGetTask : FrostingTask<BuildContext>
             Source = ctx.NugetSource,
             ApiKey = ctx.NugetApiKey
         };
-        foreach (var pkg in ctx.GetFiles(ctx.OutputDirectory.Combine("*.nupkg").FullPath))
+        foreach (var pkg in ctx.GetFiles(nugetPath.Combine("*.nupkg").FullPath))
             ctx.DotNetNuGetPush(pkg, settings);
     }
 }
