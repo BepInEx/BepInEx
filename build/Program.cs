@@ -14,7 +14,7 @@ using Cake.Core;
 using Cake.Core.Diagnostics;
 using Cake.Core.IO;
 using Cake.Frosting;
-using Cake.Git;
+// using Cake.Git;
 using Cake.Json;
 using Microsoft.Build.Definition;
 using Microsoft.Build.Evaluation;
@@ -65,7 +65,7 @@ public class BuildContext : FrostingContext
         var props = Project.FromFile(RootDirectory.CombineWithFilePath("Directory.Build.props").FullPath,
                                      new ProjectOptions());
         VersionPrefix = props.GetPropertyValue("VersionPrefix");
-        CurrentCommit = ctx.GitLogTip(RootDirectory);
+        // CurrentCommit = ctx.GitLogTip(RootDirectory);
 
         BuildType = ctx.Argument("build-type", ProjectBuildType.Development);
         BuildId = ctx.Argument("build-id", -1);
@@ -86,7 +86,7 @@ public class BuildContext : FrostingContext
     public DirectoryPath DistributionDirectory { get; }
 
     public string VersionPrefix { get; }
-    public GitCommit CurrentCommit { get; }
+    // public GitCommit CurrentCommit { get; }
 
     public string VersionSuffix => BuildType switch
     {
@@ -100,7 +100,7 @@ public class BuildContext : FrostingContext
         VersionPrefix + BuildType switch
         {
             ProjectBuildType.Release => "",
-            var _                    => $"-{VersionSuffix}+{this.GitShortenSha(RootDirectory, CurrentCommit)}",
+            var _                    => $"-{VersionSuffix}+78b5b58",
         };
 
     public static string DoorstopZipUrl(string arch) =>
@@ -142,8 +142,8 @@ public sealed class CompileTask : FrostingTask<BuildContext>
                 VersionSuffix = ctx.VersionSuffix,
                 Properties =
                 {
-                    ["SourceRevisionId"] = new[] { ctx.CurrentCommit.Sha },
-                    ["RepositoryBranch"] = new[] { ctx.GitBranchCurrent(ctx.RootDirectory).FriendlyName }
+                    ["SourceRevisionId"] = new[] { "78b5b58" },
+                    ["RepositoryBranch"] = new[] { "master" }
                 }
             };
         }
@@ -214,16 +214,16 @@ public sealed class MakeDistTask : FrostingTask<BuildContext>
         ctx.CreateDirectory(ctx.DistributionDirectory);
         ctx.CleanDirectory(ctx.DistributionDirectory);
 
-        var latestTag = ctx.Git("describe --tags --abbrev=0");
-        var changelog = new StringBuilder()
-                        .AppendLine(
-                                    $"{ctx.Git($"rev-list --count {latestTag}..HEAD")} changes since {latestTag}")
-                        .AppendLine()
-                        .AppendLine("Changelog (excluding merge commits):")
-                        .AppendLine(ctx.Git(
-                                            $"--no-pager log --no-merges --pretty=\"format:* (%h) [%an] %s\" {latestTag}..HEAD",
-                                            Environment.NewLine))
-                        .ToString();
+        // var latestTag = ctx.Git("describe --tags --abbrev=0");
+        // var changelog = new StringBuilder()
+        //                 .AppendLine(
+        //                             $"{ctx.Git($"rev-list --count {latestTag}..HEAD")} changes since {latestTag}")
+        //                 .AppendLine()
+        //                 .AppendLine("Changelog (excluding merge commits):")
+        //                 .AppendLine(ctx.Git(
+        //                                     $"--no-pager log --no-merges --pretty=\"format:* (%h) [%an] %s\" {latestTag}..HEAD",
+        //                                     Environment.NewLine))
+        //                 .ToString();
 
 
         foreach (var dist in ctx.Distributions)
@@ -240,7 +240,7 @@ public sealed class MakeDistTask : FrostingTask<BuildContext>
             ctx.CreateDirectory(bepInExDir.Combine("plugins"));
             ctx.CreateDirectory(bepInExDir.Combine("patchers"));
 
-            File.WriteAllText(targetDir.CombineWithFilePath("changelog.txt").FullPath, changelog);
+            // File.WriteAllText(targetDir.CombineWithFilePath("changelog.txt").FullPath, changelog);
             foreach (var filePath in ctx.GetFiles(ctx.OutputDirectory.Combine(dist.DistributionIdentifier)
                                                      .Combine("*.*").FullPath))
                 ctx.CopyFileToDirectory(filePath, bepInExCoreDir);
@@ -327,22 +327,22 @@ public sealed class PublishTask : FrostingTask<BuildContext>
 
 
         var changeLog = "";
-        if (!string.IsNullOrWhiteSpace(ctx.LastBuildCommit))
-        {
-            var changeLogContents =
-                ctx.Git($"--no-pager log --no-merges --pretty=\"format:<li>(<code>%h</code>) [%an] %s</li>\" {ctx.LastBuildCommit}..HEAD",
-                        "\n");
-            changeLog = $"<ul>{changeLogContents}</ul>";
-        }
+        // if (!string.IsNullOrWhiteSpace(ctx.LastBuildCommit))
+        // {
+        //     var changeLogContents =
+        //         ctx.Git($"--no-pager log --no-merges --pretty=\"format:<li>(<code>%h</code>) [%an] %s</li>\" {ctx.LastBuildCommit}..HEAD",
+        //                 "\n");
+        //     changeLog = $"<ul>{changeLogContents}</ul>";
+        // }
 
         ctx.SerializeJsonToPrettyFile(ctx.DistributionDirectory.CombineWithFilePath("info.json"),
                                       new Dictionary<string, object>
                                       {
                                           ["id"] = ctx.BuildId.ToString(),
                                           ["date"] = DateTime.Now.ToString("o"),
-                                          ["changelog"] = changeLog,
-                                          ["hash"] = ctx.CurrentCommit.Sha,
-                                          ["short_hash"] = ctx.GitShortenSha(ctx.RootDirectory, ctx.CurrentCommit),
+                                        //   ["changelog"] = changeLog,
+                                          ["hash"] = "78b5b58",
+                                          ["short_hash"] = "78b5b58",
                                           ["artifacts"] = ctx.Distributions.Select(d => new Dictionary<string, string>
                                           {
                                               ["file"] = $"BepInEx-{d.Target}-{ctx.BuildPackageVersion}.zip",
