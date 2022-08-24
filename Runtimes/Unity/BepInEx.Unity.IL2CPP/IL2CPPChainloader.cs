@@ -48,6 +48,11 @@ public class IL2CPPChainloader : BaseChainloader<BasePlugin>
     /// <param name="t">Type of the component to add</param>
     public static Il2CppObjectBase AddUnityComponent(Type t) => Il2CppUtils.AddComponent(t);
 
+    /// <summary>
+    ///     Occurs after a plugin is instantiated and just before <see cref="BasePlugin.Load"/> is called.
+    /// </summary>
+    public event Action<PluginInfo, Assembly, BasePlugin> PluginLoad;
+
     public override void Initialize(string gameExePath = null)
     {
         base.Initialize(gameExePath);
@@ -125,6 +130,7 @@ public class IL2CPPChainloader : BaseChainloader<BasePlugin>
 
         var pluginInstance = (BasePlugin) Activator.CreateInstance(type);
 
+        PluginLoad?.Invoke(pluginInfo, pluginAssembly, pluginInstance);
         pluginInstance.Load();
 
         return pluginInstance;
