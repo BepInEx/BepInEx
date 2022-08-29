@@ -285,16 +285,12 @@ internal static class Il2CppInteropManager
 
     private static void RunIl2CppInteropGenerator(List<AssemblyDefinition> sourceAssemblies)
     {
-        // Wine doesn't seem to support parallelism properly
-        var canRunParallel = !PlatformHelper.Is(Platform.Wine);
-
         var opts = new GeneratorOptions
         {
             GameAssemblyPath = GameAssemblyPath,
             Source = sourceAssemblies,
             OutputDir = IL2CPPInteropAssemblyPath,
             UnityBaseLibsDir = Directory.Exists(UnityBaseLibsDirectory) ? UnityBaseLibsDirectory : null,
-            Parallel = canRunParallel,
             ObfuscatedNamesRegex = !string.IsNullOrEmpty(ConfigUnhollowerDeobfuscationRegex.Value)
                                        ? new Regex(ConfigUnhollowerDeobfuscationRegex.Value)
                                        : null,
