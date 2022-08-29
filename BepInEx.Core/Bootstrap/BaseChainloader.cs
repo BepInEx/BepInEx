@@ -125,6 +125,16 @@ public abstract class BaseChainloader<TPlugin>
     ///     Contains information about what certain plugins were not loaded.
     /// </summary>
     public List<string> DependencyErrors { get; } = new();
+    
+    /// <summary>
+    ///     Occurs after a plugin is loaded.
+    /// </summary>
+    public event Action<PluginInfo> PluginLoaded;
+
+    /// <summary>
+    ///     Occurs after all plugins are loaded.
+    /// </summary>
+    public event Action Finished;
 
     public virtual void Initialize(string gameExePath = null)
     {
@@ -305,6 +315,7 @@ public abstract class BaseChainloader<TPlugin>
             var plugins = DiscoverPlugins();
             Logger.Log(LogLevel.Info, $"{plugins.Count} plugin{(plugins.Count == 1 ? "" : "s")} to load");
             LoadPlugins(plugins);
+            Finished?.Invoke();
         }
         catch (Exception ex)
         {
@@ -400,7 +411,7 @@ public abstract class BaseChainloader<TPlugin>
                 plugin.Instance = LoadPlugin(plugin, ass);
                 loadedPlugins.Add(plugin);
 
-                //_plugins.Add((TPlugin)plugin.Instance);
+                PluginLoaded?.Invoke(plugin);
             }
             catch (Exception ex)
             {
