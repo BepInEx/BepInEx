@@ -242,7 +242,7 @@ public static class Utility
     /// <param name="assembly">The loaded assembly.</param>
     /// <returns>True, if the assembly was found and loaded. Otherwise, false.</returns>
     public static bool TryResolveDllAssembly(AssemblyName assemblyName, string directory, out Assembly assembly) =>
-        TryResolveDllAssembly(assemblyName, directory, Assembly.LoadFile, out assembly);
+        TryResolveDllAssembly(assemblyName, directory, Assembly.LoadFrom, out assembly);
 
     /// <summary>
     ///     Try to resolve and load the given assembly DLL.
