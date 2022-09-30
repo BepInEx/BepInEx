@@ -7,9 +7,9 @@
         <ProjectReference Include="..\BepInEx.Core\BepInEx.Core.csproj"/>
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="All"/>
+        <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="All"/>
         <PackageReference Include="HarmonyX" Version="2.10.0"/>
-        <PackageReference Include="MonoMod.RuntimeDetour" Version="22.5.1.1" />
-        <PackageReference Include="MonoMod.Utils" Version="22.5.1.1" />
+        <PackageReference Include="MonoMod.RuntimeDetour" Version="22.5.1.1"/>
+        <PackageReference Include="MonoMod.Utils" Version="22.5.1.1"/>
     </ItemGroup>
 </Project>

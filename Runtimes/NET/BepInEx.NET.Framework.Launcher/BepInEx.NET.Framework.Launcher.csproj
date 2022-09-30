@@ -15,7 +15,7 @@
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="HarmonyX" Version="2.10.0"/>
-        <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="All"/>
+        <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="All"/>
     </ItemGroup>
     <Import Project="..\BepInEx.NET.Shared\BepInEx.NET.Shared.projitems" Label="Shared"/>
 </Project>
