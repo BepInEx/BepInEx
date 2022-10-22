@@ -58,6 +58,11 @@ internal static class Il2CppInteropManager
          .AppendLine("resulting in names that persist after game updates.")
          .ToString());
 
+    private static readonly ConfigEntry<bool> ScanMethodRefs = ConfigFile.CoreConfig.Bind(
+     "IL2CPP", "ScanMethodRefs",
+     Environment.Is64BitProcess,
+     "If enabled, Il2CppInterop will use xref to find dead methods and generate CallerCount attributes.");
+
     private static readonly ConfigEntry<bool> DumpDummyAssemblies = ConfigFile.CoreConfig.Bind(
      "IL2CPP", "DumpDummyAssemblies",
      false,
@@ -287,7 +292,7 @@ internal static class Il2CppInteropManager
     {
         var opts = new GeneratorOptions
         {
-            GameAssemblyPath = GameAssemblyPath,
+            GameAssemblyPath = ScanMethodRefs.Value ? GameAssemblyPath : null,
             Source = sourceAssemblies,
             OutputDir = IL2CPPInteropAssemblyPath,
             UnityBaseLibsDir = Directory.Exists(UnityBaseLibsDirectory) ? UnityBaseLibsDirectory : null,
