@@ -341,6 +341,50 @@ namespace BepInEx.Configuration
 			TomlTypeConverter.AddConverter(typeof(Vector3), jsonConverter);
 			TomlTypeConverter.AddConverter(typeof(Vector4), jsonConverter);
 			TomlTypeConverter.AddConverter(typeof(Quaternion), jsonConverter);
+			
+			TomlTypeConverter.AddConverter(typeof(Rect), new TypeConverter
+			{
+				ConvertToObject = delegate (string s, Type type)
+				{
+					Rect result = default(Rect);
+					if (s != null)
+					{
+						string cleaned = s.Trim(new char[] { '{', '}' }).Replace(" ", "");
+						foreach (string part in cleaned.Split(new char[] { ',' }))
+						{
+							string[] parts = part.Split(new char[] { ':' });
+							float value;
+							if (parts.Length == 2 && float.TryParse(parts[1], out value))
+							{
+								string id = parts[0].Trim(new char[] { '"' });
+								if (id == "x")
+								{
+									result.x = value;
+								}
+								else if (id == "y")
+								{
+									result.y = value;
+								}
+								else if (id == "width" || id == "z")
+								{
+									result.width = value;
+								}
+								else if (id == "height" || id == "w")
+								{
+									result.height = value;
+								}
+							}
+						}
+					}
+
+					return result;
+				},
+				ConvertToString = delegate (object o, Type type)
+				{
+					Rect rect = (Rect)o;
+					return string.Format(CultureInfo.InvariantCulture, "{{ \"x\":{0}, \"y\":{1}, \"width\":{2}, \"height\":{3} }}", new object[] { rect.x, rect.y, rect.width, rect.height });
+				}
+			});
 		}
 	}
 }
