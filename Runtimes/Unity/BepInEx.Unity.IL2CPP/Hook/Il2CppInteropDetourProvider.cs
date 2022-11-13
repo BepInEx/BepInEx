@@ -22,6 +22,8 @@ internal class Il2CppInteropDetour : IDetour
 
     public void Apply() => detour.Apply();
 
+    public T GenerateTrampoline<T>() where T : Delegate => detour.GenerateTrampoline<T>();
+
     public nint Target => detour.OriginalMethodPtr;
     public nint Detour => detour.DetourMethodPtr;
     public nint OriginalTrampoline => detour.TrampolinePtr;

@@ -16,6 +16,6 @@
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="All"/>
-        <PackageReference Include="HarmonyX" Version="2.10.0"/>
+        <PackageReference Include="HarmonyX" Version="2.10.1"/>
     </ItemGroup>
 </Project>
