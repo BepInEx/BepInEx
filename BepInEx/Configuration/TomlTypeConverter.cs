@@ -351,6 +351,8 @@ namespace BepInEx.Configuration
 
 		private static object StringToRect(string s, Type type)
 		{
+			// JsonUtility doesn't work with Rect on all Unity versions, so parse it manually
+
 			Rect result = default(Rect);
 			
 			if (s == null)
