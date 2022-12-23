@@ -39,9 +39,6 @@ internal static class Il2CppInteropManager
     {
         InstructionSetRegistry.RegisterInstructionSet<X86InstructionSet>(DefaultInstructionSets.X86_32);
         InstructionSetRegistry.RegisterInstructionSet<X86InstructionSet>(DefaultInstructionSets.X86_64);
-        InstructionSetRegistry.RegisterInstructionSet<WasmInstructionSet>(DefaultInstructionSets.WASM);
-        InstructionSetRegistry.RegisterInstructionSet<ArmV7InstructionSet>(DefaultInstructionSets.ARM_V7);
-        InstructionSetRegistry.RegisterInstructionSet<Arm64InstructionSet>(DefaultInstructionSets.ARM_V8);
         LibCpp2IlBinaryRegistry.RegisterBuiltInBinarySupport();
     }
 
@@ -283,19 +280,16 @@ internal static class Il2CppInteropManager
         var unityVersion = UnityInfo.Version;
         Cpp2IlApi.InitializeLibCpp2Il(GameAssemblyPath, metadataPath, unityVersion, false);
 
-        if (LibCpp2IlMain.MetadataVersion >= 29 || Cpp2IlApi.CurrentAppContext.InstructionSet.GetType() == typeof(X86InstructionSet))
+        List<Cpp2IlProcessingLayer> processingLayers = new() { new AttributeAnalysisProcessingLayer(), };
+
+        foreach (var cpp2IlProcessingLayer in processingLayers)
         {
-            List<Cpp2IlProcessingLayer> processingLayers = new() { new AttributeAnalysisProcessingLayer(), };
+            cpp2IlProcessingLayer.PreProcess(Cpp2IlApi.CurrentAppContext, processingLayers);
+        }
 
-            foreach (var cpp2IlProcessingLayer in processingLayers)
-            {
-                cpp2IlProcessingLayer.PreProcess(Cpp2IlApi.CurrentAppContext, processingLayers);
-            }
-
-            foreach (var cpp2IlProcessingLayer in processingLayers)
-            {
-                cpp2IlProcessingLayer.Process(Cpp2IlApi.CurrentAppContext);
-            }
+        foreach (var cpp2IlProcessingLayer in processingLayers)
+        {
+            cpp2IlProcessingLayer.Process(Cpp2IlApi.CurrentAppContext);
         }
 
         var assemblies = new AsmResolverDummyDllOutputFormat().BuildAssemblies(Cpp2IlApi.CurrentAppContext);
