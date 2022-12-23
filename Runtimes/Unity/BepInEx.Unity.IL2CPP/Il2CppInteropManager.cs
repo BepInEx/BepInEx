@@ -281,7 +281,7 @@ internal static partial class Il2CppInteropManager
         var unityVersion = UnityInfo.Version;
         Cpp2IlApi.InitializeLibCpp2Il(GameAssemblyPath, metadataPath, unityVersion, false);
 
-        List<Cpp2IlProcessingLayer> processingLayers = new() { new AttributeAnalysisProcessingLayer(), };
+        List<Cpp2IlProcessingLayer> processingLayers = new() { new AttributeInjectorProcessingLayer(), };
 
         foreach (var cpp2IlProcessingLayer in processingLayers)
         {
