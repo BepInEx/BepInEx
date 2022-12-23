@@ -14,6 +14,10 @@ using BepInEx.Unity.Common;
 using BepInEx.Unity.IL2CPP.Hook;
 using BepInEx.Unity.IL2CPP.Logging;
 using Cpp2IL.Core;
+using Cpp2IL.Core.Api;
+using Cpp2IL.Core.InstructionSets;
+using Cpp2IL.Core.OutputFormats;
+using Cpp2IL.Core.ProcessingLayers;
 using HarmonyLib;
 using Il2CppInterop.Common;
 using Il2CppInterop.Generator;
@@ -31,6 +35,16 @@ namespace BepInEx.Unity.IL2CPP;
 
 internal static class Il2CppInteropManager
 {
+    static Il2CppInteropManager()
+    {
+        InstructionSetRegistry.RegisterInstructionSet<X86InstructionSet>(DefaultInstructionSets.X86_32);
+        InstructionSetRegistry.RegisterInstructionSet<X86InstructionSet>(DefaultInstructionSets.X86_64);
+        InstructionSetRegistry.RegisterInstructionSet<WasmInstructionSet>(DefaultInstructionSets.WASM);
+        InstructionSetRegistry.RegisterInstructionSet<ArmV7InstructionSet>(DefaultInstructionSets.ARM_V7);
+        InstructionSetRegistry.RegisterInstructionSet<Arm64InstructionSet>(DefaultInstructionSets.ARM_V8);
+        LibCpp2IlBinaryRegistry.RegisterBuiltInBinarySupport();
+    }
+
     private static readonly ConfigEntry<bool> UpdateInteropAssemblies =
         ConfigFile.CoreConfig.Bind("IL2CPP",
                                    "UpdateInteropAssemblies",
@@ -199,7 +213,7 @@ internal static class Il2CppInteropManager
 
             AppDomain.CurrentDomain.AddCecilPlatformAssemblies(UnityBaseLibsDirectory);
             DownloadUnityAssemblies();
-            var dummyAssemblies = RunCpp2Il();
+            var dummyAssemblies = Convert(RunCpp2Il());
 
             if (DumpDummyAssemblies.Value)
             {
@@ -242,7 +256,7 @@ internal static class Il2CppInteropManager
         }
     }
 
-    private static List<AssemblyDefinition> RunCpp2Il()
+    private static List<AsmResolver.DotNet.AssemblyDefinition> RunCpp2Il()
     {
         Logger.LogMessage("Running Cpp2IL to generate dummy assemblies");
 
@@ -252,40 +266,60 @@ internal static class Il2CppInteropManager
                                         "Metadata",
                                         "global-metadata.dat");
 
-        List<AssemblyDefinition> sourceAssemblies;
-
         var stopwatch = new Stopwatch();
         stopwatch.Start();
 
         var cpp2IlLogger = BepInEx.Logging.Logger.CreateLogSource("Cpp2IL");
 
-        Cpp2IL.Core.Logger.VerboseLog += (message, s) =>
+        Cpp2IL.Core.Logging.Logger.VerboseLog += (message, s) =>
             cpp2IlLogger.LogDebug($"[{s}] {message.Trim()}");
-        Cpp2IL.Core.Logger.InfoLog += (message, s) =>
+        Cpp2IL.Core.Logging.Logger.InfoLog += (message, s) =>
             cpp2IlLogger.LogInfo($"[{s}] {message.Trim()}");
-        Cpp2IL.Core.Logger.WarningLog += (message, s) =>
+        Cpp2IL.Core.Logging.Logger.WarningLog += (message, s) =>
             cpp2IlLogger.LogWarning($"[{s}] {message.Trim()}");
-        Cpp2IL.Core.Logger.ErrorLog += (message, s) =>
+        Cpp2IL.Core.Logging.Logger.ErrorLog += (message, s) =>
             cpp2IlLogger.LogError($"[{s}] {message.Trim()}");
 
         var unityVersion = UnityInfo.Version;
-        Cpp2IlApi.InitializeLibCpp2Il(GameAssemblyPath, metadataPath, new int[]
+        Cpp2IlApi.InitializeLibCpp2Il(GameAssemblyPath, metadataPath, unityVersion, false);
+
+        if (LibCpp2IlMain.MetadataVersion >= 29 || Cpp2IlApi.CurrentAppContext.InstructionSet.GetType() == typeof(X86InstructionSet))
         {
-            unityVersion.Major,
-            unityVersion.Minor,
-            unityVersion.Build,
-        }, false);
-        sourceAssemblies = Cpp2IlApi.MakeDummyDLLs();
-        Cpp2IlApi.RunAttributeRestorationForAllAssemblies(null,
-                                                          LibCpp2IlMain.MetadataVersion >= 29 ||
-                                                          LibCpp2IlMain.Binary!.InstructionSet is InstructionSet.X86_32
-                                                              or InstructionSet.X86_64);
-        Cpp2IlApi.DisposeAndCleanupAll();
+            List<Cpp2IlProcessingLayer> processingLayers = new() { new AttributeAnalysisProcessingLayer(), };
+
+            foreach (var cpp2IlProcessingLayer in processingLayers)
+            {
+                cpp2IlProcessingLayer.PreProcess(Cpp2IlApi.CurrentAppContext, processingLayers);
+            }
+
+            foreach (var cpp2IlProcessingLayer in processingLayers)
+            {
+                cpp2IlProcessingLayer.Process(Cpp2IlApi.CurrentAppContext);
+            }
+        }
+
+        var assemblies = new AsmResolverDummyDllOutputFormat().BuildAssemblies(Cpp2IlApi.CurrentAppContext);
+
+        LibCpp2IlMain.Reset();
+        Cpp2IlApi.CurrentAppContext = null;
 
         stopwatch.Stop();
         Logger.LogInfo($"Cpp2IL finished in {stopwatch.Elapsed}");
 
-        return sourceAssemblies;
+        return assemblies;
+    }
+
+    private static List<AssemblyDefinition> Convert(List<AsmResolver.DotNet.AssemblyDefinition> assemblies)
+    {
+        List<AssemblyDefinition> cecilAssemblies = new(assemblies.Count);
+        foreach (var asmResolverAssembly in assemblies)
+        {
+            MemoryStream stream = new();
+            asmResolverAssembly.WriteManifest(stream);
+            stream.Position = 0;
+            cecilAssemblies.Add(AssemblyDefinition.ReadAssembly(stream));
+        }
+        return cecilAssemblies;
     }
 
     private static void RunIl2CppInteropGenerator(List<AssemblyDefinition> sourceAssemblies)
