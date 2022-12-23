@@ -6,9 +6,6 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <OutputPath>$(BuildDir)/Unity.IL2CPP</OutputPath>
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-        <RestoreAdditionalProjectSources>
-            https://nuget.samboy.dev/v3/index.json
-        </RestoreAdditionalProjectSources>
     </PropertyGroup>
     <ItemGroup>
         <ProjectReference Include="..\..\..\BepInEx.Core\BepInEx.Core.csproj"/>
