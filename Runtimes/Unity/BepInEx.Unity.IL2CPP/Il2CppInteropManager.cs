@@ -33,7 +33,7 @@ using MSLoggerFactory = Microsoft.Extensions.Logging.LoggerFactory;
 
 namespace BepInEx.Unity.IL2CPP;
 
-internal static class Il2CppInteropManager
+internal static partial class Il2CppInteropManager
 {
     static Il2CppInteropManager()
     {
@@ -210,17 +210,18 @@ internal static class Il2CppInteropManager
 
             AppDomain.CurrentDomain.AddCecilPlatformAssemblies(UnityBaseLibsDirectory);
             DownloadUnityAssemblies();
-            var dummyAssemblies = Convert(RunCpp2Il());
+            var asmResolverAssemblies = RunCpp2Il();
+            var cecilAssemblies = new AsmToCecilConverter(asmResolverAssemblies).ConvertAll();
 
             if (DumpDummyAssemblies.Value)
             {
                 var dummyPath = Path.Combine(Paths.BepInExRootPath, "dummy");
                 Directory.CreateDirectory(dummyPath);
-                foreach (var assemblyDefinition in dummyAssemblies)
+                foreach (var assemblyDefinition in cecilAssemblies)
                     assemblyDefinition.Write(Path.Combine(dummyPath, $"{assemblyDefinition.Name.Name}.dll"));
             }
 
-            RunIl2CppInteropGenerator(dummyAssemblies);
+            RunIl2CppInteropGenerator(cecilAssemblies);
 
             File.WriteAllText(HashPath, ComputeHash());
         }
@@ -301,19 +302,6 @@ internal static class Il2CppInteropManager
         Logger.LogInfo($"Cpp2IL finished in {stopwatch.Elapsed}");
 
         return assemblies;
-    }
-
-    private static List<AssemblyDefinition> Convert(List<AsmResolver.DotNet.AssemblyDefinition> assemblies)
-    {
-        List<AssemblyDefinition> cecilAssemblies = new(assemblies.Count);
-        foreach (var asmResolverAssembly in assemblies)
-        {
-            MemoryStream stream = new();
-            asmResolverAssembly.WriteManifest(stream);
-            stream.Position = 0;
-            cecilAssemblies.Add(AssemblyDefinition.ReadAssembly(stream));
-        }
-        return cecilAssemblies;
     }
 
     private static void RunIl2CppInteropGenerator(List<AssemblyDefinition> sourceAssemblies)
