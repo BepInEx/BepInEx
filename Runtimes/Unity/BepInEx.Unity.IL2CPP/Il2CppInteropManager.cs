@@ -246,6 +246,10 @@ internal static partial class Il2CppInteropManager
             Directory.EnumerateFiles(UnityBaseLibsDirectory, "*.dll").Do(File.Delete);
 
             using var httpClient = new HttpClient();
+            var bepinVersion = Paths.BepInExVersion;
+            var version = new SemanticVersioning.Version(bepinVersion.Major, bepinVersion.Minor, bepinVersion.Patch,
+                                                         bepinVersion.PreRelease);
+            httpClient.DefaultRequestHeaders.UserAgent.TryParseAdd($"BepInEx/{version}");
             using var zipStream = httpClient.GetStreamAsync(source).GetAwaiter().GetResult();
             using var zipArchive = new ZipArchive(zipStream, ZipArchiveMode.Read);
 
