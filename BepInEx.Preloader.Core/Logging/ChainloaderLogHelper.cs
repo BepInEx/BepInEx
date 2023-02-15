@@ -34,17 +34,14 @@ public static class ChainloaderLogHelper
 
     public static void PrintLogInfo(ManualLogSource log)
     {
-        var bepinVersion = Paths.BepInExVersion;
-        var versionMini = new SemanticVersioning.Version(bepinVersion.Major, bepinVersion.Minor, bepinVersion.Patch,
-                                                         bepinVersion.PreRelease);
-        var consoleTitle = $"BepInEx {versionMini} - {Paths.ProcessName}";
+        var consoleTitle = $"BepInEx {Paths.DisplayBepInExVersion} - {Paths.ProcessName}";
         log.Log(LogLevel.Message, consoleTitle);
 
         if (ConsoleManager.ConsoleActive)
             ConsoleManager.SetConsoleTitle(consoleTitle);
 
-        if (!string.IsNullOrEmpty(bepinVersion.Build))
-            log.Log(LogLevel.Message, $"Built from commit {bepinVersion.Build}");
+        if (!string.IsNullOrEmpty(Paths.BepInExVersion.Build))
+            log.Log(LogLevel.Message, $"Built from commit {Paths.BepInExVersion.Build}");
 
         Logger.Log(LogLevel.Info, $"System platform: {GetPlatformString()}");
         Logger.Log(LogLevel.Info,
