@@ -1,6 +1,6 @@
 #!/bin/sh
 # BepInEx start script
-# 
+#
 # Run the script to start the game with BepInEx enabled
 #
 # There are two ways to use this script
@@ -65,8 +65,8 @@ corlib_dir=""
 # Special case: program is launched via Steam
 # In that case rerun the script via their bootstrapper to ensure Steam overlay works
 if [ "$2" = "SteamLaunch" ]; then
-    steam="$1 $2 $3 $4 $0 $5"
-    shift 5
+    steam="$1 $2 $3 $4 $5 $6 $0 $7"
+    shift 7
     $steam "$@"
     exit
 fi
@@ -135,7 +135,7 @@ abs_path() {
 }
 
 _readlink() {
-    # relative links with readlink (without -f) do not preserve the path info 
+    # relative links with readlink (without -f) do not preserve the path info
     ab_path="$(abs_path "$1")"
     link="$(readlink "${ab_path}")"
     case $link in
@@ -148,8 +148,8 @@ _readlink() {
 
 resolve_executable_path () {
     e_path="$(abs_path "$1")"
-    
-    while [ -L "${e_path}" ]; do 
+
+    while [ -L "${e_path}" ]; do
         e_path=$(_readlink "${e_path}");
     done
     echo "${e_path}"
