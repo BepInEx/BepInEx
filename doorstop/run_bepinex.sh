@@ -10,7 +10,7 @@ a="/$0"; a=${a%/*}; a=${a#/}; a=${a:-.}; BASEDIR=$(cd "$a"; pwd -P)
 # ---- EDIT AS NEEDED ------
 
 # EDIT THIS: The name of the executable to run
-# LINUX: This is the name of the Unity game executable 
+# LINUX: This is the name of the Unity game executable
 # MACOS: This is the name of the game app folder, including the .app suffix
 executable_name=""
 
@@ -32,7 +32,7 @@ export DOORSTOP_CORLIB_OVERRIDE_PATH=""
 # Special case: program is launched via Steam
 # In that case rerun the script via their bootstrapper to ensure Steam overlay works
 if [ "$2" = "SteamLaunch" ]; then
-    "$1" "$2" "$3" "$4" "$0" "$5"
+    "$1" "$2" "$3" "$4" "$5" "$6" "$0" "$7"
     exit
 fi
 
@@ -92,7 +92,7 @@ abs_path() {
 }
 
 _readlink() {
-    # relative links with readlink (without -f) do not preserve the path info 
+    # relative links with readlink (without -f) do not preserve the path info
     ab_path="$(abs_path "$1")"
     link="$(readlink "${ab_path}")"
     case $link in
@@ -105,8 +105,8 @@ _readlink() {
 
 resolve_executable_path () {
     e_path="$(abs_path "$1")"
-    
-    while [ -L "${e_path}" ]; do 
+
+    while [ -L "${e_path}" ]; do
         e_path=$(_readlink "${e_path}");
     done
     echo "${e_path}"
