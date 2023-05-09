@@ -94,21 +94,28 @@ internal static partial class Il2CppInteropManager
      true,
      "If enabled, BepInEx will use Il2CppDumper to process GameAssembly.dll from runtime.");
 
+    private static readonly ConfigEntry<bool> UseApplicationDataPath = ConfigFile.CoreConfig.Bind(
+     "IL2CPP", "UseApplicationDataPath",
+     true,
+     "If enabled, BepInEx will use user's ApplicationData path.");
+
     private static readonly ManualLogSource Logger = BepInEx.Logging.Logger.CreateLogSource("InteropManager");
 
     private static bool initialized;
+
+    private static string ApplicationDataPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "BepInEx", Paths.ProcessName);
 
     public static string GameAssemblyPath => Environment.GetEnvironmentVariable("BEPINEX_GAME_ASSEMBLY_PATH") ??
                                              Path.Combine(Paths.GameRootPath,
                                                           "GameAssembly." + PlatformHelper.LibrarySuffix);
 
-    private static string HashPath => Path.Combine(IL2CPPInteropAssemblyPath, "assembly-hash.txt");
+    private static string HashPath => Path.Combine(UseApplicationDataPath.Value ? ApplicationDataPath : IL2CPPInteropAssemblyPath, "assembly-hash.txt");
 
-    private static string UnityBaseLibsDirectory => Path.Combine(Paths.BepInExRootPath, "unity-libs");
+    private static string UnityBaseLibsDirectory => Path.Combine(UseApplicationDataPath.Value ? ApplicationDataPath : Paths.BepInExRootPath, "unity-libs");
 
-    internal static string IL2CPPInteropAssemblyPath => Path.Combine(Paths.BepInExRootPath, "interop");
+    internal static string IL2CPPInteropAssemblyPath => Path.Combine(UseApplicationDataPath.Value ? ApplicationDataPath : Paths.BepInExRootPath, "interop");
 
-    internal static string RuntimeDumpedPath => Path.Combine(Paths.BepInExRootPath, "princess");
+    internal static string RuntimeDumpedPath => Path.Combine(UseApplicationDataPath.Value ? ApplicationDataPath : Paths.BepInExRootPath, "princess");
 
     private static ILoggerFactory LoggerFactory { get; } = MSLoggerFactory.Create(b =>
     {
@@ -201,36 +208,39 @@ internal static partial class Il2CppInteropManager
         Environment.SetEnvironmentVariable("IL2CPP_INTEROP_DATABASES_LOCATION", IL2CPPInteropAssemblyPath);
         AppDomain.CurrentDomain.AssemblyResolve += ResolveInteropAssemblies;
 
-        if (RuntimeAssemblies.Value)
+        if (CheckIfGenerationRequired())
         {
-            var princessLogger = new ManualLogSource("PrincessDumper");
-            BepInEx.Logging.Logger.Sources.Add(princessLogger);
-            PrincessDumper.PrincessDumper.RuntimeDump(princessLogger, out byte[] il2cppBytes, out byte[] metadataBytes);
-            if (DumpRuntimeAssemblies.Value)
+            if (RuntimeAssemblies.Value)
             {
-                Directory.CreateDirectory(RuntimeDumpedPath);
-                Directory.GetFiles(RuntimeDumpedPath).Do(File.Delete);
-
-                using (FileStream stream = new FileStream(Path.Combine(RuntimeDumpedPath, "GameAssembly.dll"), FileMode.Create, FileAccess.Write))
+                var princessLogger = new ManualLogSource("PrincessDumper");
+                BepInEx.Logging.Logger.Sources.Add(princessLogger);
+                PrincessDumper.PrincessDumper.RuntimeDump(princessLogger, out byte[] il2cppBytes, out byte[] metadataBytes);
+                if (DumpRuntimeAssemblies.Value)
                 {
-                    stream.Write(il2cppBytes, 0, il2cppBytes.Length);
+                    Directory.CreateDirectory(RuntimeDumpedPath);
+                    Directory.GetFiles(RuntimeDumpedPath).Do(File.Delete);
+
+                    using (FileStream stream = new FileStream(Path.Combine(RuntimeDumpedPath, "GameAssembly.dll"), FileMode.Create, FileAccess.Write))
+                    {
+                        stream.Write(il2cppBytes, 0, il2cppBytes.Length);
+                    }
+
+                    using (FileStream stream = new FileStream(Path.Combine(RuntimeDumpedPath, "global-metadata.dat"), FileMode.Create, FileAccess.Write))
+                    {
+                        stream.Write(metadataBytes, 0, metadataBytes.Length);
+                    }
                 }
 
-                using (FileStream stream = new FileStream(Path.Combine(RuntimeDumpedPath, "global-metadata.dat"), FileMode.Create, FileAccess.Write))
-                {
-                    stream.Write(metadataBytes, 0, metadataBytes.Length);
-                }
+                var il2cppdumperLogger = new ManualLogSource("Il2CppDumper");
+                BepInEx.Logging.Logger.Sources.Add(il2cppdumperLogger);
+                Il2CppDumper.ExtensionMethods.Init(il2cppdumperLogger, il2cppBytes, metadataBytes, out Il2CppDumper.Metadata metadata, out Il2CppDumper.Il2Cpp il2Cpp);
+                Il2CppDumper.ExtensionMethods.GenerateCecilAssemblies(il2cppdumperLogger, metadata, il2Cpp, out List<AssemblyDefinition> Assemblies);
+                GenerateInteropAssembliesFromIl2CppDumper(Assemblies);
             }
-
-            var il2cppdumperLogger = new ManualLogSource("Il2CppDumper");
-            BepInEx.Logging.Logger.Sources.Add(il2cppdumperLogger);
-            Il2CppDumper.ExtensionMethods.Init(il2cppdumperLogger, il2cppBytes, metadataBytes, out Il2CppDumper.Metadata metadata, out Il2CppDumper.Il2Cpp il2Cpp);
-            Il2CppDumper.ExtensionMethods.GenerateCecilAssemblies(il2cppdumperLogger, metadata, il2Cpp, out List<AssemblyDefinition> Assemblies);
-            GenerateInteropAssembliesFromIl2CppDumper(Assemblies);
-        }
-        else
-        {
-            GenerateInteropAssemblies();
+            else
+            {
+                GenerateInteropAssemblies();
+            }
         }
         var interopLogger = LoggerFactory.CreateLogger("Il2CppInterop");
 
