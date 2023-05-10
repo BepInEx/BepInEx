@@ -14,6 +14,7 @@ namespace BepInEx.Unity.IL2CPP;
 
 public static class Preloader
 {
+    public static string IL2CPPInteropAssemblyPath { get; internal set; }
     private static PreloaderConsoleListener PreloaderLog { get; set; }
 
     internal static ManualLogSource Log => PreloaderLogger.Log;

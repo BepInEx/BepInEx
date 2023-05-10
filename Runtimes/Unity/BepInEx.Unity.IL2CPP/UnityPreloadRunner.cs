@@ -27,6 +27,8 @@ internal static class UnityPreloaderRunner
         AppDomain.CurrentDomain.AssemblyResolve += LocalResolve;
 
         Preloader.Run();
+
+        Preloader.IL2CPPInteropAssemblyPath = Il2CppInteropManager.IL2CPPInteropAssemblyPath;
     }
 
     internal static Assembly LocalResolve(object sender, ResolveEventArgs args)
