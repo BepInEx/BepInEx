@@ -1,0 +1,6 @@
+[submodule "Il2CppDumper"]
+	path = Il2CppDumper
+	url = https://github.com/krulci/Il2CppDumper.git
+[submodule "PrincessDumper"]
+	path = PrincessDumper
+	url = https://github.com/krulci/PrincessDumper.git
