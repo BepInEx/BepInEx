@@ -10,7 +10,7 @@ internal static class PlatformUtils
 {
     public static readonly bool ProcessIs64Bit = IntPtr.Size >= 8;
     public static Version WindowsVersion { get; set; }
-    public static Version WineVersion { get; set; }
+    public static string WineVersion { get; set; }
 
     public static string LinuxArchitecture { get; set; }
     public static string LinuxKernelVersion { get; set; }
@@ -81,7 +81,7 @@ internal static class PlatformUtils
                 {
                     current |= Platform.Wine;
                     var getVersion = wineGetVersion.AsDelegate<GetWineVersionDelegate>();
-                    WineVersion = new Version(getVersion());
+                    WineVersion = getVersion();
                 }
             }
         }
