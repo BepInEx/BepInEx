@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace BepInEx.Logging
@@ -11,7 +12,9 @@ namespace BepInEx.Logging
 		/// <summary>
 		/// Collection of all log listeners that receive log events.
 		/// </summary>
-		public static ICollection<ILogListener> Listeners { get; } = new List<ILogListener>();
+		public static ICollection<ILogListener> Listeners => _Listeners;
+
+		private static readonly LogListenerCollection _Listeners = new LogListenerCollection();
 
 		/// <summary>
 		/// Collection of all log source that output log events.
@@ -26,18 +29,15 @@ namespace BepInEx.Logging
 		{
 			if (internalLogsInitialized)
 				return;
-			
+
 			Sources.Add(new HarmonyLogSource());
 
 			internalLogsInitialized = true;
 		}
-		
+
 		internal static void InternalLogEvent(object sender, LogEventArgs eventArgs)
 		{
-			foreach (var listener in Listeners)
-			{
-				listener?.LogEvent(sender, eventArgs);
-			}
+			_Listeners.SendLogEvent(sender, eventArgs);
 		}
 
 		/// <summary>
@@ -71,41 +71,146 @@ namespace BepInEx.Logging
 			return source;
 		}
 
-
-		private class LogSourceCollection : List<ILogSource>, ICollection<ILogSource>
+		private sealed class LogSourceCollection : ThreadSafeCollection<ILogSource>, ICollection<ILogSource>
 		{
-			void ICollection<ILogSource>.Add(ILogSource item)
+			public override void Add(ILogSource item)
 			{
 				if (item == null)
 					throw new ArgumentNullException(nameof(item), "Log sources cannot be null when added to the source list.");
 
-				item.LogEvent += InternalLogEvent;
-
-				base.Add(item);
-			}
-
-			void ICollection<ILogSource>.Clear()
-			{
-				foreach (var item in base.ToArray())
+				lock (Lock)
 				{
-					((ICollection<ILogSource>)this).Remove(item);
+					item.LogEvent += InternalLogEvent;
+
+					var copy = new List<ILogSource>(BaseList.Count + 1);
+					copy.AddRange(BaseList);
+					copy.Add(item);
+					BaseList = copy;
 				}
 			}
 
-			bool ICollection<ILogSource>.Remove(ILogSource item)
+			public override void Clear()
+			{
+				if (Count == 0)
+					return;
+
+				lock (Lock)
+				{
+					for (var i = 0; i < BaseList.Count; i++)
+						BaseList[i].LogEvent -= InternalLogEvent;
+
+					BaseList = new List<ILogSource>(0);
+				}
+			}
+
+			public override bool Remove(ILogSource item)
 			{
 				if (item == null)
 					return false;
 
-				if (!base.Contains(item))
+				lock (Lock)
+				{
+					var wasPresent = base.Remove(item);
+					if (wasPresent)
+						item.LogEvent -= InternalLogEvent;
+					return wasPresent;
+				}
+			}
+		}
+
+		private sealed class LogListenerCollection : ThreadSafeCollection<ILogListener>
+		{
+			public void SendLogEvent(object sender, LogEventArgs eventArgs)
+			{
+				// Do this instead of foreach to avoid boxing, also very slightly faster
+				var aListInTime = BaseList;
+				for (int i = 0; i < aListInTime.Count; i++)
+					aListInTime[i].LogEvent(sender, eventArgs);
+			}
+		}
+
+		/// <summary>
+		/// Simple thread safe list that prioritizes read speed over write speed.
+		/// Read is the same as a normal list, while write locks and allocates a copy of the list.
+		/// Logger lists are rarely updated so this tradeoff should be fine.
+		/// </summary>
+		/// <inheritdoc />
+		private class ThreadSafeCollection<T> : ICollection<T> where T : class
+		{
+			protected readonly object Lock = new object();
+			protected List<T> BaseList = new List<T>(0);
+
+			public IEnumerator<T> GetEnumerator()
+			{
+				// Can't avoid boxing
+				return BaseList.GetEnumerator();
+			}
+
+			IEnumerator IEnumerable.GetEnumerator()
+			{
+				// Can't avoid boxing
+				return BaseList.GetEnumerator();
+			}
+
+			public virtual void Add(T item)
+			{
+				if (item == null)
+					throw new ArgumentNullException(nameof(item), "item can't be null");
+
+				lock (Lock)
+				{
+					var copy = new List<T>(BaseList.Count + 1);
+					copy.AddRange(BaseList);
+					copy.Add(item);
+					BaseList = copy;
+				}
+			}
+
+			public virtual void Clear()
+			{
+				if (Count == 0)
+					return;
+
+				lock (Lock)
+					BaseList = new List<T>(0);
+			}
+
+			public bool Contains(T item)
+			{
+				return BaseList.Contains(item);
+			}
+
+			public void CopyTo(T[] array, int arrayIndex)
+			{
+				BaseList.CopyTo(array, arrayIndex);
+			}
+
+			public virtual bool Remove(T item)
+			{
+				if (item == null)
 					return false;
 
-				item.LogEvent -= InternalLogEvent;
+				lock (Lock)
+				{
+					var copy = new List<T>(BaseList.Count);
+					var any = false;
+					for (int i = 0; i < BaseList.Count; i++)
+					{
+						var existingItem = BaseList[i];
+						if (existingItem.Equals(item))
+							any = true;
+						else
+							copy.Add(existingItem);
+					}
 
-				base.Remove(item);
-
-				return true;
+					BaseList = copy;
+					return any;
+				}
 			}
+
+			public int Count => BaseList.Count;
+
+			public bool IsReadOnly => false;
 		}
 	}
 }
