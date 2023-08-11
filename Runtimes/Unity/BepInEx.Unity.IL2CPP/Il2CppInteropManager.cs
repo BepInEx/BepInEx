@@ -122,6 +122,9 @@ internal static partial class Il2CppInteropManager
         }
 
         HashFile(md5, GameAssemblyPath);
+        
+        if (File.Exists(LatestUnityVersionPath))
+            HashFile(md5, LatestUnityVersionPath);
 
         // Hash some common dependencies as they can affect output
         HashString(md5, typeof(InteropAssemblyGenerator).Assembly.GetName().Version.ToString());
@@ -183,10 +186,10 @@ internal static partial class Il2CppInteropManager
 
         var unityVersion = UnityInfo.Version;
         Il2CppInteropRuntime.Create(new RuntimeConfiguration
-        {
-            UnityVersion = new Version(unityVersion.Major, unityVersion.Minor, unityVersion.Build),
-            DetourProvider = new Il2CppInteropDetourProvider()
-        })
+                            {
+                                UnityVersion = new Version(unityVersion.Major, unityVersion.Minor, unityVersion.Build),
+                                DetourProvider = new Il2CppInteropDetourProvider()
+                            })
                             .AddLogger(interopLogger)
                             .AddHarmonySupport()
                             .Start();
