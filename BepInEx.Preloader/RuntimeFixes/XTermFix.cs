@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection.Emit;
 using HarmonyLib;
 using MonoMod.RuntimeDetour;
-using MonoMod.RuntimeDetour.Platforms;
+//using MonoMod.RuntimeDetour.Platforms;
 using MonoMod.Utils;
 
 namespace BepInEx.Preloader.RuntimeFixes
@@ -13,7 +13,7 @@ namespace BepInEx.Preloader.RuntimeFixes
 	{
 		public static void Apply()
 		{
-			if (PlatformHelper.Is(Platform.Windows))
+			if (PlatformDetection.OS.Is(OSKind.Windows))
 				return;
 
 			if (typeof(Console).Assembly.GetType("System.ConsoleDriver") == null)
@@ -33,7 +33,7 @@ namespace BepInEx.Preloader.RuntimeFixes
 			// this causes a crash owing to TermInfoReader running before it can be patched and fixed
 			// Because Doorstop does not support ARM at the moment, we can get away with just forcing x86 detour platform.
 			// TODO: Figure out a way to detect ARM on Unix without running Process.Start
-			DetourHelper.Native = new DetourNativeX86Platform();
+			//DetourHelper.Native = new DetourNativeX86Platform();
 			
 			var harmony = new HarmonyLib.Harmony("com.bepinex.xtermfix");
 
@@ -49,7 +49,7 @@ namespace BepInEx.Preloader.RuntimeFixes
 			harmony.Patch(AccessTools.Method("System.TermInfoReader:GetStringBytes", new []{ AccessTools.TypeByName("System.TermInfoStrings") }),
 				transpiler: new HarmonyMethod(typeof(XTermFix), nameof(GetTermInfoStringsTranspiler)));
 
-			DetourHelper.Native = null;
+			//DetourHelper.Native = null;
 		}
 
 		public static int intOffset;

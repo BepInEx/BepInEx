@@ -51,7 +51,7 @@ namespace BepInEx.Unix
 			// Console is always considered active on Unix
 			ConsoleActive = true;
 
-			StdoutRedirected = UnixStreamHelper.isatty(1) != 1;
+			// todo StdoutRedirected = UnixStreamHelper.isatty(1) != 1;
 
 			var duplicateStream = UnixStreamHelper.CreateDuplicateStream(1);
 

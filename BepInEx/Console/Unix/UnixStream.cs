@@ -3,7 +3,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 
 namespace BepInEx.Unix
-{
+{/*
 	internal class UnixStream : Stream
 	{
 		public override bool CanRead => Access == FileAccess.Read || Access == FileAccess.ReadWrite;
@@ -81,5 +81,5 @@ namespace BepInEx.Unix
 		{
 			Dispose(false);
 		}
-	}
+	}*/
 }

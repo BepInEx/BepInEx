@@ -7,7 +7,7 @@ namespace BepInEx.Unix
 {
 	internal static class UnixStreamHelper
 	{
-		public delegate int dupDelegate(int fd);
+		/*public delegate int dupDelegate(int fd);
 		[DynDllImport("libc")]
 		public static dupDelegate dup;
 
@@ -36,7 +36,7 @@ namespace BepInEx.Unix
 		public static isattyDelegate isatty;
 
 		static UnixStreamHelper()
-		{
+		{DynDll.
 			var libcMapping = new Dictionary<string, List<DynDllMapping>>
 			{
 				["libc"] = new List<DynDllMapping>
@@ -48,13 +48,14 @@ namespace BepInEx.Unix
 			};
 
 			typeof(UnixStreamHelper).ResolveDynDllImports(libcMapping);
-		}
+		}*/
 
 		public static Stream CreateDuplicateStream(int fileDescriptor)
 		{
-			int newFd = dup(fileDescriptor);
+			throw new NotImplementedException();
+			//int newFd = dup(fileDescriptor);
 
-			return new UnixStream(newFd, FileAccess.Write);
+			//return new UnixStream(newFd, FileAccess.Write);
 		}
 	}
 }

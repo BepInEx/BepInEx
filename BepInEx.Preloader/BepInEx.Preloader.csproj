@@ -23,29 +23,56 @@
     <DocumentationFile>..\bin\BepInEx.Preloader.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="0Harmony, Version=2.9.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>$(SolutionDir)\packages\HarmonyX.2.9.0\lib\net35\0Harmony.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="0Harmony, Version=2.9.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\bin\net35\0Harmony.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Mono.Cecil, Version=0.10.4.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e, processorArchitecture=MSIL">
-      <HintPath>$(SolutionDir)\packages\Mono.Cecil.0.10.4\lib\net35\Mono.Cecil.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\bin\net35\Mono.Cecil.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Mono.Cecil.Mdb, Version=0.10.4.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e, processorArchitecture=MSIL">
-      <HintPath>$(SolutionDir)\packages\Mono.Cecil.0.10.4\lib\net35\Mono.Cecil.Mdb.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\bin\net35\Mono.Cecil.Mdb.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Mono.Cecil.Pdb, Version=0.10.4.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e, processorArchitecture=MSIL">
-      <HintPath>$(SolutionDir)\packages\Mono.Cecil.0.10.4\lib\net35\Mono.Cecil.Pdb.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\bin\net35\Mono.Cecil.Pdb.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Mono.Cecil.Rocks, Version=0.10.4.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e, processorArchitecture=MSIL">
-      <HintPath>$(SolutionDir)\packages\Mono.Cecil.0.10.4\lib\net35\Mono.Cecil.Rocks.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\bin\net35\Mono.Cecil.Rocks.dll</HintPath>
+      <Private>False</Private>
     </Reference>
-    <Reference Include="MonoMod.RuntimeDetour, Version=22.1.29.1, Culture=neutral, PublicKeyToken=null">
-      <HintPath>$(SolutionDir)\packages\MonoMod.RuntimeDetour.22.1.29.1\lib\net35\MonoMod.RuntimeDetour.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="MonoMod.Backports">
+      <HintPath>..\bin\net35\MonoMod.Backports.dll</HintPath>
+      <Private>False</Private>
     </Reference>
-    <Reference Include="MonoMod.Utils, Version=22.1.29.1, Culture=neutral, PublicKeyToken=null">
-      <HintPath>$(SolutionDir)\packages\MonoMod.Utils.22.1.29.1\lib\net35\MonoMod.Utils.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="MonoMod.Core">
+      <HintPath>..\bin\net35\MonoMod.Core.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="MonoMod.Iced">
+      <HintPath>..\bin\net35\MonoMod.Iced.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="MonoMod.ILHelpers">
+      <HintPath>..\bin\net35\MonoMod.ILHelpers.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="MonoMod.RuntimeDetour, Version=22.1.29.1, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\bin\net35\MonoMod.RuntimeDetour.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="MonoMod.Utils, Version=22.1.29.1, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\bin\net35\MonoMod.Utils.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -69,10 +96,12 @@
     <ProjectReference Include="..\BepInEx\BepInEx.csproj">
       <Project>{4ffba620-f5ed-47f9-b90c-dad1316fd9b9}</Project>
       <Name>BepInEx</Name>
+      <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\submodules\BepInEx.Harmony\HarmonyXInterop\HarmonyXInterop.csproj">
       <Project>{160f7fe0-288d-435c-9e7e-497d3e0de3a6}</Project>
       <Name>HarmonyXInterop</Name>
+      <Private>False</Private>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
