@@ -65,9 +65,28 @@ corlib_dir="dotnet"
 # Special case: program is launched via Steam
 # In that case rerun the script via their bootstrapper to ensure Steam overlay works
 if [ "$2" = "SteamLaunch" ]; then
-    steam="$1 $2 $3 $4 $5 $6 $0 $7"
-    shift 7
-    exec $steam "$@"
+    # Conceptually: exec "$1" "$2" "$3" "$4" "$0" "rest of $@"
+    # But newer versions of Steam interleave the $1..$4 with some "--" arguments, so preserve them as well
+    # Bash has array subscripting, but POSIX sh doesn't, so avoid it
+    to_rotate=4
+    rotated=0
+    while [ $((to_rotate-=1)) -ge 0 ]; do
+        while [ "z$1" = "z--" ]; do
+            set -- "$@" "$1"
+            shift
+            rotated=$((rotated+1))
+        done
+        set -- "$@" "$1"
+        shift
+        rotated=$((rotated+1))
+    done
+    to_rotate=$(($# - rotated))
+    set -- "$@" "$0"
+    while [ $((to_rotate-=1)) -ge 0 ]; do
+        set -- "$@" "$1"
+        shift
+    done
+    exec "$@"
 fi
 
 # Handle first param being executable name
