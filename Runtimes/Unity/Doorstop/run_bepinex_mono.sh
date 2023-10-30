@@ -67,8 +67,7 @@ corlib_dir=""
 if [ "$2" = "SteamLaunch" ]; then
     steam="$1 $2 $3 $4 $5 $6 $0 $7"
     shift 7
-    $steam "$@"
-    exit
+    exec $steam "$@"
 fi
 
 # Handle first param being executable name
