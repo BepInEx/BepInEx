@@ -32,8 +32,7 @@ export DOORSTOP_CORLIB_OVERRIDE_PATH=""
 # Special case: program is launched via Steam
 # In that case rerun the script via their bootstrapper to ensure Steam overlay works
 if [ "$2" = "SteamLaunch" ]; then
-    "$1" "$2" "$3" "$4" "$5" "$6" "$0" "$7"
-    exit
+    exec "$1" "$2" "$3" "$4" "$5" "$6" "$0" "$7"
 fi
 
 if [ ! -x "$1" -a ! -x "$executable_name" ]; then
