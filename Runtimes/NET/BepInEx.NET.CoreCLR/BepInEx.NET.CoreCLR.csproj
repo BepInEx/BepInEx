@@ -2,10 +2,10 @@
 
     <PropertyGroup>
         <Description>BepInEx support library for CoreCLR games</Description>
-        <TargetFramework>netcoreapp3.1</TargetFramework>
+        <TargetFrameworks>netcoreapp3.1;net6</TargetFrameworks>
         <OutputPath>$(BuildDir)/NET.CoreCLR</OutputPath>
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+        <AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
     </PropertyGroup>
 
     <ItemGroup>
