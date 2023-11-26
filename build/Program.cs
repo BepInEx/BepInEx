@@ -356,7 +356,7 @@ public sealed class PublishTask : FrostingTask<BuildContext>
                                           {
                                               ["file"] = $"BepInEx-{d.Target}-{ctx.BuildPackageVersion}.zip",
                                               ["description"] =
-                                                  $"BepInEx {d.Engine} ({d.Runtime}) for {d.ClearOsName} ({d.Arch}) games"
+                                                  $"BepInEx {d.Engine} ({d.Runtime}{(d.FrameworkTarget == null ? "" : " " + d.FrameworkTarget)}) for {d.ClearOsName} ({d.Arch}) games"
                                           }).ToArray()
                                       });
     }
