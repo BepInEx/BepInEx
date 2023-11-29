@@ -53,7 +53,7 @@ public class BuildContext : FrostingContext
         new("NET.Framework", "win-x86", "net40"),
         new("NET.Framework", "win-x86", "net452"),
         new("NET.CoreCLR", "win-x64", "netcoreapp3.1"),
-        new("NET.CoreCLR", "win-x64", "net6")
+        new("NET.CoreCLR", "win-x64", "net6.0")
     };
 
 
