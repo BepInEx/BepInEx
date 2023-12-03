@@ -89,6 +89,8 @@ internal static partial class Il2CppInteropManager
 
     private static string HashPath => Path.Combine(IL2CPPInteropAssemblyPath, "assembly-hash.txt");
 
+    private static string LatestUnityVersionPath => Path.Combine(UnityBaseLibsDirectory, "latest-unity-version.txt");
+
     private static string UnityBaseLibsDirectory => Path.Combine(Paths.BepInExRootPath, "unity-libs");
 
     internal static string IL2CPPInteropAssemblyPath => Path.Combine(Paths.BepInExRootPath, "interop");
@@ -120,14 +122,9 @@ internal static partial class Il2CppInteropManager
         }
 
         HashFile(md5, GameAssemblyPath);
-
-        if (Directory.Exists(UnityBaseLibsDirectory))
-            foreach (var file in Directory.EnumerateFiles(UnityBaseLibsDirectory, "*.dll",
-                                                          SearchOption.TopDirectoryOnly))
-            {
-                HashString(md5, Path.GetFileName(file));
-                HashFile(md5, file);
-            }
+        
+        if (File.Exists(LatestUnityVersionPath))
+            HashFile(md5, LatestUnityVersionPath);
 
         // Hash some common dependencies as they can affect output
         HashString(md5, typeof(InteropAssemblyGenerator).Assembly.GetName().Version.ToString());
@@ -231,12 +228,29 @@ internal static partial class Il2CppInteropManager
         }
     }
 
+    private static bool CheckIfDownloadRequired()
+    {
+        if (!Directory.Exists(UnityBaseLibsDirectory))
+            return true;
+
+        if (!File.Exists(LatestUnityVersionPath))
+            return true;
+
+        var unityVersion = UnityInfo.Version;
+        if (new Version(unityVersion.Major, unityVersion.Minor, unityVersion.Build) != Version.Parse(File.ReadAllText(LatestUnityVersionPath)))
+            return true;
+
+        return false;
+    }
     private static void DownloadUnityAssemblies()
     {
+        if (!CheckIfDownloadRequired())
+            return;
         var unityVersion = UnityInfo.Version;
+        var VERSION = $"{unityVersion.Major}.{unityVersion.Minor}.{unityVersion.Build}";
         var source =
             UnityBaseLibrariesSource.Value.Replace("{VERSION}",
-                                                   $"{unityVersion.Major}.{unityVersion.Minor}.{unityVersion.Build}");
+                                                   VERSION);
 
         if (!string.IsNullOrEmpty(source))
         {
@@ -249,6 +263,7 @@ internal static partial class Il2CppInteropManager
             using var zipStream = httpClient.GetStreamAsync(source).GetAwaiter().GetResult();
             using var zipArchive = new ZipArchive(zipStream, ZipArchiveMode.Read);
 
+            File.WriteAllText(LatestUnityVersionPath, VERSION);
             Logger.LogMessage("Extracting downloaded unity base libraries");
             zipArchive.ExtractToDirectory(UnityBaseLibsDirectory);
         }
