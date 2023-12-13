@@ -6,10 +6,27 @@ using BepInEx.Logging;
 namespace BepInEx.Configuration;
 
 /// <summary>
+///     Interface for covariant <see cref="Configuration.ConfigEntry&lt;T&gt;" />.
+/// </summary>
+/// <typeparam name="T">Type of the setting.</typeparam>
+public interface ICovariantConfigEntry<out T>
+{
+    /// <summary>
+    ///     Value of this setting. Get-only.
+    /// </summary>
+    public T Value { get; }
+    
+    /// <summary>
+    ///     Fired when the setting is changed. Does not detect changes made outside from this object.
+    /// </summary>
+    public event EventHandler SettingChanged;
+}
+
+/// <summary>
 ///     Provides access to a single setting inside of a <see cref="Configuration.ConfigFile" />.
 /// </summary>
 /// <typeparam name="T">Type of the setting.</typeparam>
-public sealed class ConfigEntry<T> : ConfigEntryBase
+public sealed class ConfigEntry<T> : ConfigEntryBase, ICovariantConfigEntry<T>
 {
     private T _typedValue;
 
