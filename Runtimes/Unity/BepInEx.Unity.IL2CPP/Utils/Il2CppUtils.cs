@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Il2CppInterop.Runtime;
 using Il2CppInterop.Runtime.Injection;
 using Il2CppInterop.Runtime.InteropTypes;
@@ -14,7 +14,7 @@ internal static class Il2CppUtils
     public static Il2CppObjectBase AddComponent(Type t)
     {
         if (managerGo == null)
-            managerGo = new GameObject { hideFlags = HideFlags.HideAndDontSave };
+            managerGo = new GameObject { hideFlags = HideFlags.HideAndDontSave, name = "BepInEx_Manager" };
 
         if (!ClassInjector.IsTypeRegisteredInIl2Cpp(t))
             ClassInjector.RegisterTypeInIl2Cpp(t);
