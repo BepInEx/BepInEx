@@ -96,11 +96,6 @@ public static class Preloader
 
     private static IntPtr DllImportResolver(string libraryName, Assembly assembly, DllImportSearchPath? searchPath)
     {
-        if (libraryName == "GameAssembly")
-        {
-            return NativeLibrary.Load(Il2CppInteropManager.GameAssemblyPath, assembly, searchPath);
-        }
-
-        return IntPtr.Zero;
+        return libraryName is "GameAssembly" or "GameAssembly_plus" ? NativeLibrary.Load(Il2CppInteropManager.GameAssemblyPath, assembly, searchPath) : IntPtr.Zero;
     }
 }
