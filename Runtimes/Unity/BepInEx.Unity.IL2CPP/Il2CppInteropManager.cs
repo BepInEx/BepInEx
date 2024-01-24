@@ -273,8 +273,8 @@ internal static partial class Il2CppInteropManager
             if (DumpDummyAssemblies.Value)
             {
                 var dummyPath = Path.Combine(UseApplicationDataPath.Value ? ApplicationDataPath : Paths.BepInExRootPath, "dummy");
-                Directory.EnumerateFiles(dummyPath, "*.dll").Do(File.Delete);
                 Directory.CreateDirectory(dummyPath);
+                Directory.EnumerateFiles(dummyPath, "*.dll").Do(File.Delete);
                 foreach (var assemblyDefinition in cecilAssemblies)
                     assemblyDefinition.Write(Path.Combine(dummyPath, $"{assemblyDefinition.Name.Name}.dll"));
             }
@@ -311,7 +311,6 @@ internal static partial class Il2CppInteropManager
             if (DumpDummyAssemblies.Value)
             {
                 var dummyPath = Path.Combine(UseApplicationDataPath.Value ? ApplicationDataPath : Paths.BepInExRootPath, "dummy");
-                Directory.EnumerateFiles(dummyPath, "*.dll").Do(File.Delete);
                 Directory.CreateDirectory(dummyPath);
                 Directory.EnumerateFiles(dummyPath, "*.dll").Do(File.Delete);
                 foreach (var assemblyDefinition in cecilAssemblies)
