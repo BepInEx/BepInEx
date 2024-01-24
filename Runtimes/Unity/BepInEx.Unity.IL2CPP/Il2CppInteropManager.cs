@@ -74,6 +74,11 @@ internal static partial class Il2CppInteropManager
      Environment.Is64BitProcess,
      "If enabled, Il2CppInterop will use xref to find dead methods and generate CallerCount attributes.");
 
+    private static readonly ConfigEntry<bool> CustomStripping = ConfigFile.CoreConfig.Bind(
+     "IL2CPP", "CustomStripping",
+     true,
+     "If enabled, BepInEx will wait for manual inclusion of additional stripping libraries in BepInEx/unity-libs.");
+
     private static readonly ConfigEntry<bool> DumpDummyAssemblies = ConfigFile.CoreConfig.Bind(
      "IL2CPP", "DumpDummyAssemblies",
      true,
@@ -267,7 +272,7 @@ internal static partial class Il2CppInteropManager
 
             if (DumpDummyAssemblies.Value)
             {
-                var dummyPath = Path.Combine(Paths.BepInExRootPath, "dummy");
+                var dummyPath = Path.Combine(UseApplicationDataPath.Value ? ApplicationDataPath : Paths.BepInExRootPath, "dummy");
                 Directory.CreateDirectory(dummyPath);
                 foreach (var assemblyDefinition in cecilAssemblies)
                     assemblyDefinition.Write(Path.Combine(dummyPath, $"{assemblyDefinition.Name.Name}.dll"));
@@ -296,9 +301,15 @@ internal static partial class Il2CppInteropManager
             AppDomain.CurrentDomain.AddCecilPlatformAssemblies(UnityBaseLibsDirectory);
             DownloadUnityAssemblies();
 
+            if (CustomStripping.Value)
+            {
+                Console.WriteLine("Drop Additional Libraries to unity-libs folder now");
+                Console.ReadLine();
+            }
+
             if (DumpDummyAssemblies.Value)
             {
-                var dummyPath = Path.Combine(Paths.BepInExRootPath, "dummy");
+                var dummyPath = Path.Combine(UseApplicationDataPath.Value ? ApplicationDataPath : Paths.BepInExRootPath, "dummy");
                 Directory.CreateDirectory(dummyPath);
                 Directory.EnumerateFiles(dummyPath, "*.dll").Do(File.Delete);
                 foreach (var assemblyDefinition in cecilAssemblies)
