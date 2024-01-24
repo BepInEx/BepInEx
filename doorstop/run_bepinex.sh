@@ -1,33 +1,54 @@
 #!/bin/sh
-# BepInEx running script
+# BepInEx start script
 #
-# This script is used to run a Unity game with BepInEx enabled.
+# Run the script to start the game with BepInEx enabled
 #
-# Usage: Configure the script below and simply run this script when you want to run your game modded.
-a="/$0"; a=${a%/*}; a=${a#/}; a=${a:-.}; BASEDIR=$(cd "$a"; pwd -P)
+# There are two ways to use this script
+#
+# 1. Via CLI: Run ./run_bepinex.sh <path to game> [doorstop arguments] [game arguments]
+# 2. Via config: edit the options below and run ./run.sh without any arguments
 
-# -------- SETTINGS --------
-# ---- EDIT AS NEEDED ------
+# 0 is false, 1 is true
 
-# EDIT THIS: The name of the executable to run
-# LINUX: This is the name of the Unity game executable
-# MACOS: This is the name of the game app folder, including the .app suffix
+# LINUX: name of Unity executable
+# MACOS: name of the .app directory
 executable_name=""
 
-# The rest is automatically handled by BepInEx
+# All of the below can be overriden with command line args
 
-# Whether or not to enable Doorstop. Valid values: TRUE or FALSE
-export DOORSTOP_ENABLE=TRUE
+# General Config Options
 
-# What .NET assembly to execute. Valid value is a path to a .NET DLL that mono can execute.
-export DOORSTOP_INVOKE_DLL_PATH="$BASEDIR/BepInEx/core/BepInEx.Preloader.dll"
+# Enable Doorstop?
+enabled="1"
 
-# If specified, Doorstop will load core libraries from this folder instead of the normal Managed folder
-# Mainly usable to unstrip assemblies in some games
-export DOORSTOP_CORLIB_OVERRIDE_PATH=""
+# Path to the assembly to load and execute
+# NOTE: The entrypoint must be of format `static void Doorstop.Entrypoint.Start()`
+target_assembly="BepInEx/core/BepInEx.Preloader.dll"
 
-# ----- DO NOT EDIT FROM THIS LINE FORWARD  ------
-# ----- (unless you know what you're doing) ------
+# If enabled, DOORSTOP_DISABLE env var value is ignored
+# USE THIS ONLY WHEN ASKED TO OR YOU KNOW WHAT THIS MEANS
+ignore_disable_switch="0"
+
+# Mono Options
+
+# Overrides default Mono DLL search path
+# Sometimes it is needed to instruct Mono to seek its assemblies from a different path
+# (e.g. mscorlib is stripped in original game)
+# This option causes Mono to seek mscorlib and core libraries from a different folder before Managed
+# Original Managed folder is added as a secondary folder in the search path
+dll_search_path_override=""
+
+# If 1, Mono debugger server will be enabled
+debug_enable="0"
+
+# When debug_enabled is 1, specifies the address to use for the debugger server
+debug_address="127.0.0.1:10000"
+
+# If 1 and debug_enabled is 1, Mono debugger server will suspend the game execution until a debugger is attached
+debug_suspend="0"
+
+################################################################################
+# Everything past this point is the actual script
 
 # Special case: program is launched via Steam
 # In that case rerun the script via their bootstrapper to ensure Steam overlay works
@@ -56,56 +77,64 @@ if [ "$2" = "SteamLaunch" ]; then
     exec "$@"
 fi
 
-if [ ! -x "$1" -a ! -x "$executable_name" ]; then
-    echo "Please open run.sh in a text editor and configure executable name."
+# Handle first param being executable name
+if [ -x "$1" ] ; then
+    executable_name="$1"
+    echo "Target executable: $1"
+    shift
+fi
+
+if [ -z "${executable_name}" ] || [ ! -x "${executable_name}" ]; then
+    echo "Please set executable_name to a valid name in a text editor or as the first command line parameter"
     exit 1
 fi
 
-doorstop_libs="$BASEDIR/doorstop_libs"
+# Use POSIX-compatible way to get the directory of the executable
+a="/$0"; a=${a%/*}; a=${a#/}; a=${a:-.}; BASEDIR=$(cd "$a" || exit; pwd -P)
+
 arch=""
 executable_path=""
-lib_postfix=""
+lib_extension=""
 
-os_type=$(uname -s)
-case $os_type in
+# Set executable path and the extension to use for the libdoorstop shared object
+os_type="$(uname -s)"
+case ${os_type} in
     Linux*)
-        executable_path="$BASEDIR/${executable_name}"
-        lib_postfix="so"
-        ;;
+        executable_path="${executable_name}"
+        # Handle relative paths
+        if ! echo "$executable_path" | grep "^/.*$"; then
+            executable_path="${BASEDIR}/${executable_path}"
+        fi
+        lib_extension="so"
+    ;;
     Darwin*)
-        executable_name=$(basename "${executable_name}" .app)
-        real_executable_name=$(defaults read "$BASEDIR/${executable_name}.app/Contents/Info" CFBundleExecutable)
-        executable_path="$BASEDIR/${executable_name}.app/Contents/MacOS/${real_executable_name}"
-        lib_postfix="dylib"
-        ;;
-    *)
-        echo "Cannot identify OS (got $(uname -s))!"
-        echo "Please create an issue at https://github.com/BepInEx/BepInEx/issues."
-        exit 1
-        ;;
-esac
+        real_executable_name="${executable_name}"
 
-# Special case: if there is an arg, use that as executable path
-# Linux: arg is path to the executable
-# MacOS: arg is path to the .app folder which we need to resolve to the exectuable
-if [ -n "$1" ]; then
-    case $os_type in
-        Linux*)
-            executable_path="$1"
-            ;;
-        Darwin*)
-            # Special case: allow to specify path to the executable within .app
-            full_path_part=$(echo "$1" | grep "\.app/Contents/MacOS")
-            if [ -z "$full_path_part" ]; then
-                executable_name=$(basename "$1" .app)
-                real_executable_name=$(defaults read "$1/Contents/Info" CFBundleExecutable)
-                executable_path="$1/Contents/MacOS/${real_executable_name}"
-            else
-                executable_path="$1"
+        # Handle relative directories
+        if ! echo "$real_executable_name" | grep "^/.*$"; then
+            real_executable_name="${BASEDIR}/${real_executable_name}"
+        fi
+
+        # If we're not even an actual executable, check .app Info for actual executable
+        if ! echo "$real_executable_name" | grep "^.*\.app/Contents/MacOS/.*"; then
+            # Add .app to the end if not given
+            if ! echo "$real_executable_name" | grep "^.*\.app$"; then
+                real_executable_name="${real_executable_name}.app"
             fi
-            ;;
-    esac
-fi
+            inner_executable_name=$(defaults read "${real_executable_name}/Contents/Info" CFBundleExecutable)
+            executable_path="${real_executable_name}/Contents/MacOS/${inner_executable_name}"
+        else
+            executable_path="${executable_name}"
+        fi
+        lib_extension="dylib"
+    ;;
+    *)
+        # alright whos running games on freebsd
+        echo "Unknown operating system ($(uname -s))"
+        echo "Make an issue at https://github.com/NeighTools/UnityDoorstop"
+        exit 1
+    ;;
+esac
 
 abs_path() {
     echo "$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
@@ -132,34 +161,105 @@ resolve_executable_path () {
     echo "${e_path}"
 }
 
+# Get absolute path of executable and show to user
 executable_path=$(resolve_executable_path "${executable_path}")
 echo "${executable_path}"
-executable_type=$(LD_PRELOAD="" file -b "${executable_path}");
 
-case $executable_type in
-    *PE32*)
-        echo "The executable is a Windows executable file. You must use Wine/Proton and BepInEx for Windows with this executable."
-        echo "Uninstall BepInEx for *nix and install BepInEx for Windows instead."
-        echo "More info: https://docs.bepinex.dev/articles/advanced/steam_interop.html#protonwine"
-        exit 1
-        ;;
+# Figure out the arch of the executable with file
+file_out="$(LD_PRELOAD="" file -b "${executable_path}")"
+case "${file_out}" in
     *64-bit*)
         arch="x64"
-        ;;
-    *32-bit*|*i386*)
+    ;;
+    *32-bit*)
         arch="x86"
-        ;;
+    ;;
     *)
-        echo "Cannot identify executable type (got ${executable_type})!"
-        echo "Please create an issue at https://github.com/BepInEx/BepInEx/issues."
+        echo "The executable \"${executable_path}\" is not compiled for x86 or x64 (might be ARM?)"
+        echo "If you think this is a mistake (or would like to encourage support for other architectures)"
+        echo "Please make an issue at https://github.com/NeighTools/UnityDoorstop"
+        echo "Got: ${file_out}"
         exit 1
-        ;;
+    ;;
 esac
 
-doorstop_libname=libdoorstop_${arch}.${lib_postfix}
-export LD_LIBRARY_PATH="${doorstop_libs}":${LD_LIBRARY_PATH}
-export LD_PRELOAD=$doorstop_libname:$LD_PRELOAD
-export DYLD_LIBRARY_PATH="${doorstop_libs}"
-export DYLD_INSERT_LIBRARIES="${doorstop_libs}/$doorstop_libname"
+# Helper to convert common boolean strings into just 0 and 1
+doorstop_bool() {
+    case "$1" in
+        TRUE|true|t|T|1|Y|y|yes)
+            echo "1"
+        ;;
+        FALSE|false|f|F|0|N|n|no)
+            echo "0"
+        ;;
+    esac
+}
 
-"${executable_path}" "$@"
+# Read from command line
+while :; do
+    case "$1" in
+        --doorstop_enabled)
+            enabled="$(doorstop_bool "$2")"
+            shift
+        ;;
+        --doorstop_target_assembly)
+            target_assembly="$2"
+            shift
+        ;;
+        --doorstop-mono-dll-search-path-override)
+            dll_search_path_override="$2"
+            shift
+        ;;
+        --doorstop-mono-debug-enabled)
+            debug_enable="$(doorstop_bool "$2")"
+            shift
+        ;;
+        --doorstop-mono-debug-suspend)
+            debug_suspend="$(doorstop_bool "$2")"
+            shift
+        ;;
+        --doorstop-mono-debug-address)
+            debug_address="$2"
+            shift
+        ;;
+        *)
+            if [ -z "$1" ]; then
+                break
+            fi
+            rest_args="$rest_args $1"
+        ;;
+    esac
+    shift
+done
+
+# Move variables to environment
+export DOORSTOP_ENABLED="$enabled"
+export DOORSTOP_TARGET_ASSEMBLY="$target_assembly"
+export DOORSTOP_IGNORE_DISABLED_ENV="$ignore_disable_switch"
+export DOORSTOP_MONO_DLL_SEARCH_PATH_OVERRIDE="$dll_search_path_override"
+export DOORSTOP_MONO_DEBUG_ENABLED="$debug_enable"
+export DOORSTOP_MONO_DEBUG_ADDRESS="$debug_address"
+export DOORSTOP_MONO_DEBUG_SUSPEND="$debug_suspend"
+export DOORSTOP_CLR_RUNTIME_CORECLR_PATH="$coreclr_path.$lib_extension"
+export DOORSTOP_CLR_CORLIB_DIR="$corlib_dir"
+
+# Final setup
+doorstop_directory="${BASEDIR}/"
+doorstop_name="libdoorstop.${lib_extension}"
+
+export LD_LIBRARY_PATH="${doorstop_directory}:${corlib_dir}:${LD_LIBRARY_PATH}"
+if [ -z "$LD_PRELOAD" ]; then
+    export LD_PRELOAD="${doorstop_name}"
+else
+    export LD_PRELOAD="${doorstop_name}:${LD_PRELOAD}"
+fi
+
+export DYLD_LIBRARY_PATH="${doorstop_directory}:${DYLD_LIBRARY_PATH}"
+if [ -z "$DYLD_INSERT_LIBRARIES" ]; then
+    export DYLD_INSERT_LIBRARIES="${doorstop_name}"
+else
+    export DYLD_INSERT_LIBRARIES="${doorstop_name}:${DYLD_INSERT_LIBRARIES}"
+fi
+
+# shellcheck disable=SC2086
+exec "$executable_path" $rest_args
