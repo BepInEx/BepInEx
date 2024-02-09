@@ -88,6 +88,14 @@ internal static partial class Il2CppInteropManager
          .AppendLine("{BepInEx} - Path to the BepInEx folder.")
          .AppendLine("{ProcessName} - Name of the current process")
          .ToString());
+    
+    private static readonly ConfigEntry<bool> PreloadIL2CPPInteropAssemblies = ConfigFile.CoreConfig.Bind(
+     "IL2CPP", "PreloadIL2CPPInteropAssemblies",
+     true,
+     new StringBuilder()
+         .AppendLine("Automatically load all interop assemblies right before loading plugins.")
+         .AppendLine("Some plugins may not work properly without this, but it may cause issues in some games.")
+         .ToString());
 
     private static readonly ManualLogSource Logger = BepInEx.Logging.Logger.CreateLogSource("InteropManager");
 
@@ -357,5 +365,33 @@ internal static partial class Il2CppInteropManager
                               .Run();
 
         sourceAssemblies.Do(x => x.Dispose());
+    }
+
+    internal static void PreloadInteropAssemblies()
+    {
+        if (!PreloadIL2CPPInteropAssemblies.Value)
+            return;
+
+        var sw = Stopwatch.StartNew();
+
+        var files = Directory.EnumerateFiles(IL2CPPInteropAssemblyPath);
+        var loaded = 0;
+        System.Threading.Tasks.Parallel.ForEach(files, file =>
+        {
+            if (!file.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)) return;
+            if (file.EndsWith("netstandard.dll", StringComparison.OrdinalIgnoreCase)) return;
+            try
+            {
+                var assemblyName = AssemblyName.GetAssemblyName(file);
+                Assembly.Load(assemblyName);
+                System.Threading.Interlocked.Increment(ref loaded);
+            }
+            catch (Exception e)
+            {
+                Logger.Log(BepInEx.Logging.LogLevel.Warning, $"Failed to preload {file} - {e}");
+            }
+        });
+
+        Logger.Log(BepInEx.Logging.LogLevel.Debug, $"Preloaded {loaded} interop assemblies in {sw.ElapsedMilliseconds}ms");
     }
 }
