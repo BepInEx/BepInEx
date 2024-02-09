@@ -374,27 +374,24 @@ internal static partial class Il2CppInteropManager
 
         var sw = Stopwatch.StartNew();
 
-        var dir = new DirectoryInfo(IL2CPPInteropAssemblyPath);
-        var files = dir.GetFiles();
+        var files = Directory.EnumerateFiles(IL2CPPInteropAssemblyPath);
+        var loaded = 0;
         System.Threading.Tasks.Parallel.ForEach(files, file =>
         {
-            if (file.Name.Equals("netstandard.dll", StringComparison.OrdinalIgnoreCase))
-                return;
-
-            if (file.Extension.Equals(".dll", StringComparison.OrdinalIgnoreCase))
+            if (!file.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)) return;
+            if (file.EndsWith("netstandard.dll", StringComparison.OrdinalIgnoreCase)) return;
+            try
             {
-                try
-                {
-                    var assemblyName = AssemblyName.GetAssemblyName(file.FullName);
-                    Assembly.Load(assemblyName);
-                }
-                catch (Exception e)
-                {
-                    Logger.Log(BepInEx.Logging.LogLevel.Warning, $"Failed to preload {file.Name} - {e}");
-                }
+                var assemblyName = AssemblyName.GetAssemblyName(file);
+                Assembly.Load(assemblyName);
+                System.Threading.Interlocked.Increment(ref loaded);
+            }
+            catch (Exception e)
+            {
+                Logger.Log(BepInEx.Logging.LogLevel.Warning, $"Failed to preload {file} - {e}");
             }
         });
 
-        Logger.Log(BepInEx.Logging.LogLevel.Debug, $"Preloaded {files.Length} assemblies in {sw.ElapsedMilliseconds}ms");
+        Logger.Log(BepInEx.Logging.LogLevel.Debug, $"Preloaded {loaded} interop assemblies in {sw.ElapsedMilliseconds}ms");
     }
 }
