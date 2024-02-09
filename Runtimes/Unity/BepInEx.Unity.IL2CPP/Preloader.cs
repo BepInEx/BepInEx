@@ -21,6 +21,13 @@ public static class Preloader
     // TODO: This is not needed, maybe remove? (Instance is saved in IL2CPPChainloader itself)
     private static IL2CPPChainloader Chainloader { get; set; }
 
+    /// <summary>
+    ///     Path to a folder containing all of the IL2CPP interop assemblies for the current session.
+    ///     Interop assemblies are used to provide a bridge between managed plugins and C++ compiled game code.
+    ///     They are loaded automatically when referenced by managed code but not when passing objects between managed and unmanaged code.
+    /// </summary>
+    public static string GetInteropAssemblyPath() => Il2CppInteropManager.IL2CPPInteropAssemblyPath;
+
     public static void Run()
     {
         try
