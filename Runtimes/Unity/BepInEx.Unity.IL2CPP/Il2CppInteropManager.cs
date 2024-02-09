@@ -88,6 +88,14 @@ internal static partial class Il2CppInteropManager
          .AppendLine("{BepInEx} - Path to the BepInEx folder.")
          .AppendLine("{ProcessName} - Name of the current process")
          .ToString());
+    
+    private static readonly ConfigEntry<bool> PreloadIL2CPPInteropAssemblies = ConfigFile.CoreConfig.Bind(
+     "IL2CPP", "PreloadIL2CPPInteropAssemblies",
+     true,
+     new StringBuilder()
+         .AppendLine("Automatically load all interop assemblies right before loading plugins.")
+         .AppendLine("Some plugins may not work properly without this, but it may cause issues in some games.")
+         .ToString());
 
     private static readonly ManualLogSource Logger = BepInEx.Logging.Logger.CreateLogSource("InteropManager");
 
@@ -357,5 +365,36 @@ internal static partial class Il2CppInteropManager
                               .Run();
 
         sourceAssemblies.Do(x => x.Dispose());
+    }
+
+    internal static void PreloadInteropAssemblies()
+    {
+        if (!PreloadIL2CPPInteropAssemblies.Value)
+            return;
+
+        var sw = Stopwatch.StartNew();
+
+        var dir = new DirectoryInfo(IL2CPPInteropAssemblyPath);
+        var files = dir.GetFiles();
+        System.Threading.Tasks.Parallel.ForEach(files, file =>
+        {
+            if (file.Name.Equals("netstandard.dll", StringComparison.OrdinalIgnoreCase))
+                return;
+
+            if (file.Extension.Equals(".dll", StringComparison.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    var assemblyName = AssemblyName.GetAssemblyName(file.FullName);
+                    Assembly.Load(assemblyName);
+                }
+                catch (Exception e)
+                {
+                    Logger.Log(BepInEx.Logging.LogLevel.Warning, $"Failed to preload {file.Name} - {e}");
+                }
+            }
+        });
+
+        Logger.Log(BepInEx.Logging.LogLevel.Debug, $"Preloaded {files.Length} assemblies in {sw.ElapsedMilliseconds}ms");
     }
 }
