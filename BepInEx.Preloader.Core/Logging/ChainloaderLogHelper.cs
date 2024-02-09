@@ -38,6 +38,10 @@ public static class ChainloaderLogHelper
         var versionMini = new SemanticVersioning.Version(bepinVersion.Major, bepinVersion.Minor, bepinVersion.Patch,
                                                          bepinVersion.PreRelease);
         var consoleTitle = $"BepInEx {versionMini} - {Paths.ProcessName}";
+        if (Paths.UbisoftPlusDetected())
+        {
+            consoleTitle = $"BepInEx {versionMini} - {Paths.ProcessName} (Ubisoft+)";  
+        }
         log.Log(LogLevel.Message, consoleTitle);
 
         if (ConsoleManager.ConsoleActive)

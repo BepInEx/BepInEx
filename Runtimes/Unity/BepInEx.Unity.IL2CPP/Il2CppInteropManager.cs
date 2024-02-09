@@ -95,9 +95,24 @@ internal static partial class Il2CppInteropManager
 
     private static bool initialized;
 
-    public static string GameAssemblyPath => Environment.GetEnvironmentVariable("BEPINEX_GAME_ASSEMBLY_PATH") ??
-                                             Path.Combine(Paths.GameRootPath,
-                                                          "GameAssembly." + PlatformHelper.LibrarySuffix);
+    public static string GameAssemblyPath
+    {
+        get
+        {
+            var s = Environment.GetEnvironmentVariable("BEPINEX_GAME_ASSEMBLY_PATH");
+            if (s != null)
+            {
+                return s;
+            }
+            if (Paths.UbisoftPlusDetected())
+            {
+                return Path.Combine(Paths.GameRootPath,
+                                    "GameAssembly_plus." + PlatformHelper.LibrarySuffix);
+            }
+            return Path.Combine(Paths.GameRootPath,
+                                "GameAssembly." + PlatformHelper.LibrarySuffix);
+        }
+    }
 
     private static string HashPath => Path.Combine(IL2CPPInteropAssemblyPath, "assembly-hash.txt");
 

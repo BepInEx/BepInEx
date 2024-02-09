@@ -58,10 +58,16 @@ public class IL2CPPChainloader : BaseChainloader<BasePlugin>
         base.Initialize(gameExePath);
         Instance = this;
 
-        if (!NativeLibrary.TryLoad("GameAssembly", typeof(IL2CPPChainloader).Assembly, null, out var il2CppHandle))
+        var gameAssembly = "GameAssembly";
+        if (Paths.UbisoftPlusDetected())
+        {
+            gameAssembly = "GameAssembly_plus";
+        }
+
+        if (!NativeLibrary.TryLoad(gameAssembly, typeof(IL2CPPChainloader).Assembly, null, out var il2CppHandle))
         {
             Logger.Log(LogLevel.Fatal,
-                       "Could not locate Il2Cpp game assembly (GameAssembly.dll, UserAssembly.dll or libil2cpp.so). The game might be obfuscated or use a yet unsupported build of Unity.");
+                       $"Could not locate Il2Cpp game assembly ({gameAssembly}.dll, UserAssembly.dll or libil2cpp.so). The game might be obfuscated or use a yet unsupported build of Unity.");
             return;
         }
 
@@ -94,6 +100,16 @@ public class IL2CPPChainloader : BaseChainloader<BasePlugin>
                 unhook = true;
 
                 Instance.Execute();
+            }
+            catch (TypeInitializationException ex)
+            {
+                if (ex.TypeName.Equals("Il2CppInterop.Runtime.Injection.InjectorHelpers",
+                                       StringComparison.OrdinalIgnoreCase))
+                {
+                    Logger.Log(LogLevel.Fatal,
+                               "Unable to execute IL2CPP chainloader due to an injection issue? This can usually be overcome by disabling UnityLogListening in BepInEx config file.");
+                }
+                Logger.Log(LogLevel.Error, ex);
             }
             catch (Exception ex)
             {
