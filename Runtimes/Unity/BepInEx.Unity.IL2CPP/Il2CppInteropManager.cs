@@ -87,6 +87,25 @@ internal static partial class Il2CppInteropManager
          .AppendLine("Supports the following placeholders:")
          .AppendLine("{BepInEx} - Path to the BepInEx folder.")
          .AppendLine("{ProcessName} - Name of the current process")
+         .AppendLine("{AppData} - Path to the user AppData folder")
+         .ToString());
+
+    private static readonly ConfigEntry<bool> UseRuntimeAssemblies = ConfigFile.CoreConfig.Bind(
+     "IL2CPP", "UseRuntimeAssemblies",
+     true,
+     new StringBuilder()
+         .AppendLine("If enabled, BepInEx will save runtime binaries from process memory into BepInEx/runtime-bins.")
+         .AppendLine("IL2CPPDumper will then use them to generate dummy assemblies for IL2CPPInterop.")
+         .AppendLine("Use this if GameAssembly.dll is packed or global-metadata.dat is embedded.")
+         .ToString());
+
+    private static readonly ConfigEntry<int> ObfuscatedMetadataHeaderOffset = ConfigFile.CoreConfig.Bind(
+     "IL2CPP", "ObfuscatedMetadataHeaderOffset",
+     8,
+     new StringBuilder()
+         .AppendLine("The offset of the standard metadata header to skip when searching embedded global-metadata.dat.")
+         .AppendLine("Use this if global-metadata.dat is embedded and beginning of the header is obfuscated.")
+         .AppendLine("IL2CPPInterop will search for global-metadata.dat using standard metadata header.")
          .ToString());
 
     private static readonly ManualLogSource Logger = BepInEx.Logging.Logger.CreateLogSource("InteropManager");
@@ -94,6 +113,8 @@ internal static partial class Il2CppInteropManager
     private static string il2cppInteropBasePath;
 
     private static bool initialized;
+
+    private static string ApplicationDataPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "BepInEx", Paths.ProcessName);
 
     public static string GameAssemblyPath => Environment.GetEnvironmentVariable("BEPINEX_GAME_ASSEMBLY_PATH") ??
                                              Path.Combine(Paths.GameRootPath,
@@ -107,7 +128,8 @@ internal static partial class Il2CppInteropManager
                 return il2cppInteropBasePath;
             var path = Utility.GetCommandLineArgValue("--unhollowed-path") ?? IL2CPPInteropAssembliesPath.Value;
             il2cppInteropBasePath = path.Replace("{BepInEx}", Paths.BepInExRootPath)
-                                     .Replace("{ProcessName}", Paths.ProcessName);
+                                     .Replace("{ProcessName}", Paths.ProcessName)
+                                     .Replace("{AppData}", ApplicationDataPath);
             return il2cppInteropBasePath;
         }
     }
@@ -115,6 +137,8 @@ internal static partial class Il2CppInteropManager
     private static string UnityBaseLibsDirectory => Path.Combine(IL2CPPBasePath, "unity-libs");
 
     internal static string IL2CPPInteropAssemblyPath => Path.Combine(IL2CPPBasePath, "interop");
+
+    internal static string IL2CPPRuntimeBinariesPath => Path.Combine(IL2CPPBasePath, "runtime-bins");
 
     private static ILoggerFactory LoggerFactory { get; } = MSLoggerFactory.Create(b =>
     {
