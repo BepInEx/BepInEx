@@ -87,7 +87,7 @@ internal static partial class Il2CppInteropManager
          .AppendLine("Supports the following placeholders:")
          .AppendLine("{BepInEx} - Path to the BepInEx folder.")
          .AppendLine("{ProcessName} - Name of the current process")
-         .AppendLine("{AppData} - Path to the user AppData folder")
+         .AppendLine("{ApplicationData} - Path to the user AppData/Roaming folder")
          .ToString());
 
     private static readonly ConfigEntry<bool> UseRuntimeAssemblies = ConfigFile.CoreConfig.Bind(
@@ -99,13 +99,31 @@ internal static partial class Il2CppInteropManager
          .AppendLine("Use this if GameAssembly.dll is packed or global-metadata.dat is embedded.")
          .ToString());
 
+    private static readonly ConfigEntry<string> MetadataSignatureToScan = ConfigFile.CoreConfig.Bind(
+     "IL2CPP", "MetadataSignatureToScan",
+     "AC0E0000000000000000000001000000000000000400000001000000040000000500000006000000090000000D0000000F000000040000001C00000005000000200000000500000025000000070000002A0000000A00000031000000070000003B00000005000000420000000500000047000000050000004C0000000F0000005100000005000000600000000700000065000000090000006C0000000600000075000000030000007B0000000D0000007E000000030000008B0000001A0000008E00000001000000A800000004000000A90000000D000000AD00000005000000BA00000007000000BF0000000F000000C600000001000000D500000001000000",
+     new StringBuilder()
+         .AppendLine("The hex string of the metadata signature to scan when searching embedded global-metadata.dat.")
+         .AppendLine("Use this if global-metadata.dat is embedded and beginning of the header is obfuscated.")
+         .AppendLine("IL2CPPInterop will search for global-metadata.dat using this signature.")
+         .ToString());
+
     private static readonly ConfigEntry<int> ObfuscatedMetadataHeaderOffset = ConfigFile.CoreConfig.Bind(
      "IL2CPP", "ObfuscatedMetadataHeaderOffset",
-     8,
+     252,
      new StringBuilder()
          .AppendLine("The offset of the standard metadata header to skip when searching embedded global-metadata.dat.")
          .AppendLine("Use this if global-metadata.dat is embedded and beginning of the header is obfuscated.")
-         .AppendLine("IL2CPPInterop will search for global-metadata.dat using standard metadata header.")
+         .AppendLine("IL2CPPInterop will search for global-metadata.dat using this offset.")
+         .ToString());
+
+    private static readonly ConfigEntry<string> MagicToFix = ConfigFile.CoreConfig.Bind(
+     "IL2CPP", "MagicToFix",
+     string.Empty,
+     new StringBuilder()
+         .AppendLine("The magic bytes to fix the header of global-metadta.dat so il2cppdumper can use to determine version.")
+         .AppendLine("Use this if global-metadata.dat is embedded and beginning of the header is obfuscated.")
+         .AppendLine("IL2CPPInterop will fix global-metadata.dat using this magic.")
          .ToString());
 
     private static readonly ManualLogSource Logger = BepInEx.Logging.Logger.CreateLogSource("InteropManager");
@@ -122,14 +140,16 @@ internal static partial class Il2CppInteropManager
 
     private static string HashPath => Path.Combine(IL2CPPInteropAssemblyPath, "assembly-hash.txt");
 
-    private static string IL2CPPBasePath {
-        get {
+    private static string IL2CPPBasePath
+    {
+        get
+        {
             if (il2cppInteropBasePath != null)
                 return il2cppInteropBasePath;
             var path = Utility.GetCommandLineArgValue("--unhollowed-path") ?? IL2CPPInteropAssembliesPath.Value;
             il2cppInteropBasePath = path.Replace("{BepInEx}", Paths.BepInExRootPath)
                                      .Replace("{ProcessName}", Paths.ProcessName)
-                                     .Replace("{AppData}", ApplicationDataPath);
+                                     .Replace("{ApplicationData}", ApplicationDataPath);
             return il2cppInteropBasePath;
         }
     }
@@ -236,10 +256,10 @@ internal static partial class Il2CppInteropManager
 
         var unityVersion = UnityInfo.Version;
         Il2CppInteropRuntime.Create(new RuntimeConfiguration
-                            {
-                                UnityVersion = new Version(unityVersion.Major, unityVersion.Minor, unityVersion.Build),
-                                DetourProvider = new Il2CppInteropDetourProvider()
-                            })
+        {
+            UnityVersion = new Version(unityVersion.Major, unityVersion.Minor, unityVersion.Build),
+            DetourProvider = new Il2CppInteropDetourProvider()
+        })
                             .AddLogger(interopLogger)
                             .AddHarmonySupport()
                             .Start();
@@ -257,12 +277,11 @@ internal static partial class Il2CppInteropManager
 
             AppDomain.CurrentDomain.AddCecilPlatformAssemblies(UnityBaseLibsDirectory);
             DownloadUnityAssemblies();
-            var asmResolverAssemblies = RunCpp2Il();
-            var cecilAssemblies = new AsmToCecilConverter(asmResolverAssemblies).ConvertAll();
+            var cecilAssemblies = UseRuntimeAssemblies.Value ? RunIl2CppDumperWithRuntimeBinaries() : new AsmToCecilConverter(RunCpp2Il()).ConvertAll();
 
             if (DumpDummyAssemblies.Value)
             {
-                var dummyPath = Path.Combine(Paths.BepInExRootPath, "dummy");
+                var dummyPath = Path.Combine(IL2CPPBasePath, "dummy");
                 Directory.CreateDirectory(dummyPath);
                 foreach (var assemblyDefinition in cecilAssemblies)
                     assemblyDefinition.Write(Path.Combine(dummyPath, $"{assemblyDefinition.Name.Name}.dll"));
@@ -347,6 +366,59 @@ internal static partial class Il2CppInteropManager
 
         stopwatch.Stop();
         Logger.LogInfo($"Cpp2IL finished in {stopwatch.Elapsed}");
+
+        return assemblies;
+    }
+
+    private static List<AssemblyDefinition> RunIl2CppDumperWithRuntimeBinaries()
+    {
+        var metadataPath = Path.Combine(Paths.GameRootPath,
+                        $"{Paths.ProcessName}_Data",
+                        "il2cpp_data",
+                        "Metadata",
+                        "global-metadata.dat");
+
+        static void WriteBytesToFile(string filePath, byte[] bytes)
+        {
+            using var stream = new FileStream(filePath, FileMode.Create, FileAccess.Write);
+            stream.Write(bytes, 0, bytes.Length);
+        }
+
+        static void WriteBinariesToFile(byte[] il2cppBytes, byte[] metadataBytes)
+        {
+            Directory.CreateDirectory(IL2CPPRuntimeBinariesPath);
+            Directory.GetFiles(IL2CPPRuntimeBinariesPath).Do(File.Delete);
+
+            WriteBytesToFile(Path.Combine(IL2CPPRuntimeBinariesPath, "GameAssembly.dll"), il2cppBytes);
+            WriteBytesToFile(Path.Combine(IL2CPPRuntimeBinariesPath, "global-metadata.dat"), metadataBytes);
+        }
+
+        var stopwatch = new Stopwatch();
+        stopwatch.Start();
+
+        Logger.LogMessage("Reading process memory to generate runtime binaries");
+
+        var logger = LoggerFactory.CreateLogger("Il2CppInteropGen");
+
+        Il2CppInterop.Runtime.MemoryUtils.RuntimeModuleDump(logger, out var il2cppBytes, out var metadataBytes, Convert.FromHexString(MetadataSignatureToScan.Value), Convert.FromHexString(MagicToFix.Value), ObfuscatedMetadataHeaderOffset.Value);
+
+        // we write to disk once so we can still inspect the byproduct if validation fails later on.
+        WriteBinariesToFile(il2cppBytes, metadataBytes);
+
+        Logger.LogMessage("Validating runtime binaries");
+
+        Il2CppInterop.Runtime.MemoryUtils.ValidateMetadata(logger, metadataPath, il2cppBytes, ref metadataBytes);
+
+        // this time the product will be final
+        WriteBinariesToFile(il2cppBytes, metadataBytes);
+
+        Logger.LogMessage("Running Il2CppDumper with runtime binaries to generate dummy assemblies");
+
+        Il2CppDumper.ExtensionMethods.Init(il2cppBytes, metadataBytes, out var metadata, out var il2Cpp);
+        Il2CppDumper.ExtensionMethods.GenerateCecilAssemblies(metadata, il2Cpp, out var assemblies);
+
+        stopwatch.Stop();
+        Logger.LogInfo($"Il2CppDumper finished in {stopwatch.Elapsed}");
 
         return assemblies;
     }
