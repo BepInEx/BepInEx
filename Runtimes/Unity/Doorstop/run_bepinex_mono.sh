@@ -36,7 +36,8 @@ ignore_disable_switch="0"
 # (e.g. mscorlib is stripped in original game)
 # This option causes Mono to seek mscorlib and core libraries from a different folder before Managed
 # Original Managed folder is added as a secondary folder in the search path
-dll_search_path_override=""
+# To specify multiple paths, separate them with colons (:)
+dll_search_path_override="BepInEx/core"
 
 # If 1, Mono debugger server will be enabled
 debug_enable="0"
