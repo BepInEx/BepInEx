@@ -57,7 +57,7 @@ A more comprehensive comparison list of features and compatibility is available 
 
 ## Used libraries
 
-- [NeighTools/UnityDoorstop](https://github.com/NeighTools/UnityDoorstop) - v4.0.0
+- [NeighTools/UnityDoorstop](https://github.com/NeighTools/UnityDoorstop) - v4.2.0
 - [BepInEx/HarmonyX](https://github.com/BepInEx/HarmonyX) - v2.10.1
 - [0x0ade/MonoMod](https://github.com/0x0ade/MonoMod) - v22.5.1.1
 - [jbevain/cecil](https://github.com/jbevain/cecil) - v0.10.4
