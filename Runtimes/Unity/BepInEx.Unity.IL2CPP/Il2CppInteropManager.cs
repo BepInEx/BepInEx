@@ -316,7 +316,7 @@ internal static partial class Il2CppInteropManager
             cpp2IlProcessingLayer.Process(Cpp2IlApi.CurrentAppContext);
         }
 
-        var assemblies = new AsmResolverDummyDllOutputFormat().BuildAssemblies(Cpp2IlApi.CurrentAppContext);
+        var assemblies = new AsmResolverDllOutputFormatDefault().BuildAssemblies(Cpp2IlApi.CurrentAppContext);
 
         LibCpp2IlMain.Reset();
         Cpp2IlApi.CurrentAppContext = null;
