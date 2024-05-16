@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
-using AssetRipper.VersionUtilities;
+using AssetRipper.Primitives;
 using MonoMod.Utils;
 
 [assembly: InternalsVisibleTo("BepInEx.Unity.Mono.Preloader")]

@@ -6,7 +6,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="AssetRipper.VersionUtilities" Version="1.2.1"/>
+        <PackageReference Include="AssetRipper.Primitives" Version="2.1.1"/>
         <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all"/>
         <PackageReference Include="MonoMod.Utils" Version="22.5.1.1"/>
     </ItemGroup>
