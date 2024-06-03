@@ -1,8 +1,8 @@
-#addin nuget:?package=Cake.FileHelpers&version=4.0.1
-#addin nuget:?package=SharpZipLib&version=1.3.1
-#addin nuget:?package=Cake.Compression&version=0.2.6
-#addin nuget:?package=Cake.Json&version=6.0.1
-#addin nuget:?package=Newtonsoft.Json&version=13.0.1
+#addin nuget:?package=Cake.FileHelpers&version=5.0.0
+#addin nuget:?package=SharpZipLib&version=1.4.2
+#addin nuget:?package=Cake.Compression&version=0.3.0
+#addin nuget:?package=Cake.Json&version=7.0.1
+#addin nuget:?package=Newtonsoft.Json&version=13.0.3
 
 const string DOORSTOP_VER = "4.3.0";
 
@@ -45,7 +45,7 @@ Task("PullDependencies")
     StartProcess("git", "submodule update --init --recursive");
 
     Information("Restoring NuGet packages");
-    NuGetRestore("./BepInEx.sln");
+    DotNetRestore("./BepInEx.sln");
 });
 
 Task("Build")
@@ -55,26 +55,35 @@ Task("Build")
 {
     var bepinExProperties = Directory("./BepInEx/Properties");
 
+    buildVersion = FindRegexMatchGroupInFile(File("Directory.Build.props"), "<BepInExVersionPrefix>(.+?)<\\/BepInExVersionPrefix>", 1, System.Text.RegularExpressions.RegexOptions.None).Value;
+
+    var settings = new DotNetPublishSettings
+    {
+        Configuration = "Release",
+    };
+
     if(isBleedingEdge)
     {
+        settings.MSBuildSettings = new DotNetMSBuildSettings().WithProperty("BepInExVersionSuffix", "be." + buildId);
+
+        buildVersion = buildVersion + "-be." + buildId;
+
         CopyFile(bepinExProperties + File("AssemblyInfo.cs"), bepinExProperties + File("AssemblyInfo.cs.bak"));
-        ReplaceRegexInFiles(bepinExProperties + File("AssemblyInfo.cs"), "([0-9]+\\.[0-9]+\\.[0-9]+\\.)[0-9]+", "${1}" + buildId);
 
         FileAppendText(bepinExProperties + File("AssemblyInfo.cs"), 
-            TransformText("\n[assembly: BuildInfo(\"BLEEDING EDGE Build #<%buildNumber%> from <%shortCommit%> at <%branchName%>\")]\n")
+            TransformText("\n[assembly: BepInEx.BuildInfo(\"BLEEDING EDGE Build #<%buildNumber%> from <%shortCommit%> at <%branchName%>\")]\n")
                 .WithToken("buildNumber", buildId)
                 .WithToken("shortCommit", currentCommit)
                 .WithToken("branchName", currentBranch)
                 .ToString());
     }
 
-    buildVersion = FindRegexMatchInFile(bepinExProperties + File("AssemblyInfo.cs"), "[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+", System.Text.RegularExpressions.RegexOptions.None);
 
-    var buildSettings = new MSBuildSettings {
-        Configuration = "Release",
-        Restore = true
-    };
-    MSBuild("./BepInEx.sln", buildSettings);
+    settings.OutputDirectory = "./bin/";
+    DotNetPublish("./BepInEx.Preloader/BepInEx.Preloader.csproj", settings);
+
+    settings.OutputDirectory = "./bin/patcher/";
+    DotNetPublish("./BepInEx.Patcher/BepInEx.Patcher.csproj", settings);
 })
 .Finally(() => 
 {
