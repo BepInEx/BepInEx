@@ -2,8 +2,7 @@
 
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Target Name="ILRepacker" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
-
-    <Copy SourceFiles="$(OutputPath)\$(AssemblyName).exe" DestinationFiles="$(OutputPath)\$(AssemblyName)1.exe"/>
+    <Move SourceFiles="$(OutputPath)\$(AssemblyName).exe" DestinationFiles="$(OutputPath)\$(AssemblyName)1.exe"/>
 
     <ItemGroup>
       <InputAssemblies Include="$(OutputPath)\$(AssemblyName)1.exe" />
@@ -11,16 +10,23 @@
     </ItemGroup>
 
     <ILRepack
-      Parallel="false"
+      Parallel="true"
       Internalize="true"
       DebugInfo="true"
       InputAssemblies="@(InputAssemblies)"
       TargetKind="Exe"
-      TargetPlatformVersion="v2"
       OutputFile="$(OutputPath)\$(AssemblyName).exe" />
 
-    <Delete Files="@(InputAssemblies)" />
-    <Delete Files="$(OutputPath)\BepInEx.Bootstrap.dll" />
+    <ItemGroup>
+      <FilesToDelete Include="@(InputAssemblies)" />
+      <FilesToDelete Include="$(OutputPath)\Mono.Cecil*.dll" />
+    </ItemGroup>
+    <Delete Files="@(FilesToDelete)" />
+  </Target>
 
+  <Target Name="RemoveMonoCecilFromPublish" AfterTargets="ComputeResolvedFilesToPublishList" Condition="'$(Configuration)' == 'Release'">
+    <ItemGroup>
+      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish->WithMetadataValue('NuGetPackageId', 'Mono.Cecil'))"/>
+    </ItemGroup>
   </Target>
 </Project>
