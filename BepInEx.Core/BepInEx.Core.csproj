@@ -5,6 +5,7 @@
         <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
         <!-- Force nuget assembly output on netstandard2.0 -->
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+        <RootNamespace>BepInEx</RootNamespace>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="All"/>
