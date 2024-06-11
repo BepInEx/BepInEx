@@ -25,6 +25,9 @@ enabled="1"
 # NOTE: The entrypoint must be of format `static void Doorstop.Entrypoint.Start()`
 target_assembly="BepInEx/core/BepInEx.Preloader.dll"
 
+# Overrides the default boot.config file path
+boot_config_override=
+
 # If enabled, DOORSTOP_DISABLE env var value is ignored
 # USE THIS ONLY WHEN ASKED TO OR YOU KNOW WHAT THIS MEANS
 ignore_disable_switch="0"
@@ -205,6 +208,10 @@ while :; do
         ;;
         --doorstop_target_assembly)
             target_assembly="$2"
+            shift
+        ;;
+        --doorstop-boot-config-override)
+            boot_config_override="$2"
             shift
         ;;
         --doorstop-mono-dll-search-path-override)
