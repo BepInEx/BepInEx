@@ -1,3 +1,4 @@
 [submodule "submodules/BepInEx.Harmony"]
 	path = submodules/BepInEx.Harmony
-	url = https://github.com/BepInEx/BepInEx.Harmony
+	url = https://github.com/aldelaro5/BepInEx.Harmony
+	branch = harmonyx-2.13
