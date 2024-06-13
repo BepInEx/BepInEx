@@ -139,7 +139,7 @@ namespace BepInEx.Bootstrap
 					consoleLogListener.WriteUnityLogs = false;
 			}
 
-			if (PlatformHelper.Is(Platform.Unix))
+			if (PlatformDetection.OS.Is(OSKind.Posix))
 			{
 				Logger.LogInfo($"Detected Unity version: v{UnityVersion}");
 			}
