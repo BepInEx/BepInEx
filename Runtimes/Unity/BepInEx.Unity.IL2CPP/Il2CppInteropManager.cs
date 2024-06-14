@@ -8,6 +8,8 @@ using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using BepInEx.Unity.Common;
@@ -376,7 +378,7 @@ internal static partial class Il2CppInteropManager
 
         var files = Directory.EnumerateFiles(IL2CPPInteropAssemblyPath);
         var loaded = 0;
-        System.Threading.Tasks.Parallel.ForEach(files, file =>
+        Parallel.ForEach(files, file =>
         {
             if (!file.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)) return;
             if (file.EndsWith("netstandard.dll", StringComparison.OrdinalIgnoreCase)) return;
@@ -384,7 +386,7 @@ internal static partial class Il2CppInteropManager
             {
                 var assemblyName = AssemblyName.GetAssemblyName(file);
                 Assembly.Load(assemblyName);
-                System.Threading.Interlocked.Increment(ref loaded);
+                Interlocked.Increment(ref loaded);
             }
             catch (Exception e)
             {
