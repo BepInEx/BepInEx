@@ -384,8 +384,7 @@ internal static partial class Il2CppInteropManager
             if (file.EndsWith("netstandard.dll", StringComparison.OrdinalIgnoreCase)) return;
             try
             {
-                var assemblyName = AssemblyName.GetAssemblyName(file);
-                Assembly.Load(assemblyName);
+                Assembly.LoadFrom(file);
                 Interlocked.Increment(ref loaded);
             }
             catch (Exception e)
