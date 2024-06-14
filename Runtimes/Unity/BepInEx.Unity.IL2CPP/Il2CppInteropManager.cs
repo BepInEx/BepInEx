@@ -388,10 +388,10 @@ internal static partial class Il2CppInteropManager
             }
             catch (Exception e)
             {
-                Logger.Log(BepInEx.Logging.LogLevel.Warning, $"Failed to preload {file} - {e}");
+                Logger.LogWarning($"Failed to preload {file} - {e}");
             }
         });
 
-        Logger.Log(BepInEx.Logging.LogLevel.Debug, $"Preloaded {loaded} interop assemblies in {sw.ElapsedMilliseconds}ms");
+        Logger.LogDebug($"Preloaded {loaded} interop assemblies in {sw.ElapsedMilliseconds}ms");
     }
 }
