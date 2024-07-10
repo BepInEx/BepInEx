@@ -47,8 +47,6 @@ public static class ChainloaderLogHelper
             log.Log(LogLevel.Message, $"Built from commit {bepinVersion.Build}");
 
         Logger.Log(LogLevel.Info, $"System platform: {GetPlatformString()}");
-        Logger.Log(LogLevel.Info,
-                   $"Process bitness: {(PlatformUtils.ProcessIs64Bit ? "64-bit (x64)" : "32-bit (x86)")}");
     }
 
     private static string GetPlatformString()
@@ -71,7 +69,7 @@ public static class ChainloaderLogHelper
 
         // Not sure what it does on Linux. I think it returns the kernel version there too, but we already get the utsname structure from SetPlatform() regardless
 
-        if (PlatformHelper.Is(Platform.Windows))
+        if (PlatformDetection.OS.Is(OSKind.Windows))
         {
             osVersion = PlatformUtils.WindowsVersion;
 
@@ -94,10 +92,10 @@ public static class ChainloaderLogHelper
             else if (osVersion.Major <= 5)
                 builder.Append("XP");
 
-            if (PlatformHelper.Is(Platform.Wine))
+            if (PlatformDetection.OS.Is(OSKind.Wine))
                 builder.AppendFormat(" (Wine {0})", PlatformUtils.WineVersion);
         }
-        else if (PlatformHelper.Is(Platform.MacOS))
+        else if (PlatformDetection.OS.Is(OSKind.OSX))
         {
             builder.Append("macOS ");
 
@@ -113,7 +111,7 @@ public static class ChainloaderLogHelper
                 builder.AppendFormat("Unknown (kernel {0})", osVersion);
             }
         }
-        else if (PlatformHelper.Is(Platform.Linux))
+        else if (PlatformDetection.OS.Is(OSKind.Linux))
         {
             builder.Append("Linux");
 
@@ -122,21 +120,13 @@ public static class ChainloaderLogHelper
                 builder.AppendFormat(" (kernel {0})", PlatformUtils.LinuxKernelVersion);
             }
         }
-
-        builder.Append(PlatformHelper.Is(Platform.Bits64) ? " 64-bit" : " 32-bit");
-
-        if (PlatformHelper.Is(Platform.Android))
+        
+        if (PlatformDetection.OS.Is(OSKind.Android))
         {
             builder.Append(" Android");
         }
 
-        if (PlatformHelper.Is(Platform.ARM))
-        {
-            builder.Append(" ARM");
-
-            if (PlatformHelper.Is(Platform.Bits64))
-                builder.Append("64");
-        }
+        builder.Append($" {PlatformDetection.Architecture}");
 
         return builder.ToString();
     }

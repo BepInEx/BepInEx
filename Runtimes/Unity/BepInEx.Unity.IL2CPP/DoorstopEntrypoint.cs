@@ -44,7 +44,7 @@ internal static class Entrypoint
 
             try
             {
-                if (PlatformHelper.Is(Platform.Windows))
+                if (PlatformDetection.OS.Is(OSKind.Windows))
                 {
                     MessageBox.Show("Failed to start BepInEx", "BepInEx");
                 }

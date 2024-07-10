@@ -5,6 +5,7 @@ using System.Reflection;
 using BepInEx.ConsoleUtil;
 using HarmonyLib;
 using Microsoft.Win32.SafeHandles;
+using MonoMod.Core.Platforms;
 using MonoMod.Utils;
 using UnityInjector.ConsoleUtil;
 
@@ -143,7 +144,7 @@ internal class WindowsConsoleDriver : IConsoleDriver
 
     private static Stream OpenFileStream(IntPtr handle)
     {
-        if (ReflectionHelper.IsCore)
+        if (PlatformTriple.Current.Runtime.Target == RuntimeKind.CoreCLR)
         {
             var windowsConsoleStreamType = Type.GetType("System.ConsolePal+WindowsConsoleStream, System.Console", true);
             var constructor = AccessTools.Constructor(windowsConsoleStreamType,

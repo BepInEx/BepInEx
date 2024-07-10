@@ -12,7 +12,7 @@ internal static class MessageBox
 
     public static void Show(string text, string caption)
     {
-        if (!PlatformHelper.Is(Platform.Windows)) throw new PlatformNotSupportedException();
+        if (!PlatformDetection.OS.Is(OSKind.Windows)) throw new PlatformNotSupportedException();
         if (MessageBoxA(IntPtr.Zero, text, caption, 0) == 0)
             throw new Win32Exception();
     }

@@ -164,7 +164,7 @@ namespace BepInEx.NET.CoreCLR
 
         internal static void OuterMain(string filename)
         {
-            PlatformUtils.SetPlatform();
+            PlatformUtils.SetPlatformVersion();
 
             Paths.SetExecutablePath(filename);
 

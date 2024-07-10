@@ -29,7 +29,7 @@ internal static class RedirectStdErrFix
 
     public static void Apply()
     {
-        if (PlatformHelper.Is(Platform.Windows))
+        if (PlatformDetection.OS.Is(OSKind.Windows))
         {
             var errorFile = CreateFile(Path.Combine(Paths.BepInExRootPath, "ErrorLog.log"), GENERIC_WRITE,
                                        FILE_SHARE_READ,

@@ -80,7 +80,7 @@ internal static class NetPreloaderRunner
 
     internal static void OuterMain(string[] args, string filename)
     {
-        PlatformUtils.SetPlatform();
+        PlatformUtils.SetPlatformVersion();
 
         Paths.SetExecutablePath(filename);
 
