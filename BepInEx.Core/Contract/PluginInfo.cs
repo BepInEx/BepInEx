@@ -16,6 +16,11 @@ public class PluginInfo : ICacheable
     ///     General metadata about a plugin.
     /// </summary>
     public BepInPlugin Metadata { get; internal set; }
+    
+    /// <summary>
+    ///     The loader used to load this plugin, null if it is a provider
+    /// </summary>
+    public IPluginLoader Loader { get; internal set; }
 
     /// <summary>
     ///     Collection of <see cref="BepInProcess" /> attributes that describe what processes the plugin can run on.
@@ -33,24 +38,23 @@ public class PluginInfo : ICacheable
     /// </summary>
     public IEnumerable<BepInIncompatibility> Incompatibilities { get; internal set; }
 
-    /// <summary>
-    ///     File path to the plugin DLL
-    /// </summary>
-    public string Location { get; internal set; }
-
+    public string TypeName { get; internal set; }
+    
     /// <summary>
     ///     Instance of the plugin that represents this info. NULL if no plugin is instantiated from info (yet)
     /// </summary>
     public object Instance { get; internal set; }
-
-    public string TypeName { get; internal set; }
-
+    
     internal Version TargettedBepInExVersion { get; set; }
+    
+    internal string Location { get; set; }
+    
+    /// <inheritdoc />
+    public override string ToString() => $"{Metadata?.Name} {Metadata?.Version}";
 
-    void ICacheable.Save(BinaryWriter bw)
+    public virtual void Save(BinaryWriter bw)
     {
         bw.Write(TypeName);
-        bw.Write(Location);
 
         bw.Write(Metadata.GUID);
         bw.Write(Metadata.Name);
@@ -74,10 +78,9 @@ public class PluginInfo : ICacheable
         bw.Write(TargettedBepInExVersion.ToString(4));
     }
 
-    void ICacheable.Load(BinaryReader br)
+    public virtual void Load(BinaryReader br)
     {
         TypeName = br.ReadString();
-        Location = br.ReadString();
 
         Metadata = new BepInPlugin(br.ReadString(), br.ReadString(), br.ReadString());
 
@@ -111,7 +114,4 @@ public class PluginInfo : ICacheable
 
         TargettedBepInExVersion = new Version(br.ReadString());
     }
-
-    /// <inheritdoc />
-    public override string ToString() => $"{Metadata?.Name} {Metadata?.Version}";
 }

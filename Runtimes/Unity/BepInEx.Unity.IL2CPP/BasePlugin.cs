@@ -8,7 +8,7 @@ public abstract class BasePlugin
 {
     protected BasePlugin()
     {
-        var metadata = MetadataHelper.GetMetadata(this);
+        var metadata = MetadataHelper.GetPluginMetadata(this);
 
         Log = Logger.CreateLogSource(metadata.Name);
 

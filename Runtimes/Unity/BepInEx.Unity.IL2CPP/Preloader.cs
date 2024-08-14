@@ -67,7 +67,7 @@ public static class Preloader
 
             using (var assemblyPatcher = new AssemblyPatcher((data, _) => Assembly.Load(data)))
             {
-                assemblyPatcher.AddPatchersFromDirectory(Paths.PatcherPluginPath);
+                assemblyPatcher.AddPatchersFromProviders();
 
                 Log.LogInfo($"{assemblyPatcher.PatcherContext.PatcherPlugins.Count} patcher plugin{(assemblyPatcher.PatcherContext.PatcherPlugins.Count == 1 ? "" : "s")} loaded");
 

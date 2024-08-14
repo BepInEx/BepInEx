@@ -54,7 +54,7 @@ namespace BepInEx.NET.CoreCLR
 
             using (var assemblyPatcher = new AssemblyPatcher((data, _) => Assembly.Load(data)))
             {
-                assemblyPatcher.AddPatchersFromDirectory(Paths.PatcherPluginPath);
+                assemblyPatcher.AddPatchersFromProviders();
 
                 Log.LogInfo($"{assemblyPatcher.PatcherContext.PatchDefinitions.Count} patcher definition(s) loaded");
 

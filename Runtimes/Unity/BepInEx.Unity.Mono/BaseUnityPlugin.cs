@@ -16,7 +16,7 @@ public abstract class BaseUnityPlugin : MonoBehaviour
     /// <exception cref="InvalidOperationException">BepInPlugin attribute is missing.</exception>
     protected BaseUnityPlugin()
     {
-        var metadata = MetadataHelper.GetMetadata(this);
+        var metadata = MetadataHelper.GetPluginMetadata(this);
         if (metadata == null)
             throw new InvalidOperationException("Can't create an instance of " + GetType().FullName +
                                                 " because it inherits from BaseUnityPlugin and the BepInPlugin attribute is missing.");
@@ -27,7 +27,6 @@ public abstract class BaseUnityPlugin : MonoBehaviour
             Instance = this,
             Dependencies = MetadataHelper.GetDependencies(GetType()),
             Processes = MetadataHelper.GetAttributes<BepInProcess>(GetType()),
-            Location = GetType().Assembly.Location
         };
 
         Logger = BepInEx.Logging.Logger.CreateLogSource(metadata.Name);

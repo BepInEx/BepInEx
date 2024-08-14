@@ -11,6 +11,7 @@ using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
 using Mono.Cecil;
+using MonoMod.Utils;
 
 namespace BepInEx.Preloader.Core.Patching;
 
@@ -24,6 +25,9 @@ public class AssemblyPatcher : IDisposable
 
     private Func<byte[], string, Assembly> assemblyLoader;
 
+    private readonly List<IPluginLoader> loaders = new();
+    private readonly List<BasePatcherProvider> providers = new();
+    
     public AssemblyPatcher(Func<byte[], string, Assembly> assemblyLoader)
     {
         this.assemblyLoader = assemblyLoader;
@@ -61,16 +65,18 @@ public class AssemblyPatcher : IDisposable
 
         // Clear to allow GC collection.
         PatcherContext.PatcherPlugins.Clear();
+        
+        AppDomain.CurrentDomain.AssemblyResolve -= PatcherProvidersAssemblyResolver;
     }
 
-    private PatcherPluginMetadata ToPatcherPlugin(TypeDefinition type, string assemblyPath)
+    private PatcherPluginMetadata ToPatcherPlugin<T>(TypeDefinition type, IPluginLoader loader, string assemblyPath)
     {
         if (type.IsInterface || type.IsAbstract && !type.IsSealed)
             return null;
 
         try
         {
-            if (!type.IsSubtypeOf(typeof(BasePatcher)))
+            if (!type.IsSubtypeOf(typeof(T)))
                 return null;
         }
         catch (AssemblyResolutionException)
@@ -79,8 +85,13 @@ public class AssemblyPatcher : IDisposable
             return null;
         }
 
-        var metadata = PatcherPluginInfoAttribute.FromCecilType(type);
+        if (type.IsSubtypeOf(typeof(BasePatcherProvider)))
+            return GetPatcherInfo(type, loader, PatcherProviderPluginInfoAttribute.FromCecilType(type));
+        return GetPatcherInfo(type, loader, PatcherPluginInfoAttribute.FromCecilType(type));
+    }
 
+    private PatcherPluginMetadata GetPatcherInfo(TypeDefinition type, IPluginLoader loader, PatcherPluginInfoAttribute metadata)
+    {
         // Perform checks that will prevent the plugin from being loaded in ALL cases
         if (metadata == null)
         {
@@ -109,19 +120,159 @@ public class AssemblyPatcher : IDisposable
 
         return new PatcherPluginMetadata
         {
-            TypeName = type.FullName
+            TypeName = type.FullName,
+            Loader = loader
         };
     }
 
-    private bool HasPatcherPlugins(AssemblyDefinition ass)
+    private bool HasPatcherType<T>(AssemblyDefinition ass)
     {
         if (ass.MainModule.AssemblyReferences.All(r => r.Name != CurrentAssemblyName) &&
             ass.Name.Name != CurrentAssemblyName)
             return false;
-        if (ass.MainModule.GetTypeReferences().All(r => r.FullName != typeof(BasePatcher).FullName))
+        if (ass.MainModule.GetTypeReferences().All(r => r.FullName != typeof(T).FullName))
             return false;
 
         return true;
+    }
+    
+    /// <summary>
+    ///     Adds all patchers from all managed assemblies obtained from all patcher providers.
+    /// </summary>
+    public void AddPatchersFromProviders()
+    {
+        var allProviders = TypeLoader.FindPluginTypes(Paths.BepInExAssemblyDirectory, ToPatcherPlugin<BasePatcherProvider>, HasPatcherType<BasePatcherProvider>);
+        var foundProviders = TypeLoader.FindPluginTypes(Paths.PatcherProviderPath, ToPatcherPlugin<BasePatcherProvider>, HasPatcherType<BasePatcherProvider>);
+        allProviders.AddRange(foundProviders);
+        AppDomain.CurrentDomain.AssemblyResolve += PatcherProvidersAssemblyResolver;
+
+        foreach (var keyValuePair in allProviders)
+        {
+            var assemblyPath = keyValuePair.Key;
+            var patcherCollection = keyValuePair.Value;
+
+            if (patcherCollection.Count == 0)
+                continue;
+
+            var ass = Assembly.LoadFrom(assemblyPath);
+
+            foreach (var patcherPlugin in patcherCollection)
+            {
+                try
+                {
+                    var type = ass.GetType(patcherPlugin.TypeName);
+
+                    var instance = (BasePatcherProvider) Activator.CreateInstance(type);
+                    providers.Add(instance);
+                    loaders.AddRange(instance.GetPatchers());
+                }
+                catch (Exception e)
+                {
+                    Logger.Log(LogLevel.Error,
+                               $"Failed to load patchers from type [{patcherPlugin.TypeName}]: {(e is ReflectionTypeLoadException re ? TypeLoader.TypeLoadExceptionToString(re) : e.ToString())}");
+                }
+            }
+        }
+
+        var patchers = TypeLoader.GetPluginsFromLoaders(loaders, ToPatcherPlugin<BasePatcher>, HasPatcherType<BasePatcher>);
+        
+        var sortedPatchers = new List<PatchDefinition>();
+        
+        // TODO: Add dependency ordering and process attribute filtering
+
+        foreach (var patcherPlugin in patchers)
+        {
+            var ass = Assembly.Load(patcherPlugin.Loader.GetAssemblyData());
+            var patchDefinitions = LoadPatcherPlugin(ass, patcherPlugin);
+            sortedPatchers.AddRange(patchDefinitions);
+
+            var assName = ass.GetName();
+            Logger.Log(LogLevel.Debug, $"Loaded patcher {patcherPlugin.TypeName} from [{assName.Name} {assName.Version}]");
+        }
+
+        PatcherContext.PatchDefinitions.AddRange(sortedPatchers);
+        Logger.Log(LogLevel.Info, $"Loaded {sortedPatchers.Count} patcher{(sortedPatchers.Count > 0 ? "s" : "")}");
+    }
+
+    private Assembly PatcherProvidersAssemblyResolver(object sender, ResolveEventArgs args)
+    {
+        foreach (BasePatcherProvider provider in providers)
+        {
+            var ass = provider.ResolveAssembly(args.Name);
+            if (ass != null)
+                return ass;
+        }
+
+        return null;
+    }
+
+    private List<PatchDefinition> LoadPatcherPlugin(Assembly ass, PatcherPluginMetadata patcher)
+    {
+        var patchDefinitions = new List<PatchDefinition>();
+        try
+        {
+            var type = ass.GetType(patcher.TypeName);
+
+            var instance = (BasePatcher) Activator.CreateInstance(type);
+            instance.Context = PatcherContext;
+
+            PatcherContext.PatcherPlugins.Add(instance);
+
+            var methods =
+                type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+
+            foreach (var method in methods)
+            {
+                var targetAssemblies = MetadataHelper.GetAttributes<TargetAssemblyAttribute>(method);
+                var targetTypes = MetadataHelper.GetAttributes<TargetTypeAttribute>(method);
+
+                if (targetAssemblies.Length == 0 && targetTypes.Length == 0)
+                    continue;
+
+                var parameters = method.GetParameters();
+
+                if (parameters.Length < 1 || parameters.Length > 2
+                                             // Next few lines ensure that the first parameter is AssemblyDefinition and does not have any
+                                             // target type attributes, and vice versa
+                                          || !(
+                                                  parameters[0].ParameterType == typeof(AssemblyDefinition)
+                                               || parameters[0].ParameterType ==
+                                                  typeof(AssemblyDefinition).MakeByRefType()
+                                               && targetTypes.Length == 0
+                                               || parameters[0].ParameterType == typeof(TypeDefinition)
+                                               && targetAssemblies.Length == 0
+                                              )
+                                          || parameters.Length == 2 &&
+                                             parameters[1].ParameterType != typeof(string)
+                                          || method.ReturnType != typeof(void) &&
+                                             method.ReturnType != typeof(bool)
+                   )
+                {
+                    Logger
+                        .Log(LogLevel.Warning,
+                             $"Skipping method [{method.FullDescription()}] as it is not a valid patcher method");
+                    continue;
+                }
+
+                void AddDefinition(PatchDefinition definition)
+                {
+                    Logger.Log(LogLevel.Debug, $"Discovered patch [{definition.FullName}]");
+                    patchDefinitions.Add(definition);
+                }
+
+                foreach (var targetAssembly in targetAssemblies)
+                    AddDefinition(new PatchDefinition(targetAssembly, instance, method));
+                foreach (var targetType in targetTypes)
+                    AddDefinition(new PatchDefinition(targetType, instance, method));
+            }
+        }
+        catch (Exception e)
+        {
+            Logger.Log(LogLevel.Error,
+                       $"Failed to load patchers from type [{patcher.TypeName}]: {(e is ReflectionTypeLoadException re ? TypeLoader.TypeLoadExceptionToString(re) : e.ToString())}");
+        }
+
+        return patchDefinitions;
     }
 
     /// <summary>
@@ -135,7 +286,7 @@ public class AssemblyPatcher : IDisposable
 
         var sortedPatchers = new List<PatchDefinition>();
 
-        var patchers = TypeLoader.FindPluginTypes(directory, ToPatcherPlugin, HasPatcherPlugins);
+        var patchers = TypeLoader.FindPluginTypes(directory, ToPatcherPlugin<BasePatcher>, HasPatcherType<BasePatcher>);
 
         // TODO: Add dependency ordering and process attribute filtering
 
@@ -150,68 +301,10 @@ public class AssemblyPatcher : IDisposable
             var ass = Assembly.LoadFrom(assemblyPath);
 
             foreach (var patcherPlugin in patcherCollection)
-                try
-                {
-                    var type = ass.GetType(patcherPlugin.TypeName);
-
-                    var instance = (BasePatcher) Activator.CreateInstance(type);
-                    instance.Context = PatcherContext;
-
-                    PatcherContext.PatcherPlugins.Add(instance);
-
-                    var methods =
-                        type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-
-                    foreach (var method in methods)
-                    {
-                        var targetAssemblies = MetadataHelper.GetAttributes<TargetAssemblyAttribute>(method);
-                        var targetTypes = MetadataHelper.GetAttributes<TargetTypeAttribute>(method);
-
-                        if (targetAssemblies.Length == 0 && targetTypes.Length == 0)
-                            continue;
-
-                        var parameters = method.GetParameters();
-
-                        if (parameters.Length < 1 || parameters.Length > 2
-                                                     // Next few lines ensure that the first parameter is AssemblyDefinition and does not have any
-                                                     // target type attributes, and vice versa
-                                                  || !(
-                                                          parameters[0].ParameterType == typeof(AssemblyDefinition)
-                                                       || parameters[0].ParameterType ==
-                                                          typeof(AssemblyDefinition).MakeByRefType()
-                                                       && targetTypes.Length == 0
-                                                       || parameters[0].ParameterType == typeof(TypeDefinition)
-                                                       && targetAssemblies.Length == 0
-                                                      )
-                                                  || parameters.Length == 2 &&
-                                                     parameters[1].ParameterType != typeof(string)
-                                                  || method.ReturnType != typeof(void) &&
-                                                     method.ReturnType != typeof(bool)
-                           )
-                        {
-                            Logger
-                                .Log(LogLevel.Warning,
-                                     $"Skipping method [{method.FullDescription()}] as it is not a valid patcher method");
-                            continue;
-                        }
-
-                        void AddDefinition(PatchDefinition definition)
-                        {
-                            Logger.Log(LogLevel.Debug, $"Discovered patch [{definition.FullName}]");
-                            sortedPatchers.Add(definition);
-                        }
-
-                        foreach (var targetAssembly in targetAssemblies)
-                            AddDefinition(new PatchDefinition(targetAssembly, instance, method));
-                        foreach (var targetType in targetTypes)
-                            AddDefinition(new PatchDefinition(targetType, instance, method));
-                    }
-                }
-                catch (Exception e)
-                {
-                    Logger.Log(LogLevel.Error,
-                               $"Failed to load patchers from type [{patcherPlugin.TypeName}]: {(e is ReflectionTypeLoadException re ? TypeLoader.TypeLoadExceptionToString(re) : e.ToString())}");
-                }
+            {
+                var patchDefinitions = LoadPatcherPlugin(ass, patcherPlugin);
+                sortedPatchers.AddRange(patchDefinitions);
+            }
 
             var assName = ass.GetName();
             Logger.Log(patcherCollection.Any() ? LogLevel.Info : LogLevel.Debug,

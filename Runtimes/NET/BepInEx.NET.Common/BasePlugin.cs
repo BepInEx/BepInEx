@@ -8,7 +8,7 @@ namespace BepInEx.NET.Common
     {
         protected BasePlugin()
         {
-            var metadata = MetadataHelper.GetMetadata(this);
+            var metadata = MetadataHelper.GetPluginMetadata(this);
 
             HarmonyInstance = new Harmony("BepInEx.Plugin." + metadata.GUID);
 

@@ -110,7 +110,7 @@ public static class NetPreloader
 
         using (var assemblyPatcher = new AssemblyPatcher((data, _) => Assembly.Load(data)))
         {
-            assemblyPatcher.AddPatchersFromDirectory(Paths.PatcherPluginPath);
+            assemblyPatcher.AddPatchersFromProviders();
 
             Log.Log(LogLevel.Info,
                     $"{assemblyPatcher.PatcherContext.PatchDefinitions.Count} patcher definition(s) loaded");

@@ -89,7 +89,9 @@ public static class TypeLoader
         {
             Paths.BepInExAssemblyDirectory,
             Paths.PluginPath,
+            Paths.PluginProviderPath,
             Paths.PatcherPluginPath,
+            Paths.PatcherProviderPath,
             Paths.ManagedPath
         }.Concat(SearchDirectories);
 
@@ -126,9 +128,8 @@ public static class TypeLoader
     ///     selector.
     /// </returns>
     public static Dictionary<string, List<T>> FindPluginTypes<T>(string directory,
-                                                                 Func<TypeDefinition, string, T> typeSelector,
-                                                                 Func<AssemblyDefinition, bool> assemblyFilter =
-                                                                     null,
+                                                                 Func<TypeDefinition, IPluginLoader, string, T> typeSelector,
+                                                                 Func<AssemblyDefinition, bool> assemblyFilter = null,
                                                                  string cacheName = null)
         where T : ICacheable, new()
     {
@@ -153,19 +154,7 @@ public static class TypeLoader
                         continue;
                     }
 
-                using var ass = AssemblyDefinition.ReadAssembly(dllMs, ReaderParameters);
-                Logger.Log(LogLevel.Debug, $"Examining '{dll}'");
-
-                if (!assemblyFilter?.Invoke(ass) ?? false)
-                {
-                    result[dll] = new List<T>();
-                    continue;
-                }
-
-                var matches = ass.MainModule.Types
-                                 .Select(t => typeSelector(t, dll))
-                                 .Where(t => t != null).ToList();
-                result[dll] = matches;
+                result[dll] = ExamineStream(typeSelector, assemblyFilter, dllMs, null, dll);
             }
             catch (BadImageFormatException e)
             {
@@ -181,6 +170,82 @@ public static class TypeLoader
             SaveAssemblyCache(cacheName, result, hashes);
 
         return result;
+    }
+
+    /// <summary>
+    ///     Looks up assemblies using the given loaders and locates all types that can be loaded and collects their metadata.
+    /// </summary>
+    /// <typeparam name="T">The specific base type to search for.</typeparam>
+    /// <param name="loaders">The loaders to obtain the assemblies from.</param>
+    /// <param name="typeSelector">A function to check if a type should be selected and to build the type metadata.</param>
+    /// <param name="assemblyFilter">A filter function to quickly determine if the assembly can be loaded.</param>
+    /// <param name="cacheName">The name of the cache to get cached types from.</param>
+    /// <returns>
+    ///     A dictionary of all assemblies in the directory and the list of type metadatas of types that match the
+    ///     selector.
+    /// </returns>
+    public static List<T> GetPluginsFromLoaders<T>(IList<IPluginLoader> loaders,
+                                                   Func<TypeDefinition, IPluginLoader, string, T> typeSelector,
+                                                   Func<AssemblyDefinition, bool> assemblyFilter = null,
+                                                   string cacheName = null)
+        where T : ICacheable, new()
+    {
+        var result = new Dictionary<string, List<T>>();
+        var hashes = new Dictionary<string, string>();
+        Dictionary<string, CachedAssembly<T>> cache = null;
+
+        if (cacheName != null)
+            cache = LoadAssemblyCache<T>(cacheName);
+
+        foreach (IPluginLoader pluginLoader in loaders)
+        {
+            IList<T> plugins;
+            if (cache != null && pluginLoader.AssemblyHash != null &&
+                cache.TryGetValue(pluginLoader.AssemblyIdentifier, out var cacheEntry) &&
+                pluginLoader.AssemblyHash == cacheEntry.Hash)
+            {
+                plugins = cacheEntry.CacheItems;
+            }
+            else
+            {
+                var assemblyData = pluginLoader.GetAssemblyData();
+                using var memory = new MemoryStream(assemblyData);
+                plugins = ExamineStream(typeSelector, assemblyFilter, memory, pluginLoader, null);
+            }
+                
+            foreach (T pluginInfo in plugins)
+            {
+                if (!result.ContainsKey(pluginLoader.AssemblyIdentifier))
+                    result[pluginLoader.AssemblyIdentifier] = new();
+                result[pluginLoader.AssemblyIdentifier].Add(pluginInfo);
+            }
+        }
+            
+        if (cache != null)
+            SaveAssemblyCache(cacheName, result, hashes);
+
+        return result.SelectMany(x => x.Value).ToList();
+    }
+
+    private static List<T> ExamineStream<T>(Func<TypeDefinition, IPluginLoader, string, T> typeSelector,
+                                           Func<AssemblyDefinition, bool> assemblyFilter,
+                                           MemoryStream dllMs,
+                                           IPluginLoader loader,
+                                           string location)
+        where T : ICacheable, new()
+    {
+        using var ass = AssemblyDefinition.ReadAssembly(dllMs, ReaderParameters);
+        Logger.Log(LogLevel.Debug, $"Examining '{ass.Name}'");
+
+        if (!assemblyFilter?.Invoke(ass) ?? false)
+        {
+            return new List<T>();
+        }
+
+        var matches = ass.MainModule.Types
+                         .Select(t => typeSelector(t, loader, location))
+                         .Where(t => t != null).ToList();
+        return matches;
     }
 
     /// <summary>
