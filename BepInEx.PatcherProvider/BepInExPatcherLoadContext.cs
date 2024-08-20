@@ -2,7 +2,7 @@
 
 namespace BepInEx.PatcherProvider;
 
-public class BepInExPatcherLoader : IPluginLoader
+public class BepInExPatcherLoadContext : IPluginLoadContext
 {
     public string AssemblyIdentifier { get; internal set; }
     public string AssemblyHash { get; internal set; }

@@ -128,7 +128,7 @@ public static class TypeLoader
     ///     selector.
     /// </returns>
     public static Dictionary<string, List<T>> FindPluginTypes<T>(string directory,
-                                                                 Func<TypeDefinition, IPluginLoader, string, T> typeSelector,
+                                                                 Func<TypeDefinition, IPluginLoadContext, string, T> typeSelector,
                                                                  Func<AssemblyDefinition, bool> assemblyFilter = null,
                                                                  string cacheName = null)
         where T : ICacheable, new()
@@ -176,7 +176,7 @@ public static class TypeLoader
     ///     Looks up assemblies using the given loaders and locates all types that can be loaded and collects their metadata.
     /// </summary>
     /// <typeparam name="T">The specific base type to search for.</typeparam>
-    /// <param name="loaders">The loaders to obtain the assemblies from.</param>
+    /// <param name="loadContexts">The load contexts to obtain the assemblies from.</param>
     /// <param name="typeSelector">A function to check if a type should be selected and to build the type metadata.</param>
     /// <param name="assemblyFilter">A filter function to quickly determine if the assembly can be loaded.</param>
     /// <param name="cacheName">The name of the cache to get cached types from.</param>
@@ -184,10 +184,10 @@ public static class TypeLoader
     ///     A dictionary of all assemblies in the directory and the list of type metadatas of types that match the
     ///     selector.
     /// </returns>
-    public static List<T> GetPluginsFromLoaders<T>(IList<IPluginLoader> loaders,
-                                                   Func<TypeDefinition, IPluginLoader, string, T> typeSelector,
-                                                   Func<AssemblyDefinition, bool> assemblyFilter = null,
-                                                   string cacheName = null)
+    public static List<T> GetPluginsFromLoadContexts<T>(IList<IPluginLoadContext> loadContexts,
+                                                        Func<TypeDefinition, IPluginLoadContext, string, T> typeSelector,
+                                                        Func<AssemblyDefinition, bool> assemblyFilter = null,
+                                                        string cacheName = null)
         where T : ICacheable, new()
     {
         var result = new Dictionary<string, List<T>>();
@@ -197,27 +197,27 @@ public static class TypeLoader
         if (cacheName != null)
             cache = LoadAssemblyCache<T>(cacheName);
 
-        foreach (IPluginLoader pluginLoader in loaders)
+        foreach (IPluginLoadContext loadContext in loadContexts)
         {
             IList<T> plugins;
-            if (cache != null && pluginLoader.AssemblyHash != null &&
-                cache.TryGetValue(pluginLoader.AssemblyIdentifier, out var cacheEntry) &&
-                pluginLoader.AssemblyHash == cacheEntry.Hash)
+            if (cache != null && loadContext.AssemblyHash != null &&
+                cache.TryGetValue(loadContext.AssemblyIdentifier, out var cacheEntry) &&
+                loadContext.AssemblyHash == cacheEntry.Hash)
             {
                 plugins = cacheEntry.CacheItems;
             }
             else
             {
-                var assemblyData = pluginLoader.GetAssemblyData();
+                var assemblyData = loadContext.GetAssemblyData();
                 using var memory = new MemoryStream(assemblyData);
-                plugins = ExamineStream(typeSelector, assemblyFilter, memory, pluginLoader, null);
+                plugins = ExamineStream(typeSelector, assemblyFilter, memory, loadContext, null);
             }
                 
             foreach (T pluginInfo in plugins)
             {
-                if (!result.ContainsKey(pluginLoader.AssemblyIdentifier))
-                    result[pluginLoader.AssemblyIdentifier] = new();
-                result[pluginLoader.AssemblyIdentifier].Add(pluginInfo);
+                if (!result.ContainsKey(loadContext.AssemblyIdentifier))
+                    result[loadContext.AssemblyIdentifier] = new();
+                result[loadContext.AssemblyIdentifier].Add(pluginInfo);
             }
         }
             
@@ -227,10 +227,10 @@ public static class TypeLoader
         return result.SelectMany(x => x.Value).ToList();
     }
 
-    private static List<T> ExamineStream<T>(Func<TypeDefinition, IPluginLoader, string, T> typeSelector,
+    private static List<T> ExamineStream<T>(Func<TypeDefinition, IPluginLoadContext, string, T> typeSelector,
                                            Func<AssemblyDefinition, bool> assemblyFilter,
                                            MemoryStream dllMs,
-                                           IPluginLoader loader,
+                                           IPluginLoadContext loadContext,
                                            string location)
         where T : ICacheable, new()
     {
@@ -243,7 +243,7 @@ public static class TypeLoader
         }
 
         var matches = ass.MainModule.Types
-                         .Select(t => typeSelector(t, loader, location))
+                         .Select(t => typeSelector(t, loadContext, location))
                          .Where(t => t != null).ToList();
         return matches;
     }

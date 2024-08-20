@@ -14,9 +14,9 @@ internal class PatcherPluginMetadata : ICacheable
     public string TypeName { get; set; } = string.Empty;
 
     /// <summary>
-    ///     The loader used to load this patcher, null if it is a provider
+    ///     The load context used to load this patcher, null if it is a provider
     /// </summary>
-    public IPluginLoader Loader { get; set; }
+    public IPluginLoadContext LoadContext { get; set; }
 
     /// <inheritdoc />
     public void Save(BinaryWriter bw) => bw.Write(TypeName);

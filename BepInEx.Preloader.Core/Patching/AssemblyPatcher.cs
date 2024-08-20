@@ -25,7 +25,7 @@ public class AssemblyPatcher : IDisposable
 
     private Func<byte[], string, Assembly> assemblyLoader;
 
-    private readonly List<IPluginLoader> loaders = new();
+    private readonly List<IPluginLoadContext> loadContexts = new();
     private readonly List<BasePatcherProvider> providers = new();
     
     public AssemblyPatcher(Func<byte[], string, Assembly> assemblyLoader)
@@ -69,7 +69,7 @@ public class AssemblyPatcher : IDisposable
         AppDomain.CurrentDomain.AssemblyResolve -= PatcherProvidersAssemblyResolver;
     }
 
-    private PatcherPluginMetadata ToPatcherPlugin<T>(TypeDefinition type, IPluginLoader loader, string assemblyPath)
+    private PatcherPluginMetadata ToPatcherPlugin<T>(TypeDefinition type, IPluginLoadContext loadContext, string assemblyPath)
     {
         if (type.IsInterface || type.IsAbstract && !type.IsSealed)
             return null;
@@ -86,11 +86,11 @@ public class AssemblyPatcher : IDisposable
         }
 
         if (type.IsSubtypeOf(typeof(BasePatcherProvider)))
-            return GetPatcherInfo(type, loader, PatcherProviderPluginInfoAttribute.FromCecilType(type));
-        return GetPatcherInfo(type, loader, PatcherPluginInfoAttribute.FromCecilType(type));
+            return GetPatcherInfo(type, loadContext, PatcherProviderPluginInfoAttribute.FromCecilType(type));
+        return GetPatcherInfo(type, loadContext, PatcherPluginInfoAttribute.FromCecilType(type));
     }
 
-    private PatcherPluginMetadata GetPatcherInfo(TypeDefinition type, IPluginLoader loader, PatcherPluginInfoAttribute metadata)
+    private PatcherPluginMetadata GetPatcherInfo(TypeDefinition type, IPluginLoadContext loadContext, PatcherPluginInfoAttribute metadata)
     {
         // Perform checks that will prevent the plugin from being loaded in ALL cases
         if (metadata == null)
@@ -121,7 +121,7 @@ public class AssemblyPatcher : IDisposable
         return new PatcherPluginMetadata
         {
             TypeName = type.FullName,
-            Loader = loader
+            LoadContext = loadContext
         };
     }
 
@@ -164,7 +164,7 @@ public class AssemblyPatcher : IDisposable
 
                     var instance = (BasePatcherProvider) Activator.CreateInstance(type);
                     providers.Add(instance);
-                    loaders.AddRange(instance.GetPatchers());
+                    loadContexts.AddRange(instance.GetPatchers());
                 }
                 catch (Exception e)
                 {
@@ -174,7 +174,7 @@ public class AssemblyPatcher : IDisposable
             }
         }
 
-        var patchers = TypeLoader.GetPluginsFromLoaders(loaders, ToPatcherPlugin<BasePatcher>, HasPatcherType<BasePatcher>);
+        var patchers = TypeLoader.GetPluginsFromLoadContexts(loadContexts, ToPatcherPlugin<BasePatcher>, HasPatcherType<BasePatcher>);
         
         var sortedPatchers = new List<PatchDefinition>();
         
@@ -182,7 +182,7 @@ public class AssemblyPatcher : IDisposable
 
         foreach (var patcherPlugin in patchers)
         {
-            var ass = Assembly.Load(patcherPlugin.Loader.GetAssemblyData());
+            var ass = Assembly.Load(patcherPlugin.LoadContext.GetAssemblyData());
             var patchDefinitions = LoadPatcherPlugin(ass, patcherPlugin);
             sortedPatchers.AddRange(patchDefinitions);
 
@@ -196,11 +196,22 @@ public class AssemblyPatcher : IDisposable
 
     private Assembly PatcherProvidersAssemblyResolver(object sender, ResolveEventArgs args)
     {
-        foreach (BasePatcherProvider provider in providers)
+        BasePatcherProvider currentProvider = null;
+        try 
         {
-            var ass = provider.ResolveAssembly(args.Name);
-            if (ass != null)
-                return ass;
+            foreach (BasePatcherProvider provider in providers)
+            {
+                currentProvider = provider;
+                var ass = provider.ResolveAssembly(args.Name);
+                if (ass != null)
+                    return ass;
+            }
+        }
+        catch (Exception e)
+        {
+            Logger.Log(LogLevel.Error, $"The assembly resolver of the patcher provider [{currentProvider?.Info.GUID}] " +
+                                       $"threw an exception while resolving {args.Name}: {e}");
+            return null;
         }
 
         return null;

@@ -39,8 +39,8 @@ public abstract class BasePatcherProvider
     /// <summary>
     ///     Obtains a list of assemblies containing patchers to load
     /// </summary>
-    /// <returns>A list of loaders, one per assembly</returns>
-    public abstract IList<IPluginLoader> GetPatchers();
+    /// <returns>A list of load context, one per assembly</returns>
+    public abstract IList<IPluginLoadContext> GetPatchers();
 
     /// <summary>
     ///     A custom assembly resolver that can be used by this provider to resolve assemblies

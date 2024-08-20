@@ -18,9 +18,9 @@ public class PluginInfo : ICacheable
     public BepInPlugin Metadata { get; internal set; }
     
     /// <summary>
-    ///     The loader used to load this plugin, null if it is a provider
+    ///     The load context used to load this plugin, null if it is a provider
     /// </summary>
-    public IPluginLoader Loader { get; internal set; }
+    public IPluginLoadContext LoadContext { get; internal set; }
 
     /// <summary>
     ///     Collection of <see cref="BepInProcess" /> attributes that describe what processes the plugin can run on.
@@ -52,7 +52,7 @@ public class PluginInfo : ICacheable
     /// <inheritdoc />
     public override string ToString() => $"{Metadata?.Name} {Metadata?.Version}";
 
-    public virtual void Save(BinaryWriter bw)
+    void ICacheable.Save(BinaryWriter bw)
     {
         bw.Write(TypeName);
 
@@ -78,7 +78,7 @@ public class PluginInfo : ICacheable
         bw.Write(TargettedBepInExVersion.ToString(4));
     }
 
-    public virtual void Load(BinaryReader br)
+    void ICacheable.Load(BinaryReader br)
     {
         TypeName = br.ReadString();
 

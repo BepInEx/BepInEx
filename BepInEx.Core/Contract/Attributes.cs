@@ -89,7 +89,7 @@ public class BepInPluginProvider : BepInPlugin
     {
     }
 
-    internal static BepInPluginProvider FromCecilType(TypeDefinition td)
+    internal new static BepInPluginProvider FromCecilType(TypeDefinition td)
     {
         var attr = MetadataHelper.GetCustomAttributes<BepInPluginProvider>(td, false).FirstOrDefault();
 

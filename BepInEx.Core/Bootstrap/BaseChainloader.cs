@@ -23,9 +23,10 @@ public abstract class BaseChainloader<TPlugin>
     ///     Analyzes the given type definition and attempts to convert it to a valid <see cref="PluginInfo" />
     /// </summary>
     /// <param name="type">Type definition to analyze.</param>
+    /// <param name="loadContext">The load context of the plugin</param>
     /// <param name="assemblyLocation">The filepath of the assembly, to keep as metadata.</param>
     /// <returns>If the type represent a valid plugin, returns a <see cref="PluginInfo" /> instance. Otherwise, return null.</returns>
-    public static PluginInfo ToPluginInfo<T>(TypeDefinition type, IPluginLoader loader, string assemblyLocation)
+    public static PluginInfo ToPluginInfo<T>(TypeDefinition type, IPluginLoadContext loadContext, string assemblyLocation)
     {
         if (type.IsInterface || type.IsAbstract)
             return null;
@@ -42,11 +43,11 @@ public abstract class BaseChainloader<TPlugin>
         }
 
         if (type.IsSubtypeOf(typeof(BasePluginProvider)))
-            return GetPluginInfo(type, BepInPluginProvider.FromCecilType(type), loader, assemblyLocation);
-        return GetPluginInfo(type, BepInPlugin.FromCecilType(type), loader, assemblyLocation);
+            return GetPluginInfo(type, BepInPluginProvider.FromCecilType(type), loadContext, assemblyLocation);
+        return GetPluginInfo(type, BepInPlugin.FromCecilType(type), loadContext, assemblyLocation);
     }
 
-    private static PluginInfo GetPluginInfo(TypeDefinition type, BepInPlugin metadata, IPluginLoader loader, string assemblyLocation)
+    private static PluginInfo GetPluginInfo(TypeDefinition type, BepInPlugin metadata, IPluginLoadContext loadContext, string assemblyLocation)
     {
         // Perform checks that will prevent the plugin from being loaded in ALL cases
         if (metadata == null)
@@ -91,7 +92,7 @@ public abstract class BaseChainloader<TPlugin>
             TypeName = type.FullName,
             TargettedBepInExVersion = bepinVersion,
             Location = assemblyLocation,
-            Loader = loader
+            LoadContext = loadContext
         };
     }
 
@@ -123,18 +124,22 @@ public abstract class BaseChainloader<TPlugin>
 
     /// <summary>
     ///     List of all <see cref="PluginInfo" /> instances of all plugins loaded via the chainloader.
+    ///     If a plugin fails to load, it is removed. This list only contains the plugins that were actually
+    ///     loaded and have their dependencies satisfied.
     /// </summary>
     public Dictionary<string, PluginInfo> Plugins { get; } = new();
 
     /// <summary>
     ///     List of all <see cref="PluginInfo" /> instances of all providers loaded via the chainloader.
+    ///     If a provider fails to load, it is removed. This list only contains the providers that were actually
+    ///     loaded and have their dependencies satisfied.
     /// </summary>
     public Dictionary<string, PluginInfo> Providers { get; } = new();
     
     /// <summary>
-    ///     List of all <see cref="IPluginLoader" /> discovered from all the providers
+    ///     List of all <see cref="IPluginLoadContext" /> discovered from all the providers
     /// </summary>
-    public List<IPluginLoader> Loaders { get; } = new();
+    public List<IPluginLoadContext> LoadContexts { get; } = new();
     
     /// <summary>
     ///     Collection of error chainloader messages that occured during plugin loading.
@@ -142,6 +147,16 @@ public abstract class BaseChainloader<TPlugin>
     /// </summary>
     public List<string> DependencyErrors { get; } = new();
 
+    /// <summary>
+    ///     Occurs after a plugin provider is loaded.
+    /// </summary>
+    public event Action<PluginInfo> ProviderLoaded;
+    
+    /// <summary>
+    ///     Occurs after all plugins providers are loaded.
+    /// </summary>
+    public event Action FinishedProviders;
+    
     /// <summary>
     ///     Occurs after a plugin is loaded.
     /// </summary>
@@ -323,12 +338,13 @@ public abstract class BaseChainloader<TPlugin>
             var builtinProviders = DiscoverPluginProvidersFrom(Paths.BepInExAssemblyDirectory);
             var providers = DiscoverPluginProvidersFrom(Paths.PluginProviderPath);
             Logger.Log(LogLevel.Info, $"{providers.Count + builtinProviders.Count} " +
-                                      $"meta plugin{(providers.Count + builtinProviders.Count == 1 ? "" : "s")} to load");
+                                      $"plugins provider{(providers.Count + builtinProviders.Count == 1 ? "" : "s")} to load");
             
             LoadPlugins(builtinProviders, provider: true);
             LoadPlugins(providers, provider: true);
+            FinishedProviders?.Invoke();
             
-            var plugins = TypeLoader.GetPluginsFromLoaders(Loaders, ToPluginInfo<TPlugin>, HasBepinPluginType<BepInPlugin>, "chainloader");
+            var plugins = TypeLoader.GetPluginsFromLoadContexts(LoadContexts, ToPluginInfo<TPlugin>, HasBepinPluginType<BepInPlugin>, "chainloader");
             Logger.Log(LogLevel.Info, $"{plugins.Count} plugin{(plugins.Count == 1 ? "" : "s")} to load");
             LoadPlugins(plugins, provider: false);
             Finished?.Invoke();
@@ -373,10 +389,10 @@ public abstract class BaseChainloader<TPlugin>
                     ass = Assembly.LoadFrom(plugin.Location);
                     loadedAssemblies[plugin.Location] = ass;
                 }
-                else if (!provider && !loadedAssemblies.TryGetValue(plugin.Loader.AssemblyIdentifier, out ass))
+                else if (!provider && !loadedAssemblies.TryGetValue(plugin.LoadContext.AssemblyIdentifier, out ass))
                 {
-                    ass = Assembly.Load(plugin.Loader.GetAssemblyData());
-                    loadedAssemblies[plugin.Loader.AssemblyIdentifier] = ass;
+                    ass = Assembly.Load(plugin.LoadContext.GetAssemblyData());
+                    loadedAssemblies[plugin.LoadContext.AssemblyIdentifier] = ass;
                 }
 
                 existingPlugins[plugin.Metadata.GUID] = plugin;
@@ -388,13 +404,14 @@ public abstract class BaseChainloader<TPlugin>
                     plugin.Instance = Activator.CreateInstance(type);
                     AppDomain.CurrentDomain.AssemblyResolve += (_, args) => ((BasePluginProvider)plugin.Instance).ResolveAssembly(args.Name);
                     var requestedPluginsStream = ((BasePluginProvider)plugin.Instance).GetPlugins();
-                    Loaders.AddRange(requestedPluginsStream);
+                    LoadContexts.AddRange(requestedPluginsStream);
+                    ProviderLoaded?.Invoke(plugin);
                 }
                 else
                 {
                     plugin.Instance = LoadPlugin(plugin, ass);
+                    PluginLoaded?.Invoke(plugin);
                 }
-                PluginLoaded?.Invoke(plugin);
             }
             catch (Exception ex)
             {

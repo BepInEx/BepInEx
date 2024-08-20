@@ -55,8 +55,8 @@ public abstract class BasePluginProvider
     /// <summary>
     ///     Obtains a list of assemblies containing plugins to load
     /// </summary>
-    /// <returns>A list of loaders, one per assembly</returns>
-    public abstract IList<IPluginLoader> GetPlugins();
+    /// <returns>A list of load context, one per assembly</returns>
+    public abstract IList<IPluginLoadContext> GetPlugins();
 
     /// <summary>
     ///     A custom assembly resolver that can be used by this provider to resolve assemblies

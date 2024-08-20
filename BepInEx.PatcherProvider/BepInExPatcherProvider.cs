@@ -12,15 +12,15 @@ public class BepInExPatcherProvider : BasePatcherProvider
 {
     private static readonly Dictionary<string, string> AssemblyLocationsByFilename = new();
 
-    public override IList<IPluginLoader> GetPatchers()
+    public override IList<IPluginLoadContext> GetPatchers()
     {
-        var loaders = new List<IPluginLoader>();
+        var loadContexts = new List<IPluginLoadContext>();
         foreach (var dll in Directory.GetFiles(Path.GetFullPath(Paths.PatcherPluginPath), "*.dll", SearchOption.AllDirectories))
         {
             try
             {
                 AssemblyLocationsByFilename.Add(Path.GetFileNameWithoutExtension(dll), Path.GetDirectoryName(dll));
-                loaders.Add(new BepInExPatcherLoader
+                loadContexts.Add(new BepInExPatcherLoadContext
                 {
                     AssemblyHash = File.GetLastWriteTimeUtc(dll).ToString("O"),
                     AssemblyIdentifier = dll
@@ -32,7 +32,7 @@ public class BepInExPatcherProvider : BasePatcherProvider
             }
         }
         
-        return loaders;
+        return loadContexts;
     }
 
     public override Assembly ResolveAssembly(string name)
