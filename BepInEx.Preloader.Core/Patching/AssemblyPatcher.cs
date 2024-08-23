@@ -188,6 +188,7 @@ public class AssemblyPatcher : IDisposable
 
             var assName = ass.GetName();
             Logger.Log(LogLevel.Debug, $"Loaded patcher {patcherPlugin.TypeName} from [{assName.Name} {assName.Version}]");
+            patcherPlugin.LoadContext.Dispose();
         }
 
         PatcherContext.PatchDefinitions.AddRange(sortedPatchers);

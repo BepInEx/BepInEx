@@ -1,10 +1,12 @@
-﻿namespace BepInEx;
+﻿using System;
+
+namespace BepInEx;
 
 /// <summary>
 ///     An interface that allows to dynamically load and track an assembly
 ///     which can be obtained from a provider
 /// </summary>
-public interface IPluginLoadContext
+public interface IPluginLoadContext : IDisposable
 {
     /// <summary>
     ///     An identifier that uniquely identifies an assembly from a provider no matter its revision
@@ -23,4 +25,11 @@ public interface IPluginLoadContext
     /// </summary>
     /// <returns>The assembly's raw data in bytes</returns>
     public byte[] GetAssemblyData();
+
+    /// <summary>
+    ///     Obtains a file's raw data using a relative path from the plugin assembly
+    /// </summary>
+    /// <param name="relativePath">The relative path from the plugin assembly used to locate the file</param>
+    /// <returns>The file's raw data if resolved successfully, null if the file couldn't be loaded</returns>
+    public byte[] GetFile(string relativePath);
 }

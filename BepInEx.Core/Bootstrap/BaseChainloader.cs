@@ -403,20 +403,22 @@ public abstract class BaseChainloader<TPlugin>
                     var type = ass.GetType(plugin.TypeName);
                     plugin.Instance = Activator.CreateInstance(type);
                     AppDomain.CurrentDomain.AssemblyResolve += (_, args) => ((BasePluginProvider)plugin.Instance).ResolveAssembly(args.Name);
-                    var requestedPluginsStream = ((BasePluginProvider)plugin.Instance).GetPlugins();
-                    LoadContexts.AddRange(requestedPluginsStream);
+                    var pluginLoadContexts = ((BasePluginProvider)plugin.Instance).GetPlugins();
+                    LoadContexts.AddRange(pluginLoadContexts);
                     ProviderLoaded?.Invoke(plugin);
                 }
                 else
                 {
                     plugin.Instance = LoadPlugin(plugin, ass);
                     PluginLoaded?.Invoke(plugin);
+                    plugin.LoadContext.Dispose();
                 }
             }
             catch (Exception ex)
             {
                 invalidPlugins.Add(plugin.Metadata.GUID);
                 existingPlugins.Remove(plugin.Metadata.GUID);
+                plugin.LoadContext.Dispose();
 
                 Logger.Log(LogLevel.Error,
                            $"Error loading [{plugin}]: {(ex is ReflectionTypeLoadException re ? TypeLoader.TypeLoadExceptionToString(re) : ex.ToString())}");

@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 namespace BepInEx.PluginProvider;
 
@@ -15,5 +16,20 @@ public class BepInExPluginLoadContext : IPluginLoadContext
         }
 
         return assemblyData;
+    }
+
+    public byte[] GetFile(string relativePath)
+    {
+        if (relativePath == null)
+            throw new ArgumentNullException(nameof(relativePath));
+        
+        string assemblyFolder = Path.GetDirectoryName(AssemblyIdentifier);
+        string filePath = Path.Combine(assemblyFolder, relativePath);
+        return File.ReadAllBytes(filePath);
+    }
+
+    public void Dispose()
+    {
+        assemblyData = null;
     }
 }
