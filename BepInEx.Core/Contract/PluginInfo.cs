@@ -18,6 +18,12 @@ public class PluginInfo : ICacheable
     public BepInPlugin Metadata { get; internal set; }
     
     /// <summary>
+    ///     The <see cref="PluginInfo"/> of the plugin provider that loaded this plugin.
+    ///     This is null if this plugin is a provider
+    /// </summary>
+    public PluginInfo Source { get; internal set; }
+    
+    /// <summary>
     ///     The load context used to load this plugin, null if it is a provider
     /// </summary>
     public IPluginLoadContext LoadContext { get; internal set; }

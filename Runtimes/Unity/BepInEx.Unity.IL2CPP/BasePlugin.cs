@@ -1,21 +1,28 @@
-﻿using BepInEx.Configuration;
+﻿using BepInEx.Bootstrap;
+using BepInEx.Configuration;
+using BepInEx.Contract;
 using BepInEx.Logging;
 using Il2CppInterop.Runtime.InteropTypes;
 
 namespace BepInEx.Unity.IL2CPP;
 
-public abstract class BasePlugin
+public abstract class BasePlugin : IPlugin
 {
     protected BasePlugin()
     {
         var metadata = MetadataHelper.GetPluginMetadata(this);
 
-        Log = Logger.CreateLogSource(metadata.Name);
+        Info = BaseChainloader<BasePlugin>.GetPluginInfoFromGuid(metadata.GUID);
+        Info.Instance = this;
+        
+        Logger = BepInEx.Logging.Logger.CreateLogSource(metadata.Name);
 
         Config = new ConfigFile(Utility.CombinePaths(Paths.ConfigPath, metadata.GUID + ".cfg"), false, metadata);
     }
 
-    public ManualLogSource Log { get; }
+    public PluginInfo Info { get; }
+    
+    public ManualLogSource Logger { get; }
 
     public ConfigFile Config { get; }
 

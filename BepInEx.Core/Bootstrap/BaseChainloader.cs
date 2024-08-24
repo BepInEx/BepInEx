@@ -116,6 +116,16 @@ public abstract class BaseChainloader<TPlugin>
         return pluginTarget.Build > CurrentAssemblyVersion.Build;
     }
 
+    /// <summary>
+    ///     Obtains the <see cref="PluginInfo"/> corresponding to its GUID
+    /// </summary>
+    /// <param name="pluginGuid">The GUID of the plugin to get the info from</param>
+    /// <returns>The info of the plugin, null if the plugin wasn't loaded by the chainloader</returns>
+    public static PluginInfo GetPluginInfoFromGuid(string pluginGuid)
+    {
+        return Plugins.TryGetValue(pluginGuid, out var pluginInfo) ? pluginInfo : null;
+    }
+
     #region Contract
 
     protected virtual string ConsoleTitle => $"BepInEx {Paths.BepInExVersion} - {Paths.ProcessName}";
@@ -127,7 +137,7 @@ public abstract class BaseChainloader<TPlugin>
     ///     If a plugin fails to load, it is removed. This list only contains the plugins that were actually
     ///     loaded and have their dependencies satisfied.
     /// </summary>
-    public Dictionary<string, PluginInfo> Plugins { get; } = new();
+    public static Dictionary<string, PluginInfo> Plugins { get; } = new();
 
     /// <summary>
     ///     List of all <see cref="PluginInfo" /> instances of all providers loaded via the chainloader.
@@ -138,8 +148,9 @@ public abstract class BaseChainloader<TPlugin>
     
     /// <summary>
     ///     List of all <see cref="IPluginLoadContext" /> discovered from all the providers
+    ///     with each context associated with its provider info
     /// </summary>
-    public List<IPluginLoadContext> LoadContexts { get; } = new();
+    public Dictionary<IPluginLoadContext, PluginInfo> LoadContexts { get; } = new();
     
     /// <summary>
     ///     Collection of error chainloader messages that occured during plugin loading.
@@ -344,7 +355,7 @@ public abstract class BaseChainloader<TPlugin>
             LoadPlugins(providers, provider: true);
             FinishedProviders?.Invoke();
             
-            var plugins = TypeLoader.GetPluginsFromLoadContexts(LoadContexts, ToPluginInfo<TPlugin>, HasBepinPluginType<BepInPlugin>, "chainloader");
+            var plugins = TypeLoader.GetPluginsFromLoadContexts(LoadContexts.Keys, ToPluginInfo<TPlugin>, HasBepinPluginType<BepInPlugin>, "chainloader");
             Logger.Log(LogLevel.Info, $"{plugins.Count} plugin{(plugins.Count == 1 ? "" : "s")} to load");
             LoadPlugins(plugins, provider: false);
             Finished?.Invoke();
@@ -404,11 +415,15 @@ public abstract class BaseChainloader<TPlugin>
                     plugin.Instance = Activator.CreateInstance(type);
                     AppDomain.CurrentDomain.AssemblyResolve += (_, args) => ((BasePluginProvider)plugin.Instance).ResolveAssembly(args.Name);
                     var pluginLoadContexts = ((BasePluginProvider)plugin.Instance).GetPlugins();
-                    LoadContexts.AddRange(pluginLoadContexts);
+                    foreach (IPluginLoadContext context in pluginLoadContexts)
+                    {
+                        LoadContexts[context] = plugin;
+                    }
                     ProviderLoaded?.Invoke(plugin);
                 }
                 else
                 {
+                    plugin.Source = LoadContexts[plugin.LoadContext];
                     plugin.Instance = LoadPlugin(plugin, ass);
                     PluginLoaded?.Invoke(plugin);
                     plugin.LoadContext.Dispose();

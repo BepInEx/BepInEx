@@ -184,7 +184,7 @@ public static class TypeLoader
     ///     A dictionary of all assemblies in the directory and the list of type metadatas of types that match the
     ///     selector.
     /// </returns>
-    public static List<T> GetPluginsFromLoadContexts<T>(IList<IPluginLoadContext> loadContexts,
+    public static List<T> GetPluginsFromLoadContexts<T>(IEnumerable<IPluginLoadContext> loadContexts,
                                                         Func<TypeDefinition, IPluginLoadContext, string, T> typeSelector,
                                                         Func<AssemblyDefinition, bool> assemblyFilter = null,
                                                         string cacheName = null)

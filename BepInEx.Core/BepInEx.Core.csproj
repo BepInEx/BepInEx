@@ -12,9 +12,6 @@
         <PackageReference Include="SemanticVersioning" Version="2.0.2"/>
         <PackageReference Include="MonoMod.Utils" Version="22.5.1.1"/>
     </ItemGroup>
-    <ItemGroup>
-        <Compile Remove="Contract\IPlugin.cs"/>
-    </ItemGroup>
 
     <!-- CopyLocalLockFileAssemblies causes to also output shared assemblies: https://github.com/NuGet/Home/issues/4837#issuecomment-354536302 -->
     <!-- Since all core assemblies usually follow naming of System.*, we just delete them for now -->

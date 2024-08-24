@@ -1,5 +1,7 @@
 ﻿using System;
+using BepInEx.Bootstrap;
 using BepInEx.Configuration;
+using BepInEx.Contract;
 using BepInEx.Logging;
 using UnityEngine;
 
@@ -8,7 +10,7 @@ namespace BepInEx.Unity.Mono;
 /// <summary>
 ///     The base plugin type that is used by the BepInEx plugin loader.
 /// </summary>
-public abstract class BaseUnityPlugin : MonoBehaviour
+public abstract class BaseUnityPlugin : MonoBehaviour, IPlugin
 {
     /// <summary>
     ///     Create a new instance of a plugin and all of its tied in objects.
@@ -21,13 +23,8 @@ public abstract class BaseUnityPlugin : MonoBehaviour
             throw new InvalidOperationException("Can't create an instance of " + GetType().FullName +
                                                 " because it inherits from BaseUnityPlugin and the BepInPlugin attribute is missing.");
 
-        Info = new PluginInfo
-        {
-            Metadata = metadata,
-            Instance = this,
-            Dependencies = MetadataHelper.GetDependencies(GetType()),
-            Processes = MetadataHelper.GetAttributes<BepInProcess>(GetType()),
-        };
+        Info = BaseChainloader<BaseUnityPlugin>.GetPluginInfoFromGuid(metadata.GUID);
+        Info.Instance = this;
 
         Logger = BepInEx.Logging.Logger.CreateLogSource(metadata.Name);
 
@@ -42,7 +39,7 @@ public abstract class BaseUnityPlugin : MonoBehaviour
     /// <summary>
     ///     Logger instance tied to this plugin.
     /// </summary>
-    protected ManualLogSource Logger { get; }
+    public ManualLogSource Logger { get; }
 
     /// <summary>
     ///     Default config file tied to this plugin. The config file will not be created until
