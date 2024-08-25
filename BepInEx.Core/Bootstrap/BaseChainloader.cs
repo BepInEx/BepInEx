@@ -120,10 +120,12 @@ public abstract class BaseChainloader<TPlugin>
     ///     Obtains the <see cref="PluginInfo"/> corresponding to its GUID
     /// </summary>
     /// <param name="pluginGuid">The GUID of the plugin to get the info from</param>
-    /// <returns>The info of the plugin, null if the plugin wasn't loaded by the chainloader</returns>
-    public static PluginInfo GetPluginInfoFromGuid(string pluginGuid)
+    /// <param name="foundPluginInfo">When this method returns, contains the <see cref="PluginInfo"/>
+    /// associated with the specified GUID, if the plugin was loaded; otherwise, null. This parameter is passed uninitialized.</param>
+    /// <returns>true if the plugin with the GUID was loaded by the chainloader; otherwise, false.</returns>
+    public bool TryGetPluginInfoFromGuid(string pluginGuid, out PluginInfo foundPluginInfo)
     {
-        return Plugins.TryGetValue(pluginGuid, out var pluginInfo) ? pluginInfo : null;
+        return Plugins.TryGetValue(pluginGuid, out foundPluginInfo);
     }
 
     #region Contract
@@ -133,11 +135,16 @@ public abstract class BaseChainloader<TPlugin>
     private bool _initialized;
 
     /// <summary>
+    /// The current chainloader instance
+    /// </summary>
+    public static BaseChainloader<TPlugin> Instance { get; protected set; }
+    
+    /// <summary>
     ///     List of all <see cref="PluginInfo" /> instances of all plugins loaded via the chainloader.
     ///     If a plugin fails to load, it is removed. This list only contains the plugins that were actually
     ///     loaded and have their dependencies satisfied.
     /// </summary>
-    public static Dictionary<string, PluginInfo> Plugins { get; } = new();
+    public Dictionary<string, PluginInfo> Plugins { get; } = new();
 
     /// <summary>
     ///     List of all <see cref="PluginInfo" /> instances of all providers loaded via the chainloader.
@@ -147,8 +154,9 @@ public abstract class BaseChainloader<TPlugin>
     public Dictionary<string, PluginInfo> Providers { get; } = new();
     
     /// <summary>
-    ///     List of all <see cref="IPluginLoadContext" /> discovered from all the providers
-    ///     with each context associated with its provider info
+    ///     List of all <see cref="IPluginLoadContext" /> objects received from plugin providers.
+    ///     Value holds info of the originating provider. These contexts are used by chainloader to
+    ///     load plugins. Plugins that are loaded successfully are added to <see cref="Plugins" />.
     /// </summary>
     public Dictionary<IPluginLoadContext, PluginInfo> LoadContexts { get; } = new();
     
@@ -349,7 +357,7 @@ public abstract class BaseChainloader<TPlugin>
             var builtinProviders = DiscoverPluginProvidersFrom(Paths.BepInExAssemblyDirectory);
             var providers = DiscoverPluginProvidersFrom(Paths.PluginProviderPath);
             Logger.Log(LogLevel.Info, $"{providers.Count + builtinProviders.Count} " +
-                                      $"plugins provider{(providers.Count + builtinProviders.Count == 1 ? "" : "s")} to load");
+                                      $"plugin provider{(providers.Count + builtinProviders.Count == 1 ? "" : "s")} to load");
             
             LoadPlugins(builtinProviders, provider: true);
             LoadPlugins(providers, provider: true);
@@ -376,67 +384,67 @@ public abstract class BaseChainloader<TPlugin>
 
     private void LoadPlugins(List<PluginInfo> plugins, bool provider)
     {
-        var existingPlugins = provider ? Providers : Plugins;
-        var sortedPlugins = ModifyLoadOrder(plugins, existingPlugins);
+        var existingPluginInfos = provider ? Providers : Plugins;
+        var sortedPluginInfos = ModifyLoadOrder(plugins, existingPluginInfos);
         
         var invalidPlugins = new HashSet<string>();
         var processedPlugins = new Dictionary<string, SemanticVersioning.Version>();
         var loadedAssemblies = new Dictionary<string, Assembly>();
 
-        foreach (var plugin in sortedPlugins)
+        foreach (var pluginInfo in sortedPluginInfos)
         {
-            if (!CheckDependencies(plugin, processedPlugins, invalidPlugins, existingPlugins))
+            if (!CheckDependencies(pluginInfo, processedPlugins, invalidPlugins, existingPluginInfos))
             {
                 continue;
             }
 
             try
             {
-                Logger.Log(LogLevel.Info, $"Loading [{plugin}]");
+                Logger.Log(LogLevel.Info, $"Loading [{pluginInfo}]");
 
                 Assembly ass = null;
-                if (provider && !loadedAssemblies.TryGetValue(plugin.Location, out ass))
+                if (provider && !loadedAssemblies.TryGetValue(pluginInfo.Location, out ass))
                 {
-                    ass = Assembly.LoadFrom(plugin.Location);
-                    loadedAssemblies[plugin.Location] = ass;
+                    ass = Assembly.LoadFrom(pluginInfo.Location);
+                    loadedAssemblies[pluginInfo.Location] = ass;
                 }
-                else if (!provider && !loadedAssemblies.TryGetValue(plugin.LoadContext.AssemblyIdentifier, out ass))
+                else if (!provider && !loadedAssemblies.TryGetValue(pluginInfo.LoadContext.AssemblyIdentifier, out ass))
                 {
-                    ass = Assembly.Load(plugin.LoadContext.GetAssemblyData());
-                    loadedAssemblies[plugin.LoadContext.AssemblyIdentifier] = ass;
+                    ass = Assembly.Load(pluginInfo.LoadContext.GetAssemblyData());
+                    loadedAssemblies[pluginInfo.LoadContext.AssemblyIdentifier] = ass;
                 }
 
-                existingPlugins[plugin.Metadata.GUID] = plugin;
-                TryRunModuleCtor(plugin, ass);
+                existingPluginInfos[pluginInfo.Metadata.GUID] = pluginInfo;
+                TryRunModuleCtor(pluginInfo, ass);
 
                 if (provider)
                 {
-                    var type = ass.GetType(plugin.TypeName);
-                    plugin.Instance = Activator.CreateInstance(type);
-                    AppDomain.CurrentDomain.AssemblyResolve += (_, args) => ((BasePluginProvider)plugin.Instance).ResolveAssembly(args.Name);
-                    var pluginLoadContexts = ((BasePluginProvider)plugin.Instance).GetPlugins();
+                    var type = ass.GetType(pluginInfo.TypeName);
+                    pluginInfo.Instance = Activator.CreateInstance(type);
+                    AppDomain.CurrentDomain.AssemblyResolve += (_, args) => ((BasePluginProvider)pluginInfo.Instance).ResolveAssembly(args.Name);
+                    var pluginLoadContexts = ((BasePluginProvider)pluginInfo.Instance).GetPlugins();
                     foreach (IPluginLoadContext context in pluginLoadContexts)
                     {
-                        LoadContexts[context] = plugin;
+                        LoadContexts[context] = pluginInfo;
                     }
-                    ProviderLoaded?.Invoke(plugin);
+                    ProviderLoaded?.Invoke(pluginInfo);
                 }
                 else
                 {
-                    plugin.Source = LoadContexts[plugin.LoadContext];
-                    plugin.Instance = LoadPlugin(plugin, ass);
-                    PluginLoaded?.Invoke(plugin);
-                    plugin.LoadContext.Dispose();
+                    pluginInfo.Source = LoadContexts[pluginInfo.LoadContext];
+                    pluginInfo.Instance = LoadPlugin(pluginInfo, ass);
+                    PluginLoaded?.Invoke(pluginInfo);
+                    pluginInfo.LoadContext.Dispose();
                 }
             }
             catch (Exception ex)
             {
-                invalidPlugins.Add(plugin.Metadata.GUID);
-                existingPlugins.Remove(plugin.Metadata.GUID);
-                plugin.LoadContext.Dispose();
+                invalidPlugins.Add(pluginInfo.Metadata.GUID);
+                existingPluginInfos.Remove(pluginInfo.Metadata.GUID);
+                pluginInfo.LoadContext.Dispose();
 
                 Logger.Log(LogLevel.Error,
-                           $"Error loading [{plugin}]: {(ex is ReflectionTypeLoadException re ? TypeLoader.TypeLoadExceptionToString(re) : ex.ToString())}");
+                           $"Error loading [{pluginInfo}]: {(ex is ReflectionTypeLoadException re ? TypeLoader.TypeLoadExceptionToString(re) : ex.ToString())}");
             }
         }
     }

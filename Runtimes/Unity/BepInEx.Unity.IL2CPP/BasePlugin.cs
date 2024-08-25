@@ -1,4 +1,5 @@
-﻿using BepInEx.Bootstrap;
+﻿using System;
+using BepInEx.Bootstrap;
 using BepInEx.Configuration;
 using BepInEx.Contract;
 using BepInEx.Logging;
@@ -12,8 +13,15 @@ public abstract class BasePlugin : IPlugin
     {
         var metadata = MetadataHelper.GetPluginMetadata(this);
 
-        Info = BaseChainloader<BasePlugin>.GetPluginInfoFromGuid(metadata.GUID);
-        Info.Instance = this;
+        if (BaseChainloader<BasePlugin>.Instance.TryGetPluginInfoFromGuid(metadata.GUID, out var pluginInfo))
+        {
+            Info = pluginInfo;
+            Info.Instance = this;
+        }
+        else
+        {
+            throw new InvalidOperationException($"The plugin information for {metadata.GUID} couldn't be found on the chainloader");
+        }
         
         Logger = BepInEx.Logging.Logger.CreateLogSource(metadata.Name);
 

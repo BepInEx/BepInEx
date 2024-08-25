@@ -1,3 +1,4 @@
+using System;
 using BepInEx.Bootstrap;
 using BepInEx.Configuration;
 using BepInEx.Contract;
@@ -14,8 +15,15 @@ namespace BepInEx.NET.Common
 
             HarmonyInstance = new Harmony("BepInEx.Plugin." + metadata.GUID);
 
-            Info = BaseChainloader<BasePlugin>.GetPluginInfoFromGuid(metadata.GUID);
-            Info.Instance = this;
+            if (BaseChainloader<BasePlugin>.Instance.TryGetPluginInfoFromGuid(metadata.GUID, out var pluginInfo))
+            {
+                Info = pluginInfo;
+                Info.Instance = this;
+            }
+            else
+            {
+                throw new InvalidOperationException($"The plugin information for {metadata.GUID} couldn't be found on the chainloader");
+            }
             
             Logger = BepInEx.Logging.Logger.CreateLogSource(metadata.Name);
 
