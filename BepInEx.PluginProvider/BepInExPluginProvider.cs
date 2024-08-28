@@ -6,7 +6,7 @@ using BepInEx.Logging;
 
 namespace BepInEx.PluginProvider;
 
-[BepInPluginProvider("io.bepinex.bepinexpluginprovider", "BepInExPluginProvider", "1.0")]
+[BepInPluginProvider("BepInExPluginProvider", "BepInExPluginProvider", "1.0")]
 public class BepInExPluginProvider : BasePluginProvider
 {
     private static readonly Dictionary<string, string> AssemblyLocationsByFilename = new();

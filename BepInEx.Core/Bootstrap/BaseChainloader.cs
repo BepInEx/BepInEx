@@ -257,13 +257,12 @@ public abstract class BaseChainloader<TPlugin>
     /// <remarks>Some plugins may be skipped if they cannot be loaded (wrong metadata, etc).</remarks>
     /// <param name="plugins">Plugins to process.</param>
     /// <returns>List of plugins to load in the correct load order.</returns>
-    protected virtual List<T> ModifyLoadOrder<T>(IList<T> plugins, Dictionary<string, T> existingPlugins)
-        where T : PluginInfo
+    protected virtual List<PluginInfo> ModifyLoadOrder(IList<PluginInfo> plugins, Dictionary<string, PluginInfo> existingPlugins)
     {
         // We use a sorted dictionary to ensure consistent load order
         var dependencyDict =
             new SortedDictionary<string, IEnumerable<string>>(StringComparer.InvariantCultureIgnoreCase);
-        var pluginsByGuid = new Dictionary<string, T>();
+        var pluginsByGuid = new Dictionary<string, PluginInfo>();
 
         foreach (var pluginInfoGroup in plugins.GroupBy(info => info.Metadata.GUID))
         {
@@ -441,7 +440,7 @@ public abstract class BaseChainloader<TPlugin>
             {
                 invalidPlugins.Add(pluginInfo.Metadata.GUID);
                 existingPluginInfos.Remove(pluginInfo.Metadata.GUID);
-                pluginInfo.LoadContext.Dispose();
+                pluginInfo.LoadContext?.Dispose();
 
                 Logger.Log(LogLevel.Error,
                            $"Error loading [{pluginInfo}]: {(ex is ReflectionTypeLoadException re ? TypeLoader.TypeLoadExceptionToString(re) : ex.ToString())}");

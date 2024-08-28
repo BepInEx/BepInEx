@@ -11,13 +11,13 @@
         <ProjectReference Include="..\..\..\BepInEx.Core\BepInEx.Core.csproj"/>
         <ProjectReference Include="..\..\..\BepInEx.PluginProvider\BepInEx.PluginProvider.csproj">
             <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-            <OutputItemType>Content</OutputItemType>
+            <OutputItemType>None</OutputItemType>
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
             <Targets>Build;DocumentationProjectOutputGroup</Targets>
         </ProjectReference>
         <ProjectReference Include="..\..\..\BepInEx.PatcherProvider\BepInEx.PatcherProvider.csproj">
             <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-            <OutputItemType>Content</OutputItemType>
+            <OutputItemType>None</OutputItemType>
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
             <Targets>Build;DocumentationProjectOutputGroup</Targets>
         </ProjectReference>
