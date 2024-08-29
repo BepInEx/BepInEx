@@ -43,5 +43,6 @@ public class BepInExPluginLoadContext : IPluginLoadContext
     public void Dispose()
     {
         assemblyData = null;
+        assemblySymbolsData = null;
     }
 }

@@ -236,7 +236,7 @@ public static class Utility
 
         var potentialSymbolsFileNames = new[]
         {
-            $"{filename}.mdb",
+            $"{filename}.dll.mdb",
             $"{filename}.pdb"
         };
                 
