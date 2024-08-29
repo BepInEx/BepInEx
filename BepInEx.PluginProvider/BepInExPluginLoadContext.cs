@@ -8,6 +8,7 @@ public class BepInExPluginLoadContext : IPluginLoadContext
     public string AssemblyIdentifier { get; internal set; }
     public string AssemblyHash { get; internal set; }
     private byte[] assemblyData;
+    private byte[] assemblySymbolsData;
     public byte[] GetAssemblyData()
     {
         if (assemblyData == null)
@@ -16,6 +17,17 @@ public class BepInExPluginLoadContext : IPluginLoadContext
         }
 
         return assemblyData;
+    }
+
+    public byte[] GetAssemblySymbolsData()
+    {
+        if (assemblySymbolsData == null)
+        {
+            if (!Utility.TryResolveDllSymbols(AssemblyIdentifier, out assemblySymbolsData))
+                assemblySymbolsData = null;
+        }
+
+        return assemblySymbolsData;
     }
 
     public byte[] GetFile(string relativePath)

@@ -40,7 +40,7 @@ public class BepInExPatcherProvider : BasePatcherProvider
         if (!AssemblyLocationsByFilename.TryGetValue(name, out var location))
             return null;
 
-        if (!Utility.TryResolveDllAssembly(new(name), location, out var ass))
+        if (!Utility.TryResolveDllAssemblyWithSymbols(new(name), location, out var ass))
             return null;
 
         return ass;

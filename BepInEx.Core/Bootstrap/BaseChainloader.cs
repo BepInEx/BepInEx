@@ -116,18 +116,6 @@ public abstract class BaseChainloader<TPlugin>
         return pluginTarget.Build > CurrentAssemblyVersion.Build;
     }
 
-    /// <summary>
-    ///     Obtains the <see cref="PluginInfo"/> corresponding to its GUID
-    /// </summary>
-    /// <param name="pluginGuid">The GUID of the plugin to get the info from</param>
-    /// <param name="foundPluginInfo">When this method returns, contains the <see cref="PluginInfo"/>
-    /// associated with the specified GUID, if the plugin was loaded; otherwise, null. This parameter is passed uninitialized.</param>
-    /// <returns>true if the plugin with the GUID was loaded by the chainloader; otherwise, false.</returns>
-    public bool TryGetPluginInfoFromGuid(string pluginGuid, out PluginInfo foundPluginInfo)
-    {
-        return Plugins.TryGetValue(pluginGuid, out foundPluginInfo);
-    }
-
     #region Contract
 
     protected virtual string ConsoleTitle => $"BepInEx {Paths.BepInExVersion} - {Paths.ProcessName}";
@@ -409,7 +397,9 @@ public abstract class BaseChainloader<TPlugin>
                 }
                 else if (!provider && !loadedAssemblies.TryGetValue(pluginInfo.LoadContext.AssemblyIdentifier, out ass))
                 {
-                    ass = Assembly.Load(pluginInfo.LoadContext.GetAssemblyData());
+                    var symbols = pluginInfo.LoadContext.GetAssemblySymbolsData();
+                    ass = symbols != null ? Assembly.Load(pluginInfo.LoadContext.GetAssemblyData(), symbols)
+                                          : Assembly.Load(pluginInfo.LoadContext.GetAssemblyData());
                     loadedAssemblies[pluginInfo.LoadContext.AssemblyIdentifier] = ass;
                 }
 

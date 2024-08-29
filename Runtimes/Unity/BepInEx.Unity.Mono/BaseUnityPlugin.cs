@@ -23,7 +23,7 @@ public abstract class BaseUnityPlugin : MonoBehaviour, IPlugin
             throw new InvalidOperationException("Can't create an instance of " + GetType().FullName +
                                                 " because it inherits from BaseUnityPlugin and the BepInPlugin attribute is missing.");
 
-        if (BaseChainloader<BaseUnityPlugin>.Instance.TryGetPluginInfoFromGuid(metadata.GUID, out var pluginInfo))
+        if (BaseChainloader<BaseUnityPlugin>.Instance.Plugins.TryGetValue(metadata.GUID, out var pluginInfo))
         {
             Info = pluginInfo;
             Info.Instance = this;

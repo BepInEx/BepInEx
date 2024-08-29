@@ -13,7 +13,7 @@ public abstract class BasePlugin : IPlugin
     {
         var metadata = MetadataHelper.GetPluginMetadata(this);
 
-        if (BaseChainloader<BasePlugin>.Instance.TryGetPluginInfoFromGuid(metadata.GUID, out var pluginInfo))
+        if (BaseChainloader<BasePlugin>.Instance.Plugins.TryGetValue(metadata.GUID, out var pluginInfo))
         {
             Info = pluginInfo;
             Info.Instance = this;

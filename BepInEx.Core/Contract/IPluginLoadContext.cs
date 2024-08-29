@@ -27,6 +27,12 @@ public interface IPluginLoadContext : IDisposable
     public byte[] GetAssemblyData();
 
     /// <summary>
+    ///     Obtains the assembly's symbols data which will be loaded by the chainloader alongside the assembly
+    /// </summary>
+    /// <returns>The assembly's symbols data in bytes (either in portable pdb or mdb format). Null if no symbols exists for this assembly</returns>
+    public byte[] GetAssemblySymbolsData();
+    
+    /// <summary>
     ///     Obtains a file's raw data using a relative path from the plugin assembly
     /// </summary>
     /// <param name="relativePath">The relative path from the plugin assembly used to locate the file</param>
