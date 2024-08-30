@@ -227,17 +227,16 @@ public static class Utility
     /// <param name="dllPath">File path of the DLL assembly.</param>
     /// <param name="symbolsData">The symbols of the DLL assembly.</param>
     /// <returns>True, if the symbols were found. Otherwise, false.</returns>
-    public static bool TryResolveDllSymbols(string dllPath, out byte[] symbolsData)
+    public static bool TryResolveAssemblySymbols(string dllPath, out byte[] symbolsData)
     {
         symbolsData = null;
         
         var subDirectory = Path.GetDirectoryName(dllPath);
-        var filename = Path.GetFileNameWithoutExtension(dllPath);
 
         var potentialSymbolsFileNames = new[]
         {
-            $"{filename}.dll.mdb",
-            $"{filename}.pdb"
+            $"{dllPath}.mdb",
+            Path.ChangeExtension(dllPath, ".pdb")
         };
                 
         foreach (var symbolFileName in potentialSymbolsFileNames)
@@ -265,7 +264,7 @@ public static class Utility
     {        
         var assemblyData = File.ReadAllBytes(assemblyFilePath);
 
-        return TryResolveDllSymbols(assemblyFilePath, out byte[] symbolsData)
+        return TryResolveAssemblySymbols(assemblyFilePath, out byte[] symbolsData)
                    ? Assembly.Load(assemblyData, symbolsData)
                    : Assembly.Load(assemblyData);
     }
