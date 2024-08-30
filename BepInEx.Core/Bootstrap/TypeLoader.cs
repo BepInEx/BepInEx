@@ -10,6 +10,47 @@ using Mono.Cecil;
 
 namespace BepInEx.Bootstrap;
 
+internal class CachedPluginLoadContext : IPluginLoadContext, IDisposable
+{
+    public IPluginLoadContext PluginLoadContext { get; }
+    private byte[] assemblyData;
+    private byte[] assemblySymbolsData;
+    private readonly Dictionary<string, byte[]> files = new();
+
+    public CachedPluginLoadContext(IPluginLoadContext pluginLoadContext)
+    {
+        PluginLoadContext = pluginLoadContext;
+    }
+
+    public string AssemblyIdentifier => PluginLoadContext.AssemblyIdentifier;
+    public string AssemblyHash => PluginLoadContext.AssemblyHash;
+    public byte[] GetAssemblyData()
+    {
+        return assemblyData ??= PluginLoadContext.GetAssemblyData();
+    }
+
+    public byte[] GetAssemblySymbolsData()
+    {
+        return assemblySymbolsData ??= PluginLoadContext.GetAssemblySymbolsData();
+    }
+
+    public byte[] GetFile(string relativePath)
+    {
+        if (!files.ContainsKey(relativePath))
+        {
+            files[relativePath] = PluginLoadContext.GetFile(relativePath);
+        }
+        return files[relativePath];
+    }
+
+    public void Dispose()
+    {
+        assemblyData = null;
+        assemblySymbolsData = null;
+        files.Clear();
+    }
+}
+
 /// <summary>
 ///     A cacheable metadata item. Can be used with <see cref="TypeLoader.LoadAssemblyCache{T}" /> and
 ///     <see cref="TypeLoader.SaveAssemblyCache{T}" /> to cache plugin metadata.

@@ -146,7 +146,7 @@ public abstract class BaseChainloader<TPlugin>
     ///     Value holds info of the originating provider. These contexts are used by chainloader to
     ///     load plugins. Plugins that are loaded successfully are added to <see cref="Plugins" />.
     /// </summary>
-    public Dictionary<IPluginLoadContext, PluginInfo> LoadContexts { get; } = new();
+    internal Dictionary<CachedPluginLoadContext, PluginInfo> LoadContexts { get; } = new();
     
     /// <summary>
     ///     Collection of error chainloader messages that occured during plugin loading.
@@ -350,7 +350,7 @@ public abstract class BaseChainloader<TPlugin>
             LoadPlugins(providers, provider: true);
             FinishedProviders?.Invoke();
             
-            var plugins = TypeLoader.GetPluginsFromLoadContexts(LoadContexts.Keys, ToPluginInfo<TPlugin>, HasBepinPluginType<BepInPlugin>, "chainloader");
+            var plugins = TypeLoader.GetPluginsFromLoadContexts(LoadContexts.Keys.Cast<IPluginLoadContext>(), ToPluginInfo<TPlugin>, HasBepinPluginType<BepInPlugin>, "chainloader");
             Logger.Log(LogLevel.Info, $"{plugins.Count} plugin{(plugins.Count == 1 ? "" : "s")} to load");
             LoadPlugins(plugins, provider: false);
             Finished?.Invoke();
@@ -414,23 +414,24 @@ public abstract class BaseChainloader<TPlugin>
                     var pluginLoadContexts = ((BasePluginProvider)pluginInfo.Instance).GetPlugins();
                     foreach (IPluginLoadContext context in pluginLoadContexts)
                     {
-                        LoadContexts[context] = pluginInfo;
+                        var cachedContext = new CachedPluginLoadContext(context);
+                        LoadContexts[cachedContext] = pluginInfo;
                     }
                     ProviderLoaded?.Invoke(pluginInfo);
                 }
                 else
                 {
-                    pluginInfo.Source = LoadContexts[pluginInfo.LoadContext];
+                    pluginInfo.Source = LoadContexts[(CachedPluginLoadContext)pluginInfo.LoadContext];
                     pluginInfo.Instance = LoadPlugin(pluginInfo, ass);
                     PluginLoaded?.Invoke(pluginInfo);
-                    pluginInfo.LoadContext.Dispose();
+                    foreach (CachedPluginLoadContext context in LoadContexts.Keys)
+                        context.Dispose();
                 }
             }
             catch (Exception ex)
             {
                 invalidPlugins.Add(pluginInfo.Metadata.GUID);
                 existingPluginInfos.Remove(pluginInfo.Metadata.GUID);
-                pluginInfo.LoadContext?.Dispose();
 
                 Logger.Log(LogLevel.Error,
                            $"Error loading [{pluginInfo}]: {(ex is ReflectionTypeLoadException re ? TypeLoader.TypeLoadExceptionToString(re) : ex.ToString())}");

@@ -25,7 +25,7 @@ public class AssemblyPatcher : IDisposable
 
     private Func<byte[], string, Assembly> assemblyLoader;
 
-    private readonly List<IPluginLoadContext> loadContexts = new();
+    private readonly List<CachedPluginLoadContext> loadContexts = new();
     private readonly List<BasePatcherProvider> providers = new();
     
     public AssemblyPatcher(Func<byte[], string, Assembly> assemblyLoader)
@@ -164,7 +164,7 @@ public class AssemblyPatcher : IDisposable
 
                     var instance = (BasePatcherProvider) Activator.CreateInstance(type);
                     providers.Add(instance);
-                    loadContexts.AddRange(instance.GetPatchers());
+                    loadContexts.AddRange(instance.GetPatchers().Select(x => new CachedPluginLoadContext(x)));
                 }
                 catch (Exception e)
                 {
@@ -174,7 +174,7 @@ public class AssemblyPatcher : IDisposable
             }
         }
 
-        var patchers = TypeLoader.GetPluginsFromLoadContexts(loadContexts, ToPatcherPlugin<BasePatcher>, HasPatcherType<BasePatcher>);
+        var patchers = TypeLoader.GetPluginsFromLoadContexts(loadContexts.Cast<IPluginLoadContext>(), ToPatcherPlugin<BasePatcher>, HasPatcherType<BasePatcher>);
         
         var sortedPatchers = new List<PatchDefinition>();
         
@@ -188,11 +188,15 @@ public class AssemblyPatcher : IDisposable
 
             var assName = ass.GetName();
             Logger.Log(LogLevel.Debug, $"Loaded patcher {patcherPlugin.TypeName} from [{assName.Name} {assName.Version}]");
-            patcherPlugin.LoadContext.Dispose();
         }
 
         PatcherContext.PatchDefinitions.AddRange(sortedPatchers);
         Logger.Log(LogLevel.Info, $"Loaded {sortedPatchers.Count} patcher{(sortedPatchers.Count > 0 ? "s" : "")}");
+
+        foreach (CachedPluginLoadContext loadContext in loadContexts)
+        {
+            loadContext.Dispose();
+        }
     }
 
     private Assembly PatcherProvidersAssemblyResolver(object sender, ResolveEventArgs args)

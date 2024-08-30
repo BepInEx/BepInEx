@@ -6,7 +6,7 @@ namespace BepInEx;
 ///     An interface that allows to dynamically load and track an assembly
 ///     which can be obtained from a provider
 /// </summary>
-public interface IPluginLoadContext : IDisposable
+public interface IPluginLoadContext
 {
     /// <summary>
     ///     An identifier that uniquely identifies an assembly from a provider no matter its revision
