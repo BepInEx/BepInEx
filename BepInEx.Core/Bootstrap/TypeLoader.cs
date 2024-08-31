@@ -15,7 +15,6 @@ internal class CachedPluginLoadContext : IPluginLoadContext, IDisposable
     public IPluginLoadContext PluginLoadContext { get; }
     private byte[] assemblyData;
     private byte[] assemblySymbolsData;
-    private readonly Dictionary<string, byte[]> files = new();
 
     public CachedPluginLoadContext(IPluginLoadContext pluginLoadContext)
     {
@@ -36,18 +35,13 @@ internal class CachedPluginLoadContext : IPluginLoadContext, IDisposable
 
     public byte[] GetFile(string relativePath)
     {
-        if (!files.ContainsKey(relativePath))
-        {
-            files[relativePath] = PluginLoadContext.GetFile(relativePath);
-        }
-        return files[relativePath];
+        return PluginLoadContext.GetFile(relativePath);
     }
 
     public void Dispose()
     {
         assemblyData = null;
         assemblySymbolsData = null;
-        files.Clear();
     }
 }
 
