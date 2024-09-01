@@ -281,8 +281,7 @@ internal static partial class Il2CppInteropManager
     {
         Logger.LogMessage("Running Cpp2IL to generate dummy assemblies");
 
-        var metadataPath = Path.Combine(Paths.GameRootPath,
-                                        $"{Paths.ProcessName}_Data",
+        var metadataPath = Path.Combine(Paths.GameDataPath,
                                         "il2cpp_data",
                                         "Metadata",
                                         "global-metadata.dat");
