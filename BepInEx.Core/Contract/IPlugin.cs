@@ -13,7 +13,7 @@ internal interface IPlugin
     /// <summary>
     /// Logger instance tied to this plugin.
     /// </summary>
-    ManualLogSource Logger { get; }
+    ManualLogSource Log { get; }
 
     /// <summary>
     /// Default config file tied to this plugin. The config file will not be created until 

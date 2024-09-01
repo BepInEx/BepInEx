@@ -11,7 +11,7 @@ namespace BepInEx.NET.Common
     {
         protected BasePlugin()
         {
-            var metadata = MetadataHelper.GetPluginMetadata(this);
+            var metadata = MetadataHelper.GetMetadata(this);
 
             HarmonyInstance = new Harmony("BepInEx.Plugin." + metadata.GUID);
 
@@ -25,7 +25,7 @@ namespace BepInEx.NET.Common
                 throw new InvalidOperationException($"The plugin information for {metadata.GUID} couldn't be found on the chainloader");
             }
             
-            Logger = BepInEx.Logging.Logger.CreateLogSource(metadata.Name);
+            Log = BepInEx.Logging.Logger.CreateLogSource(metadata.Name);
 
             Config = new ConfigFile(Utility.CombinePaths(Paths.ConfigPath, metadata.GUID + ".cfg"), false, metadata);
         }
@@ -34,7 +34,7 @@ namespace BepInEx.NET.Common
         public PluginInfo Info { get; }
         
         /// <inheritdoc />
-        public ManualLogSource Logger { get; }
+        public ManualLogSource Log { get; }
 
         /// <inheritdoc />
         public ConfigFile Config { get; }

@@ -11,7 +11,7 @@ public abstract class BasePlugin : IPlugin
 {
     protected BasePlugin()
     {
-        var metadata = MetadataHelper.GetPluginMetadata(this);
+        var metadata = MetadataHelper.GetMetadata(this);
 
         if (BaseChainloader<BasePlugin>.Instance.Plugins.TryGetValue(metadata.GUID, out var pluginInfo))
         {
@@ -23,14 +23,14 @@ public abstract class BasePlugin : IPlugin
             throw new InvalidOperationException($"The plugin information for {metadata.GUID} couldn't be found on the chainloader");
         }
         
-        Logger = BepInEx.Logging.Logger.CreateLogSource(metadata.Name);
+        Log = BepInEx.Logging.Logger.CreateLogSource(metadata.Name);
 
         Config = new ConfigFile(Utility.CombinePaths(Paths.ConfigPath, metadata.GUID + ".cfg"), false, metadata);
     }
 
     public PluginInfo Info { get; }
     
-    public ManualLogSource Logger { get; }
+    public ManualLogSource Log { get; }
 
     public ConfigFile Config { get; }
 

@@ -290,7 +290,7 @@ public static class MetadataHelper
     /// </summary>
     /// <param name="pluginType">The plugin type.</param>
     /// <returns>The BepInPlugin metadata of the plugin type.</returns>
-    public static BepInPlugin GetPluginMetadata(Type pluginType)
+    public static BepInPlugin GetMetadata(Type pluginType)
     {
         var attributes = pluginType.GetCustomAttributes(typeof(BepInPlugin), false);
 
@@ -305,7 +305,7 @@ public static class MetadataHelper
     /// </summary>
     /// <param name="plugin">The plugin instance.</param>
     /// <returns>The BepInPlugin metadata of the plugin instance.</returns>
-    public static BepInPlugin GetPluginMetadata(object plugin) => GetPluginMetadata(plugin.GetType());
+    public static BepInPlugin GetMetadata(object plugin) => GetMetadata(plugin.GetType());
 
     /// <summary>
     ///     Retrieves the BepInPluginProvider metadata from a plugin type.

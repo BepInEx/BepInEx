@@ -10,7 +10,7 @@ namespace BepInEx.Unity.Mono;
 /// <summary>
 ///     The base plugin type that is used by the BepInEx plugin loader.
 /// </summary>
-public abstract class BaseUnityPlugin : MonoBehaviour, IPlugin
+public abstract class BaseUnityPlugin : MonoBehaviour
 {
     /// <summary>
     ///     Create a new instance of a plugin and all of its tied in objects.
@@ -18,7 +18,7 @@ public abstract class BaseUnityPlugin : MonoBehaviour, IPlugin
     /// <exception cref="InvalidOperationException">BepInPlugin attribute is missing.</exception>
     protected BaseUnityPlugin()
     {
-        var metadata = MetadataHelper.GetPluginMetadata(this);
+        var metadata = MetadataHelper.GetMetadata(this);
         if (metadata == null)
             throw new InvalidOperationException("Can't create an instance of " + GetType().FullName +
                                                 " because it inherits from BaseUnityPlugin and the BepInPlugin attribute is missing.");
