@@ -287,6 +287,19 @@ internal static partial class Il2CppInteropManager
                                         "Metadata",
                                         "global-metadata.dat");
 
+        if (!File.Exists(metadataPath))
+        {
+            var metadataPaths = Directory.GetFiles(Paths.GameRootPath, "global-metadata.dat", SearchOption.AllDirectories);
+
+            if (metadataPaths.Length > 1)
+                throw new AmbiguousMatchException($"Multiple global-metadata.dat files found at \n{string.Join("\n",metadataPaths)}");
+
+            if (metadataPaths.Length == 0)
+                throw new FileNotFoundException("Could not find global-metadata.dat anywhere in recursive search!");
+
+            metadataPath = metadataPaths[0];
+        }
+
         var stopwatch = new Stopwatch();
         stopwatch.Start();
 
