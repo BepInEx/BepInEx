@@ -32,6 +32,8 @@ public class IL2CPPChainloader : BaseChainloader<BasePlugin>
 
     private static INativeDetour RuntimeInvokeDetour { get; set; }
 
+    public static new IL2CPPChainloader Instance { get; set; }
+
     /// <summary>
     ///     Register and add a Unity Component (for example MonoBehaviour) into BepInEx global manager.
     ///     Automatically registers the type with Il2Cpp type system if it isn't initialised already.
