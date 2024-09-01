@@ -104,8 +104,7 @@ public static class Paths
 
         GameRootPath = PlatformHelper.Is(Platform.MacOS)
                            ? Utility.ParentDirectory(executablePath, 4)
-                           : Path.GetDirectoryName(executablePath) 
-                          ?? throw new DirectoryNotFoundException("Failed to extract GameRootPath from executablePath: " + executablePath);
+                           : Path.GetDirectoryName(executablePath);
 
         if (managedPath != null && gameDataRelativeToManaged)
         {
@@ -128,7 +127,8 @@ public static class Paths
         PluginPath = Path.Combine(BepInExRootPath, "plugins");
         PatcherPluginPath = Path.Combine(BepInExRootPath, "patchers");
         BepInExAssemblyDirectory = Path.Combine(BepInExRootPath, "core");
-        BepInExAssemblyPath = Path.Combine(BepInExAssemblyDirectory, $"{Assembly.GetExecutingAssembly().GetName().Name}.dll");
+        BepInExAssemblyPath = Path.Combine(BepInExAssemblyDirectory,
+                                           $"{Assembly.GetExecutingAssembly().GetName().Name}.dll");
         CachePath = Path.Combine(BepInExRootPath, "cache");
         DllSearchPaths = (dllSearchPath ?? new string[0]).Concat(new[] { ManagedPath }).Distinct().ToArray();
     }
