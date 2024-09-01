@@ -31,6 +31,12 @@ public class AssemblyPatcher : IDisposable
     public AssemblyPatcher(Func<byte[], string, Assembly> assemblyLoader)
     {
         this.assemblyLoader = assemblyLoader;
+        
+        if (!Directory.Exists(Paths.PatcherProviderPath))
+            Directory.CreateDirectory(Paths.PatcherProviderPath);
+
+        if (!Directory.Exists(Paths.PatcherPluginPath))
+            Directory.CreateDirectory(Paths.PatcherPluginPath);
     }
 
     /// <summary>

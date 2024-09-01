@@ -187,11 +187,11 @@ public abstract class BaseChainloader<TPlugin>
 
         InitializeLoggers();
 
+        if (!Directory.Exists(Paths.PluginProviderPath))
+            Directory.CreateDirectory(Paths.PluginProviderPath);
+
         if (!Directory.Exists(Paths.PluginPath))
             Directory.CreateDirectory(Paths.PluginPath);
-
-        if (!Directory.Exists(Paths.PatcherPluginPath))
-            Directory.CreateDirectory(Paths.PatcherPluginPath);
 
         _initialized = true;
 
