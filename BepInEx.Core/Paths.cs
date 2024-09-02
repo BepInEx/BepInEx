@@ -112,6 +112,9 @@ public static class Paths
         }
         else
         {
+            // According to some experiments, Unity checks whether globalgamemanagers/data.unity3d exists in the data folder before picking it.
+            // 'ProcessName_Data' folder is checked first, then if that fails 'Data' folder is checked. If neither is valid, the player crashes.
+            // A simple Directory.Exists check is accurate enough while being less likely to break in case these conditions change.
             GameDataPath = Path.Combine(GameRootPath, $"{ProcessName}_Data");
             if (!Directory.Exists(GameDataPath))
                 GameDataPath = Path.Combine(GameRootPath, "Data");
