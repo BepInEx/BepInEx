@@ -8,7 +8,7 @@ using BepInEx.Preloader.Core.Patching;
 namespace BepInEx.PatcherProvider;
 
 [PatcherProviderPluginInfo("BepInExPatcherProvider", "BepInExPatcherProvider", "1.0")]
-public class BepInExPatcherProvider : BasePatcherProvider
+internal class BepInExPatcherProvider : BasePatcherProvider
 {
     private static readonly Dictionary<string, string> AssemblyLocationsByFilename = new();
 
