@@ -53,7 +53,7 @@ public class PluginInfo : ICacheable
     
     internal Version TargettedBepInExVersion { get; set; }
     
-    internal string Location { get; set; }
+    internal string _location { get; set; }
     
     /// <inheritdoc />
     public override string ToString() => $"{Metadata?.Name} {Metadata?.Version}";

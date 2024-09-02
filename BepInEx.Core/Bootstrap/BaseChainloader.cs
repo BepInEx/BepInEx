@@ -91,7 +91,7 @@ public abstract class BaseChainloader<TPlugin>
             Incompatibilities = incompatibilities,
             TypeName = type.FullName,
             TargettedBepInExVersion = bepinVersion,
-            Location = assemblyLocation,
+            _location = assemblyLocation,
             LoadContext = loadContext
         };
     }
@@ -390,10 +390,10 @@ public abstract class BaseChainloader<TPlugin>
                 Logger.Log(LogLevel.Info, $"Loading [{pluginInfo}]");
 
                 Assembly ass = null;
-                if (provider && !loadedAssemblies.TryGetValue(pluginInfo.Location, out ass))
+                if (provider && !loadedAssemblies.TryGetValue(pluginInfo._location, out ass))
                 {
-                    ass = Assembly.LoadFrom(pluginInfo.Location);
-                    loadedAssemblies[pluginInfo.Location] = ass;
+                    ass = Assembly.LoadFrom(pluginInfo._location);
+                    loadedAssemblies[pluginInfo._location] = ass;
                 }
                 else if (!provider && !loadedAssemblies.TryGetValue(pluginInfo.LoadContext.AssemblyIdentifier, out ass))
                 {
