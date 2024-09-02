@@ -53,6 +53,9 @@ public class PluginInfo : ICacheable
     
     internal Version TargettedBepInExVersion { get; set; }
     
+    [Obsolete("Use LoadContext.AssemblyIdentifier instead", true)]
+    public string Location => LoadContext?.AssemblyIdentifier;
+    
     internal string _location { get; set; }
     
     /// <inheritdoc />
