@@ -73,7 +73,7 @@ public class CachedAssembly<T> where T : ICacheable
     /// <summary>
     ///     The version of the cache which increments on each format changes
     /// </summary>
-    public const int VERSION = 0;
+    public const int Version = 0;
 
     /// <summary>
     ///     List of cached items inside the assembly.
@@ -312,7 +312,7 @@ public static class TypeLoader
 
             using var br = new BinaryReader(File.OpenRead(path));
             var version = br.ReadInt32();
-            if (version == CachedAssembly<T>.VERSION)
+            if (version == CachedAssembly<T>.Version)
             {
                 var entriesCount = br.ReadInt32();
 
@@ -366,7 +366,7 @@ public static class TypeLoader
             var path = Path.Combine(Paths.CachePath, $"{cacheName}_typeloader.dat");
 
             using var bw = new BinaryWriter(File.OpenWrite(path));
-            bw.Write(CachedAssembly<T>.VERSION);
+            bw.Write(CachedAssembly<T>.Version);
             bw.Write(entries.Count);
 
             foreach (var kv in entries)
