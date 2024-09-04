@@ -71,6 +71,11 @@ public interface ICacheable
 public class CachedAssembly<T> where T : ICacheable
 {
     /// <summary>
+    ///     The version of the cache which increments on each format changes
+    /// </summary>
+    public static int Version => 0;
+
+    /// <summary>
     ///     List of cached items inside the assembly.
     /// </summary>
     public List<T> CacheItems { get; set; }
@@ -305,7 +310,9 @@ public static class TypeLoader
             if (!File.Exists(path))
                 return null;
 
-            using (var br = new BinaryReader(File.OpenRead(path)))
+            using var br = new BinaryReader(File.OpenRead(path));
+            var version = br.ReadInt32();
+            if (version == CachedAssembly<T>.Version)
             {
                 var entriesCount = br.ReadInt32();
 
