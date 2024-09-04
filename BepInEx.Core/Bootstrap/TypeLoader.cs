@@ -366,6 +366,7 @@ public static class TypeLoader
             var path = Path.Combine(Paths.CachePath, $"{cacheName}_typeloader.dat");
 
             using var bw = new BinaryWriter(File.OpenWrite(path));
+            bw.Write(CachedAssembly<T>.Version);
             bw.Write(entries.Count);
 
             foreach (var kv in entries)
