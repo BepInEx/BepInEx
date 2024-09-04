@@ -1,13 +1,11 @@
 ﻿using System;
-using BepInEx.Bootstrap;
 using BepInEx.Configuration;
-using BepInEx.Contract;
 using BepInEx.Logging;
 using Il2CppInterop.Runtime.InteropTypes;
 
 namespace BepInEx.Unity.IL2CPP;
 
-public abstract class BasePlugin : IPlugin
+public abstract class BasePlugin
 {
     protected BasePlugin()
     {

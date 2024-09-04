@@ -229,8 +229,6 @@ public static class Utility
     /// <returns>True, if the symbols were found. Otherwise, false.</returns>
     public static bool TryResolveAssemblySymbols(string dllPath, out byte[] symbolsData)
     {
-        symbolsData = null;
-        
         var subDirectory = Path.GetDirectoryName(dllPath);
 
         var potentialSymbolsFileNames = new[]
@@ -257,6 +255,7 @@ public static class Utility
             return true;
         }
 
+        symbolsData = null;
         return false;
     }
 

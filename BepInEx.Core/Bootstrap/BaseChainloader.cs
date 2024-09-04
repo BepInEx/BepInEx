@@ -19,6 +19,8 @@ public abstract class BaseChainloader<TPlugin>
 
     private static Regex allowedGuidRegex { get; } = new(@"^[a-zA-Z0-9\._\-]+$");
 
+    internal BaseChainloader() { }
+
     /// <summary>
     ///     Analyzes the given type definition and attempts to convert it to a valid <see cref="PluginInfo" />
     /// </summary>
@@ -369,6 +371,12 @@ public abstract class BaseChainloader<TPlugin>
         Logger.Log(LogLevel.Message, "Chainloader startup complete");
     }
 
+    [Obsolete("Use a plugin provider instead", true)]
+    public IList<PluginInfo> LoadPlugins(params string[] pluginsPaths)
+    {
+        throw new NotSupportedException("Use a plugin provider instead");
+    }
+    
     private void LoadPlugins(List<PluginInfo> plugins, bool provider)
     {
         var existingPluginInfos = provider ? Providers : Plugins;

@@ -42,6 +42,12 @@ public class UnityChainloader : BaseChainloader<BaseUnityPlugin>
     /// </summary>
     public static GameObject ManagerObject { get; private set; }
 
+    public static new UnityChainloader Instance
+    {
+        get => (UnityChainloader)BaseChainloader<BaseUnityPlugin>.Instance;
+        set => BaseChainloader<BaseUnityPlugin>.Instance = value;
+    }
+    
     protected override string ConsoleTitle => _consoleTitle;
 
 

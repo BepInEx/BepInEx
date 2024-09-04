@@ -1,13 +1,12 @@
 using System;
 using BepInEx.Bootstrap;
 using BepInEx.Configuration;
-using BepInEx.Contract;
 using BepInEx.Logging;
 using HarmonyLib;
 
 namespace BepInEx.NET.Common
 {
-    public abstract class BasePlugin : IPlugin
+    public abstract class BasePlugin
     {
         protected BasePlugin()
         {
