@@ -381,7 +381,8 @@ internal static partial class Il2CppInteropManager
         Parallel.ForEach(files, file =>
         {
             if (!file.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)) return;
-            if (file.EndsWith("netstandard.dll", StringComparison.OrdinalIgnoreCase)) return;
+            if (file.Equals("netstandard.dll", StringComparison.OrdinalIgnoreCase)) return;
+            if (file.Equals("Il2Cppnetstandard.dll", StringComparison.OrdinalIgnoreCase)) return;
             try
             {
                 Assembly.LoadFrom(file);
