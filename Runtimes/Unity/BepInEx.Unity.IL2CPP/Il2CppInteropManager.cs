@@ -89,13 +89,15 @@ internal static partial class Il2CppInteropManager
          .AppendLine("{ProcessName} - Name of the current process")
          .ToString());
 
-    private static readonly ConfigEntry<string> GlobalMetadataRelativePath = ConfigFile.CoreConfig.Bind(
-     "IL2CPP", "GlobalMetadataRelativePath",
-     "{ProcessName}_Data/il2cpp_data/Metadata/global-metadata.dat",
+    private static readonly ConfigEntry<string> GlobalMetadataPath = ConfigFile.CoreConfig.Bind(
+     "IL2CPP", "GlobalMetadataPath",
+     "{GameDataPath}/il2cpp_data/Metadata/global-metadata.dat",
      new StringBuilder()
-         .AppendLine("The path to the IL2CPP metadata file, relative to the game root directory.")
+         .AppendLine("The path to the IL2CPP metadata file.")
          .AppendLine("Supports the following placeholders:")
+         .AppendLine("{BepInEx} - Path to the BepInEx folder.")
          .AppendLine("{ProcessName} - Name of the current process")
+         .AppendLine("{GameDataPath} - Path to the game's Data folder.")
          .ToString());
 
     private static readonly ManualLogSource Logger = BepInEx.Logging.Logger.CreateLogSource("InteropManager");
@@ -289,7 +291,10 @@ internal static partial class Il2CppInteropManager
     private static List<AsmResolver.DotNet.AssemblyDefinition> RunCpp2Il()
     {
         var metadataPath = Path.Combine(Paths.GameRootPath,
-                                        GlobalMetadataRelativePath.Value.Replace("{ProcessName}", Paths.ProcessName));
+                                        GlobalMetadataPath.Value
+                                                          .Replace("{BepInEx}", Paths.BepInExRootPath)
+                                                          .Replace("{ProcessName}", Paths.ProcessName)
+                                                          .Replace("{GameDataPath}", Paths.GameDataPath));
         
         Logger.LogMessage("Running Cpp2IL to generate dummy assemblies from " + metadataPath);
 

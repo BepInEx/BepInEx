@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using MonoMod.Utils;
@@ -106,9 +106,23 @@ public static class Paths
                            ? Utility.ParentDirectory(executablePath, 4)
                            : Path.GetDirectoryName(executablePath);
 
-        GameDataPath = managedPath != null && gameDataRelativeToManaged
-                           ? Path.GetDirectoryName(managedPath)
-                           : Path.Combine(GameRootPath, $"{ProcessName}_Data");
+        if (managedPath != null && gameDataRelativeToManaged)
+        {
+            GameDataPath = Path.GetDirectoryName(managedPath);
+        }
+        else
+        {
+            // According to some experiments, Unity checks whether globalgamemanagers/data.unity3d exists in the data folder before picking it.
+            // 'ProcessName_Data' folder is checked first, then if that fails 'Data' folder is checked. If neither is valid, the player crashes.
+            // A simple Directory.Exists check is accurate enough while being less likely to break in case these conditions change.
+            GameDataPath = Path.Combine(GameRootPath, $"{ProcessName}_Data");
+            if (!Directory.Exists(GameDataPath))
+                GameDataPath = Path.Combine(GameRootPath, "Data");
+        }
+        
+        if (string.IsNullOrEmpty(GameDataPath) || !Directory.Exists(GameDataPath))
+            throw new DirectoryNotFoundException("Failed to extract valid GameDataPath from executablePath: " + executablePath);
+
         ManagedPath = managedPath ?? Path.Combine(GameDataPath, "Managed");
         BepInExRootPath = bepinRootPath ?? Path.Combine(GameRootPath, "BepInEx");
         ConfigPath = Path.Combine(BepInExRootPath, "config");
