@@ -89,6 +89,15 @@ internal static partial class Il2CppInteropManager
          .AppendLine("{ProcessName} - Name of the current process")
          .ToString());
 
+    private static readonly ConfigEntry<string> GlobalMetadataRelativePath = ConfigFile.CoreConfig.Bind(
+     "IL2CPP", "GlobalMetadataRelativePath",
+     "{ProcessName}_Data/il2cpp_data/Metadata/global-metadata.dat",
+     new StringBuilder()
+         .AppendLine("The path to the IL2CPP metadata file, relative to the game root directory.")
+         .AppendLine("Supports the following placeholders:")
+         .AppendLine("{ProcessName} - Name of the current process")
+         .ToString());
+
     private static readonly ManualLogSource Logger = BepInEx.Logging.Logger.CreateLogSource("InteropManager");
 
     private static string il2cppInteropBasePath;
@@ -212,10 +221,10 @@ internal static partial class Il2CppInteropManager
 
         var unityVersion = UnityInfo.Version;
         Il2CppInteropRuntime.Create(new RuntimeConfiguration
-                            {
-                                UnityVersion = new Version(unityVersion.Major, unityVersion.Minor, unityVersion.Build),
-                                DetourProvider = new Il2CppInteropDetourProvider()
-                            })
+        {
+            UnityVersion = new Version(unityVersion.Major, unityVersion.Minor, unityVersion.Build),
+            DetourProvider = new Il2CppInteropDetourProvider()
+        })
                             .AddLogger(interopLogger)
                             .AddHarmonySupport()
                             .Start();
@@ -279,13 +288,10 @@ internal static partial class Il2CppInteropManager
 
     private static List<AsmResolver.DotNet.AssemblyDefinition> RunCpp2Il()
     {
-        Logger.LogMessage("Running Cpp2IL to generate dummy assemblies");
-
         var metadataPath = Path.Combine(Paths.GameRootPath,
-                                        $"{Paths.ProcessName}_Data",
-                                        "il2cpp_data",
-                                        "Metadata",
-                                        "global-metadata.dat");
+                                        GlobalMetadataRelativePath.Value.Replace("{ProcessName}", Paths.ProcessName));
+        
+        Logger.LogMessage("Running Cpp2IL to generate dummy assemblies from " + metadataPath);
 
         var stopwatch = new Stopwatch();
         stopwatch.Start();
