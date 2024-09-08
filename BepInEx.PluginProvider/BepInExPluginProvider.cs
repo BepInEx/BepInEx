@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using BepInEx.Logging;
 
@@ -18,7 +19,23 @@ internal class BepInExPluginProvider : BasePluginProvider
         {
             try
             {
-                AssemblyLocationsByFilename.Add(Path.GetFileNameWithoutExtension(dll), Path.GetDirectoryName(dll));
+                var filename = Path.GetFileNameWithoutExtension(dll);
+                var foundDirectory = Path.GetDirectoryName(dll);
+                
+                // Prioritize the shallowest path of each assembly name
+                if (AssemblyLocationsByFilename.TryGetValue(filename, out var existingDirectory))
+                {
+                    int levelExistingDirectory = existingDirectory?.Count(x => x == Path.DirectorySeparatorChar) ?? 0;
+                    int levelFoundDirectory = foundDirectory?.Count(x => x == Path.DirectorySeparatorChar) ?? 0;
+
+                    if (levelExistingDirectory > levelFoundDirectory) 
+                        AssemblyLocationsByFilename[filename] = foundDirectory;
+                }
+                else
+                {
+                    AssemblyLocationsByFilename.Add(filename, foundDirectory);
+                }
+
                 loadContexts.Add(new BepInExPluginLoadContext
                 {
                     AssemblyHash = File.GetLastWriteTimeUtc(dll).ToString("O"),
