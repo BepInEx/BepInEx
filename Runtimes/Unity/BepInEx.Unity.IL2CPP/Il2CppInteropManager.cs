@@ -99,6 +99,17 @@ internal static partial class Il2CppInteropManager
          .AppendLine("Some plugins may not work properly without this, but it may cause issues in some games.")
          .ToString());
 
+    private static readonly ConfigEntry<string> GlobalMetadataPath = ConfigFile.CoreConfig.Bind(
+     "IL2CPP", "GlobalMetadataPath",
+     "{GameDataPath}/il2cpp_data/Metadata/global-metadata.dat",
+     new StringBuilder()
+         .AppendLine("The path to the IL2CPP metadata file.")
+         .AppendLine("Supports the following placeholders:")
+         .AppendLine("{BepInEx} - Path to the BepInEx folder.")
+         .AppendLine("{ProcessName} - Name of the current process")
+         .AppendLine("{GameDataPath} - Path to the game's Data folder.")
+         .ToString());
+
     private static readonly ManualLogSource Logger = BepInEx.Logging.Logger.CreateLogSource("InteropManager");
 
     private static string il2cppInteropBasePath;
@@ -289,12 +300,13 @@ internal static partial class Il2CppInteropManager
 
     private static List<AsmResolver.DotNet.AssemblyDefinition> RunCpp2Il()
     {
-        Logger.LogMessage("Running Cpp2IL to generate dummy assemblies");
-
-        var metadataPath = Path.Combine(Paths.GameDataPath,
-                                        "il2cpp_data",
-                                        "Metadata",
-                                        "global-metadata.dat");
+        var metadataPath = Path.Combine(Paths.GameRootPath,
+                                        GlobalMetadataPath.Value
+                                                          .Replace("{BepInEx}", Paths.BepInExRootPath)
+                                                          .Replace("{ProcessName}", Paths.ProcessName)
+                                                          .Replace("{GameDataPath}", Paths.GameDataPath));
+        
+        Logger.LogMessage("Running Cpp2IL to generate dummy assemblies from " + metadataPath);
 
         var stopwatch = new Stopwatch();
         stopwatch.Start();
