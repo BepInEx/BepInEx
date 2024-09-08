@@ -8,6 +8,8 @@ using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using BepInEx.Unity.Common;
@@ -87,6 +89,14 @@ internal static partial class Il2CppInteropManager
          .AppendLine("Supports the following placeholders:")
          .AppendLine("{BepInEx} - Path to the BepInEx folder.")
          .AppendLine("{ProcessName} - Name of the current process")
+         .ToString());
+    
+    private static readonly ConfigEntry<bool> PreloadIL2CPPInteropAssemblies = ConfigFile.CoreConfig.Bind(
+     "IL2CPP", "PreloadIL2CPPInteropAssemblies",
+     true,
+     new StringBuilder()
+         .AppendLine("Automatically load all interop assemblies right before loading plugins.")
+         .AppendLine("Some plugins may not work properly without this, but it may cause issues in some games.")
          .ToString());
 
     private static readonly ManualLogSource Logger = BepInEx.Logging.Logger.CreateLogSource("InteropManager");
@@ -356,5 +366,33 @@ internal static partial class Il2CppInteropManager
                               .Run();
 
         sourceAssemblies.Do(x => x.Dispose());
+    }
+
+    internal static void PreloadInteropAssemblies()
+    {
+        if (!PreloadIL2CPPInteropAssemblies.Value)
+            return;
+
+        var sw = Stopwatch.StartNew();
+
+        var files = Directory.EnumerateFiles(IL2CPPInteropAssemblyPath);
+        var loaded = 0;
+        Parallel.ForEach(files, file =>
+        {
+            if (!file.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)) return;
+            if (file.Equals("netstandard.dll", StringComparison.OrdinalIgnoreCase)) return;
+            if (file.Equals("Il2Cppnetstandard.dll", StringComparison.OrdinalIgnoreCase)) return;
+            try
+            {
+                Assembly.LoadFrom(file);
+                Interlocked.Increment(ref loaded);
+            }
+            catch (Exception e)
+            {
+                Logger.LogWarning($"Failed to preload {file} - {e}");
+            }
+        });
+
+        Logger.LogDebug($"Preloaded {loaded} interop assemblies in {sw.ElapsedMilliseconds}ms");
     }
 }

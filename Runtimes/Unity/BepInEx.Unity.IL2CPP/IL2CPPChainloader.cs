@@ -97,6 +97,8 @@ public class IL2CPPChainloader : BaseChainloader<BasePlugin>
 
                 unhook = true;
 
+                Il2CppInteropManager.PreloadInteropAssemblies();
+
                 Instance.Execute();
             }
             catch (Exception ex)
