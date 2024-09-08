@@ -1,4 +1,5 @@
-﻿using BepInEx.Configuration;
+﻿using System;
+using BepInEx.Configuration;
 using BepInEx.Logging;
 using Il2CppInterop.Runtime.InteropTypes;
 
@@ -10,11 +11,23 @@ public abstract class BasePlugin
     {
         var metadata = MetadataHelper.GetMetadata(this);
 
-        Log = Logger.CreateLogSource(metadata.Name);
+        if (IL2CPPChainloader.Instance.Plugins.TryGetValue(metadata.GUID, out var pluginInfo))
+        {
+            Info = pluginInfo;
+            Info.Instance = this;
+        }
+        else
+        {
+            throw new InvalidOperationException($"The plugin information for {metadata.GUID} couldn't be found on the chainloader");
+        }
+        
+        Log = BepInEx.Logging.Logger.CreateLogSource(metadata.Name);
 
         Config = new ConfigFile(Utility.CombinePaths(Paths.ConfigPath, metadata.GUID + ".cfg"), false, metadata);
     }
 
+    public PluginInfo Info { get; }
+    
     public ManualLogSource Log { get; }
 
     public ConfigFile Config { get; }
