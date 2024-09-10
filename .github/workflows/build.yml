@@ -72,7 +72,7 @@ jobs:
                           ]
                         }
             -   name: Upload Artifacts
-                uses: actions/upload-artifact@v2.2.4
+                uses: actions/upload-artifact@v4
                 with:
                     path: "./bin/dist/*.zip"
                     name: "BepInEx_CI_${{ steps.info.outputs.build_type }}_${{ steps.info.outputs.sha_short }}_${{ steps.info.outputs.build_id || 0 }}"
