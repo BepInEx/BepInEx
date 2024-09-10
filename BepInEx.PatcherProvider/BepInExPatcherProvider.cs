@@ -28,8 +28,13 @@ internal class BepInExPatcherProvider : BasePatcherProvider
                 {
                     int levelExistingDirectory = existingDirectory?.Count(x => x == Path.DirectorySeparatorChar) ?? 0;
                     int levelFoundDirectory = foundDirectory?.Count(x => x == Path.DirectorySeparatorChar) ?? 0;
-
-                    if (levelExistingDirectory > levelFoundDirectory) 
+                    
+                    bool shallowerPathFound = levelExistingDirectory > levelFoundDirectory;
+                    Log.LogWarning($"Found duplicate assemblies filenames: {filename} was found at {foundDirectory} " +
+                                   $"while it exists already at {AssemblyLocationsByFilename[filename]}. " +
+                                   $"Only the {(shallowerPathFound ? "first" : "second")} will be examined and resolved");
+                    
+                    if (levelExistingDirectory > levelFoundDirectory)
                         AssemblyLocationsByFilename[filename] = foundDirectory;
                 }
                 else
