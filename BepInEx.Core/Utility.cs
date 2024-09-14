@@ -19,6 +19,13 @@ public static class Utility
     private static bool? sreEnabled;
 
     /// <summary>
+    ///    BepInEx version.
+    /// </summary>
+    public static SemanticVersioning.Version BepInExVersion { get; } =
+        SemanticVersioning.Version.Parse(MetadataHelper.GetAttributes<AssemblyInformationalVersionAttribute>(typeof(Paths).Assembly)[0]
+                                    .InformationalVersion);
+
+    /// <summary>
     ///     Whether current Common Language Runtime supports dynamic method generation using
     ///     <see cref="System.Reflection.Emit" /> namespace.
     /// </summary>
