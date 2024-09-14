@@ -1,7 +1,6 @@
 using System;
 using Il2CppInterop.Runtime;
 using Il2CppInterop.Runtime.Injection;
-using Il2CppInterop.Runtime.InteropTypes;
 using UnityEngine;
 
 namespace BepInEx.Unity.IL2CPP.Utils;
@@ -11,7 +10,7 @@ internal static class Il2CppUtils
     // TODO: Check if we can safely initialize this in Chainloader instead
     private static GameObject managerGo;
 
-    public static Il2CppObjectBase AddComponent(Type t)
+    internal static Component AddComponent(Type t)
     {
         if (managerGo == null)
             managerGo = new GameObject { hideFlags = HideFlags.HideAndDontSave, name = "BepInEx_Manager" };

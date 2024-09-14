@@ -1,34 +1,16 @@
-using System;
-using System.Reflection;
-using BepInEx.Bootstrap;
 using BepInEx.Preloader.Core.Logging;
 
-namespace BepInEx.NET.Common
+namespace BepInEx.NET.Common;
+
+/// <summary>
+///     The .NET runtime specific chainloader
+/// </summary>
+internal class NetChainloader : Chainloader
 {
-    public class NetChainloader : BaseChainloader<BasePlugin>
+    internal override void InitializeLoggers()
     {
-        public override void Initialize(string gameExePath = null)
-        {
-            Instance = this;
-            base.Initialize(gameExePath);
-        }
+        base.InitializeLoggers();
 
-        public override BasePlugin LoadPlugin(PluginInfo pluginInfo, Assembly pluginAssembly)
-        {
-            var type = pluginAssembly.GetType(pluginInfo.TypeName);
-
-            var pluginInstance = (BasePlugin) Activator.CreateInstance(type);
-
-            pluginInstance.Load();
-
-            return pluginInstance;
-        }
-
-        protected override void InitializeLoggers()
-        {
-            base.InitializeLoggers();
-
-            ChainloaderLogHelper.RewritePreloaderLogs();
-        }
+        ChainloaderLogHelper.RewritePreloaderLogs();
     }
 }

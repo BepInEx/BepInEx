@@ -3,8 +3,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using BepInEx.Bootstrap;
-using BepInEx.Configuration;
 using BepInEx.Logging;
 using BepInEx.Preloader.Core.Logging;
 using BepInEx.Unity.Common;
@@ -21,18 +19,8 @@ namespace BepInEx.Unity.Mono.Bootstrap;
 /// <summary>
 ///     The manager and loader for all plugins, and the entry point for BepInEx plugin system.
 /// </summary>
-public class UnityChainloader : BaseChainloader<BaseUnityPlugin>
+internal class UnityChainloader : Chainloader
 {
-    private static readonly ConfigEntry<bool> ConfigUnityLogging = ConfigFile.CoreConfig.Bind(
-     "Logging", "UnityLogListening",
-     true,
-     "Enables showing unity log messages in the BepInEx logging system.");
-
-    private static readonly ConfigEntry<bool> ConfigDiskWriteUnityLog = ConfigFile.CoreConfig.Bind(
-     "Logging.Disk", "WriteUnityLog",
-     false,
-     "Include unity log messages in log file output.");
-
     private static bool staticStartHasBeenCalled = false;
 
     private string _consoleTitle;
@@ -40,16 +28,10 @@ public class UnityChainloader : BaseChainloader<BaseUnityPlugin>
     /// <summary>
     ///     The GameObject that all plugins are attached to as components.
     /// </summary>
-    public static GameObject ManagerObject { get; private set; }
-
-    public static new UnityChainloader Instance
-    {
-        get => (UnityChainloader)BaseChainloader<BaseUnityPlugin>.Instance;
-        set => BaseChainloader<BaseUnityPlugin>.Instance = value;
-    }
+    internal static GameObject ManagerObject { get; private set; }
     
+    /// <inheritdoc />
     protected override string ConsoleTitle => _consoleTitle;
-
 
     // In some rare cases calling Application.unityVersion seems to cause MissingMethodException
     // if a preloader patch applies Harmony patch to Chainloader.Initialize.
@@ -63,8 +45,7 @@ public class UnityChainloader : BaseChainloader<BaseUnityPlugin>
         get => Application.unityVersion;
     }
 
-    [Obsolete("This method is public due to a limitation with Unity 4.x. DO NOT CALL", true)]
-    public static void StaticStart(string gameExePath = null)
+    internal static void StaticStart(string gameExePath = null)
     {
         try
         {
@@ -80,7 +61,7 @@ public class UnityChainloader : BaseChainloader<BaseUnityPlugin>
 
             Instance = new UnityChainloader();
             Instance.Initialize(gameExePath);
-            Instance.Execute();
+            Instance.LoadFromProviders();
 
             Logger.Log(LogLevel.Debug, "Exiting chainloader StaticStart");
         }
@@ -91,7 +72,7 @@ public class UnityChainloader : BaseChainloader<BaseUnityPlugin>
         }
     }
 
-    public override void Initialize(string gameExePath = null)
+    internal override void Initialize(string gameExePath = null)
     {
         try
         {
@@ -127,7 +108,7 @@ public class UnityChainloader : BaseChainloader<BaseUnityPlugin>
         }
     }
 
-    protected override void InitializeLoggers()
+    internal override void InitializeLoggers()
     {
         base.InitializeLoggers();
 
@@ -139,14 +120,11 @@ public class UnityChainloader : BaseChainloader<BaseUnityPlugin>
         if (UnityInfo.Version != prevVersion)
             Logger.Log(LogLevel.Info, $"UnityPlayer version: {UnityInfo.Version}");
 
-        if (!ConfigDiskWriteUnityLog.Value) DiskLogListener.BlacklistedSources.Add("Unity Log");
+        if (!ConfigUnityLog.ConfigDiskWriteUnityLog.Value) DiskLogListener.BlacklistedSources.Add("Unity Log");
 
         ChainloaderLogHelper.RewritePreloaderLogs();
 
-        if (ConfigUnityLogging.Value)
+        if (ConfigUnityLog.ConfigUnityLogging.Value)
             Logger.Sources.Add(new UnityLogSource());
     }
-
-    public override BaseUnityPlugin LoadPlugin(PluginInfo pluginInfo, Assembly pluginAssembly) =>
-        (BaseUnityPlugin) ManagerObject.AddComponent(pluginAssembly.GetType(pluginInfo.TypeName));
 }

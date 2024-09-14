@@ -12,16 +12,13 @@ using MonoMod.Utils;
 
 namespace BepInEx.Unity.IL2CPP;
 
-public static class Preloader
+internal static class Preloader
 {
     private static PreloaderConsoleListener PreloaderLog { get; set; }
 
-    internal static ManualLogSource Log => PreloaderLogger.Log;
+    private static ManualLogSource Log => PreloaderLogger.Log;
 
-    // TODO: This is not needed, maybe remove? (Instance is saved in IL2CPPChainloader itself)
-    private static IL2CPPChainloader Chainloader { get; set; }
-
-    public static void Run()
+    internal static void Run()
     {
         try
         {
@@ -65,26 +62,19 @@ public static class Preloader
 
             Il2CppInteropManager.Initialize();
 
-            using (var assemblyPatcher = new AssemblyPatcher((data, _) => Assembly.Load(data)))
+            using (var assemblyPatcher = new AssemblyPatcher([Il2CppInteropManager.IL2CPPInteropAssemblyPath], ["dll"], (data, _) => Assembly.Load(data)))
             {
-                assemblyPatcher.AddPatchersFromProviders();
-
-                Log.LogInfo($"{assemblyPatcher.PatcherContext.PatcherPlugins.Count} patcher plugin{(assemblyPatcher.PatcherContext.PatcherPlugins.Count == 1 ? "" : "s")} loaded");
-
-                assemblyPatcher.LoadAssemblyDirectories(Il2CppInteropManager.IL2CPPInteropAssemblyPath);
-
-                Log.LogInfo($"{assemblyPatcher.PatcherContext.PatcherPlugins.Count} assemblies discovered");
-
+                assemblyPatcher.LoadFromProviders();
                 assemblyPatcher.PatchAndLoad();
+                Chainloader.SetLoadedPatchers(assemblyPatcher.Plugins);
             }
 
 
             Logger.Listeners.Remove(PreloaderLog);
 
 
-            Chainloader = new IL2CPPChainloader();
-
-            Chainloader.Initialize();
+            var chainloader = new IL2CPPChainloader();
+            chainloader.Initialize();
         }
         catch (Exception ex)
         {

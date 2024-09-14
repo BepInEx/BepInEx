@@ -3,6 +3,7 @@
         <Description>BepInEx support library for Mono Unity games</Description>
         <TargetFrameworks>net35;netstandard2.0</TargetFrameworks>
         <AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
+        <DefineConstants>UNITY_MONO</DefineConstants>
     </PropertyGroup>
     <PropertyGroup Condition="'$(TargetFramework)' == 'net35'">
         <!-- Output only net35 version to distribution; netstadnard is only used for generating NuGet package -->
@@ -31,5 +32,9 @@
         <PackageReference Include="HarmonyX" Version="2.10.2" />
         <PackageReference Include="UnityEngine" Version="5.6.1" IncludeAssets="compile"/>
         <PackageReference Include="Unity.InputSystem" version="1.5.0" IncludeAssets="compile"/>
+    </ItemGroup>
+    
+    <ItemGroup>
+        <Compile Include="../Shared/PluginExtensions.cs" LinkBase="Shared"/>
     </ItemGroup>
 </Project>

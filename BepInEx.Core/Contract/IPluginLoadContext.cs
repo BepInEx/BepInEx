@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace BepInEx;
+﻿namespace BepInEx;
 
 /// <summary>
 ///     An interface that allows to dynamically load and track an assembly

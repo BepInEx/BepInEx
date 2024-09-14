@@ -1,66 +1,25 @@
 using System;
-using System.Reflection;
 using System.Runtime.InteropServices;
-using BepInEx.Bootstrap;
-using BepInEx.Configuration;
 using BepInEx.Logging;
 using BepInEx.Preloader.Core;
 using BepInEx.Preloader.Core.Logging;
+using BepInEx.Unity.Common;
 using BepInEx.Unity.IL2CPP.Hook;
 using BepInEx.Unity.IL2CPP.Logging;
-using BepInEx.Unity.IL2CPP.Utils;
-using Il2CppInterop.Runtime.InteropTypes;
 using UnityEngine;
 using Logger = BepInEx.Logging.Logger;
 
 namespace BepInEx.Unity.IL2CPP;
 
-public class IL2CPPChainloader : BaseChainloader<BasePlugin>
+internal class IL2CPPChainloader : Chainloader
 {
     private static RuntimeInvokeDetourDelegate originalInvoke;
 
-    private static readonly ConfigEntry<bool> ConfigUnityLogging = ConfigFile.CoreConfig.Bind(
-     "Logging", "UnityLogListening",
-     true,
-     "Enables showing unity log messages in the BepInEx logging system.");
-
-    private static readonly ConfigEntry<bool> ConfigDiskWriteUnityLog = ConfigFile.CoreConfig.Bind(
-     "Logging.Disk", "WriteUnityLog",
-     false,
-     "Include unity log messages in log file output.");
-
-
     private static INativeDetour RuntimeInvokeDetour { get; set; }
 
-    public static new IL2CPPChainloader Instance
-    {
-        get => (IL2CPPChainloader)BaseChainloader<BasePlugin>.Instance;
-        set => BaseChainloader<BasePlugin>.Instance = value;
-    }
-
-    /// <summary>
-    ///     Register and add a Unity Component (for example MonoBehaviour) into BepInEx global manager.
-    ///     Automatically registers the type with Il2Cpp type system if it isn't initialised already.
-    /// </summary>
-    /// <typeparam name="T">Type of the component to add.</typeparam>
-    public static T AddUnityComponent<T>() where T : Il2CppObjectBase => AddUnityComponent(typeof(T)).Cast<T>();
-
-    /// <summary>
-    ///     Register and add a Unity Component (for example MonoBehaviour) into BepInEx global manager.
-    ///     Automatically registers the type with Il2Cpp type system if it isn't initialised already.
-    /// </summary>
-    /// <param name="t">Type of the component to add</param>
-    public static Il2CppObjectBase AddUnityComponent(Type t) => Il2CppUtils.AddComponent(t);
-
-    /// <summary>
-    ///     Occurs after a plugin is instantiated and just before <see cref="BasePlugin.Load"/> is called.
-    /// </summary>
-    public event Action<PluginInfo, Assembly, BasePlugin> PluginLoad;
-
-    public override void Initialize(string gameExePath = null)
+    internal override void Initialize(string gameExePath = null)
     {
         base.Initialize(gameExePath);
-        Instance = this;
 
         if (!NativeLibrary.TryLoad("GameAssembly", typeof(IL2CPPChainloader).Assembly, null, out var il2CppHandle))
         {
@@ -87,7 +46,7 @@ public class IL2CPPChainloader : BaseChainloader<BasePlugin>
         if (methodName == "Internal_ActiveSceneChanged")
             try
             {
-                if (ConfigUnityLogging.Value)
+                if (ConfigUnityLog.ConfigUnityLogging.Value)
                 {
                     Logger.Sources.Add(new IL2CPPUnityLogSource());
 
@@ -99,7 +58,7 @@ public class IL2CPPChainloader : BaseChainloader<BasePlugin>
 
                 Il2CppInteropManager.PreloadInteropAssemblies();
 
-                Instance.Execute();
+                Instance.LoadFromProviders();
             }
             catch (Exception ex)
             {
@@ -119,27 +78,15 @@ public class IL2CPPChainloader : BaseChainloader<BasePlugin>
         return result;
     }
 
-    protected override void InitializeLoggers()
+    internal override void InitializeLoggers()
     {
         base.InitializeLoggers();
 
-        if (!ConfigDiskWriteUnityLog.Value) DiskLogListener.BlacklistedSources.Add("Unity");
+        if (!ConfigUnityLog.ConfigDiskWriteUnityLog.Value) DiskLogListener.BlacklistedSources.Add("Unity");
 
         ChainloaderLogHelper.RewritePreloaderLogs();
 
         Logger.Sources.Add(new IL2CPPLogSource());
-    }
-
-    public override BasePlugin LoadPlugin(PluginInfo pluginInfo, Assembly pluginAssembly)
-    {
-        var type = pluginAssembly.GetType(pluginInfo.TypeName);
-
-        var pluginInstance = (BasePlugin) Activator.CreateInstance(type);
-
-        PluginLoad?.Invoke(pluginInfo, pluginAssembly, pluginInstance);
-        pluginInstance.Load();
-
-        return pluginInstance;
     }
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
