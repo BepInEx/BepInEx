@@ -42,7 +42,7 @@ internal static class UnityPreloaderRunner
             }
     }
 
-    public static void PreloaderPreMain()
+    internal static void PreloaderPreMain()
     {
         PlatformUtils.SetPlatform();
 

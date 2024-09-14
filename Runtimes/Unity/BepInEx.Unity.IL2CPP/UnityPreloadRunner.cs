@@ -29,7 +29,7 @@ internal static class UnityPreloaderRunner
         Preloader.Run();
     }
 
-    internal static Assembly LocalResolve(object sender, ResolveEventArgs args)
+    private static Assembly LocalResolve(object sender, ResolveEventArgs args)
     {
         var assemblyName = new AssemblyName(args.Name);
 

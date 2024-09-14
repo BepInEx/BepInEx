@@ -37,6 +37,9 @@ public class ConfigFile : IDictionary<ConfigDefinition, ConfigEntryBase>
         else if (saveOnInit) Save();
     }
 
+    /// <summary>
+    ///     The BepInEx core configuration file
+    /// </summary>
     public static ConfigFile CoreConfig { get; } = new(Paths.BepInExConfigPath, true);
 
     /// <summary>
@@ -73,7 +76,10 @@ public class ConfigFile : IDictionary<ConfigDefinition, ConfigEntryBase>
     /// </summary>
     public bool SaveOnConfigSet { get; set; } = true;
 
-    /// <inheritdoc />
+    /// <summary>
+    ///     Obtains a config entry from a definition
+    /// </summary>
+    /// <param name="key">The config definition</param>
     public ConfigEntryBase this[ConfigDefinition key]
     {
         get
@@ -86,9 +92,10 @@ public class ConfigFile : IDictionary<ConfigDefinition, ConfigEntryBase>
     }
 
     /// <summary>
+    ///     Obtains a config entry from its section and key
     /// </summary>
-    /// <param name="section"></param>
-    /// <param name="key"></param>
+    /// <param name="section">The name of the config section</param>
+    /// <param name="key">The name of the key within the section</param>
     public ConfigEntryBase this[string section, string key] => this[new ConfigDefinition(section, key)];
 
     /// <inheritdoc />

@@ -12,7 +12,7 @@ namespace BepInEx.Bootstrap;
 
 internal class CachedPluginLoadContext : IPluginLoadContext, IDisposable
 {
-    public IPluginLoadContext PluginLoadContext { get; }
+    private IPluginLoadContext PluginLoadContext { get; }
     private byte[] assemblyData;
     private byte[] assemblySymbolsData;
 
@@ -101,7 +101,7 @@ public static class TypeLoader
     /// </summary>
     public static readonly ReaderParameters ReaderParameters;
 
-    public static HashSet<string> SearchDirectories = new();
+    internal static readonly HashSet<string> SearchDirectories = new();
 
     #region Config
 
@@ -120,7 +120,7 @@ public static class TypeLoader
         CecilResolver.ResolveFailure += CecilResolveOnFailure;
     }
 
-    public static AssemblyDefinition CecilResolveOnFailure(object sender, AssemblyNameReference reference)
+    private static AssemblyDefinition CecilResolveOnFailure(object sender, AssemblyNameReference reference)
     {
         if (!Utility.TryParseAssemblyName(reference.FullName, out var name))
             return null;

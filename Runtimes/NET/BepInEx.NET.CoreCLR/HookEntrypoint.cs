@@ -9,7 +9,7 @@ using BepInEx.Preloader.Core;
 
 internal class StartupHook
 {
-    public static List<string> ResolveDirectories = new();
+    private static List<string> ResolveDirectories = new();
 
     public static string DoesNotExistPath = "_doesnotexist_.exe";
 

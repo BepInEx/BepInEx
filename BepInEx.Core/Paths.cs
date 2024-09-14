@@ -103,7 +103,7 @@ public static class Paths
     /// </summary>
     public static string[] DllSearchPaths { get; private set; }
 
-    public static void SetExecutablePath(string executablePath,
+    internal static void SetExecutablePath(string executablePath,
                                          string bepinRootPath = null,
                                          string managedPath = null,
                                          bool gameDataRelativeToManaged = false,

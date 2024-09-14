@@ -5,6 +5,9 @@ using HarmonyLogger = HarmonyLib.Tools.Logger;
 
 namespace BepInEx.Logging;
 
+/// <summary>
+///     A log source for Harmony messages
+/// </summary>
 public class HarmonyLogSource : ILogSource
 {
     private static readonly ConfigEntry<HarmonyLogger.LogChannel> LogChannels = ConfigFile.CoreConfig.Bind(
@@ -21,15 +24,21 @@ public class HarmonyLogSource : ILogSource
         [HarmonyLogger.LogChannel.IL] = LogLevel.Debug
     };
 
-    public HarmonyLogSource()
+    internal HarmonyLogSource()
     {
         HarmonyLogger.ChannelFilter = LogChannels.Value;
         HarmonyLogger.MessageReceived += HandleHarmonyMessage;
     }
 
+    /// <inheritdoc />
     public void Dispose() => HarmonyLogger.MessageReceived -= HandleHarmonyMessage;
 
-    public string SourceName { get; } = "HarmonyX";
+    /// <inheritdoc />
+    public string SourceName => "HarmonyX";
+    
+    /// <summary>
+    ///     An event invoked when a Harmony message is sent with a channel this log source listens to
+    /// </summary>
     public event EventHandler<LogEventArgs> LogEvent;
 
     private void HandleHarmonyMessage(object sender, HarmonyLogger.LogEventArgs e)

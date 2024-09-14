@@ -39,7 +39,7 @@ internal static class UnityPreloader
 
     private static readonly Harmony Harmony = new("BepInEx.Unity.Mono.Preloader");
 
-    public static void Run()
+    internal static void Run()
     {
         try
         {
@@ -202,7 +202,7 @@ internal static class UnityPreloader
     /// <summary>
     ///     Allocates a console window for use by BepInEx safely.
     /// </summary>
-    public static void AllocateConsole()
+    private static void AllocateConsole()
     {
         if (!ConsoleManager.ConsoleEnabled)
             return;

@@ -10,7 +10,10 @@ namespace BepInEx.Logging;
 /// </summary>
 public class DiskLogListener : ILogListener
 {
-    public static HashSet<string> BlacklistedSources = new();
+    /// <summary>
+    ///     The names of all the <see cref="ILogSource"/> that will be ignored in <see cref="LogEvent"/>
+    /// </summary>
+    public static readonly HashSet<string> BlacklistedSources = new();
 
     /// <summary>
     ///     Creates a new disk log listener.
@@ -106,6 +109,7 @@ public class DiskLogListener : ILogListener
         catch (ObjectDisposedException) { }
     }
 
+    /// <inheritdoc />
     ~DiskLogListener()
     {
         Dispose();

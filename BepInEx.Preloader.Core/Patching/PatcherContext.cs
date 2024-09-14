@@ -9,7 +9,13 @@ namespace BepInEx.Preloader.Core.Patching;
 /// </summary>
 public class PatchDefinition
 {
-    public PatchDefinition(TargetAssemblyAttribute targetAssembly, BasePatcher instance, MethodInfo methodInfo)
+    /// <summary>
+    /// Creates a <see cref="PatchDefinition"/> using a <see cref="TargetAssemblyAttribute"/>
+    /// </summary>
+    /// <param name="targetAssembly">The attribute specifying the assembly / assemblies targeted</param>
+    /// <param name="instance">The instance of the patcher</param>
+    /// <param name="methodInfo">The patching method</param>
+    public PatchDefinition(TargetAssemblyAttribute targetAssembly, PatcherPlugin instance, MethodInfo methodInfo)
     {
         TargetAssembly = targetAssembly;
         Instance = instance;
@@ -18,7 +24,13 @@ public class PatchDefinition
         FullName = $"{MethodInfo.DeclaringType.FullName}/{MethodInfo.Name} -> {TargetAssembly.TargetAssembly}";
     }
 
-    public PatchDefinition(TargetTypeAttribute targetType, BasePatcher instance, MethodInfo methodInfo)
+    /// <summary>
+    /// Creates a <see cref="PatchDefinition"/> using a <see cref="TargetTypeAttribute"/>
+    /// </summary>
+    /// <param name="targetType">The attribute specifying the type / types targeted</param>
+    /// <param name="instance">The instance of the patcher</param>
+    /// <param name="methodInfo">The patching method</param>
+    public PatchDefinition(TargetTypeAttribute targetType, PatcherPlugin instance, MethodInfo methodInfo)
     {
         TargetType = targetType;
         Instance = instance;
@@ -97,7 +109,7 @@ public class PatcherContext
 
     /// <summary>
     ///     The directory location as to where patched assemblies will be saved to and loaded from disk, for debugging
-    ///     purposes. Defaults to BepInEx/DumpedAssemblies/<ProcessName>
+    ///     purposes. Defaults to BepInEx/DumpedAssemblies.
     /// </summary>
     public string DumpedAssembliesPath { get; internal set; }
 }
