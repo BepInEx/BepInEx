@@ -35,7 +35,7 @@ internal static class ChainloaderLogHelper
 
     internal static void PrintLogInfo(ManualLogSource log)
     {
-        var bepinVersion = Paths.BepInExVersion;
+        var bepinVersion = Utility.BepInExVersion;
         var versionMini = new SemanticVersioning.Version(bepinVersion.Major, bepinVersion.Minor, bepinVersion.Patch,
                                                          bepinVersion.PreRelease);
         var consoleTitle = $"BepInEx {versionMini} - {Paths.ProcessName}";
