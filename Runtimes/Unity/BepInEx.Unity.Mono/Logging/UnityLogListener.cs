@@ -16,7 +16,7 @@ namespace BepInEx.Unity.Mono.Logging
     {
         internal static readonly Action<string> WriteStringToUnityLog;
 
-        protected static readonly ConfigEntry<LogLevel> ConfigUnityLogLevel = ConfigFile.CoreConfig.Bind(
+        private static readonly ConfigEntry<LogLevel> ConfigUnityLogLevel = ConfigFile.CoreConfig.Bind(
          "Logging.Unity", "LogLevels",
          LogLevel.Fatal | LogLevel.Error | LogLevel.Warning | LogLevel.Message | LogLevel.Info,
          "What log levels to log to Unity's output log.");

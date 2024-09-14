@@ -4,23 +4,53 @@ using Mono.Cecil;
 
 namespace BepInEx.Preloader.Core
 {
+    /// <summary>
+    ///     Represents the build information of an assembly including runtime information and CPU architecture
+    /// </summary>
     public class AssemblyBuildInfo
     {
+        /// <summary>
+        ///     A .NET type (framework, standard or core)
+        /// </summary>
         public enum FrameworkType
         {
+            /// <summary>
+            ///     The framework type couldn't be determined
+            /// </summary>
             Unknown,
+            /// <summary>
+            ///     .NET Framework
+            /// </summary>
             NetFramework,
+            /// <summary>
+            ///     .NET Standard
+            /// </summary>
             NetStandard,
+            /// <summary>
+            ///     .NET Core
+            /// </summary>
             NetCore
         }
 
+        /// <summary>
+        ///     The version of the .NET framework the assembly was built for
+        /// </summary>
         public Version NetFrameworkVersion { get; private set; }
 
-        public bool IsAnyCpu { get; set; }
+        /// <summary>
+        ///     Whether the assembly was built with AnyCPU
+        /// </summary>
+        public bool IsAnyCpu { get; private set; }
 
-        public bool Is64Bit { get; set; }
+        /// <summary>
+        ///     True if the assembly targets 64 bit, false if it targets 32 bit
+        /// </summary>
+        public bool Is64Bit { get; private set; }
 
-        public FrameworkType AssemblyFrameworkType { get; set; }
+        /// <summary>
+        ///     The type of .NET framework the assembly was built for
+        /// </summary>
+        public FrameworkType AssemblyFrameworkType { get; private set; }
 
         private void SetNet4Version(AssemblyDefinition assemblyDefinition)
         {
@@ -68,6 +98,12 @@ namespace BepInEx.Preloader.Core
             }
         }
 
+        /// <summary>
+        ///     Get an <see cref="AssemblyBuildInfo"/> from an <see cref="AssemblyDefinition"/>
+        /// </summary>
+        /// <param name="assemblyDefinition">The assembly definition to get the build information for</param>
+        /// <returns>The assembly build information</returns>
+        /// <exception cref="Exception">Thrown when unable to determine the assembly archtecture</exception>
         public static AssemblyBuildInfo DetermineInfo(AssemblyDefinition assemblyDefinition)
         {
             var buildInfo = new AssemblyBuildInfo();

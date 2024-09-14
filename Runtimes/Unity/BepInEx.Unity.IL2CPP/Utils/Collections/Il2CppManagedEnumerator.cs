@@ -13,6 +13,9 @@ using Type = System.Type;
 
 namespace BepInEx.Unity.IL2CPP.Utils.Collections;
 
+/// <summary>
+///     An IL2CPP enumerator that wraps a managed one 
+/// </summary>
 public class Il2CppManagedEnumerator : Object
 {
     private static readonly Dictionary<Type, System.Func<object, Object>> boxers = new();
@@ -27,8 +30,17 @@ public class Il2CppManagedEnumerator : Object
         });
     }
 
+    /// <summary>
+    ///     Creates an <see cref="Il2CppManagedEnumerator"/> using a <see cref="IntPtr"/>
+    /// </summary>
+    /// <param name="ptr">The pointer of the object</param>
     public Il2CppManagedEnumerator(IntPtr ptr) : base(ptr) { }
 
+    /// <summary>
+    ///     Creates an <see cref="Il2CppManagedEnumerator"/> from an <see cref="IEnumerator"/>
+    /// </summary>
+    /// <param name="enumerator">The wrapped enumerator</param>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="enumerator"/> is null</exception>
     public Il2CppManagedEnumerator(IEnumerator enumerator)
         : base(ClassInjector.DerivedConstructorPointer<Il2CppManagedEnumerator>())
     {
@@ -36,6 +48,7 @@ public class Il2CppManagedEnumerator : Object
         ClassInjector.DerivedConstructorBody(this);
     }
 
+    /// <inheritdoc cref="IEnumerator.Current"/>
     public Object Current => enumerator.Current switch
     {
         Il2CppIEnumerator i => i.Cast<Object>(),
@@ -45,8 +58,10 @@ public class Il2CppManagedEnumerator : Object
         null                => null
     };
 
+    /// <inheritdoc cref="IEnumerator.MoveNext"/>
     public bool MoveNext() => enumerator.MoveNext();
 
+    /// <inheritdoc cref="IEnumerator.Reset"/>
     public void Reset() => enumerator.Reset();
 
     private static System.Func<object, Object> GetValueBoxer(Type t)

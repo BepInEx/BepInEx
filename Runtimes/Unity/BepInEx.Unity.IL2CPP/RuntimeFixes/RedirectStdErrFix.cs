@@ -27,7 +27,7 @@ internal static class RedirectStdErrFix
     private static extern bool SetStdHandle(int nStdHandle, nint hConsoleOutput);
 
 
-    public static void Apply()
+    internal static void Apply()
     {
         if (PlatformHelper.Is(Platform.Windows))
         {

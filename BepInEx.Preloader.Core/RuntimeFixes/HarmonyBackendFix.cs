@@ -4,7 +4,7 @@ using BepInEx.Configuration;
 
 namespace BepInEx.Preloader.RuntimeFixes;
 
-public static class HarmonyBackendFix
+internal static class HarmonyBackendFix
 {
     private static readonly ConfigEntry<MonoModBackend> ConfigHarmonyBackend = ConfigFile.CoreConfig.Bind(
      "Preloader",

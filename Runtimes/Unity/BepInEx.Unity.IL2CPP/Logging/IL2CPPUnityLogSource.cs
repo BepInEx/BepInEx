@@ -4,8 +4,14 @@ using UnityEngine;
 
 namespace BepInEx.Unity.IL2CPP.Logging;
 
+/// <summary>
+///     Logs entries using Unity related IL2CPP specific outputs.
+/// </summary>
 public class IL2CPPUnityLogSource : ILogSource
 {
+    /// <summary>
+    ///     Creates an <see cref="IL2CPPLogSource"/>
+    /// </summary>
     public IL2CPPUnityLogSource()
     {
         Application.s_LogCallbackHandler = new Action<string, string, LogType>(UnityLogCallback);
@@ -15,13 +21,16 @@ public class IL2CPPUnityLogSource : ILogSource
                          SetLogCallbackDefinedDelegate>("UnityEngine.Application::SetLogCallbackDefined")(true);
     }
 
+    /// <inheritdoc />
     public string SourceName { get; } = "Unity";
 
+    /// <inheritdoc />
     public event EventHandler<LogEventArgs> LogEvent;
 
+    /// <inheritdoc />
     public void Dispose() { }
 
-    public void UnityLogCallback(string logLine, string exception, LogType type)
+    private void UnityLogCallback(string logLine, string exception, LogType type)
     {
         var level = type switch
         {

@@ -8,9 +8,12 @@ using MonoMod.Utils;
 
 namespace BepInEx;
 
+/// <summary>
+///     Contains various information about the logging console
+/// </summary>
 public static class ConsoleManager
 {
-    public enum ConsoleOutRedirectType
+    internal enum ConsoleOutRedirectType
     {
         [Description("Auto")]
         Auto = 0,
@@ -26,22 +29,22 @@ public static class ConsoleManager
 
     private const string ENABLE_CONSOLE_ARG = "--enable-console";
 
-    public static readonly ConfigEntry<bool> ConfigConsoleEnabled = ConfigFile.CoreConfig.Bind(
+    private static readonly ConfigEntry<bool> ConfigConsoleEnabled = ConfigFile.CoreConfig.Bind(
      "Logging.Console", "Enabled",
      true,
      "Enables showing a console for log output.");
 
-    public static readonly ConfigEntry<bool> ConfigPreventClose = ConfigFile.CoreConfig.Bind(
+    private static readonly ConfigEntry<bool> ConfigPreventClose = ConfigFile.CoreConfig.Bind(
      "Logging.Console", "PreventClose",
      false,
      "If enabled, will prevent closing the console (either by deleting the close button or in other platform-specific way).");
 
-    public static readonly ConfigEntry<bool> ConfigConsoleShiftJis = ConfigFile.CoreConfig.Bind(
+    private static readonly ConfigEntry<bool> ConfigConsoleShiftJis = ConfigFile.CoreConfig.Bind(
      "Logging.Console", "ShiftJisEncoding",
      false,
      "If true, console is set to the Shift-JIS encoding, otherwise UTF-8 encoding.");
 
-    public static readonly ConfigEntry<ConsoleOutRedirectType> ConfigConsoleOutRedirectType =
+    internal static readonly ConfigEntry<ConsoleOutRedirectType> ConfigConsoleOutRedirectType =
         ConfigFile.CoreConfig.Bind(
                                    "Logging.Console", "StandardOutType",
                                    ConsoleOutRedirectType.Auto,
@@ -74,9 +77,9 @@ public static class ConsoleManager
         }
     }
 
-    public static bool ConsoleEnabled => EnableConsoleArgOverride ?? ConfigConsoleEnabled.Value;
+    internal static bool ConsoleEnabled => EnableConsoleArgOverride ?? ConfigConsoleEnabled.Value;
 
-    internal static IConsoleDriver Driver { get; set; }
+    private static IConsoleDriver Driver { get; set; }
 
     /// <summary>
     ///     True if an external console has been started, false otherwise.
@@ -94,7 +97,7 @@ public static class ConsoleManager
     public static TextWriter ConsoleStream => Driver?.ConsoleOut;
 
 
-    public static void Initialize(bool alreadyActive, bool useManagedEncoder)
+    internal static void Initialize(bool alreadyActive, bool useManagedEncoder)
     {
         if (PlatformHelper.Is(Platform.Unix))
             Driver = new LinuxConsoleDriver();
@@ -113,7 +116,7 @@ public static class ConsoleManager
             throw new InvalidOperationException("Driver has not been initialized");
     }
 
-    public static void CreateConsole()
+    internal static void CreateConsole()
     {
         if (ConsoleActive)
             return;
@@ -131,7 +134,7 @@ public static class ConsoleManager
             Driver.PreventClose();
     }
 
-    public static void DetachConsole()
+    internal static void DetachConsole()
     {
         if (!ConsoleActive)
             return;
@@ -141,14 +144,14 @@ public static class ConsoleManager
         Driver.DetachConsole();
     }
 
-    public static void SetConsoleTitle(string title)
+    internal static void SetConsoleTitle(string title)
     {
         DriverCheck();
 
         Driver.SetConsoleTitle(title);
     }
 
-    public static void SetConsoleColor(ConsoleColor color)
+    internal static void SetConsoleColor(ConsoleColor color)
     {
         DriverCheck();
 

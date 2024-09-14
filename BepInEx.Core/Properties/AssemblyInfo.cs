@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("BepInEx.Preloader.Core")]
 [assembly: InternalsVisibleTo("BepInEx.Unity.Mono")]
+[assembly: InternalsVisibleTo("BepInEx.Unity.Mono.Preloader")]
 [assembly: InternalsVisibleTo("BepInEx.NET.Common")]
 [assembly: InternalsVisibleTo("BepInEx.NET.Framework.Launcher")]
 [assembly: InternalsVisibleTo("BepInEx.NET.CoreCLR")]
