@@ -82,7 +82,7 @@ internal static class UnityPreloader
 
             TypeLoader.SearchDirectories.UnionWith(Paths.DllSearchPaths);
 
-            using (var assemblyPatcher = new AssemblyPatcher(MonoAssemblyHelper.LoadFromMemory))
+            using (var assemblyPatcher = new AssemblyPatcher(Paths.DllSearchPaths, ["dll"], MonoAssemblyHelper.LoadFromMemory))
             {
                 assemblyPatcher.AddPatchersFromProviders();
 
@@ -95,6 +95,7 @@ internal static class UnityPreloader
                         $"{assemblyPatcher.PatcherContext.AvailableAssemblies.Count} assemblies discovered");
 
                 assemblyPatcher.PatchAndLoad();
+                Chainloader.SetLoadedPatchers(assemblyPatcher.Plugins);
             }
 
             Log.Log(LogLevel.Message, "Preloader finished");

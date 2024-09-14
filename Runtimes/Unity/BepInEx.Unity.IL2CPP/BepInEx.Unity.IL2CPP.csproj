@@ -6,6 +6,7 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <OutputPath>$(BuildDir)/Unity.IL2CPP</OutputPath>
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+        <DefineConstants>UNITY_IL2CPP</DefineConstants>
     </PropertyGroup>
     <ItemGroup>
         <ProjectReference Include="..\..\..\BepInEx.Core\BepInEx.Core.csproj"/>
@@ -48,4 +49,7 @@
         <Delete Files="@(FilesToDelete)"/>
     </Target>
 
+    <ItemGroup>
+        <Compile Include="../Shared/PluginExtensions.cs" LinkBase="Shared"/>
+    </ItemGroup>
 </Project>

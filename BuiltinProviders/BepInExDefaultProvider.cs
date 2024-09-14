@@ -1,22 +1,20 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using BepInEx.Logging;
-using BepInEx.Preloader.Core.Patching;
 
-namespace BepInEx.PatcherProvider;
+namespace BepInEx.DefaultProviders;
 
-[PatcherProviderPluginInfo("BepInExPatcherProvider", "BepInExPatcherProvider", "1.0")]
-internal class BepInExPatcherProvider : BasePatcherProvider
+internal static class BepInExDefaultProvider
 {
     private static readonly Dictionary<string, string> AssemblyLocationsByFilename = new();
 
-    public override IList<IPluginLoadContext> GetPatchers()
+    internal static IList<IPluginLoadContext> GetLoadContexts(string directory, ManualLogSource logger)
     {
         var loadContexts = new List<IPluginLoadContext>();
-        foreach (var dll in Directory.GetFiles(Path.GetFullPath(Paths.PatcherPluginPath), "*.dll", SearchOption.AllDirectories))
+        foreach (var dll in Directory.GetFiles(Path.GetFullPath(directory), "*.dll", SearchOption.AllDirectories))
         {
             try
             {
@@ -30,9 +28,9 @@ internal class BepInExPatcherProvider : BasePatcherProvider
                     int levelFoundDirectory = foundDirectory?.Count(x => x == Path.DirectorySeparatorChar) ?? 0;
                     
                     bool shallowerPathFound = levelExistingDirectory > levelFoundDirectory;
-                    Log.LogWarning($"Found duplicate assemblies filenames: {filename} was found at {foundDirectory} " +
-                                   $"while it exists already at {AssemblyLocationsByFilename[filename]}. " +
-                                   $"Only the {(shallowerPathFound ? "first" : "second")} will be examined and resolved");
+                    logger.LogWarning($"Found duplicate assemblies filenames: {filename} was found at {foundDirectory} " +
+                                      $"while it exists already at {AssemblyLocationsByFilename[filename]}. " +
+                                      $"Only the {(shallowerPathFound ? "first" : "second")} will be examined and resolved");
                     
                     if (levelExistingDirectory > levelFoundDirectory)
                         AssemblyLocationsByFilename[filename] = foundDirectory;
@@ -42,7 +40,7 @@ internal class BepInExPatcherProvider : BasePatcherProvider
                     AssemblyLocationsByFilename.Add(filename, foundDirectory);
                 }
                 
-                loadContexts.Add(new BepInExPatcherLoadContext
+                loadContexts.Add(new BepInExDefaultProviderLoadContext
                 {
                     AssemblyHash = File.GetLastWriteTimeUtc(dll).ToString("O"),
                     AssemblyIdentifier = dll
@@ -50,14 +48,14 @@ internal class BepInExPatcherProvider : BasePatcherProvider
             }
             catch (Exception e)
             {
-                Log.Log(LogLevel.Error, e);
+                logger.Log(LogLevel.Error, e);
             }
         }
         
         return loadContexts;
     }
 
-    public override Assembly ResolveAssembly(string name)
+    internal static Assembly ResolveAssembly(string name)
     {
         if (!AssemblyLocationsByFilename.TryGetValue(name, out var location))
             return null;

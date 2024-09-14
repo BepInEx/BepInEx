@@ -1,9 +1,9 @@
 ﻿using System;
 using System.IO;
 
-namespace BepInEx.PluginProvider;
+namespace BepInEx.DefaultProviders;
 
-internal class BepInExPluginLoadContext : IPluginLoadContext
+internal class BepInExDefaultProviderLoadContext : IPluginLoadContext
 {
     public string AssemblyIdentifier { get; internal set; }
     public string AssemblyHash { get; internal set; }
@@ -26,7 +26,7 @@ internal class BepInExPluginLoadContext : IPluginLoadContext
             throw new ArgumentNullException(nameof(relativePath));
         
         string assemblyFolder = Path.GetDirectoryName(AssemblyIdentifier);
-        string filePath = Path.Combine(assemblyFolder, relativePath);
+        string filePath = assemblyFolder is null ? relativePath : Path.Combine(assemblyFolder, relativePath);
         return File.ReadAllBytes(filePath);
     }
 }

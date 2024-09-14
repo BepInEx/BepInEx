@@ -12,9 +12,9 @@ namespace BepInEx.Configuration;
 /// </summary>
 public class ConfigFile : IDictionary<ConfigDefinition, ConfigEntryBase>
 {
-    private readonly BepInPlugin _ownerMetadata;
+    private readonly BepInMetadataAttribute _ownerMetadata;
 
-    /// <inheritdoc cref="ConfigFile(string, bool, BepInPlugin)" />
+    /// <inheritdoc cref="ConfigFile(string, bool, BepInMetadataAttribute)" />
     public ConfigFile(string configPath, bool saveOnInit) : this(configPath, saveOnInit, null) { }
 
     /// <summary>
@@ -23,7 +23,7 @@ public class ConfigFile : IDictionary<ConfigDefinition, ConfigEntryBase>
     /// <param name="configPath">Full path to a file that contains settings. The file will be created as needed.</param>
     /// <param name="saveOnInit">If the config file/directory doesn't exist, create it immediately.</param>
     /// <param name="ownerMetadata">Information about the plugin that owns this setting file.</param>
-    public ConfigFile(string configPath, bool saveOnInit, BepInPlugin ownerMetadata)
+    public ConfigFile(string configPath, bool saveOnInit, BepInMetadataAttribute ownerMetadata)
     {
         _ownerMetadata = ownerMetadata;
 
@@ -292,7 +292,7 @@ public class ConfigFile : IDictionary<ConfigDefinition, ConfigEntryBase>
                 if (_ownerMetadata != null)
                 {
                     writer.WriteLine($"## Settings file was created by plugin {_ownerMetadata.Name} v{_ownerMetadata.Version}");
-                    writer.WriteLine($"## Plugin GUID: {_ownerMetadata.GUID}");
+                    writer.WriteLine($"## Plugin GUID: {_ownerMetadata.Guid}");
                     writer.WriteLine();
                 }
 

@@ -1,6 +1,5 @@
 using System;
 using System.Diagnostics;
-using System.IO;
 using System.Reflection;
 using BepInEx.Bootstrap;
 using BepInEx.Logging;
@@ -52,17 +51,11 @@ namespace BepInEx.NET.CoreCLR
 
             Log.LogMessage("Preloader started");
 
-            using (var assemblyPatcher = new AssemblyPatcher((data, _) => Assembly.Load(data)))
+            using (var assemblyPatcher = new AssemblyPatcher([Paths.GameRootPath], ["dll", "exe"], (data, _) => Assembly.Load(data)))
             {
-                assemblyPatcher.AddPatchersFromProviders();
-
-                Log.LogInfo($"{assemblyPatcher.PatcherContext.PatchDefinitions.Count} patcher definition(s) loaded");
-
-                assemblyPatcher.LoadAssemblyDirectories(new[] { Paths.GameRootPath }, new[] { "dll", "exe" });
-
-                Log.LogInfo($"{assemblyPatcher.PatcherContext.AvailableAssemblies.Count} assemblies discovered");
-
+                assemblyPatcher.LoadFromProviders();
                 assemblyPatcher.PatchAndLoad();
+                Chainloader.SetLoadedPatchers(assemblyPatcher.Plugins);
             }
 
             Log.LogMessage("Preloader finished");
@@ -71,7 +64,7 @@ namespace BepInEx.NET.CoreCLR
 
             var chainloader = new NetChainloader();
             chainloader.Initialize();
-            chainloader.Execute();
+            chainloader.LoadFromProviders();
         }
     }
 }
