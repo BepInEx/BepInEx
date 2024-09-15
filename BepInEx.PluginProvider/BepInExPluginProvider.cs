@@ -13,11 +13,15 @@ internal class BepInExPluginProvider : BasePluginProvider
 {
     private static readonly Dictionary<string, string> AssemblyLocationsByFilename = new();
     private static Harmony harmonyInstance;
-    
+
+    private static readonly bool PatchRuntimeAssembly = AccessTools.TypeByName("RuntimeAssembly")
+                                                                   ?.GetProperty("Location")?.DeclaringType?.FullName
+                                                                   ?.EndsWith("RuntimeAssembly") == true;
+
     public override IList<IPluginLoadContext> GetPlugins()
     {
         harmonyInstance = new Harmony(Info.Metadata.GUID);
-        harmonyInstance.PatchAll(typeof(AssemblyLocationPatch));
+        harmonyInstance.PatchAll(PatchRuntimeAssembly ? typeof(RuntimeAssemblyLocationPatch) : typeof(AssemblyLocationPatch));
 
         var loadContexts = new List<IPluginLoadContext>();
         foreach (var dll in Directory.GetFiles(Path.GetFullPath(Paths.PluginPath), "*.dll", SearchOption.AllDirectories))
@@ -72,21 +76,36 @@ internal class BepInExPluginProvider : BasePluginProvider
         return ass;
     }
 
+    private static void AssemblyWorkaroundPatch(Assembly __instance, ref string __result)
+    {
+        if (!string.IsNullOrEmpty(__result))
+            return;
+
+        var name = __instance.GetName().Name;
+        if (!AssemblyLocationsByFilename.TryGetValue(name, out var location)) 
+            return;
+
+        var filenameWithoutExtension = Path.Combine(location, name);
+        __result = filenameWithoutExtension + ".dll";
+    }
+
     public class AssemblyLocationPatch
     {
         [HarmonyPostfix]
         [HarmonyPatch(typeof(Assembly), nameof(Assembly.Location), MethodType.Getter)]
         public static void AssemblyLocationWorkaround(Assembly __instance, ref string __result)
         {
-            if (!string.IsNullOrEmpty(__result))
-                return;
+            AssemblyWorkaroundPatch(__instance, ref __result);
+        }
+    }
 
-            var name = __instance.GetName().Name;
-            if (!AssemblyLocationsByFilename.TryGetValue(name, out var location)) 
-                return;
-
-            var filenameWithoutExtension = Path.Combine(location, name);
-            __result = filenameWithoutExtension + ".dll";
+    public class RuntimeAssemblyLocationPatch
+    {
+        [HarmonyPostfix]
+        [HarmonyPatch("RuntimeAssembly", nameof(Assembly.Location), MethodType.Getter)]
+        public static void AssemblyLocationWorkaround(Assembly __instance, ref string __result)
+        {
+            AssemblyWorkaroundPatch(__instance, ref __result);
         }
     }
 }
