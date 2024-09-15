@@ -87,7 +87,7 @@ internal class BepInExPluginProvider : BasePluginProvider
                 return;
 
             var filenameWithoutExtension = Path.Combine(location, name);
-            __result = Path.ChangeExtension(filenameWithoutExtension, ".dll");
+            __result = filenameWithoutExtension + ".dll";
         }
     }
 }

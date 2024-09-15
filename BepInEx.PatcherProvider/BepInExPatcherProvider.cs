@@ -88,7 +88,7 @@ internal class BepInExPatcherProvider : BasePatcherProvider
                 return;
 
             var filenameWithoutExtension = Path.Combine(location, name);
-            __result = Path.ChangeExtension(filenameWithoutExtension, ".dll");
+            __result = filenameWithoutExtension + ".dll";
         }
     }
 }
