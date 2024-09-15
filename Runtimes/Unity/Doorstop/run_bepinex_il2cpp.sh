@@ -183,6 +183,12 @@ echo "${executable_path}"
 # Figure out the arch of the executable with file
 file_out="$(LD_PRELOAD="" file -b "${executable_path}")"
 case "${file_out}" in
+    *PE32*)
+        echo "The executable is a Windows executable file. You must use Wine/Proton and BepInEx for Windows with this executable."
+        echo "Uninstall BepInEx for *nix and install BepInEx for Windows instead."
+        echo "More info: https://docs.bepinex.dev/articles/advanced/steam_interop.html#protonwine"
+        exit 1
+    ;;
     *64-bit*)
         arch="x64"
     ;;
