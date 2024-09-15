@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using BepInEx.Logging;
@@ -38,7 +39,7 @@ public static class ChainloaderLogHelper
         var versionMini = new SemanticVersioning.Version(bepinVersion.Major, bepinVersion.Minor, bepinVersion.Patch,
                                                          bepinVersion.PreRelease);
         var consoleTitle = $"BepInEx {versionMini} - {Paths.ProcessName}";
-        log.Log(LogLevel.Message, consoleTitle);
+        log.Log(LogLevel.Message, $"{consoleTitle} ({File.GetLastWriteTime(Paths.ExecutablePath)})");
 
         if (ConsoleManager.ConsoleActive)
             ConsoleManager.SetConsoleTitle(consoleTitle);
