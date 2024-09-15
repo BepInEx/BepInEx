@@ -17,7 +17,7 @@ internal class BepInExPluginProvider : BasePluginProvider
     public override IList<IPluginLoadContext> GetPlugins()
     {
         harmonyInstance = new Harmony(Info.Metadata.GUID);
-        harmonyInstance.PatchAll(Assembly.GetExecutingAssembly());
+        harmonyInstance.PatchAll(typeof(AssemblyLocationPatch));
 
         var loadContexts = new List<IPluginLoadContext>();
         foreach (var dll in Directory.GetFiles(Path.GetFullPath(Paths.PluginPath), "*.dll", SearchOption.AllDirectories))
@@ -72,7 +72,6 @@ internal class BepInExPluginProvider : BasePluginProvider
         return ass;
     }
 
-    [HarmonyPatch]
     public class AssemblyLocationPatch
     {
         [HarmonyPostfix]
