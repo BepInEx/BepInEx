@@ -35,17 +35,8 @@ public struct KeyboardShortcut
     /// </summary>
     public static readonly KeyboardShortcut Empty = new();
 
-    /// <summary>
-    ///     All KeyCode values that can be used in a keyboard shortcut.
-    /// </summary>
-    public static readonly IEnumerable<KeyCode> AllKeyCodes = (KeyCode[]) Enum.GetValues(typeof(KeyCode));
-
     // Don't block hotkeys if mouse is being pressed, e.g. when shooting and trying to strafe
-    private static readonly KeyCode[] _modifierBlockKeyCodes = AllKeyCodes.Except(new[]
-    {
-        KeyCode.Mouse0, KeyCode.Mouse1, KeyCode.Mouse2, KeyCode.Mouse3, KeyCode.Mouse4, KeyCode.Mouse5,
-        KeyCode.Mouse6, KeyCode.None
-    }).ToArray();
+    private static KeyCode[] modifierBlockKeyCodes;
 
     private readonly KeyCode[] _allKeys;
 
@@ -122,7 +113,7 @@ public struct KeyboardShortcut
         var mainKey = MainKey;
         if (mainKey == KeyCode.None) return false;
 
-        return Input.GetKeyDown(mainKey) && ModifierKeyTest();
+        return UnityInput.Current.GetKeyDown(mainKey) && ModifierKeyTest();
     }
 
     /// <summary>
@@ -133,7 +124,7 @@ public struct KeyboardShortcut
         var mainKey = MainKey;
         if (mainKey == KeyCode.None) return false;
 
-        return Input.GetKey(mainKey) && ModifierKeyTest();
+        return UnityInput.Current.GetKey(mainKey) && ModifierKeyTest();
     }
 
     /// <summary>
@@ -144,7 +135,7 @@ public struct KeyboardShortcut
         var mainKey = MainKey;
         if (mainKey == KeyCode.None) return false;
 
-        return Input.GetKeyUp(mainKey) && ModifierKeyTest();
+        return UnityInput.Current.GetKeyUp(mainKey) && ModifierKeyTest();
     }
 
     private bool ModifierKeyTest()
@@ -152,10 +143,15 @@ public struct KeyboardShortcut
         var allKeys = _allKeys;
         var mainKey = MainKey;
 
-        var allModifiersPressed = allKeys.All(c => c == mainKey || Input.GetKey(c));
+        var allModifiersPressed = allKeys.All(c => c == mainKey || UnityInput.Current.GetKey(c));
         if (!allModifiersPressed) return false;
 
-        var noOtherModifiersPressed = _modifierBlockKeyCodes.All(c => !Input.GetKey(c) || allKeys.Contains(c));
+        // Lazy init to make sure the game is initialized, and we're in main thread before calling UnityInput.Current
+        modifierBlockKeyCodes ??= UnityInput.Current.SupportedKeyCodes.Except([KeyCode.Mouse0, KeyCode.Mouse1,
+            KeyCode.Mouse2, KeyCode.Mouse3, KeyCode.Mouse4, KeyCode.Mouse5, KeyCode.Mouse6, KeyCode.None
+        ]).ToArray();
+
+        bool noOtherModifiersPressed = modifierBlockKeyCodes.All(c => !UnityInput.Current.GetKey(c) || allKeys.Contains(c));
         return noOtherModifiersPressed;
     }
 
