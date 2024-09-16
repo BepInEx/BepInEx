@@ -9,7 +9,7 @@
     <ItemGroup>
         <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="All"/>
         <PackageReference Include="HarmonyX" Version="2.13.0" />
-        <PackageReference Include="MonoMod.RuntimeDetour" Version="25.1.2" />
-        <PackageReference Include="MonoMod.Utils" Version="25.0.6" />
+        <PackageReference Include="MonoMod.RuntimeDetour" Version="25.2.0" />
+        <PackageReference Include="MonoMod.Utils" Version="25.0.7" />
     </ItemGroup>
 </Project>
