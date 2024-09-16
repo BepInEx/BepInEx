@@ -182,7 +182,7 @@ public abstract class LoadingSystem<TProvider, TPlugin>
     ///     Collection of error chainloader messages that occured during plugin loading.
     ///     Contains information about what certain plugins were not loaded.
     /// </summary>
-    private List<string> DependencyErrors { get; } = new();
+    public List<string> DependencyErrors { get; } = new();
 
     /// <summary>
     ///     Occurs after a plugin provider is loaded.
