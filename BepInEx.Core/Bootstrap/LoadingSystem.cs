@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using BepInEx.Bootstrap;
 using BepInEx.Configuration;
+using BepInEx.Core.Bootstrap;
 using BepInEx.Logging;
 using Mono.Cecil;
 
@@ -187,22 +188,22 @@ public abstract class LoadingSystem<TProvider, TPlugin>
     /// <summary>
     ///     Occurs after a plugin provider is loaded.
     /// </summary>
-    public event Action<PluginInfo> ProviderLoaded;
+    public static event Action<PluginLoadEventArgs> ProviderLoaded;
     
     /// <summary>
     ///     Occurs after all plugins providers are loaded.
     /// </summary>
-    public event Action AllProvidersLoaded;
+    public static event Action AllProvidersLoaded;
     
     /// <summary>
     ///     Occurs after a plugin is loaded.
     /// </summary>
-    public event Action<PluginInfo> PluginLoaded;
+    public static event Action<PluginLoadEventArgs> PluginLoaded;
 
     /// <summary>
     ///     Occurs after all plugins are loaded.
     /// </summary>
-    public event Action AllPluginsLoaded;
+    public static event Action AllPluginsLoaded;
 
     /// <summary>
     /// Discovers all plugins in the plugin directory without loading them.
@@ -369,13 +370,13 @@ public abstract class LoadingSystem<TProvider, TPlugin>
                         var cachedContext = new CachedPluginLoadContext(context);
                         LoadContexts[cachedContext] = pluginInfo;
                     }
-                    ProviderLoaded?.Invoke(pluginInfo);
+                    ProviderLoaded?.Invoke(new(pluginInfo, ass, (Plugin)pluginInfo.Instance));
                 }
                 else
                 {
                     pluginInfo.Source = LoadContexts[(CachedPluginLoadContext)pluginInfo.LoadContext];
                     pluginInfo.Instance = LoadPlugin(pluginInfo, ass);
-                    PluginLoaded?.Invoke(pluginInfo);
+                    PluginLoaded?.Invoke(new(pluginInfo, ass, (Plugin)pluginInfo.Instance));
                     foreach (CachedPluginLoadContext context in LoadContexts.Keys)
                         context.Dispose();
                 }

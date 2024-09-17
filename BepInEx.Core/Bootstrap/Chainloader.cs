@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using BepInEx.Configuration;
+using BepInEx.Core.Bootstrap;
 using BepInEx.Logging;
 using MonoMod.Utils;
 
@@ -64,7 +65,7 @@ public abstract class Chainloader : LoadingSystem<GamePluginProvider, GamePlugin
     /// <summary>
     ///     Occurs after a plugin is instantiated and just before <see cref="GamePlugin.Load"/> is called.
     /// </summary>
-    public event Action<PluginInfo, Assembly, GamePlugin> PluginLoad;
+    public static event Action<PluginLoadEventArgs> PluginLoad;
 
     internal static void SetLoadedPatchers(Dictionary<string, PluginInfo> patchers)
     {
@@ -134,7 +135,7 @@ public abstract class Chainloader : LoadingSystem<GamePluginProvider, GamePlugin
     protected override GamePlugin LoadPlugin(PluginInfo pluginInfo, Assembly pluginAssembly)
     {
         var pluginInstance = base.LoadPlugin(pluginInfo, pluginAssembly);
-        PluginLoad?.Invoke(pluginInfo, pluginAssembly, pluginInstance);
+        PluginLoad?.Invoke(new(pluginInfo, pluginAssembly, pluginInstance));
         pluginInstance.Load();
 
         return pluginInstance;
