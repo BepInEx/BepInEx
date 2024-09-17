@@ -11,6 +11,6 @@ internal static class ConfigUnityLog
 
     internal static readonly ConfigEntry<bool> ConfigDiskWriteUnityLog = ConfigFile.CoreConfig.Bind(
      "Logging.Disk", "WriteUnityLog",
-     false,
+     true,
      "Include unity log messages in log file output.");
 }
