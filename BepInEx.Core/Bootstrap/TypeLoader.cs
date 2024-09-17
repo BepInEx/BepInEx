@@ -274,7 +274,7 @@ public static class TypeLoader
                                            string location)
         where T : ICacheable, new()
     {
-        try 
+        try
         {
             using var ass = AssemblyDefinition.ReadAssembly(dllMs, ReaderParameters);
             Logger.Log(LogLevel.Debug, $"Examining '{ass.Name}'");
@@ -291,6 +291,11 @@ public static class TypeLoader
         }
         catch (BadImageFormatException)
         {
+            return new List<T>();
+        }
+        catch (Exception e)
+        {
+            Logger.Log(LogLevel.Error, $"An unexpected error occured when examining an assembly stream: {e}");
             return new List<T>();
         }
     }
