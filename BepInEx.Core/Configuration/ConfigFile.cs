@@ -46,7 +46,10 @@ public class ConfigFile : IDictionary<ConfigDefinition, ConfigEntryBase>
     /// </summary>
     protected Dictionary<ConfigDefinition, ConfigEntryBase> Entries { get; } = new();
 
-    private Dictionary<ConfigDefinition, string> OrphanedEntries { get; } = new();
+    /// <summary>
+    ///     All config entries which aren't bound
+    /// </summary>
+    public Dictionary<ConfigDefinition, string> OrphanedEntries { get; } = new();
 
     /// <summary>
     ///     Full path to the config file. The file might not exist until a setting is added and changed, or <see cref="Save" />
