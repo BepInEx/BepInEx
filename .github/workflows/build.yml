@@ -34,7 +34,7 @@ jobs:
                     branch: master
                     workflow_id: build.yml
                     github_token: ${{ secrets.GITHUB_TOKEN }}
-            -   uses: actions/setup-dotnet@v1
+            -   uses: actions/setup-dotnet@v4
                 with:
                     dotnet-version: "8.0.x"
             -   name: Build
