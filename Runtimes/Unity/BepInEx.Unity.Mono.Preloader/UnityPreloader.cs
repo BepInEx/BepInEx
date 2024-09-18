@@ -149,29 +149,36 @@ internal static class UnityPreloader
         if (assemblyName is not ("UnityEngine.CoreModule" or "UnityEngine"))
             return;
 
-        AppDomain.CurrentDomain.AssemblyLoad -= OnAssemblyLoad;
+        try 
+        { 
+            AppDomain.CurrentDomain.AssemblyLoad -= OnAssemblyLoad;
 
-        var sceneManagerType = assembly.GetType(sceneManagerTypeName, false);
-        if (sceneManagerType != null)
-        {
-            var activeSceneChangedMethod = sceneManagerType.GetMethod("Internal_ActiveSceneChanged",
-                                                                      BindingFlags.NonPublic | BindingFlags.Static);
-            Harmony.Patch(activeSceneChangedMethod, prefix: new HarmonyMethod(typeof(UnityPreloader), nameof(Entrypoint)));
-            Log.LogInfo($"Hooked into {activeSceneChangedMethod.FullDescription()}");
-            return;
+            var sceneManagerType = assembly.GetType(sceneManagerTypeName, false);
+            if (sceneManagerType != null)
+            {
+                var activeSceneChangedMethod = sceneManagerType.GetMethod("Internal_ActiveSceneChanged",
+                                                                          BindingFlags.NonPublic | BindingFlags.Static);
+                Harmony.Patch(activeSceneChangedMethod, prefix: new HarmonyMethod(typeof(UnityPreloader), nameof(Entrypoint)));
+                Log.LogInfo($"Hooked into {activeSceneChangedMethod.FullDescription()}");
+                return;
+            }
+
+            var displayType = assembly.GetType(displayTypeName, false);
+            if (displayType != null)
+            {
+                var recreateDisplayListMethod = displayType.GetMethod("RecreateDisplayList", BindingFlags.NonPublic | BindingFlags.Static);
+                Harmony.Patch(recreateDisplayListMethod, postfix: new HarmonyMethod(typeof(UnityPreloader), nameof(Entrypoint)));
+                Log.LogInfo($"Hooked into {recreateDisplayListMethod.FullDescription()}");
+                return;
+            }
+
+            Log.LogFatal($"Couldn't find a suitable chainloader entrypoint in the {assemblyName} assembly because " +
+                         $"{sceneManagerTypeName} or {displayTypeName} do not exist in the assembly");
         }
-
-        var displayType = assembly.GetType(displayTypeName, false);
-        if (displayType != null)
+        catch (Exception e)
         {
-            var recreateDisplayListMethod = displayType.GetMethod("RecreateDisplayList", BindingFlags.NonPublic | BindingFlags.Static);
-            Harmony.Patch(recreateDisplayListMethod, postfix: new HarmonyMethod(typeof(UnityPreloader), nameof(Entrypoint)));
-            Log.LogInfo($"Hooked into {recreateDisplayListMethod.FullDescription()}");
-            return;
+            Log.LogFatal($"Unexpected error occured when trying to hook into {assemblyName}: {e}");
         }
-
-        Log.LogError($"Couldn't find a suitable chainloader entrypoint in the {assemblyName} assembly because " +
-                     $"{sceneManagerTypeName} or {displayTypeName} do not exist in the assembly");
     }
 
     // Second step of the chainloader entrypoint: undo the Harmony patch and call the chainloader init method
@@ -188,7 +195,7 @@ internal static class UnityPreloader
         }
         catch (Exception e)
         {
-            Log.LogError(e);
+            Log.LogFatal(e);
         }
     }
 
