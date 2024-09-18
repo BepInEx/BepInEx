@@ -69,7 +69,10 @@ public class UnityChainloader : BaseChainloader<BaseUnityPlugin>
         try
         {
             if (staticStartHasBeenCalled)
-                throw new InvalidOperationException("Cannot call StaticStart again");
+            {
+                Logger.Log(LogLevel.Fatal, "StaticStart called more than once");
+                return;
+            }
 
             staticStartHasBeenCalled = true;
             
