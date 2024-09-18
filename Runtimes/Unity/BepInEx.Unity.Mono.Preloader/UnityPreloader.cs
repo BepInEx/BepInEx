@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using BepInEx.Bootstrap;
 using BepInEx.Configuration;
 using BepInEx.Logging;
@@ -11,6 +12,7 @@ using BepInEx.Preloader.RuntimeFixes;
 using BepInEx.Unity.Common;
 using BepInEx.Unity.Mono.Preloader.RuntimeFixes;
 using BepInEx.Unity.Mono.Preloader.Utils;
+using HarmonyLib;
 
 namespace BepInEx.Unity.Mono.Preloader;
 
@@ -34,6 +36,8 @@ internal static class UnityPreloader
     private static PreloaderConsoleListener PreloaderLog { get; set; }
 
     private static ManualLogSource Log => PreloaderLogger.Log;
+
+    private static readonly Harmony Harmony = new("BepInEx.Unity.Mono.Preloader");
 
     public static void Run()
     {
@@ -72,11 +76,14 @@ internal static class UnityPreloader
 
             Log.Log(LogLevel.Message, "Preloader started");
 
+            // Set up the chainloader entrypoint which harmony patches the main Unity assembly as soon as possible and
+            // unpatch it in our hooking method before calling the chainloader init method
+            AppDomain.CurrentDomain.AssemblyLoad += OnAssemblyLoad;
+
             TypeLoader.SearchDirectories.UnionWith(Paths.DllSearchPaths);
 
             using (var assemblyPatcher = new AssemblyPatcher(MonoAssemblyHelper.LoadFromMemory))
             {
-                assemblyPatcher.AddPatchersFromDirectory(Paths.BepInExAssemblyDirectory);
                 assemblyPatcher.AddPatchersFromProviders();
 
                 Log.Log(LogLevel.Info,
@@ -127,6 +134,61 @@ internal static class UnityPreloader
             File.WriteAllText(
                               Path.Combine(Paths.GameRootPath, $"preloader_{DateTime.Now:yyyyMMdd_HHmmss_fff}.log"),
                               log + ex);
+        }
+    }
+
+    // First step of the chainloader entrypoint: Harmony patch the main Unity assembly with a suitable hook
+    private static void OnAssemblyLoad(object sender, AssemblyLoadEventArgs args)
+    {
+        const string sceneManagerTypeName = "UnityEngine.SceneManagement.SceneManager";
+        const string displayTypeName = "UnityEngine.Display";
+        
+        var assembly = args.LoadedAssembly;
+        var assemblyName = assembly.GetName().Name;
+
+        if (assemblyName is not ("UnityEngine.CoreModule" or "UnityEngine"))
+            return;
+
+        AppDomain.CurrentDomain.AssemblyLoad -= OnAssemblyLoad;
+
+        var sceneManagerType = assembly.GetType(sceneManagerTypeName, false);
+        if (sceneManagerType != null)
+        {
+            var activeSceneChangedMethod = sceneManagerType.GetMethod("Internal_ActiveSceneChanged",
+                                                                      BindingFlags.NonPublic | BindingFlags.Static);
+            Harmony.Patch(activeSceneChangedMethod, prefix: new HarmonyMethod(typeof(UnityPreloader), nameof(Entrypoint)));
+            Log.LogInfo($"Hooked into {activeSceneChangedMethod.FullDescription()}");
+            return;
+        }
+
+        var displayType = assembly.GetType(displayTypeName, false);
+        if (displayType != null)
+        {
+            var recreateDisplayListMethod = displayType.GetMethod("RecreateDisplayList", BindingFlags.NonPublic | BindingFlags.Static);
+            Harmony.Patch(recreateDisplayListMethod, postfix: new HarmonyMethod(typeof(UnityPreloader), nameof(Entrypoint)));
+            Log.LogInfo($"Hooked into {recreateDisplayListMethod.FullDescription()}");
+            return;
+        }
+
+        Log.LogError($"Couldn't find a suitable chainloader entrypoint in the {assemblyName} assembly because " +
+                     $"{sceneManagerTypeName} or {displayTypeName} do not exist in the assembly");
+    }
+
+    // Second step of the chainloader entrypoint: undo the Harmony patch and call the chainloader init method
+    private static void Entrypoint()
+    {
+        try
+        {
+            Harmony.UnpatchSelf();
+
+            Assembly.Load("BepInEx.Unity.Mono")
+                    .GetType("BepInEx.Unity.Mono.Bootstrap.UnityChainloader")
+                    .GetMethod("StaticStart", AccessTools.all)!
+                    .Invoke(null, [null]);
+        }
+        catch (Exception e)
+        {
+            Log.LogError(e);
         }
     }
 

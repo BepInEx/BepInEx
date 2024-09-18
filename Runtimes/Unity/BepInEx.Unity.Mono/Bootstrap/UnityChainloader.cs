@@ -33,7 +33,7 @@ public class UnityChainloader : BaseChainloader<BaseUnityPlugin>
      false,
      "Include unity log messages in log file output.");
 
-    private static readonly bool staticStartHasBeenCalled = false;
+    private static bool staticStartHasBeenCalled = false;
 
     private string _consoleTitle;
 
@@ -71,6 +71,8 @@ public class UnityChainloader : BaseChainloader<BaseUnityPlugin>
             if (staticStartHasBeenCalled)
                 throw new InvalidOperationException("Cannot call StaticStart again");
 
+            staticStartHasBeenCalled = true;
+            
             Logger.Log(LogLevel.Debug, "Entering chainloader StaticStart");
 
             Instance = new UnityChainloader();
