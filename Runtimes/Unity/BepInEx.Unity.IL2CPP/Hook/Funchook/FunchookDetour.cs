@@ -7,7 +7,7 @@ internal class FunchookDetour : BaseNativeDetour<FunchookDetour>
 {
     private readonly nint funchookInstance;
 
-    public FunchookDetour(nint originalMethodPtr, Delegate detourMethod) : base(originalMethodPtr, detourMethod)
+    public FunchookDetour(nint originalMethodPtr, nint targetMethodPtr) : base(originalMethodPtr, targetMethodPtr)
     {
         funchookInstance = FunchookLib.Create();
     }
@@ -16,9 +16,10 @@ internal class FunchookDetour : BaseNativeDetour<FunchookDetour>
 
     protected override unsafe void PrepareImpl()
     {
-        var trampolinePtr = OriginalMethodPtr;
-        EnsureSuccess(FunchookLib.Prepare(funchookInstance, &trampolinePtr, DetourMethodPtr));
-        TrampolinePtr = trampolinePtr;
+        var trampolinePtr = Source;
+        EnsureSuccess(FunchookLib.Prepare(funchookInstance, &trampolinePtr, Target));
+        OrigEntrypoint = trampolinePtr;
+        HasOrigEntrypoint = true;
     }
 
     protected override void UndoImpl() => EnsureSuccess(FunchookLib.Uninstall(funchookInstance, 0));

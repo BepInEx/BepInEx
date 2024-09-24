@@ -70,7 +70,7 @@ public static class UnityInfo
             }
 
         // On Windows, we can try to parse executable name, but some games can mess up the file version as well 
-        if (PlatformHelper.Is(Platform.Windows))
+        if (PlatformDetection.OS.Is(OSKind.Windows))
             try
             {
                 var version = FileVersionInfo.GetVersionInfo(PlayerPath);

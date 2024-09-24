@@ -6,10 +6,10 @@ using BepInEx.Configuration;
 using BepInEx.Logging;
 using BepInEx.Preloader.Core;
 using BepInEx.Preloader.Core.Logging;
-using BepInEx.Unity.IL2CPP.Hook;
 using BepInEx.Unity.IL2CPP.Logging;
 using BepInEx.Unity.IL2CPP.Utils;
 using Il2CppInterop.Runtime.InteropTypes;
+using MonoMod.RuntimeDetour;
 using UnityEngine;
 using Logger = BepInEx.Logging.Logger;
 
@@ -17,8 +17,6 @@ namespace BepInEx.Unity.IL2CPP;
 
 public class IL2CPPChainloader : BaseChainloader<BasePlugin>
 {
-    private static RuntimeInvokeDetourDelegate originalInvoke;
-
     private static readonly ConfigEntry<bool> ConfigUnityLogging = ConfigFile.CoreConfig.Bind(
      "Logging", "UnityLogListening",
      true,
@@ -30,7 +28,7 @@ public class IL2CPPChainloader : BaseChainloader<BasePlugin>
      "Include unity log messages in log file output.");
 
 
-    private static INativeDetour RuntimeInvokeDetour { get; set; }
+    private static NativeHook RuntimeInvokeDetour { get; set; }
 
     public static new IL2CPPChainloader Instance
     {
@@ -71,14 +69,12 @@ public class IL2CPPChainloader : BaseChainloader<BasePlugin>
 
         var runtimeInvokePtr = NativeLibrary.GetExport(il2CppHandle, "il2cpp_runtime_invoke");
         PreloaderLogger.Log.Log(LogLevel.Debug, $"Runtime invoke pointer: 0x{runtimeInvokePtr.ToInt64():X}");
-        RuntimeInvokeDetourDelegate invokeMethodDetour = OnInvokeMethod;
 
-        RuntimeInvokeDetour =
-            INativeDetour.CreateAndApply(runtimeInvokePtr, invokeMethodDetour, out originalInvoke);
+        RuntimeInvokeDetour = new NativeHook(runtimeInvokePtr, OnInvokeMethod);
         PreloaderLogger.Log.Log(LogLevel.Debug, "Runtime invoke patched");
     }
 
-    private static IntPtr OnInvokeMethod(IntPtr method, IntPtr obj, IntPtr parameters, IntPtr exc)
+    private static IntPtr OnInvokeMethod(RuntimeInvokeDetourDelegate original, IntPtr method, IntPtr obj, IntPtr parameters, IntPtr exc)
     {
         var methodName = Marshal.PtrToStringAnsi(Il2CppInterop.Runtime.IL2CPP.il2cpp_method_get_name(method));
 
@@ -107,7 +103,7 @@ public class IL2CPPChainloader : BaseChainloader<BasePlugin>
                 Logger.Log(LogLevel.Error, ex);
             }
 
-        var result = originalInvoke(method, obj, parameters, exc);
+        var result = original(method, obj, parameters, exc);
 
         if (unhook)
         {

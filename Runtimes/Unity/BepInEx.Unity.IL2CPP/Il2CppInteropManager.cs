@@ -29,6 +29,7 @@ using Il2CppInterop.Runtime.Startup;
 using LibCpp2IL;
 using Microsoft.Extensions.Logging;
 using Mono.Cecil;
+using MonoMod.RuntimeDetour;
 using MonoMod.Utils;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 using MSLoggerFactory = Microsoft.Extensions.Logging.LoggerFactory;
@@ -111,14 +112,16 @@ internal static partial class Il2CppInteropManager
          .ToString());
 
     private static readonly ManualLogSource Logger = BepInEx.Logging.Logger.CreateLogSource("InteropManager");
-
+    private static Il2CppDetourFactory DetourFactory = new();
     private static string il2cppInteropBasePath;
 
     private static bool initialized;
 
     public static string GameAssemblyPath => Environment.GetEnvironmentVariable("BEPINEX_GAME_ASSEMBLY_PATH") ??
                                              Path.Combine(Paths.GameRootPath,
-                                                          "GameAssembly." + PlatformHelper.LibrarySuffix);
+                                                          "GameAssembly." + 
+                                                          (PlatformDetection.OS.Is(OSKind.OSX) ? "dylib" :
+                                                          PlatformDetection.OS.Is(OSKind.Posix) ? "so" : "dll"));
 
     private static string HashPath => Path.Combine(IL2CPPInteropAssemblyPath, "assembly-hash.txt");
 
@@ -229,8 +232,9 @@ internal static partial class Il2CppInteropManager
         AppDomain.CurrentDomain.AssemblyResolve += ResolveInteropAssemblies;
 
         GenerateInteropAssemblies();
-        var interopLogger = LoggerFactory.CreateLogger("Il2CppInterop");
+        DetourContext.SetGlobalContext(new DetourFactoryContext(DetourFactory));
 
+        var interopLogger = LoggerFactory.CreateLogger("Il2CppInterop");
         var unityVersion = UnityInfo.Version;
         Il2CppInteropRuntime.Create(new RuntimeConfiguration
                             {
