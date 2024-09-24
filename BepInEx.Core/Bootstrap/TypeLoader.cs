@@ -274,18 +274,30 @@ public static class TypeLoader
                                            string location)
         where T : ICacheable, new()
     {
-        using var ass = AssemblyDefinition.ReadAssembly(dllMs, ReaderParameters);
-        Logger.Log(LogLevel.Debug, $"Examining '{ass.Name}'");
+        try
+        {
+            using var ass = AssemblyDefinition.ReadAssembly(dllMs, ReaderParameters);
+            Logger.Log(LogLevel.Debug, $"Examining '{ass.Name}'");
 
-        if (!assemblyFilter?.Invoke(ass) ?? false)
+            if (!assemblyFilter?.Invoke(ass) ?? false)
+            {
+                return new List<T>();
+            }
+
+            var matches = ass.MainModule.Types
+                             .Select(t => typeSelector(t, loadContext, location))
+                             .Where(t => t != null).ToList();
+            return matches;
+        }
+        catch (BadImageFormatException)
         {
             return new List<T>();
         }
-
-        var matches = ass.MainModule.Types
-                         .Select(t => typeSelector(t, loadContext, location))
-                         .Where(t => t != null).ToList();
-        return matches;
+        catch (Exception e)
+        {
+            Logger.Log(LogLevel.Error, $"An unexpected error occured when examining an assembly stream: {e}");
+            return new List<T>();
+        }
     }
 
     /// <summary>
