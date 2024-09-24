@@ -76,16 +76,6 @@ public static class Paths
     public static string PatcherPluginPath { get; private set; }
 
     /// <summary>
-    ///     The path to the plugin provider folder which resides in the BepInEx folder.
-    /// </summary>
-    public static string PluginProviderPath { get; private set; }
-    
-    /// <summary>
-    ///     The path to the patcher plugin provider folder which resides in the BepInEx folder.
-    /// </summary>
-    public static string PatcherProviderPath { get; private set; }
-
-    /// <summary>
     ///     The path to the plugin folder which resides in the BepInEx folder.
     ///     <para>
     ///         This is ONLY guaranteed to be set correctly when Chainloader has been initialized.
@@ -137,9 +127,7 @@ public static class Paths
         BepInExRootPath = bepinRootPath ?? Path.Combine(GameRootPath, "BepInEx");
         ConfigPath = Path.Combine(BepInExRootPath, "config");
         BepInExConfigPath = Path.Combine(ConfigPath, "BepInEx.cfg");
-        PluginProviderPath = Path.Combine(BepInExRootPath, "plugins-providers");
         PluginPath = Path.Combine(BepInExRootPath, "plugins");
-        PatcherProviderPath = Path.Combine(BepInExRootPath, "patchers-providers");
         PatcherPluginPath = Path.Combine(BepInExRootPath, "patchers");
         BepInExAssemblyDirectory = Path.Combine(BepInExRootPath, "core");
         BepInExAssemblyPath = Path.Combine(BepInExAssemblyDirectory,

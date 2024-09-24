@@ -77,7 +77,7 @@ internal static class UnityPreloader
             using (var assemblyPatcher = new AssemblyPatcher(MonoAssemblyHelper.LoadFromMemory))
             {
                 assemblyPatcher.AddPatchersFromDirectory(Paths.BepInExAssemblyDirectory);
-                assemblyPatcher.AddPatchersFromProviders();
+                assemblyPatcher.AddPatchersFromDirectory(Paths.PatcherPluginPath);
 
                 Log.Log(LogLevel.Info,
                         $"{assemblyPatcher.PatcherContext.PatcherPlugins.Count} patcher plugin{(assemblyPatcher.PatcherContext.PatcherPlugins.Count == 1 ? "" : "s")} loaded");

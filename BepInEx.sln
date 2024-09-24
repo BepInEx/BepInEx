@@ -51,10 +51,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Doorstop", "Doorstop", "{CE
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Build", "build\Build.csproj", "{0C38DDF2-EAAA-43FA-BA0A-985636AC6040}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BepInEx.PluginProvider", "BepInEx.PluginProvider\BepInEx.PluginProvider.csproj", "{CBE495BC-0258-4F36-8B3D-1CA64D97E90A}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BepInEx.PatcherProvider", "BepInEx.PatcherProvider\BepInEx.PatcherProvider.csproj", "{F88995B3-A5A2-4FC1-A11B-E2AA17483B20}"
-EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		BepInEx.NetLauncher.Shared\BepInEx.NetLauncher.Shared.projitems*{067bcc8c-fc25-4929-b4f4-c6a5a7496994}*SharedItemsImports = 13
@@ -151,22 +147,6 @@ Global
 		{0C38DDF2-EAAA-43FA-BA0A-985636AC6040}.Release_Unity|Any CPU.ActiveCfg = Debug|Any CPU
 		{0C38DDF2-EAAA-43FA-BA0A-985636AC6040}.Release_Unity|Any CPU.Build.0 = Debug|Any CPU
 		{0C38DDF2-EAAA-43FA-BA0A-985636AC6040}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CBE495BC-0258-4F36-8B3D-1CA64D97E90A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CBE495BC-0258-4F36-8B3D-1CA64D97E90A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CBE495BC-0258-4F36-8B3D-1CA64D97E90A}.Release_NetFramework|Any CPU.ActiveCfg = Debug|Any CPU
-		{CBE495BC-0258-4F36-8B3D-1CA64D97E90A}.Release_NetFramework|Any CPU.Build.0 = Debug|Any CPU
-		{CBE495BC-0258-4F36-8B3D-1CA64D97E90A}.Release_Unity|Any CPU.ActiveCfg = Debug|Any CPU
-		{CBE495BC-0258-4F36-8B3D-1CA64D97E90A}.Release_Unity|Any CPU.Build.0 = Debug|Any CPU
-		{CBE495BC-0258-4F36-8B3D-1CA64D97E90A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CBE495BC-0258-4F36-8B3D-1CA64D97E90A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F88995B3-A5A2-4FC1-A11B-E2AA17483B20}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F88995B3-A5A2-4FC1-A11B-E2AA17483B20}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F88995B3-A5A2-4FC1-A11B-E2AA17483B20}.Release_NetFramework|Any CPU.ActiveCfg = Debug|Any CPU
-		{F88995B3-A5A2-4FC1-A11B-E2AA17483B20}.Release_NetFramework|Any CPU.Build.0 = Debug|Any CPU
-		{F88995B3-A5A2-4FC1-A11B-E2AA17483B20}.Release_Unity|Any CPU.ActiveCfg = Debug|Any CPU
-		{F88995B3-A5A2-4FC1-A11B-E2AA17483B20}.Release_Unity|Any CPU.Build.0 = Debug|Any CPU
-		{F88995B3-A5A2-4FC1-A11B-E2AA17483B20}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F88995B3-A5A2-4FC1-A11B-E2AA17483B20}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

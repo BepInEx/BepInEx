@@ -37,17 +37,14 @@ public class UnityChainloader : BaseChainloader<BaseUnityPlugin>
 
     private string _consoleTitle;
 
+    // TODO: Remove once proper instance handling exists
+    public static UnityChainloader Instance { get; set; }
+
     /// <summary>
     ///     The GameObject that all plugins are attached to as components.
     /// </summary>
     public static GameObject ManagerObject { get; private set; }
 
-    public static new UnityChainloader Instance
-    {
-        get => (UnityChainloader)BaseChainloader<BaseUnityPlugin>.Instance;
-        set => BaseChainloader<BaseUnityPlugin>.Instance = value;
-    }
-    
     protected override string ConsoleTitle => _consoleTitle;
 
 
@@ -73,9 +70,9 @@ public class UnityChainloader : BaseChainloader<BaseUnityPlugin>
 
             Logger.Log(LogLevel.Debug, "Entering chainloader StaticStart");
 
-            Instance = new UnityChainloader();
-            Instance.Initialize(gameExePath);
-            Instance.Execute();
+            var instance = new UnityChainloader();
+            instance.Initialize(gameExePath);
+            instance.Execute();
 
             Logger.Log(LogLevel.Debug, "Exiting chainloader StaticStart");
         }

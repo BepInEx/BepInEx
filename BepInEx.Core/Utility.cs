@@ -222,53 +222,6 @@ public static class Utility
     }
 
     /// <summary>
-    ///     Try to resolve the symbols data from an assembly DLL.
-    /// </summary>
-    /// <param name="dllPath">File path of the DLL assembly.</param>
-    /// <param name="symbolsData">The symbols of the DLL assembly.</param>
-    /// <returns>True, if the symbols were found. Otherwise, false.</returns>
-    public static bool TryResolveAssemblySymbols(string dllPath, out byte[] symbolsData)
-    {
-        var subDirectory = Path.GetDirectoryName(dllPath);
-
-        var potentialSymbolsFileNames = new[]
-        {
-            $"{dllPath}.mdb",
-            Path.ChangeExtension(dllPath, ".pdb")
-        };
-                
-        foreach (var symbolFileName in potentialSymbolsFileNames)
-        {
-            var symbolPath = Path.Combine(subDirectory, symbolFileName);
-            if (!File.Exists(symbolPath))
-                continue;
-
-            try
-            {
-                symbolsData = File.ReadAllBytes(symbolPath);
-            }
-            catch (Exception)
-            {
-                continue;
-            }
-
-            return true;
-        }
-
-        symbolsData = null;
-        return false;
-    }
-
-    private static Assembly LoadAssemblyWithSymbols(string assemblyFilePath)
-    {        
-        var assemblyData = File.ReadAllBytes(assemblyFilePath);
-
-        return TryResolveAssemblySymbols(assemblyFilePath, out byte[] symbolsData)
-                   ? Assembly.Load(assemblyData, symbolsData)
-                   : Assembly.Load(assemblyData);
-    }
-
-    /// <summary>
     ///     Checks whether a given cecil type definition is a subtype of a provided type.
     /// </summary>
     /// <param name="self">Cecil type definition</param>
@@ -305,16 +258,6 @@ public static class Utility
                                              out AssemblyDefinition assembly) =>
         TryResolveDllAssembly(assemblyName, directory,
                               s => AssemblyDefinition.ReadAssembly(s, readerParameters), out assembly);
-
-    /// <summary>
-    ///     Try to resolve and load the given assembly DLL including their symbols file.
-    /// </summary>
-    /// <param name="assemblyName">Name of the assembly, of the type <see cref="AssemblyName" />.</param>
-    /// <param name="directory">Directory to search the assembly from.</param>
-    /// <param name="assembly">The loaded assembly.</param>
-    /// <returns>True, if the assembly was found and loaded. Otherwise, false.</returns>
-    public static bool TryResolveDllAssemblyWithSymbols(AssemblyName assemblyName, string directory, out Assembly assembly) =>
-        TryResolveDllAssembly(assemblyName, directory, LoadAssemblyWithSymbols, out assembly);
 
     /// <summary>
     ///     Tries to create a file with the given name

@@ -80,31 +80,6 @@ public class PatcherPluginInfoAttribute : Attribute
 }
 
 /// <summary>
-///     This attribute denotes that a class is a patcher plugin provider, and specifies the required metadata.
-/// </summary>
-[AttributeUsage(AttributeTargets.Class)]
-public class PatcherProviderPluginInfoAttribute : PatcherPluginInfoAttribute {
-    /// <param name="GUID">The unique identifier of the plugin. Should not change between plugin versions.</param>
-    /// <param name="Name">The user friendly name of the plugin. Is able to be changed between versions.</param>
-    /// <param name="Version">The specific version of the plugin.</param>
-    public PatcherProviderPluginInfoAttribute(string GUID, string Name, string Version) : base(GUID, Name, Version)
-    {
-    }
-
-    internal new static PatcherProviderPluginInfoAttribute FromCecilType(TypeDefinition td)
-    {
-        var attr = MetadataHelper.GetCustomAttributes<PatcherProviderPluginInfoAttribute>(td, false).FirstOrDefault();
-
-        if (attr == null)
-            return null;
-
-        return new PatcherProviderPluginInfoAttribute((string) attr.ConstructorArguments[0].Value,
-                                                      (string) attr.ConstructorArguments[1].Value,
-                                                      (string) attr.ConstructorArguments[2].Value);
-    }
-}
-
-/// <summary>
 ///     Defines an assembly that a patch method will target.
 /// </summary>
 [AttributeUsage(AttributeTargets.Method)]

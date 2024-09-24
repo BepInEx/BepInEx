@@ -239,10 +239,8 @@ public sealed class MakeDistTask : FrostingTask<BuildContext>
             var bepInExCoreDir = bepInExDir.Combine("core");
             ctx.CreateDirectory(bepInExDir);
             ctx.CreateDirectory(bepInExCoreDir);
-            ctx.CreateDirectory(bepInExDir.Combine("plugins-providers"));
             ctx.CreateDirectory(bepInExDir.Combine("plugins"));
             ctx.CreateDirectory(bepInExDir.Combine("patchers"));
-            ctx.CreateDirectory(bepInExDir.Combine("patchers-providers"));
 
             File.WriteAllText(targetDir.CombineWithFilePath("changelog.txt").FullPath, changelog);
 

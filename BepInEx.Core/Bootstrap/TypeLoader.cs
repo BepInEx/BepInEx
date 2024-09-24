@@ -10,41 +10,6 @@ using Mono.Cecil;
 
 namespace BepInEx.Bootstrap;
 
-internal class CachedPluginLoadContext : IPluginLoadContext, IDisposable
-{
-    public IPluginLoadContext PluginLoadContext { get; }
-    private byte[] assemblyData;
-    private byte[] assemblySymbolsData;
-
-    public CachedPluginLoadContext(IPluginLoadContext pluginLoadContext)
-    {
-        PluginLoadContext = pluginLoadContext;
-    }
-
-    public string AssemblyIdentifier => PluginLoadContext.AssemblyIdentifier;
-    public string AssemblyHash => PluginLoadContext.AssemblyHash;
-    public byte[] GetAssemblyData()
-    {
-        return assemblyData ??= PluginLoadContext.GetAssemblyData();
-    }
-
-    public byte[] GetAssemblySymbolsData()
-    {
-        return assemblySymbolsData ??= PluginLoadContext.GetAssemblySymbolsData();
-    }
-
-    public byte[] GetFile(string relativePath)
-    {
-        return PluginLoadContext.GetFile(relativePath);
-    }
-
-    public void Dispose()
-    {
-        assemblyData = null;
-        assemblySymbolsData = null;
-    }
-}
-
 /// <summary>
 ///     A cacheable metadata item. Can be used with <see cref="TypeLoader.LoadAssemblyCache{T}" /> and
 ///     <see cref="TypeLoader.SaveAssemblyCache{T}" /> to cache plugin metadata.
@@ -70,11 +35,6 @@ public interface ICacheable
 /// <typeparam name="T"></typeparam>
 public class CachedAssembly<T> where T : ICacheable
 {
-    /// <summary>
-    ///     The version of the cache which increments on each format changes
-    /// </summary>
-    public const int Version = 0;
-
     /// <summary>
     ///     List of cached items inside the assembly.
     /// </summary>
@@ -129,9 +89,7 @@ public static class TypeLoader
         {
             Paths.BepInExAssemblyDirectory,
             Paths.PluginPath,
-            Paths.PluginProviderPath,
             Paths.PatcherPluginPath,
-            Paths.PatcherProviderPath,
             Paths.ManagedPath
         }.Concat(SearchDirectories);
 
@@ -168,8 +126,9 @@ public static class TypeLoader
     ///     selector.
     /// </returns>
     public static Dictionary<string, List<T>> FindPluginTypes<T>(string directory,
-                                                                 Func<TypeDefinition, IPluginLoadContext, string, T> typeSelector,
-                                                                 Func<AssemblyDefinition, bool> assemblyFilter = null,
+                                                                 Func<TypeDefinition, string, T> typeSelector,
+                                                                 Func<AssemblyDefinition, bool> assemblyFilter =
+                                                                     null,
                                                                  string cacheName = null)
         where T : ICacheable, new()
     {
@@ -194,7 +153,19 @@ public static class TypeLoader
                         continue;
                     }
 
-                result[dll] = ExamineStream(typeSelector, assemblyFilter, dllMs, null, dll);
+                using var ass = AssemblyDefinition.ReadAssembly(dllMs, ReaderParameters);
+                Logger.Log(LogLevel.Debug, $"Examining '{dll}'");
+
+                if (!assemblyFilter?.Invoke(ass) ?? false)
+                {
+                    result[dll] = new List<T>();
+                    continue;
+                }
+
+                var matches = ass.MainModule.Types
+                                 .Select(t => typeSelector(t, dll))
+                                 .Where(t => t != null).ToList();
+                result[dll] = matches;
             }
             catch (BadImageFormatException e)
             {
@@ -210,82 +181,6 @@ public static class TypeLoader
             SaveAssemblyCache(cacheName, result, hashes);
 
         return result;
-    }
-
-    /// <summary>
-    ///     Looks up assemblies using the given loaders and locates all types that can be loaded and collects their metadata.
-    /// </summary>
-    /// <typeparam name="T">The specific base type to search for.</typeparam>
-    /// <param name="loadContexts">The load contexts to obtain the assemblies from.</param>
-    /// <param name="typeSelector">A function to check if a type should be selected and to build the type metadata.</param>
-    /// <param name="assemblyFilter">A filter function to quickly determine if the assembly can be loaded.</param>
-    /// <param name="cacheName">The name of the cache to get cached types from.</param>
-    /// <returns>
-    ///     A dictionary of all assemblies in the directory and the list of type metadatas of types that match the
-    ///     selector.
-    /// </returns>
-    public static List<T> GetPluginsFromLoadContexts<T>(IEnumerable<IPluginLoadContext> loadContexts,
-                                                        Func<TypeDefinition, IPluginLoadContext, string, T> typeSelector,
-                                                        Func<AssemblyDefinition, bool> assemblyFilter = null,
-                                                        string cacheName = null)
-        where T : ICacheable, new()
-    {
-        var result = new Dictionary<string, List<T>>();
-        var hashes = new Dictionary<string, string>();
-        Dictionary<string, CachedAssembly<T>> cache = null;
-
-        if (cacheName != null)
-            cache = LoadAssemblyCache<T>(cacheName);
-
-        foreach (IPluginLoadContext loadContext in loadContexts)
-        {
-            IList<T> plugins;
-            if (cache != null && loadContext.AssemblyHash != null &&
-                cache.TryGetValue(loadContext.AssemblyIdentifier, out var cacheEntry) &&
-                loadContext.AssemblyHash == cacheEntry.Hash)
-            {
-                plugins = cacheEntry.CacheItems;
-            }
-            else
-            {
-                var assemblyData = loadContext.GetAssemblyData();
-                using var memory = new MemoryStream(assemblyData);
-                plugins = ExamineStream(typeSelector, assemblyFilter, memory, loadContext, null);
-            }
-                
-            foreach (T pluginInfo in plugins)
-            {
-                if (!result.ContainsKey(loadContext.AssemblyIdentifier))
-                    result[loadContext.AssemblyIdentifier] = new();
-                result[loadContext.AssemblyIdentifier].Add(pluginInfo);
-            }
-        }
-            
-        if (cache != null)
-            SaveAssemblyCache(cacheName, result, hashes);
-
-        return result.SelectMany(x => x.Value).ToList();
-    }
-
-    private static List<T> ExamineStream<T>(Func<TypeDefinition, IPluginLoadContext, string, T> typeSelector,
-                                           Func<AssemblyDefinition, bool> assemblyFilter,
-                                           MemoryStream dllMs,
-                                           IPluginLoadContext loadContext,
-                                           string location)
-        where T : ICacheable, new()
-    {
-        using var ass = AssemblyDefinition.ReadAssembly(dllMs, ReaderParameters);
-        Logger.Log(LogLevel.Debug, $"Examining '{ass.Name}'");
-
-        if (!assemblyFilter?.Invoke(ass) ?? false)
-        {
-            return new List<T>();
-        }
-
-        var matches = ass.MainModule.Types
-                         .Select(t => typeSelector(t, loadContext, location))
-                         .Where(t => t != null).ToList();
-        return matches;
     }
 
     /// <summary>
@@ -310,9 +205,7 @@ public static class TypeLoader
             if (!File.Exists(path))
                 return null;
 
-            using var br = new BinaryReader(File.OpenRead(path));
-            var version = br.ReadInt32();
-            if (version == CachedAssembly<T>.Version)
+            using (var br = new BinaryReader(File.OpenRead(path)))
             {
                 var entriesCount = br.ReadInt32();
 
@@ -366,7 +259,6 @@ public static class TypeLoader
             var path = Path.Combine(Paths.CachePath, $"{cacheName}_typeloader.dat");
 
             using var bw = new BinaryWriter(File.OpenWrite(path));
-            bw.Write(CachedAssembly<T>.Version);
             bw.Write(entries.Count);
 
             foreach (var kv in entries)
