@@ -8,7 +8,7 @@ namespace BepInEx;
 
 /// <summary>
 ///     Data class that represents information about a <see cref="Plugin"/>.
-///     Contains all metadata and additional info required for plugin loading by a <see cref="LoadingSystem{TProvider,TPlugin}"/>.
+///     Contains all metadata and additional info required for plugin loading by <see cref="PluginManager"/>.
 /// </summary>
 public class PluginInfo : ICacheable
 {

@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using BepInEx.Core.Bootstrap;
 using BepInEx.Logging;
 using BepInEx.Preloader.Core.Logging;
 using BepInEx.Unity.Common;
@@ -30,9 +31,6 @@ internal class UnityChainloader : Chainloader
     /// </summary>
     internal static GameObject ManagerObject { get; private set; }
     
-    /// <inheritdoc />
-    protected override string ConsoleTitle => _consoleTitle;
-
     // In some rare cases calling Application.unityVersion seems to cause MissingMethodException
     // if a preloader patch applies Harmony patch to Chainloader.Initialize.
     // The issue could be related to BepInEx being compiled against Unity 5.6 version of UnityEngine.dll,
@@ -45,6 +43,16 @@ internal class UnityChainloader : Chainloader
         get => Application.unityVersion;
     }
 
+    /// <summary>
+    ///     The assembly name of this loading system
+    /// </summary>
+    private readonly string CurrentAssemblyName = Assembly.GetExecutingAssembly().GetName().Name;
+
+    /// <summary>
+    ///     The assembly version of this loading system
+    /// </summary>
+    private readonly Version CurrentAssemblyVersion = Assembly.GetExecutingAssembly().GetName().Version;
+    
     internal static void StaticStart(string gameExePath = null)
     {
         try
@@ -61,7 +69,8 @@ internal class UnityChainloader : Chainloader
 
             Instance = new UnityChainloader();
             Instance.Initialize(gameExePath);
-            Instance.LoadFromProviders();
+            PhaseManager.Instance.StartPhase(BepInPhases.AfterGameAssembliesLoadedPhase);
+            PhaseManager.Instance.StartPhase(BepInPhases.GameInitialisedPhase);
 
             Logger.Log(LogLevel.Debug, "Exiting chainloader StaticStart");
         }

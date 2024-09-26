@@ -13,39 +13,124 @@ using Mono.Cecil;
 namespace BepInEx;
 
 /// <summary>
-///     The base type of any phases of a system to manage the loading of <see cref="Plugin"/> obtained from
-///     multiple <see cref="PluginProvider"/>
+///     The manager class that handles plugins loading and dependencies resolutions
 /// </summary>
-/// <typeparam name="TProvider">The provider type used to obtains the <see cref="IPluginLoadContext"/> of the plugins</typeparam>
-/// <typeparam name="TPlugin">The plugin type provided by providers</typeparam>
-public abstract class LoadingSystem<TProvider, TPlugin>
-    where TProvider : PluginProvider
-    where TPlugin : Plugin
+public sealed class PluginManager
 {
+    /// <summary>
+    ///     The current instance of the PluyinManager
+    /// </summary>
+    public static PluginManager Instance { get; } = new();
+
+    private PluginManager() { }
+
+    private readonly DefaultPluginProvider defaultProvider = new();
+
+    internal void Initialize()
+    {
+        defaultProvider.Initialize();
+        PhaseManager.Instance.OnPhaseStarted += OnPhaseStart;
+    }
+
+    private void OnPhaseStart(string phase)
+    {
+        try
+        {
+            Logger.Log(LogLevel.Info, $"{Providers.Count} plugin provider{(Providers.Count == 1 ? "" : "s")} to load");
+
+            var loadContexts = new List<CachedPluginLoadContext>();
+            foreach (var provider in Providers)
+            {
+                var pluginLoadContexts = provider.Value.Invoke();
+                foreach (IPluginLoadContext context in pluginLoadContexts)
+                {
+                    var cachedContext = new CachedPluginLoadContext(context);
+                    loadContexts.Add(cachedContext);
+                    SourcePlugins[context.AssemblyIdentifier] = provider.Key;
+                }
+                ProviderLoaded?.Invoke(new(provider.Key, (Plugin)provider.Key.Instance));
+            }
+            
+            AllProvidersLoaded?.Invoke();
+            var plugins = TypeLoader.GetPluginsFromLoadContexts(loadContexts.Cast<IPluginLoadContext>(),
+                                                                ToPluginInfo, HasPluginType,
+                                                                $"{PhaseManager.Instance.CurrentPhase}_provider");
+            Logger.Log(LogLevel.Info, $"{plugins.Count} plugin{(plugins.Count == 1 ? "" : "s")} to load");
+            Providers.Clear();
+            LoadPlugins(plugins);
+            AllPluginsLoaded?.Invoke();
+            foreach (CachedPluginLoadContext context in loadContexts)
+                context.Dispose();
+        }
+        catch (Exception ex)
+        {
+            try
+            {
+                ConsoleManager.CreateConsole();
+            }
+            catch { }
+
+            Logger.Log(LogLevel.Error, $"Error occurred loading plugins: {ex}");
+        }
+    }
+
+    /// <summary>
+    ///     The list of all plugin providers whose key is the <see cref="PluginInfo"/> of the source plugin
+    /// </summary>
+    public Dictionary<PluginInfo, Func<IList<IPluginLoadContext>>> Providers { get; } = new();
+
+    private Dictionary<string, PluginInfo> SourcePlugins { get; } = new();
+    
     /// <summary>
     ///     The assembly name of this loading system
     /// </summary>
-    protected readonly string CurrentAssemblyName = Assembly.GetExecutingAssembly().GetName().Name;
+    private readonly string currentAssemblyName = Assembly.GetExecutingAssembly().GetName().Name;
 
     /// <summary>
     ///     The assembly version of this loading system
     /// </summary>
-    protected readonly Version CurrentAssemblyVersion = Assembly.GetExecutingAssembly().GetName().Version;
-
-    /// <summary>
-    ///     The name a plugin should be referred to in the logs
-    /// </summary>
-    protected abstract string PluginLogName { get; }
-    
-    /// <summary>
-    ///     The name of the assembly load cache of this loading system
-    /// </summary>
-    protected abstract string LoadCacheName { get; }
+    private readonly Version currentAssemblyVersion = Assembly.GetExecutingAssembly().GetName().Version;
 
     private static Regex AllowedGuidRegex => new(@"^[a-zA-Z0-9\._\-]+$");
 
-    internal LoadingSystem() {}
+    /// <summary>
+    ///     List of all <see cref="PluginInfo" /> instances of all plugins loaded via the chainloader.
+    ///     If a plugin fails to load, it is removed. This list only contains the plugins that were actually
+    ///     loaded and have their dependencies satisfied.
+    /// </summary>
+    public Dictionary<string, PluginInfo> Plugins { get; } = new();
+
+    /// <summary>
+    ///     Collection of error chainloader messages that occured during plugin loading.
+    ///     Contains information about what certain plugins were not loaded.
+    /// </summary>
+    public List<string> DependencyErrors { get; } = new();
+
+    /// <summary>
+    ///     Occurs after a plugin is instantiated and just before <see cref="Plugin.Load"/> is called.
+    /// </summary>
+    public static event Action<PluginLoadEventArgs> PluginLoad;
+
+    /// <summary>
+    ///     Occurs after a plugin provider is loaded.
+    /// </summary>
+    public static event Action<ProviderLoadEventArgs> ProviderLoaded;
     
+    /// <summary>
+    ///     Occurs after all plugins providers are loaded.
+    /// </summary>
+    public static event Action AllProvidersLoaded;
+    
+    /// <summary>
+    ///     Occurs after a plugin is loaded.
+    /// </summary>
+    public static event Action<PluginLoadEventArgs> PluginLoaded;
+
+    /// <summary>
+    ///     Occurs after all plugins are loaded.
+    /// </summary>
+    public static event Action AllPluginsLoaded;
+
     /// <summary>
     ///     Analyzes the given type definition and attempts to convert it to a valid <see cref="PluginInfo" />
     /// </summary>
@@ -53,14 +138,14 @@ public abstract class LoadingSystem<TProvider, TPlugin>
     /// <param name="loadContext">The load context of the plugin</param>
     /// <param name="assemblyLocation">The filepath of the assembly, to keep as metadata.</param>
     /// <returns>If the type represent a valid plugin, returns a <see cref="PluginInfo" /> instance. Otherwise, return null.</returns>
-    protected static PluginInfo ToPluginInfo<T>(TypeDefinition type, IPluginLoadContext loadContext, string assemblyLocation)
+    private PluginInfo ToPluginInfo(TypeDefinition type, IPluginLoadContext loadContext, string assemblyLocation)
     {
         if (type.IsInterface || type.IsAbstract)
             return null;
 
         try
         {
-            if (!type.IsSubtypeOf(typeof(T)))
+            if (!type.IsSubtypeOf(typeof(Plugin)))
                 return null;
         }
         catch (AssemblyResolutionException)
@@ -69,15 +154,23 @@ public abstract class LoadingSystem<TProvider, TPlugin>
             return null;
         }
 
-        return GetPluginInfo(type, BepInMetadataAttribute.FromCecilType(type), loadContext, assemblyLocation);
-    }
-
-    private static PluginInfo GetPluginInfo(TypeDefinition type, BepInMetadataAttribute metadata, IPluginLoadContext loadContext, string assemblyLocation)
-    {
+        BepInMetadataAttribute metadata = BepInMetadataAttribute.FromCecilType(type);
+        BepInPhaseAttribute phase = BepInPhaseAttribute.FromCecilType(type);
         // Perform checks that will prevent the plugin from being loaded in ALL cases
         if (metadata == null)
         {
             Logger.Log(LogLevel.Warning, $"Skipping over type [{type.FullName}] as no metadata attribute is specified");
+            return null;
+        }
+        
+        if (phase == null)
+        {
+            Logger.Log(LogLevel.Warning, $"Skipping over type [{type.FullName}] as no phase attribute is specified");
+            return null;
+        }
+
+        if (phase.Phase != PhaseManager.Instance.CurrentPhase)
+        {
             return null;
         }
 
@@ -125,14 +218,13 @@ public abstract class LoadingSystem<TProvider, TPlugin>
     ///     Determines if an assembly definition contains plugins of interest
     /// </summary>
     /// <param name="ass">The assembly definition to check for plugins</param>
-    /// <typeparam name="T">The types of plugins</typeparam>
     /// <returns>Whether a plugin was found in the assembly</returns>
-    protected bool HasPluginType<T>(AssemblyDefinition ass)
+    private bool HasPluginType(AssemblyDefinition ass)
     {
-        if (ass.MainModule.AssemblyReferences.All(r => r.Name != CurrentAssemblyName)
-            && ass.Name.Name != CurrentAssemblyName)
+        if (ass.MainModule.AssemblyReferences.All(r => r.Name != currentAssemblyName)
+            && ass.Name.Name != currentAssemblyName)
             return false;
-        if (ass.MainModule.GetTypeReferences().All(r => r.FullName != typeof(T).FullName))
+        if (ass.MainModule.GetTypeReferences().All(r => r.FullName != typeof(Plugin).FullName))
             return false;
 
         return true;
@@ -142,83 +234,10 @@ public abstract class LoadingSystem<TProvider, TPlugin>
     {
         var pluginTarget = pluginInfo.TargetedBepInExVersion;
         // X.X.X.x - compare normally. x.x.x.X - nightly build number, ignore
-        if (pluginTarget.Major != CurrentAssemblyVersion.Major) return true;
-        if (pluginTarget.Minor > CurrentAssemblyVersion.Minor) return true;
-        if (pluginTarget.Minor < CurrentAssemblyVersion.Minor) return false;
-        return pluginTarget.Build > CurrentAssemblyVersion.Build;
-    }
-
-    /// <summary>
-    ///     The title of the console
-    /// </summary>
-    protected virtual string ConsoleTitle => $"BepInEx {Utility.BepInExVersion} - {Paths.ProcessName}";
-
-    /// <summary>
-    ///     Whether the loading system was initialised
-    /// </summary>
-    protected bool Initialized { get; set; }
-    
-    /// <summary>
-    ///     List of all <see cref="PluginInfo" /> instances of all plugins loaded via the chainloader.
-    ///     If a plugin fails to load, it is removed. This list only contains the plugins that were actually
-    ///     loaded and have their dependencies satisfied.
-    /// </summary>
-    public Dictionary<string, PluginInfo> Plugins { get; } = new();
-
-    /// <summary>
-    ///     List of all <see cref="PluginInfo" /> instances of all providers loaded via the chainloader.
-    ///     If a provider fails to load, it is removed. This list only contains the providers that were actually
-    ///     loaded and have their dependencies satisfied.
-    /// </summary>
-    public Dictionary<string, PluginInfo> Providers { get; } = new();
-    
-    /// <summary>
-    ///     List of all <see cref="IPluginLoadContext" /> objects received from plugin providers.
-    ///     Value holds info of the originating provider. These contexts are used by chainloader to
-    ///     load plugins. Plugins that are loaded successfully are added to <see cref="Plugins" />.
-    /// </summary>
-    internal Dictionary<CachedPluginLoadContext, PluginInfo> LoadContexts { get; } = new();
-    
-    /// <summary>
-    ///     Collection of error chainloader messages that occured during plugin loading.
-    ///     Contains information about what certain plugins were not loaded.
-    /// </summary>
-    public List<string> DependencyErrors { get; } = new();
-
-    /// <summary>
-    ///     Occurs after a plugin provider is loaded.
-    /// </summary>
-    public static event Action<PluginLoadEventArgs> ProviderLoaded;
-    
-    /// <summary>
-    ///     Occurs after all plugins providers are loaded.
-    /// </summary>
-    public static event Action AllProvidersLoaded;
-    
-    /// <summary>
-    ///     Occurs after a plugin is loaded.
-    /// </summary>
-    public static event Action<PluginLoadEventArgs> PluginLoaded;
-
-    /// <summary>
-    ///     Occurs after all plugins are loaded.
-    /// </summary>
-    public static event Action AllPluginsLoaded;
-
-    /// <summary>
-    /// Discovers all plugins in the plugin directory without loading them.
-    /// </summary>
-    /// <remarks>
-    /// This is useful for discovering BepInEx plugin metadata.
-    /// </remarks>
-    /// <param name="path">Path from which to search the plugins.</param>
-    /// <param name="cacheName">Cache name to use. If null, results are not cached.</param>
-    /// <returns>List of discovered plugins and their metadata.</returns>
-    private List<PluginInfo> DiscoverPluginProvidersFrom(string path, string cacheName)
-    {
-        var pluginsToLoad =
-            TypeLoader.FindPluginTypes(path, ToPluginInfo<TProvider>, HasPluginType<TProvider>, cacheName);
-        return pluginsToLoad.SelectMany(p => p.Value).ToList();
+        if (pluginTarget.Major != currentAssemblyVersion.Major) return true;
+        if (pluginTarget.Minor > currentAssemblyVersion.Minor) return true;
+        if (pluginTarget.Minor < currentAssemblyVersion.Minor) return false;
+        return pluginTarget.Build > currentAssemblyVersion.Build;
     }
 
     /// <summary>
@@ -317,81 +336,6 @@ public abstract class LoadingSystem<TProvider, TPlugin>
         return sortedPlugins.Where(pluginsByGuid.ContainsKey).Select(x => pluginsByGuid[x]).ToList();
     }
 
-    /// <summary>
-    ///     Load all plugins or providers of plugins with dependency resolution
-    /// </summary>
-    /// <param name="plugins">A list of all the plugins to load</param>
-    /// <param name="provider">Whether to load the providers or the plugins discovered by providers</param>
-    private void LoadPlugins(List<PluginInfo> plugins, bool provider)
-    {
-        var existingPluginInfos = provider ? Providers : Plugins;
-        var sortedPluginInfos = ModifyLoadOrder(plugins, existingPluginInfos);
-        
-        var invalidPlugins = new HashSet<string>();
-        var processedPlugins = new Dictionary<string, SemanticVersioning.Version>();
-        var loadedAssemblies = new Dictionary<string, Assembly>();
-
-        foreach (var pluginInfo in sortedPluginInfos)
-        {
-            if (!CheckDependencies(pluginInfo, processedPlugins, invalidPlugins, existingPluginInfos))
-            {
-                continue;
-            }
-
-            try
-            {
-                Logger.Log(LogLevel.Info, $"Loading [{pluginInfo}]");
-
-                Assembly ass = null;
-                if (provider && !loadedAssemblies.TryGetValue(pluginInfo.Location, out ass))
-                {
-                    ass = Assembly.LoadFrom(pluginInfo.Location);
-                    loadedAssemblies[pluginInfo.Location] = ass;
-                }
-                else if (!provider && !loadedAssemblies.TryGetValue(pluginInfo.LoadContext.AssemblyIdentifier, out ass))
-                {
-                    var symbols = pluginInfo.LoadContext.GetAssemblySymbolsData();
-                    ass = symbols != null ? Assembly.Load(pluginInfo.LoadContext.GetAssemblyData(), symbols)
-                                          : Assembly.Load(pluginInfo.LoadContext.GetAssemblyData());
-                    loadedAssemblies[pluginInfo.LoadContext.AssemblyIdentifier] = ass;
-                }
-
-                existingPluginInfos[pluginInfo.Metadata.Guid] = pluginInfo;
-                TryRunModuleCtor(pluginInfo, ass);
-
-                if (provider)
-                {
-                    var type = ass.GetType(pluginInfo.TypeName);
-                    pluginInfo.Instance = Activator.CreateInstance(type);
-                    AppDomain.CurrentDomain.AssemblyResolve += (_, args) => ((TProvider)pluginInfo.Instance).ResolveAssembly(args.Name);
-                    var pluginLoadContexts = ((TProvider)pluginInfo.Instance).GetLoadContexts();
-                    foreach (IPluginLoadContext context in pluginLoadContexts)
-                    {
-                        var cachedContext = new CachedPluginLoadContext(context);
-                        LoadContexts[cachedContext] = pluginInfo;
-                    }
-                    ProviderLoaded?.Invoke(new(pluginInfo, ass, (Plugin)pluginInfo.Instance));
-                }
-                else
-                {
-                    pluginInfo.Source = LoadContexts[(CachedPluginLoadContext)pluginInfo.LoadContext];
-                    pluginInfo.Instance = LoadPlugin(pluginInfo, ass);
-                    PluginLoaded?.Invoke(new(pluginInfo, ass, (Plugin)pluginInfo.Instance));
-                    foreach (CachedPluginLoadContext context in LoadContexts.Keys)
-                        context.Dispose();
-                }
-            }
-            catch (Exception ex)
-            {
-                invalidPlugins.Add(pluginInfo.Metadata.Guid);
-                existingPluginInfos.Remove(pluginInfo.Metadata.Guid);
-
-                Logger.Log(LogLevel.Error,
-                           $"Error loading [{pluginInfo}]: {(ex is ReflectionTypeLoadException re ? TypeLoader.TypeLoadExceptionToString(re) : ex.ToString())}");
-            }
-        }
-    }
-
     private bool CheckDependencies<T>(T plugin, Dictionary<string, SemanticVersioning.Version> processedPlugins, HashSet<string> invalidPlugins, Dictionary<string, T> existingPlugins)
         where T : PluginInfo
     {
@@ -455,6 +399,65 @@ public abstract class LoadingSystem<TProvider, TPlugin>
         return true;
     }
 
+    /// <summary>
+    ///     Load all plugins or providers of plugins with dependency resolution
+    /// </summary>
+    /// <param name="plugins">A list of all the plugins to load</param>
+    private void LoadPlugins(List<PluginInfo> plugins)
+    {
+        var existingPluginInfos = Plugins;
+        var sortedPluginInfos = ModifyLoadOrder(plugins, existingPluginInfos);
+        
+        var invalidPlugins = new HashSet<string>();
+        var processedPlugins = new Dictionary<string, SemanticVersioning.Version>();
+        var loadedAssemblies = new Dictionary<string, Assembly>();
+
+        foreach (var pluginInfo in sortedPluginInfos)
+        {
+            if (!CheckDependencies(pluginInfo, processedPlugins, invalidPlugins, existingPluginInfos))
+            {
+                continue;
+            }
+
+            try
+            {
+                Logger.Log(LogLevel.Info, $"Loading [{pluginInfo}]");
+
+                Assembly ass;
+                if (pluginInfo.Location != null && !loadedAssemblies.TryGetValue(pluginInfo.Location, out ass))
+                {
+                    ass = Assembly.LoadFrom(pluginInfo.Location);
+                    loadedAssemblies[pluginInfo.Location] = ass;
+                }
+                else if (!loadedAssemblies.TryGetValue(pluginInfo.LoadContext.AssemblyIdentifier, out ass))
+                {
+                    var symbols = pluginInfo.LoadContext.GetAssemblySymbolsData();
+                    ass = symbols != null ? Assembly.Load(pluginInfo.LoadContext.GetAssemblyData(), symbols)
+                                          : Assembly.Load(pluginInfo.LoadContext.GetAssemblyData());
+                    loadedAssemblies[pluginInfo.LoadContext.AssemblyIdentifier] = ass;
+                }
+
+                existingPluginInfos[pluginInfo.Metadata.Guid] = pluginInfo;
+                TryRunModuleCtor(pluginInfo, ass);
+
+                if (pluginInfo.LoadContext != null)
+                {
+                    pluginInfo.Source = SourcePlugins[pluginInfo.LoadContext.AssemblyIdentifier];
+                }
+                pluginInfo.Instance = LoadPlugin(pluginInfo, ass);
+                PluginLoaded?.Invoke(new(pluginInfo, ass, (Plugin)pluginInfo.Instance));
+            }
+            catch (Exception ex)
+            {
+                invalidPlugins.Add(pluginInfo.Metadata.Guid);
+                existingPluginInfos.Remove(pluginInfo.Metadata.Guid);
+
+                Logger.Log(LogLevel.Error,
+                           $"Error loading [{pluginInfo}]: {(ex is ReflectionTypeLoadException re ? TypeLoader.TypeLoadExceptionToString(re) : ex.ToString())}");
+            }
+        }
+    }
+
     private static void TryRunModuleCtor(PluginInfo plugin, Assembly assembly)
     {
         try
@@ -469,46 +472,12 @@ public abstract class LoadingSystem<TProvider, TPlugin>
     }
 
     /// <summary>
-    ///     Load all <typeparamref name="TPlugin"/> from all <typeparamref name="TProvider"/>
-    /// </summary>
-    internal virtual void LoadFromProviders()
-    {
-        try
-        {
-            var builtinProviders = DiscoverPluginProvidersFrom(Paths.BepInExAssemblyDirectory, $"{LoadCacheName}_providers");
-            var providers = DiscoverPluginProvidersFrom(Paths.PluginProviderPath, $"{LoadCacheName}_providers");
-            Logger.Log(LogLevel.Info, $"{providers.Count + builtinProviders.Count} " +
-                                      $"{PluginLogName} provider{(providers.Count + builtinProviders.Count == 1 ? "" : "s")} to load");
-            
-            LoadPlugins(builtinProviders, provider: true);
-            LoadPlugins(providers, provider: true);
-            AllProvidersLoaded?.Invoke();
-            var plugins = TypeLoader.GetPluginsFromLoadContexts(LoadContexts.Keys.Cast<IPluginLoadContext>(),
-                                                                ToPluginInfo<TPlugin>,
-                                                                HasPluginType<TPlugin>, LoadCacheName);
-            Logger.Log(LogLevel.Info, $"{plugins.Count} {PluginLogName}{(plugins.Count == 1 ? "" : "s")} to load");
-            LoadPlugins(plugins, provider: false);
-            AllPluginsLoaded?.Invoke();
-        }
-        catch (Exception ex)
-        {
-            try
-            {
-                ConsoleManager.CreateConsole();
-            }
-            catch { }
-
-            Logger.Log(LogLevel.Error, $"Error occurred loading {PluginLogName}s: {ex}");
-        }
-    }
-
-    /// <summary>
     ///     Load a single plugin
     /// </summary>
     /// <param name="pluginInfo">The information of the plugin</param>
     /// <param name="pluginAssembly">The assembly containing the plugin</param>
     /// <returns>The plugin instance</returns>
-    protected virtual TPlugin LoadPlugin(PluginInfo pluginInfo, Assembly pluginAssembly)
+    private Plugin LoadPlugin(PluginInfo pluginInfo, Assembly pluginAssembly)
     {
         var type = pluginAssembly.GetType(pluginInfo.TypeName);
         var metadata = MetadataHelper.GetMetadata(type);
@@ -516,12 +485,15 @@ public abstract class LoadingSystem<TProvider, TPlugin>
             throw new InvalidOperationException("Can't create an instance of " + GetType().FullName +
                                                 " because it inherits from BaseUnityPlugin and the BepInPlugin attribute is missing.");
 
-        var pluginInstance = (TPlugin) Activator.CreateInstance(type);
+        var pluginInstance = (Plugin) Activator.CreateInstance(type);
         pluginInstance.Info = Plugins[metadata.Guid];
         pluginInstance.Info.Instance = pluginInstance;
         pluginInstance.Logger = Logger.CreateLogSource(metadata.Name);
         pluginInstance.Config = new ConfigFile(Utility.CombinePaths(Paths.ConfigPath, metadata.Guid + ".cfg"), false, metadata);
 
+        PluginLoad?.Invoke(new(pluginInstance.Info, pluginAssembly, pluginInstance));
+        pluginInstance.Load();
+        
         return pluginInstance;
     }
 }

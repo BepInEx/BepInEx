@@ -1,9 +1,9 @@
 ﻿using System;
 using System.IO;
 
-namespace BepInEx.DefaultProviders;
+namespace BepInEx.Core.Bootstrap;
 
-internal class BepInExDefaultProviderLoadContext : IPluginLoadContext
+internal class DefaultPluginLoadContext : IPluginLoadContext
 {
     public string AssemblyIdentifier { get; internal set; }
     public string AssemblyHash { get; internal set; }

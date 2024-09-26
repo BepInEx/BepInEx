@@ -129,9 +129,6 @@ public static class TypeLoader
         {
             Paths.BepInExAssemblyDirectory,
             Paths.PluginPath,
-            Paths.PluginProviderPath,
-            Paths.PatcherPluginPath,
-            Paths.PatcherProviderPath,
             Paths.ManagedPath
         }.Concat(SearchDirectories);
 

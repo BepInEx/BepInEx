@@ -1,20 +1,32 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using BepInEx.Logging;
 
-namespace BepInEx.DefaultProviders;
+namespace BepInEx.Core.Bootstrap;
 
-internal static class BepInExDefaultProvider
+internal class DefaultPluginProvider
 {
     private static readonly Dictionary<string, string> AssemblyLocationsByFilename = new();
+    
+    internal void Initialize()
+    {
+        Logger.Log(LogLevel.Message, "Started Initialise of default provider");
+        AppDomain.CurrentDomain.AssemblyResolve += (_, args) => ResolveAssembly(args.Name);
+        PhaseManager.Instance.OnPhaseStarted += phase =>
+        {
+            Logger.Log(LogLevel.Message, $"Providing on phase {phase}");
+            PluginManager.Instance.Providers.Add(new(), GetLoadContexts);
+        };
+        Logger.Log(LogLevel.Message, "Ended Initialise of default provider");
+    }
 
-    internal static IList<IPluginLoadContext> GetLoadContexts(string directory, ManualLogSource logger)
+    private IList<IPluginLoadContext> GetLoadContexts()
     {
         var loadContexts = new List<IPluginLoadContext>();
-        foreach (var dll in Directory.GetFiles(Path.GetFullPath(directory), "*.dll", SearchOption.AllDirectories))
+        foreach (var dll in Directory.GetFiles(Path.GetFullPath(Paths.PluginPath), "*.dll", SearchOption.AllDirectories))
         {
             try
             {
@@ -22,25 +34,26 @@ internal static class BepInExDefaultProvider
                 var foundDirectory = Path.GetDirectoryName(dll);
                 
                 // Prioritize the shallowest path of each assembly name
-                if (AssemblyLocationsByFilename.TryGetValue(filename, out var existingDirectory))
+                if (PhaseManager.Instance.CurrentPhase == BepInPhases.EntrypointPhase
+                 && AssemblyLocationsByFilename.TryGetValue(filename, out var existingDirectory))
                 {
                     int levelExistingDirectory = existingDirectory?.Count(x => x == Path.DirectorySeparatorChar) ?? 0;
                     int levelFoundDirectory = foundDirectory?.Count(x => x == Path.DirectorySeparatorChar) ?? 0;
                     
                     bool shallowerPathFound = levelExistingDirectory > levelFoundDirectory;
-                    logger.LogWarning($"Found duplicate assemblies filenames: {filename} was found at {foundDirectory} " +
-                                      $"while it exists already at {AssemblyLocationsByFilename[filename]}. " +
-                                      $"Only the {(shallowerPathFound ? "first" : "second")} will be examined and resolved");
+                    Logger.Log(LogLevel.Warning, $"Found duplicate assemblies filenames: {filename} was found at {foundDirectory} " +
+                                                    $"while it exists already at {AssemblyLocationsByFilename[filename]}. " +
+                                                    $"Only the {(shallowerPathFound ? "first" : "second")} will be examined and resolved");
                     
                     if (levelExistingDirectory > levelFoundDirectory)
                         AssemblyLocationsByFilename[filename] = foundDirectory;
                 }
                 else
                 {
-                    AssemblyLocationsByFilename.Add(filename, foundDirectory);
+                    AssemblyLocationsByFilename[filename] = foundDirectory;
                 }
                 
-                loadContexts.Add(new BepInExDefaultProviderLoadContext
+                loadContexts.Add(new DefaultPluginLoadContext
                 {
                     AssemblyHash = File.GetLastWriteTimeUtc(dll).ToString("O"),
                     AssemblyIdentifier = dll
@@ -48,14 +61,14 @@ internal static class BepInExDefaultProvider
             }
             catch (Exception e)
             {
-                logger.Log(LogLevel.Error, e);
+                Logger.Log(LogLevel.Error, e);
             }
         }
         
         return loadContexts;
     }
 
-    internal static Assembly ResolveAssembly(string name)
+    private Assembly ResolveAssembly(string name)
     {
         if (!AssemblyLocationsByFilename.TryGetValue(name, out var location))
             return null;

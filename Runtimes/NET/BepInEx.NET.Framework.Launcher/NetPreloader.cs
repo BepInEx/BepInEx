@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using BepInEx.Bootstrap;
 using BepInEx.Configuration;
+using BepInEx.Core.Bootstrap;
 using BepInEx.Logging;
 using BepInEx.NET.Common;
 using BepInEx.NET.Framework.Launcher.RuntimeFixes;
@@ -106,13 +107,15 @@ internal static class NetPreloader
 
         Log.Log(LogLevel.Message, "Preloader started");
 
+        PluginManager.Instance.Initialize();
+        PhaseManager.Instance.StartPhase(BepInPhases.EntrypointPhase);
+
         Assembly entrypointAssembly;
 
         using (var assemblyPatcher = new AssemblyPatcher([Paths.GameRootPath], ["dll", "exe"], (data, _) => Assembly.Load(data)))
         {
-            assemblyPatcher.LoadFromProviders();
+            PhaseManager.Instance.StartPhase(BepInPhases.BeforeGameAssembliesLoadedPhase);
             assemblyPatcher.PatchAndLoad();
-            Chainloader.SetLoadedPatchers(assemblyPatcher.Plugins);
 
             var assemblyName = AssemblyName.GetAssemblyName(executablePath);
 
@@ -146,7 +149,9 @@ internal static class NetPreloader
 
         var chainloader = new NetChainloader();
         chainloader.Initialize();
-        chainloader.LoadFromProviders();
+
+        PhaseManager.Instance.StartPhase(BepInPhases.AfterGameAssembliesLoadedPhase);
+        PhaseManager.Instance.StartPhase(BepInPhases.GameInitialisedPhase);
 
         AssemblyFixes.Execute(entrypointAssembly);
 

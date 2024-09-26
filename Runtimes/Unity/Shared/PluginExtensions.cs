@@ -19,7 +19,7 @@ public static class PluginExtensions
     /// </summary>
     /// <param name="plugin">The plugin</param>
     /// <typeparam name="T">Type of the component to add.</typeparam>
-    public static Component AddUnityComponent<T>(this GamePlugin plugin)
+    public static Component AddUnityComponent<T>(this Plugin plugin)
         where T : Component
     {
 #if UNITY_MONO
@@ -34,7 +34,7 @@ public static class PluginExtensions
     /// </summary>
     /// <param name="plugin">The plugin</param>
     /// <param name="type">Type of the component to add</param>
-    public static Component AddUnityComponent(this GamePlugin plugin, Type type)
+    public static Component AddUnityComponent(this Plugin plugin, Type type)
     {
 #if UNITY_MONO
         return UnityChainloader.ManagerObject.AddComponent(type);

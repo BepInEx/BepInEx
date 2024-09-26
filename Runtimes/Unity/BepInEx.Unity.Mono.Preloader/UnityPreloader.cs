@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using BepInEx.Bootstrap;
 using BepInEx.Configuration;
+using BepInEx.Core.Bootstrap;
 using BepInEx.Logging;
 using BepInEx.Preloader.Core;
 using BepInEx.Preloader.Core.Logging;
@@ -76,6 +77,9 @@ internal static class UnityPreloader
 
             Log.Log(LogLevel.Message, "Preloader started");
 
+            PluginManager.Instance.Initialize();
+            PhaseManager.Instance.StartPhase(BepInPhases.EntrypointPhase);
+
             // Set up the chainloader entrypoint which harmony patches the main Unity assembly as soon as possible and
             // unpatch it in our hooking method before calling the chainloader init method
             AppDomain.CurrentDomain.AssemblyLoad += OnAssemblyLoad;
@@ -84,16 +88,12 @@ internal static class UnityPreloader
 
             using (var assemblyPatcher = new AssemblyPatcher(Paths.DllSearchPaths, ["dll"], MonoAssemblyHelper.LoadFromMemory))
             {
-                assemblyPatcher.LoadFromProviders();
-
-                Log.Log(LogLevel.Info,
-                        $"{assemblyPatcher.PatcherContext.PatcherPlugins.Count} patcher plugin{(assemblyPatcher.PatcherContext.PatcherPlugins.Count == 1 ? "" : "s")} loaded");
+                PhaseManager.Instance.StartPhase(BepInPhases.BeforeGameAssembliesLoadedPhase);
 
                 Log.Log(LogLevel.Info,
                         $"{assemblyPatcher.PatcherContext.AvailableAssemblies.Count} assemblies discovered");
 
                 assemblyPatcher.PatchAndLoad();
-                Chainloader.SetLoadedPatchers(assemblyPatcher.Plugins);
             }
 
             Log.Log(LogLevel.Message, "Preloader finished");

@@ -5,6 +5,7 @@
         <AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
         <Description>BepInEx plugin provider module</Description>
         <IsPackable>false</IsPackable>
+        <RootNamespace>BepInEx.BootstrapPlugin</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
@@ -13,9 +14,5 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="All"/>
-    </ItemGroup>
-    
-    <ItemGroup>
-        <Compile Include="../BuiltinProviders/*.cs" LinkBase="DefaultProvidersShared" />
     </ItemGroup>
 </Project>

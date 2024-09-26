@@ -17,14 +17,8 @@ namespace BepInEx.Preloader.Core.Patching;
 ///     Worker class which is used for loading and patching entire folders of assemblies, or alternatively patching and
 ///     loading assemblies one at a time.
 /// </summary>
-internal class AssemblyPatcher : LoadingSystem<PatcherPluginProvider, PatcherPlugin>,  IDisposable
+public class AssemblyPatcher : IDisposable
 {
-    /// <inheritdoc />
-    protected override string PluginLogName => "patcher";
-
-    /// <inheritdoc />
-    protected override string LoadCacheName => "preloader";
-
     private static readonly ConfigEntry<bool> ConfigDumpAssemblies = ConfigFile.CoreConfig.Bind(
      "Preloader", "DumpAssemblies",
      false,
@@ -43,6 +37,11 @@ internal class AssemblyPatcher : LoadingSystem<PatcherPluginProvider, PatcherPlu
     private readonly Func<byte[], string, Assembly> assemblyLoader;
     
     /// <summary>
+    ///     The current instance of the assembly patcher
+    /// </summary>
+    public static AssemblyPatcher Instance { get; private set; }
+
+    /// <summary>
     ///     Initialise an <see cref="AssemblyPatcher"/>
     /// </summary>
     /// <param name="directories">The directories paths to search for assemblies</param>
@@ -50,14 +49,9 @@ internal class AssemblyPatcher : LoadingSystem<PatcherPluginProvider, PatcherPlu
     /// <param name="assemblyLoader">A callback that loads the assembly for patching</param>
     internal AssemblyPatcher(IEnumerable<string> directories, IEnumerable<string> assemblyExtensions, Func<byte[], string, Assembly> assemblyLoader)
     {
+        Instance = this;
         this.assemblyLoader = assemblyLoader;
-        
-        if (!Directory.Exists(Paths.PatcherProviderPath))
-            Directory.CreateDirectory(Paths.PatcherProviderPath);
 
-        if (!Directory.Exists(Paths.PatcherPluginPath))
-            Directory.CreateDirectory(Paths.PatcherPluginPath);
-        
         LoadAssemblyDirectories(directories, assemblyExtensions);
         
         Logger.Log(LogLevel.Info, $"{PatcherContext.AvailableAssemblies.Count} assemblies discovered");
@@ -71,13 +65,22 @@ internal class AssemblyPatcher : LoadingSystem<PatcherPluginProvider, PatcherPlu
         DumpedAssembliesPath = Utility.CombinePaths(Paths.BepInExRootPath, "DumpedAssemblies", Paths.ProcessName)
     };
 
-    /// <summary>
-    ///     A cloned version of <see cref="PatcherContext.PatcherPlugins" /> to ensure that any foreach loops do not break when the collection
-    ///     gets modified.
-    /// </summary>
-    private IEnumerable<PatcherPlugin> PatcherPluginsSafe => PatcherContext.PatcherPlugins.ToList();
-
     private ManualLogSource Logger { get; } = BepInEx.Logging.Logger.CreateLogSource("AssemblyPatcher");
+
+    /// <summary>
+    ///     Adds a patch definition to be applied
+    /// </summary>
+    /// <param name="definition">The patch definition to apply</param>
+    public void AddDefinition(PatchDefinition definition)
+    {
+        Logger.Log(LogLevel.Debug, $"Discovered patch [{definition.FullName}]");
+        PatcherContext.PatchDefinitions.Add(definition);
+    }
+
+    /// <summary>
+    ///     Occurs after all assemblies have been patched
+    /// </summary>
+    public event Action AllAssembliesPatched;
     
     /// <summary>
     ///     Performs work to dispose collection objects.
@@ -90,25 +93,6 @@ internal class AssemblyPatcher : LoadingSystem<PatcherPluginProvider, PatcherPlu
         PatcherContext.AvailableAssemblies.Clear();
 
         PatcherContext.AvailableAssembliesPaths.Clear();
-
-        // Clear to allow GC collection.
-        PatcherContext.PatcherPlugins.Clear();
-    }
-    
-    /// <inheritdoc />
-    internal override void LoadFromProviders()
-    {
-        base.LoadFromProviders();
-
-        var contexts = LoadContexts.Keys.Cast<IPluginLoadContext>().ToList();
-        foreach (var pluginLoadContext in contexts)
-        {
-            var loadContext = (CachedPluginLoadContext)pluginLoadContext;
-            loadContext.Dispose();
-        }
-        
-        Logger.Log(LogLevel.Info, $"{PatcherContext.PatcherPlugins.Count} patcher " +
-                                  $"plugin{(PatcherContext.PatcherPlugins.Count == 1 ? "" : "s")} loaded");
     }
 
     /// <summary>
@@ -167,65 +151,6 @@ internal class AssemblyPatcher : LoadingSystem<PatcherPluginProvider, PatcherPlu
         }
     }
 
-    /// <inheritdoc />
-    protected override PatcherPlugin LoadPlugin(PluginInfo pluginInfo, Assembly pluginAssembly)
-    {
-        var instance = base.LoadPlugin(pluginInfo, pluginAssembly);
-        instance.Context = PatcherContext;
-
-        PatcherContext.PatcherPlugins.Add(instance);
-        var type = pluginAssembly.GetType(pluginInfo.TypeName);
-        var methods = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-        var patchDefinitions = new List<PatchDefinition>();
-        foreach (var method in methods)
-        {
-            var targetAssemblies = MetadataHelper.GetAttributes<TargetAssemblyAttribute>(method);
-            var targetTypes = MetadataHelper.GetAttributes<TargetTypeAttribute>(method);
-
-            if (targetAssemblies.Length == 0 && targetTypes.Length == 0)
-                continue;
-
-            var parameters = method.GetParameters();
-
-            if (parameters.Length < 1 || parameters.Length > 2
-                                         // Next few lines ensure that the first parameter is AssemblyDefinition and does not have any
-                                         // target type attributes, and vice versa
-                                      || !(
-                                              parameters[0].ParameterType == typeof(AssemblyDefinition)
-                                           || parameters[0].ParameterType ==
-                                              typeof(AssemblyDefinition).MakeByRefType()
-                                           && targetTypes.Length == 0
-                                           || parameters[0].ParameterType == typeof(TypeDefinition)
-                                           && targetAssemblies.Length == 0
-                                          )
-                                      || parameters.Length == 2 &&
-                                         parameters[1].ParameterType != typeof(string)
-                                      || method.ReturnType != typeof(void) &&
-                                         method.ReturnType != typeof(bool)
-               )
-            {
-                Logger
-                    .Log(LogLevel.Warning,
-                         $"Skipping method [{method.FullDescription()}] as it is not a valid patcher method");
-                continue;
-            }
-
-            void AddDefinition(PatchDefinition definition)
-            {
-                Logger.Log(LogLevel.Debug, $"Discovered patch [{definition.FullName}]");
-                patchDefinitions.Add(definition);
-            }
-
-            foreach (var targetAssembly in targetAssemblies)
-                AddDefinition(new PatchDefinition(targetAssembly, instance, method));
-            foreach (var targetType in targetTypes)
-                AddDefinition(new PatchDefinition(targetType, instance, method));
-        }
-
-        PatcherContext.PatchDefinitions.AddRange(patchDefinitions);
-        return instance;
-    }
-    
     /// <summary>
     ///     Applies patchers to all assemblies loaded into this assembly patcher and then loads patched assemblies into memory.
     /// </summary>
@@ -236,19 +161,7 @@ internal class AssemblyPatcher : LoadingSystem<PatcherPluginProvider, PatcherPlu
             new Dictionary<string, AssemblyDefinition>(PatcherContext.AvailableAssemblies,
                                                        StringComparer.InvariantCultureIgnoreCase);
 
-        // Next, initialize all the patchers
-        foreach (var assemblyPatcher in PatcherPluginsSafe)
-            try
-            {
-                assemblyPatcher.Initialize();
-            }
-            catch (Exception ex)
-            {
-                Logger.Log(LogLevel.Error, $"Failed to run initializer of {assemblyPatcher.Info.Metadata.Guid}: {ex}");
-            }
-
-        // Then, perform the actual patching
-
+        // Perform the actual patching
         var patchedAssemblies = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
         var resolvedAssemblies = new Dictionary<string, string>();
 
@@ -259,10 +172,9 @@ internal class AssemblyPatcher : LoadingSystem<PatcherPluginProvider, PatcherPlu
 
         foreach (var patchDefinition in PatcherContext.PatchDefinitions.ToList())
         {
-            var targetDll = patchDefinition.TargetAssembly?.TargetAssembly ??
-                            patchDefinition.TargetType.TargetAssembly;
+            var targetDll = patchDefinition.TargetAssembly;
 
-            var isAssemblyPatch = patchDefinition.TargetAssembly != null;
+            var isAssemblyPatch = patchDefinition.TargetType == null;
 
             if (targetDll == TargetAssemblyAttribute.AllAssemblies)
             {
@@ -288,39 +200,31 @@ internal class AssemblyPatcher : LoadingSystem<PatcherPluginProvider, PatcherPlu
             {
                 try
                 {
-                    var arguments = new object[patchDefinition.MethodInfo.GetParameters().Length];
-
+                    bool patched = false;
                     if (!isAssemblyPatch)
                     {
                         var targetType =
                             assembly.MainModule.Types.FirstOrDefault(x => x.FullName ==
-                                                                          patchDefinition.TargetType.TargetType);
+                                                                          patchDefinition.TargetType);
 
                         if (targetType == null)
                         {
                             Logger
-                                .LogWarning($"Unable to find type [{patchDefinition.TargetType.TargetType}] defined in {patchDefinition.MethodInfo.Name}. Skipping patcher"); //TODO: Proper name
+                                .LogWarning($"Unable to find type [{patchDefinition.TargetType}] defined in {patchDefinition.TypePatcher.Method.Name}. Skipping patcher");
                             return false;
                         }
 
-                        arguments[0] = targetType;
+                        patched = patchDefinition.TypePatcher.Invoke(PatcherContext, targetType, targetDll);
                     }
                     else
                     {
-                        arguments[0] = assembly;
+                        patched = patchDefinition.AssemblyPatcher.Invoke(PatcherContext, assembly, targetDll);
                     }
 
-                    if (arguments.Length > 1)
-                        arguments[1] = targetDll;
-
-                    var result = patchDefinition.MethodInfo.Invoke(patchDefinition.Instance, arguments);
-
-                    if (patchDefinition.MethodInfo.ReturnType == typeof(void)
-                     || patchDefinition.MethodInfo.ReturnType == typeof(bool) && (bool) result)
+                    if (patched)
                     {
                         if (isAssemblyPatch)
                         {
-                            assembly = (AssemblyDefinition) arguments[0];
                             PatcherContext.AvailableAssemblies[targetDll] = assembly;
                         }
 
@@ -348,7 +252,7 @@ internal class AssemblyPatcher : LoadingSystem<PatcherPluginProvider, PatcherPlu
 
                 // Report only the first type that caused the assembly to load, because any subsequent ones can be false positives
                 if (!resolvedAssemblies.ContainsKey(name))
-                    resolvedAssemblies[name] = patchDefinition.MethodInfo.DeclaringType.ToString();
+                    resolvedAssemblies[name] = patchDefinition.Instance.GetType().ToString();
             }
         }
 
@@ -444,46 +348,6 @@ internal class AssemblyPatcher : LoadingSystem<PatcherPluginProvider, PatcherPlu
             assembly.Dispose();
         }
 
-        // Finally, run all finalizers
-        foreach (var assemblyPatcher in PatcherPluginsSafe)
-            try
-            {
-                assemblyPatcher.Finalizer();
-            }
-            catch (Exception ex)
-            {
-                Logger.Log(LogLevel.Error, $"Failed to run finalizer of {assemblyPatcher.Info.Metadata.Guid}: {ex}");
-            }
-    }
-    
-    /// <summary>
-    ///     Adds all patchers from all managed assemblies specified in a directory.
-    /// </summary>
-    /// <param name="directory">Directory to search patcher DLLs from.</param>
-    internal void AddPatchersFromDirectory(string directory)
-    {
-        if (!Directory.Exists(directory))
-            return;
-        
-        var patchers = TypeLoader.FindPluginTypes(directory, ToPluginInfo<PatcherPlugin>, HasPluginType<PatcherPlugin>);
-        foreach (var keyValuePair in patchers)
-        {
-            var assemblyPath = keyValuePair.Key;
-            var patcherCollection = keyValuePair.Value;
-
-            if (patcherCollection.Count == 0)
-                continue;
-
-            var ass = Assembly.LoadFrom(assemblyPath);
-            foreach (var patcherPlugin in patcherCollection)
-            {
-                Plugins.Add(patcherPlugin.Metadata.Guid, patcherPlugin);
-                LoadPlugin(patcherPlugin, ass);
-            }
-
-            var assName = ass.GetName();
-            Logger.Log(patcherCollection.Any() ? LogLevel.Info : LogLevel.Debug,
-                       $"Loaded {patcherCollection.Count} patcher type{(patcherCollection.Count == 1 ? "" : "s")} from [{assName.Name} {assName.Version}]");
-        }
+        AllAssembliesPatched?.Invoke();
     }
 }

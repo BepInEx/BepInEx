@@ -18,6 +18,9 @@ namespace BepInEx;
 [AttributeUsage(AttributeTargets.Class)]
 public class BepInMetadataAttribute : Attribute
 {
+    /// <summary>
+    ///     Creates a metadata attribute
+    /// </summary>
     /// <param name="guid">The unique identifier of the plugin. Should not change between plugin versions.</param>
     /// <param name="name">The user-friendly name of the plugin. It can be changed between versions.</param>
     /// <param name="version">The specific version of the plugin.</param>
@@ -71,6 +74,34 @@ public class BepInMetadataAttribute : Attribute
         return new BepInMetadataAttribute((string) attr.ConstructorArguments[0].Value,
                                           (string) attr.ConstructorArguments[1].Value,
                                           (string) attr.ConstructorArguments[2].Value);
+    }
+}
+
+/// <summary>
+///     This attributes defines the phase that a <see cref="Plugin"/>'s <see cref="Plugin.Load"/> method will be called
+/// </summary>
+[AttributeUsage(AttributeTargets.Class)]
+public class BepInPhaseAttribute : Attribute
+{
+    internal string Phase { get; }
+    
+    /// <summary>
+    ///     Creates a phase attribute
+    /// </summary>
+    /// <param name="phase">The name of the phase</param>
+    public BepInPhaseAttribute(string phase)
+    {
+        Phase = phase;
+    }
+    
+    internal static BepInPhaseAttribute FromCecilType(TypeDefinition td)
+    {
+        var attr = MetadataHelper.GetCustomAttributes<BepInPhaseAttribute>(td, false).FirstOrDefault();
+
+        if (attr == null)
+            return null;
+
+        return new BepInPhaseAttribute((string) attr.ConstructorArguments[0].Value);
     }
 }
 

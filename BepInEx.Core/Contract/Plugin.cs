@@ -4,12 +4,10 @@ using BepInEx.Logging;
 namespace BepInEx;
 
 /// <summary>
-///     The base type of all plugins and providers that BepInEx can dynamically load via a <see cref="LoadingSystem{TProvider,TBase}"/>
+///     The base type of all plugins and providers that BepInEx can dynamically load via <see cref="PluginManager"/>
 /// </summary>
 public abstract class Plugin
 {
-    internal Plugin() { }
-
     /// <summary>
     ///     Information about this plugin as it was loaded.
     /// </summary>
@@ -25,4 +23,9 @@ public abstract class Plugin
     ///     any settings are added and changed, or <see cref="ConfigFile.Save" /> is called.
     /// </summary>
     public ConfigFile Config { get; internal set; }
+
+    /// <summary>
+    ///     A callback called when loaded by the chainloader
+    /// </summary>
+    public abstract void Load();
 }

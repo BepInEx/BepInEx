@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+using BepInEx.Core.Bootstrap;
 using BepInEx.Logging;
 using BepInEx.Preloader.Core;
 using BepInEx.Preloader.Core.Logging;
@@ -58,7 +59,8 @@ internal class IL2CPPChainloader : Chainloader
 
                 Il2CppInteropManager.PreloadInteropAssemblies();
 
-                Instance.LoadFromProviders();
+                PhaseManager.Instance.StartPhase(BepInPhases.AfterGameAssembliesLoadedPhase);
+                PhaseManager.Instance.StartPhase(BepInPhases.GameInitialisedPhase);
             }
             catch (Exception ex)
             {

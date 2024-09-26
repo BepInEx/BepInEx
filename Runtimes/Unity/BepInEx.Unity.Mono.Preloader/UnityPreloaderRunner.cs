@@ -101,7 +101,6 @@ internal static class UnityPreloaderRunner
             return foundAssembly;
 
         if (MonoAssemblyHelper.TryResolveDllAssembly(assemblyName, Paths.BepInExAssemblyDirectory, out foundAssembly)
-         || MonoAssemblyHelper.TryResolveDllAssembly(assemblyName, Paths.PatcherPluginPath, out foundAssembly)
          || MonoAssemblyHelper.TryResolveDllAssembly(assemblyName, Paths.PluginPath, out foundAssembly))
             return foundAssembly;
 

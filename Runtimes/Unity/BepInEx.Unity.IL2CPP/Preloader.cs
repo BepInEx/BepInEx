@@ -1,6 +1,7 @@
 using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using BepInEx.Core.Bootstrap;
 using BepInEx.IL2CPP.RuntimeFixes;
 using BepInEx.Logging;
 using BepInEx.Preloader.Core;
@@ -60,13 +61,15 @@ internal static class Preloader
 
             NativeLibrary.SetDllImportResolver(typeof(Il2CppInterop.Runtime.IL2CPP).Assembly, DllImportResolver);
 
+            PluginManager.Instance.Initialize();
+            PhaseManager.Instance.StartPhase(BepInPhases.EntrypointPhase);
+            
             Il2CppInteropManager.Initialize();
 
             using (var assemblyPatcher = new AssemblyPatcher([Il2CppInteropManager.IL2CPPInteropAssemblyPath], ["dll"], (data, _) => Assembly.Load(data)))
             {
-                assemblyPatcher.LoadFromProviders();
+                PhaseManager.Instance.StartPhase(BepInPhases.BeforeGameAssembliesLoadedPhase);
                 assemblyPatcher.PatchAndLoad();
-                Chainloader.SetLoadedPatchers(assemblyPatcher.Plugins);
             }
 
 

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -7,21 +6,14 @@ using System.Text;
 using BepInEx.Configuration;
 using BepInEx.Core.Bootstrap;
 using BepInEx.Logging;
-using MonoMod.Utils;
 
 namespace BepInEx;
 
 /// <summary>
 ///     The base type of any chainloaders no matter the runtime
 /// </summary>
-public abstract class Chainloader : LoadingSystem<GamePluginProvider, GamePlugin>
+public abstract class Chainloader
 {
-    /// <inheritdoc />
-    protected override string PluginLogName => "plugin";
-
-    /// <inheritdoc />
-    protected override string LoadCacheName => "chainloader";
-
     private static readonly ConfigEntry<bool> ConfigDiskAppend = ConfigFile.CoreConfig.Bind(
      "Logging.Disk", "AppendLog",
      false,
@@ -55,23 +47,21 @@ public abstract class Chainloader : LoadingSystem<GamePluginProvider, GamePlugin
 
     internal Chainloader() { }
 
-    private static readonly Dictionary<string, PluginInfo> LoadedPatchers = new();
-    
+    /// <summary>
+    ///     The title of the console
+    /// </summary>
+    private string ConsoleTitle => $"BepInEx {Utility.BepInExVersion} - {Paths.ProcessName}";
+
+    /// <summary>
+    ///     Whether the loading system was initialised
+    /// </summary>
+    private bool Initialized { get; set; }
+
     /// <summary>
     /// The current chainloader instance
     /// </summary>
-    public static Chainloader Instance { get; protected set; }
-    
-    /// <summary>
-    ///     Occurs after a plugin is instantiated and just before <see cref="GamePlugin.Load"/> is called.
-    /// </summary>
-    public static event Action<PluginLoadEventArgs> PluginLoad;
+    protected static Chainloader Instance { get; set; }
 
-    internal static void SetLoadedPatchers(Dictionary<string, PluginInfo> patchers)
-    {
-        LoadedPatchers.AddRange(patchers);
-    }
-    
     internal virtual void Initialize(string gameExePath = null)
     {
         if (Initialized)
@@ -86,9 +76,6 @@ public abstract class Chainloader : LoadingSystem<GamePluginProvider, GamePlugin
             Paths.SetExecutablePath(gameExePath);
 
         InitializeLoggers();
-
-        if (!Directory.Exists(Paths.PluginProviderPath))
-            Directory.CreateDirectory(Paths.PluginProviderPath);
 
         if (!Directory.Exists(Paths.PluginPath))
             Directory.CreateDirectory(Paths.PluginPath);
@@ -121,23 +108,5 @@ public abstract class Chainloader : LoadingSystem<GamePluginProvider, GamePlugin
 
         if (!Logger.Sources.Any(x => x is HarmonyLogSource))
             Logger.Sources.Add(new HarmonyLogSource());
-    }
-
-    /// <inheritdoc />
-    internal override void LoadFromProviders()
-    {
-        Plugins.AddRange(LoadedPatchers);
-        base.LoadFromProviders();
-        Logger.Log(LogLevel.Message, "Chainloader startup complete");
-    }
-
-    /// <inheritdoc />
-    protected override GamePlugin LoadPlugin(PluginInfo pluginInfo, Assembly pluginAssembly)
-    {
-        var pluginInstance = base.LoadPlugin(pluginInfo, pluginAssembly);
-        PluginLoad?.Invoke(new(pluginInfo, pluginAssembly, pluginInstance));
-        pluginInstance.Load();
-
-        return pluginInstance;
     }
 }
