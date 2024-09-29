@@ -76,41 +76,41 @@ namespace BepInEx.Unity.Mono
         /// <inheritdoc cref="Input.GetKeyDown(string)"/>
         bool GetKeyDown(string name);
         /// <inheritdoc cref="Input.GetKeyDown(KeyCode)"/>
-		bool GetKeyDown(KeyCode key);
+        bool GetKeyDown(KeyCode key);
 
         /// <inheritdoc cref="Input.GetKeyUp(string)"/>
-		bool GetKeyUp(string name);
+        bool GetKeyUp(string name);
         /// <inheritdoc cref="Input.GetKeyUp(KeyCode)"/>
-		bool GetKeyUp(KeyCode key);
+        bool GetKeyUp(KeyCode key);
 
 
         /// <inheritdoc cref="Input.GetMouseButton(int)"/>
         bool GetMouseButton(int button);
         /// <inheritdoc cref="Input.GetMouseButtonDown(int)"/>
-		bool GetMouseButtonDown(int button);
+        bool GetMouseButtonDown(int button);
         /// <inheritdoc cref="Input.GetMouseButtonUp(int)"/>
-		bool GetMouseButtonUp(int button);
+        bool GetMouseButtonUp(int button);
 
         /// <inheritdoc cref="Input.ResetInputAxes()"/>
-		void ResetInputAxes();
+        void ResetInputAxes();
 
         /// <inheritdoc cref="Input.mousePosition"/>
-		Vector3 mousePosition { get; }
+        Vector3 mousePosition { get; }
         /// <inheritdoc cref="Input.mouseScrollDelta"/>
-		Vector2 mouseScrollDelta { get; }
+        Vector2 mouseScrollDelta { get; }
 
         /// <inheritdoc cref="Input.mousePresent"/>
-		bool mousePresent { get; }
+        bool mousePresent { get; }
 
         /// <inheritdoc cref="Input.anyKey"/>
-		bool anyKey { get; }
+        bool anyKey { get; }
         /// <inheritdoc cref="Input.anyKeyDown"/>
         bool anyKeyDown { get; }
 
         /// <summary>
         /// All KeyCodes supported by the current input system.
         /// </summary>
-		IEnumerable<KeyCode> SupportedKeyCodes { get; }
+        IEnumerable<KeyCode> SupportedKeyCodes { get; }
     }
 
     internal class NullInputSystem : IInputSystem
@@ -150,7 +150,7 @@ namespace BepInEx.Unity.Mono
     {
         [MethodImpl(MethodImplOptions.NoInlining)]
         public NewInputSystem() => GetKeyDown(KeyCode.A);
-        
+
         public bool GetKey(string name) => GetControl(name)?.isPressed ?? false;
 
         public bool GetKey(KeyCode key) => GetControl(key)?.isPressed ?? false;
@@ -866,7 +866,7 @@ namespace BepInEx.Unity.Mono
     {
         [MethodImpl(MethodImplOptions.NoInlining)]
         public LegacyInputSystem() => Input.GetKeyDown(KeyCode.A);
-        
+
         public bool GetKey(string name) => Input.GetKey(name);
 
         public bool GetKey(KeyCode key) => Input.GetKey(key);
