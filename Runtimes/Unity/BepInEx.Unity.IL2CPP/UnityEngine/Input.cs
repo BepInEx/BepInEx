@@ -1,5 +1,8 @@
-﻿namespace BepInEx.Unity.IL2CPP.UnityEngine;
+using System;
 
+namespace BepInEx.Unity.IL2CPP.UnityEngine;
+
+[Obsolete("Use UnityInput instead")]
 public enum KeyCode
 {
     None,
@@ -330,6 +333,7 @@ public enum KeyCode
     Joystick8Button19
 }
 
+[Obsolete("Use UnityInput instead")]
 public static class Input
 {
     private static readonly GetKeyIntDelegate GetKeyInt_Value
