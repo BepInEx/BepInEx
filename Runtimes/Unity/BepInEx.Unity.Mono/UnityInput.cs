@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using BepInEx.Logging;
@@ -17,7 +17,7 @@ namespace BepInEx
     /// </summary>
     public class UnityInput
     {
-        private static IInputSystem current;
+        private static IInputSystem _current;
         /// <summary>
         /// Best currently supported input system.
         /// </summary>
@@ -25,25 +25,31 @@ namespace BepInEx
         {
             get
             {
-                if (current == null)
+                if (_current == null)
                 {
                     try
                     {
-                        Input.GetKeyDown(KeyCode.A);
-                        current = new LegacyInputSystem();
-                        Logging.Logger.Log(LogLevel.Debug, "[UnityInput] Using LegacyInputSystem");
-                    }
-                    catch (InvalidOperationException)
-                    {
-                        current = new NewInputSystem();
-                        Logging.Logger.Log(LogLevel.Debug, "[UnityInput] Using NewInputSystem");
+                        try
+                        {
+                            Input.GetKeyDown(KeyCode.A);
+                            _current = new LegacyInputSystem();
+                            Logging.Logger.Log(LogLevel.Debug, "[UnityInput] Using LegacyInputSystem");
+                        }
+                        catch (InvalidOperationException)
+                        {
+                            var newInputSystem = new NewInputSystem();
+                            newInputSystem.GetKeyDown(KeyCode.A);
+                            _current = newInputSystem;
+                            Logging.Logger.Log(LogLevel.Debug, "[UnityInput] Using NewInputSystem");
+                        }
                     }
                     catch (Exception ex)
                     {
-                        Logging.Logger.Log(LogLevel.Warning, "[UnityInput] Failed to detect available input systems - " + ex);
+                        _current = new NullInputSystem();
+                        Logging.Logger.Log(LogLevel.Debug, "[UnityInput] Failed to detect available input systems - " + ex);
                     }
                 }
-                return current;
+                return _current;
             }
         }
 
@@ -71,41 +77,74 @@ namespace BepInEx
         /// <inheritdoc cref="Input.GetKeyDown(string)"/>
         bool GetKeyDown(string name);
         /// <inheritdoc cref="Input.GetKeyDown(KeyCode)"/>
-        bool GetKeyDown(KeyCode key);
+		bool GetKeyDown(KeyCode key);
 
         /// <inheritdoc cref="Input.GetKeyUp(string)"/>
-        bool GetKeyUp(string name);
+		bool GetKeyUp(string name);
         /// <inheritdoc cref="Input.GetKeyUp(KeyCode)"/>
-        bool GetKeyUp(KeyCode key);
+		bool GetKeyUp(KeyCode key);
 
 
         /// <inheritdoc cref="Input.GetMouseButton(int)"/>
         bool GetMouseButton(int button);
         /// <inheritdoc cref="Input.GetMouseButtonDown(int)"/>
-        bool GetMouseButtonDown(int button);
+		bool GetMouseButtonDown(int button);
         /// <inheritdoc cref="Input.GetMouseButtonUp(int)"/>
-        bool GetMouseButtonUp(int button);
+		bool GetMouseButtonUp(int button);
 
         /// <inheritdoc cref="Input.ResetInputAxes()"/>
-        void ResetInputAxes();
+		void ResetInputAxes();
 
         /// <inheritdoc cref="Input.mousePosition"/>
-        Vector3 mousePosition { get; }
+		Vector3 mousePosition { get; }
         /// <inheritdoc cref="Input.mouseScrollDelta"/>
-        Vector2 mouseScrollDelta { get; }
+		Vector2 mouseScrollDelta { get; }
 
         /// <inheritdoc cref="Input.mousePresent"/>
-        bool mousePresent { get; }
+		bool mousePresent { get; }
 
         /// <inheritdoc cref="Input.anyKey"/>
-        bool anyKey { get; }
+		bool anyKey { get; }
         /// <inheritdoc cref="Input.anyKeyDown"/>
         bool anyKeyDown { get; }
 
         /// <summary>
         /// All KeyCodes supported by the current input system.
         /// </summary>
-        IEnumerable<KeyCode> SupportedKeyCodes { get; }
+		IEnumerable<KeyCode> SupportedKeyCodes { get; }
+    }
+
+    internal class NullInputSystem : IInputSystem
+    {
+        public bool GetKey(string name) => false;
+
+        public bool GetKey(KeyCode key) => false;
+
+        public bool GetKeyDown(string name) => false;
+
+        public bool GetKeyDown(KeyCode key) => false;
+
+        public bool GetKeyUp(string name) => false;
+
+        public bool GetKeyUp(KeyCode key) => false;
+
+        public bool GetMouseButton(int button) => false;
+
+        public bool GetMouseButtonDown(int button) => false;
+
+        public bool GetMouseButtonUp(int button) => false;
+
+        public void ResetInputAxes() { }
+
+        public Vector3 mousePosition => Vector3.zero;
+        public Vector2 mouseScrollDelta => Vector2.zero;
+        public bool mousePresent => false;
+
+        public bool anyKey => false;
+
+        public bool anyKeyDown => false;
+
+        public IEnumerable<KeyCode> SupportedKeyCodes { get; } = Enumerable.Empty<KeyCode>();
     }
 
     internal class NewInputSystem : IInputSystem
@@ -810,8 +849,8 @@ namespace BepInEx
                     break;
                 case KeyCode.Joystick8Button19:
                     break;
-                //default:
-                //    throw new ArgumentOutOfRangeException(nameof(key), key, null);
+                    //default:
+                    //    throw new ArgumentOutOfRangeException(nameof(key), key, null);
             }
 
             if (!silent)
