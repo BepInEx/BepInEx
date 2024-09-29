@@ -33,10 +33,6 @@
         <HintPath>..\..\..\..\_lib il2cpp\UnityEngine.InputLegacyModule.dll</HintPath>
         <Private>False</Private>
       </Reference>
-      <Reference Include="UnityEngine.InputModule">
-        <HintPath>..\..\..\..\_lib il2cpp\UnityEngine.InputModule.dll</HintPath>
-        <Private>False</Private>
-      </Reference>
     </ItemGroup>
 
     <!-- CopyLocalLockFileAssemblies causes to also output shared assemblies: https://github.com/NuGet/Home/issues/4837#issuecomment-354536302 -->
