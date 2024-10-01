@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using BepInEx.Bootstrap;
 using BepInEx.Configuration;
+using BepInEx.Core.Bootstrap;
 using BepInEx.Logging;
 using BepInEx.Preloader.Core;
 using BepInEx.Preloader.Core.Logging;
@@ -39,7 +40,7 @@ internal static class UnityPreloader
 
     private static readonly Harmony Harmony = new("BepInEx.Unity.Mono.Preloader");
 
-    public static void Run()
+    internal static void Run()
     {
         try
         {
@@ -76,20 +77,18 @@ internal static class UnityPreloader
 
             Log.Log(LogLevel.Message, "Preloader started");
 
+            PluginManager.Instance.Initialize();
+            PhaseManager.Instance.StartPhase(BepInPhases.Entrypoint);
+
             // Set up the chainloader entrypoint which harmony patches the main Unity assembly as soon as possible and
             // unpatch it in our hooking method before calling the chainloader init method
             AppDomain.CurrentDomain.AssemblyLoad += OnAssemblyLoad;
 
             TypeLoader.SearchDirectories.UnionWith(Paths.DllSearchPaths);
 
-            using (var assemblyPatcher = new AssemblyPatcher(MonoAssemblyHelper.LoadFromMemory))
+            using (var assemblyPatcher = new AssemblyPatcher(Paths.DllSearchPaths, ["dll"], MonoAssemblyHelper.LoadFromMemory))
             {
-                assemblyPatcher.AddPatchersFromProviders();
-
-                Log.Log(LogLevel.Info,
-                        $"{assemblyPatcher.PatcherContext.PatcherPlugins.Count} patcher plugin{(assemblyPatcher.PatcherContext.PatcherPlugins.Count == 1 ? "" : "s")} loaded");
-
-                assemblyPatcher.LoadAssemblyDirectories(Paths.DllSearchPaths);
+                PhaseManager.Instance.StartPhase(BepInPhases.BeforeGameAssembliesLoaded);
 
                 Log.Log(LogLevel.Info,
                         $"{assemblyPatcher.PatcherContext.AvailableAssemblies.Count} assemblies discovered");
@@ -202,7 +201,7 @@ internal static class UnityPreloader
     /// <summary>
     ///     Allocates a console window for use by BepInEx safely.
     /// </summary>
-    public static void AllocateConsole()
+    private static void AllocateConsole()
     {
         if (!ConsoleManager.ConsoleEnabled)
             return;

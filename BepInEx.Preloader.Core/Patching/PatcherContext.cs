@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Mono.Cecil;
@@ -5,48 +6,82 @@ using Mono.Cecil;
 namespace BepInEx.Preloader.Core.Patching;
 
 /// <summary>
-///     A definition of an individual patch for use by <see cref="AssemblyPatcher" />.
+///     A definition of an individual patch for use by <see cref="AssemblyPatcherMethod" />.
 /// </summary>
 public class PatchDefinition
 {
-    public PatchDefinition(TargetAssemblyAttribute targetAssembly, BasePatcher instance, MethodInfo methodInfo)
+    /// <summary>
+    ///     Creates a patch definition that targets an assembly
+    /// </summary>
+    /// <param name="targetAssembly">The name of the assembly</param>
+    /// <param name="instance">The plugin instance of this patch definition</param>
+    /// <param name="assemblyPatcher">The patching method</param>
+    public PatchDefinition(string targetAssembly, Plugin instance, AssemblyPatcher assemblyPatcher)
     {
         TargetAssembly = targetAssembly;
+        TargetType = null;
         Instance = instance;
-        MethodInfo = methodInfo;
+        AssemblyPatcherMethod = assemblyPatcher;
+        TypePatcherMethod = null;
 
-        FullName = $"{MethodInfo.DeclaringType.FullName}/{MethodInfo.Name} -> {TargetAssembly.TargetAssembly}";
-    }
-
-    public PatchDefinition(TargetTypeAttribute targetType, BasePatcher instance, MethodInfo methodInfo)
-    {
-        TargetType = targetType;
-        Instance = instance;
-        MethodInfo = methodInfo;
-
-        FullName =
-            $"{MethodInfo.DeclaringType.FullName}/{MethodInfo.Name} -> {TargetType.TargetAssembly}/{TargetType.TargetType}";
+        FullName = $"{instance.Info.Metadata.Name}/{assemblyPatcher.Method.Name} -> {TargetAssembly}";
     }
 
     /// <summary>
-    ///     The assembly / assemblies this patch will target, if there any.
+    ///     Creates a patch definition that targets a type within an assembly
     /// </summary>
-    public TargetAssemblyAttribute TargetAssembly { get; }
+    /// <param name="targetAssembly">The name of the assembly</param>
+    /// <param name="targetType">The name of the type</param>
+    /// <param name="instance">The plugin instance of this patch definition</param>
+    /// <param name="typePatcher">The patching method</param>
+    public PatchDefinition(string targetAssembly, string targetType, Plugin instance, TypePatcher typePatcher)
+    {
+        TargetAssembly = targetAssembly;
+        TargetType = targetType;
+        Instance = instance;
+        AssemblyPatcherMethod = null;
+        TypePatcherMethod = typePatcher;
+
+        FullName =
+            $"{instance.Info.Metadata.Name}/{typePatcher.Method.Name} -> {targetAssembly}/{TargetType}";
+    }
+
+    /// <summary>
+    ///     The assembly / assemblies this patch will target, if there are any.
+    /// </summary>
+    public string TargetAssembly { get; }
 
     /// <summary>
     ///     The type / types this patch will target, if there are any.
     /// </summary>
-    public TargetTypeAttribute TargetType { get; }
+    public string TargetType { get; }
 
     /// <summary>
-    ///     The instance of the <see cref="BasePatcher" /> this <see cref="PatchDefinition" /> originates from.
+    ///     The instance of the <see cref="Plugin" /> this <see cref="PatchDefinition" /> originates from.
     /// </summary>
-    public BasePatcher Instance { get; }
+    public Plugin Instance { get; }
 
     /// <summary>
-    ///     The method that will perform the patching logic defined by this <see cref="PatchDefinition" /> instance.
+    ///     A method that patches an assembly given a <see cref="PatcherContext"/> and an <see cref="AssemblyDefinition"/>.
+    ///     Also receives the .dll filename of the assembly and returns whether the assembly was patched
     /// </summary>
-    public MethodInfo MethodInfo { get; }
+    public delegate bool AssemblyPatcher(PatcherContext context, AssemblyDefinition assemblyDefinition, string targetDll);
+    
+    /// <summary>
+    ///     The method that will perform the patching logic defined by this <see cref="PatchDefinition" /> instance on an assembly.
+    /// </summary>
+    public AssemblyPatcher AssemblyPatcherMethod { get; }
+
+    /// <summary>
+    ///     A method that patches an assembly given a <see cref="PatcherContext"/> and an <see cref="AssemblyDefinition"/>.
+    ///     Also receives the .dll filename of the assembly and returns whether the assembly was patched
+    /// </summary>
+    public delegate bool TypePatcher(PatcherContext context, TypeDefinition assemblyDefinition, string targetDll);
+
+    /// <summary>
+    ///     The method that will perform the patching logic defined by this <see cref="PatchDefinition" /> instance on a type.
+    /// </summary>
+    public TypePatcher TypePatcherMethod { get; }
 
     /// <summary>
     ///     A friendly name for this patch definition, for use in logging and error tracking.
@@ -85,19 +120,13 @@ public class PatcherContext
     public Dictionary<string, Assembly> LoadedAssemblies { get; } = new();
 
     /// <summary>
-    ///     A list of plugins that will be initialized and executed, in the order of the list.
-    /// </summary>
-    public List<BasePatcher> PatcherPlugins { get; } = new();
-
-    /// <summary>
-    ///     A list of individual patches that <see cref="AssemblyPatcher" /> will execute, generated by parsing
-    ///     <see cref="PatcherPlugins" />.
+    ///     A list of individual patches that <see cref="AssemblyPatcher" /> will execute.
     /// </summary>
     public List<PatchDefinition> PatchDefinitions { get; } = new();
 
     /// <summary>
     ///     The directory location as to where patched assemblies will be saved to and loaded from disk, for debugging
-    ///     purposes. Defaults to BepInEx/DumpedAssemblies/<ProcessName>
+    ///     purposes. Defaults to BepInEx/DumpedAssemblies.
     /// </summary>
     public string DumpedAssembliesPath { get; internal set; }
 }

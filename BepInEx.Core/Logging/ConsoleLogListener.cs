@@ -8,7 +8,7 @@ namespace BepInEx.Logging;
 /// </summary>
 public class ConsoleLogListener : ILogListener
 {
-    protected static readonly ConfigEntry<LogLevel> ConfigConsoleDisplayedLevel = ConfigFile.CoreConfig.Bind(
+    private static readonly ConfigEntry<LogLevel> ConfigConsoleDisplayedLevel = ConfigFile.CoreConfig.Bind(
      "Logging.Console", "LogLevels",
      LogLevel.Fatal | LogLevel.Error | LogLevel.Warning | LogLevel.Message | LogLevel.Info,
      "Only displays the specified log levels in the console output.");

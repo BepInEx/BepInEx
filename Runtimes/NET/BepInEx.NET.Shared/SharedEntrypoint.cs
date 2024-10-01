@@ -74,7 +74,6 @@ namespace BepInEx.NET.Shared
                 return foundAssembly;
 
             if (LocalUtility.TryResolveDllAssembly(assemblyName, Paths.BepInExAssemblyDirectory, out foundAssembly)
-             || LocalUtility.TryResolveDllAssembly(assemblyName, Paths.PatcherPluginPath, out foundAssembly)
              || LocalUtility.TryResolveDllAssembly(assemblyName, Paths.PluginPath, out foundAssembly))
                 return foundAssembly;
 
@@ -93,6 +92,7 @@ namespace BepInEx.NET.Shared
         /// </summary>
         /// <param name="assemblyName">Name of the assembly, of the type <see cref="AssemblyName" />.</param>
         /// <param name="directory">Directory to search the assembly from.</param>
+        /// <param name="loader">The callback that loads an assembly from its name</param>
         /// <param name="assembly">The loaded assembly.</param>
         /// <returns>True, if the assembly was found and loaded. Otherwise, false.</returns>
         private static bool TryResolveDllAssembly<T>(AssemblyName assemblyName,

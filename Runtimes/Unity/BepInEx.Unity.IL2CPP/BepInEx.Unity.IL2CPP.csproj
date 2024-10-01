@@ -6,21 +6,10 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <OutputPath>$(BuildDir)/Unity.IL2CPP</OutputPath>
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+        <DefineConstants>UNITY_IL2CPP</DefineConstants>
     </PropertyGroup>
     <ItemGroup>
         <ProjectReference Include="..\..\..\BepInEx.Core\BepInEx.Core.csproj"/>
-        <ProjectReference Include="..\..\..\BepInEx.PluginProvider\BepInEx.PluginProvider.csproj">
-            <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-            <OutputItemType>None</OutputItemType>
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-            <Targets>Build;DocumentationProjectOutputGroup</Targets>
-        </ProjectReference>
-        <ProjectReference Include="..\..\..\BepInEx.PatcherProvider\BepInEx.PatcherProvider.csproj">
-            <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-            <OutputItemType>None</OutputItemType>
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-            <Targets>Build;DocumentationProjectOutputGroup</Targets>
-        </ProjectReference>
         <ProjectReference Include="..\..\..\BepInEx.Preloader.Core\BepInEx.Preloader.Core.csproj" PrivateAssets="All"/>
         <ProjectReference Include="..\BepInEx.Unity.Common\BepInEx.Unity.Common.csproj"/>
     </ItemGroup>
@@ -48,4 +37,7 @@
         <Delete Files="@(FilesToDelete)"/>
     </Target>
 
+    <ItemGroup>
+        <Compile Include="../Shared/PluginExtensions.cs" LinkBase="Shared"/>
+    </ItemGroup>
 </Project>

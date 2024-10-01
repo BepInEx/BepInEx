@@ -7,6 +7,9 @@ using IntPtr = System.IntPtr;
 
 namespace BepInEx.Unity.IL2CPP.Utils.Collections;
 
+/// <summary>
+///     An IL2CPP enumerable that wraps a managed one 
+/// </summary>
 public class Il2CppManagedEnumerable : Object
 {
     private readonly IEnumerable enumerable;
@@ -19,8 +22,17 @@ public class Il2CppManagedEnumerable : Object
         });
     }
 
-    public Il2CppManagedEnumerable(IntPtr ptr) : base(ptr) { }
+    /// <summary>
+    ///     Creates an <see cref="Il2CppManagedEnumerable"/> using a <see cref="IntPtr"/>
+    /// </summary>
+    /// <param name="ptr">The pointer of the object</param>
+    public Il2CppManagedEnumerable(IntPtr ptr) : base(ptr) { } 
 
+    /// <summary>
+    ///     Creates an <see cref="Il2CppManagedEnumerable"/> from an <see cref="IEnumerable"/>
+    /// </summary>
+    /// <param name="enumerable">The wrapped enumerable</param>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="enumerable"/> is null</exception>
     public Il2CppManagedEnumerable(IEnumerable enumerable)
         : base(ClassInjector.DerivedConstructorPointer<Il2CppManagedEnumerable>())
     {
@@ -28,6 +40,7 @@ public class Il2CppManagedEnumerable : Object
         ClassInjector.DerivedConstructorBody(this);
     }
 
+    /// <inheritdoc cref="IEnumerable.GetEnumerator"/>
     public IEnumerator GetEnumerator() =>
         new Il2CppManagedEnumerator(enumerable.GetEnumerator()).Cast<IEnumerator>();
 }

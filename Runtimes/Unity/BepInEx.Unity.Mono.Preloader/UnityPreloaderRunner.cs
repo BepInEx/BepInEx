@@ -42,7 +42,7 @@ internal static class UnityPreloaderRunner
             }
     }
 
-    public static void PreloaderPreMain()
+    internal static void PreloaderPreMain()
     {
         PlatformUtils.SetPlatform();
 
@@ -101,7 +101,6 @@ internal static class UnityPreloaderRunner
             return foundAssembly;
 
         if (MonoAssemblyHelper.TryResolveDllAssembly(assemblyName, Paths.BepInExAssemblyDirectory, out foundAssembly)
-         || MonoAssemblyHelper.TryResolveDllAssembly(assemblyName, Paths.PatcherPluginPath, out foundAssembly)
          || MonoAssemblyHelper.TryResolveDllAssembly(assemblyName, Paths.PluginPath, out foundAssembly))
             return foundAssembly;
 

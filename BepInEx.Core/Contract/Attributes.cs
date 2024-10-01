@@ -10,40 +10,41 @@ using Version = SemanticVersioning.Version;
 
 namespace BepInEx;
 
-#region BaseUnityPlugin
+#region BasePlugin
 
 /// <summary>
-///     This attribute denotes that a class is a plugin, and specifies the required metadata.
+///     This attribute denotes that a class is a <see cref="Plugin"/>, and specifies the required metadata.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class)]
-public class BepInPlugin : Attribute
+public class BepInMetadataAttribute : Attribute
 {
-    /// <param name="GUID">The unique identifier of the plugin. Should not change between plugin versions.</param>
-    /// <param name="Name">The user friendly name of the plugin. Is able to be changed between versions.</param>
-    /// <param name="Version">The specific version of the plugin.</param>
-    public BepInPlugin(string GUID, string Name, string Version)
+    /// <summary>
+    ///     Creates a metadata attribute
+    /// </summary>
+    /// <param name="guid">The unique identifier of the plugin. Should not change between plugin versions.</param>
+    /// <param name="name">The user-friendly name of the plugin. It can be changed between versions.</param>
+    /// <param name="version">The specific version of the plugin.</param>
+    public BepInMetadataAttribute(string guid, string name, string version)
     {
-        this.GUID = GUID;
-        this.Name = Name;
-        this.Version = TryParseLongVersion(Version);
+        Guid = guid;
+        Name = name;
+        Version = TryParseLongVersion(version);
     }
 
     /// <summary>
     ///     The unique identifier of the plugin. Should not change between plugin versions.
     /// </summary>
-    public string GUID { get; protected set; }
-
-
+    public string Guid { get; }
+    
     /// <summary>
-    ///     The user friendly name of the plugin. Is able to be changed between versions.
+    ///     The user-friendly name of the plugin. It can be changed between versions.
     /// </summary>
-    public string Name { get; protected set; }
-
-
+    public string Name { get; }
+    
     /// <summary>
     ///     The specific version of the plugin.
     /// </summary>
-    public Version Version { get; protected set; }
+    public Version Version { get; }
 
     private static Version TryParseLongVersion(string version)
     {
@@ -63,47 +64,49 @@ public class BepInPlugin : Attribute
         return null;
     }
 
-    internal static BepInPlugin FromCecilType(TypeDefinition td)
+    internal static BepInMetadataAttribute FromCecilType(TypeDefinition td)
     {
-        var attr = MetadataHelper.GetCustomAttributes<BepInPlugin>(td, false).FirstOrDefault();
+        var attr = MetadataHelper.GetCustomAttributes<BepInMetadataAttribute>(td, false).FirstOrDefault();
 
         if (attr == null)
             return null;
 
-        return new BepInPlugin((string) attr.ConstructorArguments[0].Value,
-                               (string) attr.ConstructorArguments[1].Value,
-                               (string) attr.ConstructorArguments[2].Value);
+        return new BepInMetadataAttribute((string) attr.ConstructorArguments[0].Value,
+                                          (string) attr.ConstructorArguments[1].Value,
+                                          (string) attr.ConstructorArguments[2].Value);
     }
 }
 
 /// <summary>
-///     This attribute denotes that a class is a plugin provider, and specifies the required metadata.
+///     This attributes defines the phase that a <see cref="Plugin"/>'s <see cref="Plugin.Load"/> method will be called
 /// </summary>
 [AttributeUsage(AttributeTargets.Class)]
-public class BepInPluginProvider : BepInPlugin
+public class BepInPhaseAttribute : Attribute
 {
-    /// <param name="GUID">The unique identifier of the plugin. Should not change between plugin versions.</param>
-    /// <param name="Name">The user friendly name of the plugin. Is able to be changed between versions.</param>
-    /// <param name="Version">The specific version of the plugin.</param>
-    public BepInPluginProvider(string GUID, string Name, string Version) : base(GUID, Name, Version)
+    internal string Phase { get; }
+    
+    /// <summary>
+    ///     Creates a phase attribute
+    /// </summary>
+    /// <param name="phase">The name of the phase</param>
+    public BepInPhaseAttribute(string phase)
     {
+        Phase = phase;
     }
-
-    internal new static BepInPluginProvider FromCecilType(TypeDefinition td)
+    
+    internal static BepInPhaseAttribute FromCecilType(TypeDefinition td)
     {
-        var attr = MetadataHelper.GetCustomAttributes<BepInPluginProvider>(td, false).FirstOrDefault();
+        var attr = MetadataHelper.GetCustomAttributes<BepInPhaseAttribute>(td, false).FirstOrDefault();
 
         if (attr == null)
             return null;
 
-        return new BepInPluginProvider((string) attr.ConstructorArguments[0].Value,
-                                       (string) attr.ConstructorArguments[1].Value,
-                                       (string) attr.ConstructorArguments[2].Value);
+        return new BepInPhaseAttribute((string) attr.ConstructorArguments[0].Value);
     }
 }
 
 /// <summary>
-///     This attribute specifies any dependencies that this plugin has on other plugins.
+///     This attribute specifies any dependencies that this <see cref="Plugin"/> has on other plugins.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
 public class BepInDependency : Attribute, ICacheable
@@ -126,27 +129,27 @@ public class BepInDependency : Attribute, ICacheable
     }
 
     /// <summary>
-    ///     Marks this <see cref="BaseUnityPlugin" /> as dependent on another plugin. The other plugin will be loaded before
+    ///     Marks this <see cref="Plugin" /> plugin as dependent on another plugin. The other plugin will be loaded before
     ///     this one.
     ///     If the other plugin doesn't exist, what happens depends on the <see cref="Flags" /> parameter.
     /// </summary>
-    /// <param name="DependencyGUID">The GUID of the referenced plugin.</param>
-    /// <param name="Flags">The flags associated with this dependency definition.</param>
-    public BepInDependency(string DependencyGUID, DependencyFlags Flags = DependencyFlags.HardDependency)
+    /// <param name="dependencyGuid">The GUID of the referenced plugin.</param>
+    /// <param name="flags">The flags associated with this dependency definition.</param>
+    public BepInDependency(string dependencyGuid, DependencyFlags flags = DependencyFlags.HardDependency)
     {
-        this.DependencyGUID = DependencyGUID;
-        this.Flags = Flags;
+        DependencyGuid = dependencyGuid;
+        Flags = flags;
         VersionRange = null;
     }
 
     /// <summary>
-    ///     Marks this <see cref="BaseUnityPlugin" /> as dependent on another plugin. The other plugin will be loaded before
+    ///     Marks this <see cref="Plugin" /> as dependent on another plugin. The other plugin will be loaded before
     ///     this one.
     ///     If the other plugin doesn't exist or is of a version not satisfying <see cref="VersionRange" />, this plugin will
     ///     not load and an error will be logged instead.
     /// </summary>
     /// <param name="guid">The GUID of the referenced plugin.</param>
-    /// <param name="version">The version range of the referenced plugin.</param>
+    /// <param name="version">The version <see cref="Range"/> of the referenced plugin.</param>
     /// <remarks>When version is supplied the dependency is always treated as HardDependency</remarks>
     public BepInDependency(string guid, string version) : this(guid)
     {
@@ -156,28 +159,28 @@ public class BepInDependency : Attribute, ICacheable
     /// <summary>
     ///     The GUID of the referenced plugin.
     /// </summary>
-    public string DependencyGUID { get; protected set; }
+    public string DependencyGuid { get; private set; }
 
     /// <summary>
     ///     The flags associated with this dependency definition.
     /// </summary>
-    public DependencyFlags Flags { get; protected set; }
+    public DependencyFlags Flags { get; private set; }
 
     /// <summary>
-    ///     The version <see cref="SemVer.Range">range</see> of the referenced plugin.
+    ///     The version <see cref="Range"/> of the referenced plugin.
     /// </summary>
-    public Range VersionRange { get; protected set; }
+    public Range VersionRange { get; private set; }
 
     void ICacheable.Save(BinaryWriter bw)
     {
-        bw.Write(DependencyGUID);
+        bw.Write(DependencyGuid);
         bw.Write((int) Flags);
         bw.Write(VersionRange?.ToString() ?? string.Empty);
     }
 
     void ICacheable.Load(BinaryReader br)
     {
-        DependencyGUID = br.ReadString();
+        DependencyGuid = br.ReadString();
         Flags = (DependencyFlags) br.ReadInt32();
 
         var versionRange = br.ReadString();
@@ -198,29 +201,29 @@ public class BepInDependency : Attribute, ICacheable
 }
 
 /// <summary>
-///     This attribute specifies other plugins that are incompatible with this plugin.
+///     This attribute specifies other <see cref="Plugin"/> that are incompatible with this plugin.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
 public class BepInIncompatibility : Attribute, ICacheable
 {
     /// <summary>
-    ///     Marks this <see cref="BaseUnityPlugin" /> as incompatible with another plugin.
+    ///     Marks this <see cref="Plugin"/> as incompatible with another plugin.
     ///     If the other plugin exists, this plugin will not be loaded and a warning will be shown.
     /// </summary>
-    /// <param name="IncompatibilityGUID">The GUID of the referenced plugin.</param>
-    public BepInIncompatibility(string IncompatibilityGUID)
+    /// <param name="incompatibilityGuid">The GUID of the referenced plugin.</param>
+    public BepInIncompatibility(string incompatibilityGuid)
     {
-        this.IncompatibilityGUID = IncompatibilityGUID;
+        IncompatibilityGuid = incompatibilityGuid;
     }
 
     /// <summary>
     ///     The GUID of the referenced plugin.
     /// </summary>
-    public string IncompatibilityGUID { get; protected set; }
+    public string IncompatibilityGuid { get; private set; }
 
-    void ICacheable.Save(BinaryWriter bw) => bw.Write(IncompatibilityGUID);
+    void ICacheable.Save(BinaryWriter bw) => bw.Write(IncompatibilityGuid);
 
-    void ICacheable.Load(BinaryReader br) => IncompatibilityGUID = br.ReadString();
+    void ICacheable.Load(BinaryReader br) => IncompatibilityGuid = br.ReadString();
 
     internal static IEnumerable<BepInIncompatibility> FromCecilType(TypeDefinition td)
     {
@@ -234,22 +237,22 @@ public class BepInIncompatibility : Attribute, ICacheable
 }
 
 /// <summary>
-///     This attribute specifies which processes this plugin should be run for. Not specifying this attribute will load the
+///     This attribute specifies which processes this <see cref="Plugin"/> should be run for. Not specifying this attribute will load the
 ///     plugin under every process.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
 public class BepInProcess : Attribute
 {
-    /// <param name="ProcessName">The name of the process that this plugin will run under.</param>
-    public BepInProcess(string ProcessName)
+    /// <param name="processName">The name of the process that this plugin will run under.</param>
+    public BepInProcess(string processName)
     {
-        this.ProcessName = ProcessName;
+        ProcessName = processName;
     }
 
     /// <summary>
     ///     The name of the process that this plugin will run under.
     /// </summary>
-    public string ProcessName { get; protected set; }
+    public string ProcessName { get; }
 
     internal static List<BepInProcess> FromCecilType(TypeDefinition td)
     {
@@ -290,44 +293,22 @@ public static class MetadataHelper
     /// </summary>
     /// <param name="pluginType">The plugin type.</param>
     /// <returns>The BepInPlugin metadata of the plugin type.</returns>
-    public static BepInPlugin GetMetadata(Type pluginType)
+    public static BepInMetadataAttribute GetMetadata(Type pluginType)
     {
-        var attributes = pluginType.GetCustomAttributes(typeof(BepInPlugin), false);
+        var attributes = pluginType.GetCustomAttributes(typeof(BepInMetadataAttribute), false);
 
         if (attributes.Length == 0)
             return null;
 
-        return (BepInPlugin) attributes[0];
+        return (BepInMetadataAttribute) attributes[0];
     }
 
     /// <summary>
-    ///     Retrieves the BepInPlugin metadata from a plugin instance.
+    ///     Retrieves the <see cref="BepInMetadataAttribute"/> from a plugin instance.
     /// </summary>
     /// <param name="plugin">The plugin instance.</param>
-    /// <returns>The BepInPlugin metadata of the plugin instance.</returns>
-    public static BepInPlugin GetMetadata(object plugin) => GetMetadata(plugin.GetType());
-
-    /// <summary>
-    ///     Retrieves the BepInPluginProvider metadata from a plugin type.
-    /// </summary>
-    /// <param name="pluginType">The plugin type.</param>
-    /// <returns>The BepInPluginProvider metadata of the plugin type.</returns>
-    public static BepInPlugin GetPluginProviderMetadata(Type pluginType)
-    {
-        var attributes = pluginType.GetCustomAttributes(typeof(BepInPluginProvider), false);
-
-        if (attributes.Length == 0)
-            return null;
-
-        return (BepInPlugin) attributes[0];
-    }
-
-    /// <summary>
-    ///     Retrieves the BepInPluginProvider metadata from a plugin instance.
-    /// </summary>
-    /// <param name="plugin">The plugin instance.</param>
-    /// <returns>The BepInPluginProvider metadata of the plugin instance.</returns>
-    public static BepInPlugin GetPluginProviderMetadata(object plugin) => GetPluginProviderMetadata(plugin.GetType());
+    /// <returns>The metadata of the plugin instance.</returns>
+    public static BepInMetadataAttribute GetMetadata(object plugin) => GetMetadata(plugin.GetType());
 
     /// <summary>
     ///     Gets the specified attributes of a type, if they exist.

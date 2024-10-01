@@ -2,7 +2,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using MonoMod.Utils;
-using SemanticVersioning;
 
 namespace BepInEx;
 
@@ -11,14 +10,6 @@ namespace BepInEx;
 /// </summary>
 public static class Paths
 {
-    // TODO: Why is this in Paths?
-    /// <summary>
-    ///    BepInEx version.
-    /// </summary>
-    public static Version BepInExVersion { get; } =
-        Version.Parse(MetadataHelper.GetAttributes<AssemblyInformationalVersionAttribute>(typeof(Paths).Assembly)[0]
-                                    .InformationalVersion);
-
     /// <summary>
     ///     The path to the Managed folder that contains the main managed assemblies.
     /// </summary>
@@ -71,21 +62,6 @@ public static class Paths
     public static string CachePath { get; private set; }
 
     /// <summary>
-    ///     The path to the patcher plugin folder which resides in the BepInEx folder.
-    /// </summary>
-    public static string PatcherPluginPath { get; private set; }
-
-    /// <summary>
-    ///     The path to the plugin provider folder which resides in the BepInEx folder.
-    /// </summary>
-    public static string PluginProviderPath { get; private set; }
-    
-    /// <summary>
-    ///     The path to the patcher plugin provider folder which resides in the BepInEx folder.
-    /// </summary>
-    public static string PatcherProviderPath { get; private set; }
-
-    /// <summary>
     ///     The path to the plugin folder which resides in the BepInEx folder.
     ///     <para>
     ///         This is ONLY guaranteed to be set correctly when Chainloader has been initialized.
@@ -103,7 +79,7 @@ public static class Paths
     /// </summary>
     public static string[] DllSearchPaths { get; private set; }
 
-    public static void SetExecutablePath(string executablePath,
+    internal static void SetExecutablePath(string executablePath,
                                          string bepinRootPath = null,
                                          string managedPath = null,
                                          bool gameDataRelativeToManaged = false,
@@ -137,10 +113,7 @@ public static class Paths
         BepInExRootPath = bepinRootPath ?? Path.Combine(GameRootPath, "BepInEx");
         ConfigPath = Path.Combine(BepInExRootPath, "config");
         BepInExConfigPath = Path.Combine(ConfigPath, "BepInEx.cfg");
-        PluginProviderPath = Path.Combine(BepInExRootPath, "plugins-providers");
         PluginPath = Path.Combine(BepInExRootPath, "plugins");
-        PatcherProviderPath = Path.Combine(BepInExRootPath, "patchers-providers");
-        PatcherPluginPath = Path.Combine(BepInExRootPath, "patchers");
         BepInExAssemblyDirectory = Path.Combine(BepInExRootPath, "core");
         BepInExAssemblyPath = Path.Combine(BepInExAssemblyDirectory,
                                            $"{Assembly.GetExecutingAssembly().GetName().Name}.dll");

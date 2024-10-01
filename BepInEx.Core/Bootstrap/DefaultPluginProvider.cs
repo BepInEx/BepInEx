@@ -5,14 +5,25 @@ using System.Linq;
 using System.Reflection;
 using BepInEx.Logging;
 
-namespace BepInEx.PluginProvider;
+namespace BepInEx.Core.Bootstrap;
 
-[BepInPluginProvider("BepInExPluginProvider", "BepInExPluginProvider", "1.0")]
-internal class BepInExPluginProvider : BasePluginProvider
+internal class DefaultPluginProvider
 {
     private static readonly Dictionary<string, string> AssemblyLocationsByFilename = new();
     
-    public override IList<IPluginLoadContext> GetPlugins()
+    internal void Initialize()
+    {
+        Logger.Log(LogLevel.Message, "Started Initialise of default provider");
+        AppDomain.CurrentDomain.AssemblyResolve += (_, args) => ResolveAssembly(args.Name);
+        PhaseManager.Instance.OnPhaseStarted += phase =>
+        {
+            Logger.Log(LogLevel.Message, $"Providing on phase {phase}");
+            PluginManager.Instance.Providers.Add(new(), GetLoadContexts);
+        };
+        Logger.Log(LogLevel.Message, "Ended Initialise of default provider");
+    }
+
+    private IList<IPluginLoadContext> GetLoadContexts()
     {
         var loadContexts = new List<IPluginLoadContext>();
         foreach (var dll in Directory.GetFiles(Path.GetFullPath(Paths.PluginPath), "*.dll", SearchOption.AllDirectories))
@@ -22,26 +33,27 @@ internal class BepInExPluginProvider : BasePluginProvider
                 var filename = Path.GetFileNameWithoutExtension(dll);
                 var foundDirectory = Path.GetDirectoryName(dll);
                 
-                // Prioritize the shallowest path of each assembly name
-                if (AssemblyLocationsByFilename.TryGetValue(filename, out var existingDirectory))
+                // Prioritize the shallowest path of each assembly name, but only resolve the conflict once on the first phase
+                if (PhaseManager.Instance.CurrentPhase == BepInPhases.Entrypoint
+                 && AssemblyLocationsByFilename.TryGetValue(filename, out var existingDirectory))
                 {
                     int levelExistingDirectory = existingDirectory?.Count(x => x == Path.DirectorySeparatorChar) ?? 0;
                     int levelFoundDirectory = foundDirectory?.Count(x => x == Path.DirectorySeparatorChar) ?? 0;
-
+                    
                     bool shallowerPathFound = levelExistingDirectory > levelFoundDirectory;
-                    Logger.LogWarning($"Found duplicate assemblies filenames: {filename} was found at {foundDirectory} " +
-                                      $"while it exists already at {AssemblyLocationsByFilename[filename]}. " +
-                                      $"Only the {(shallowerPathFound ? "first" : "second")} will be examined and resolved");
+                    Logger.Log(LogLevel.Warning, $"Found duplicate assemblies filenames: {filename} was found at {foundDirectory} " +
+                                                    $"while it exists already at {AssemblyLocationsByFilename[filename]}. " +
+                                                    $"Only the {(shallowerPathFound ? "first" : "second")} will be examined and resolved");
                     
                     if (levelExistingDirectory > levelFoundDirectory)
                         AssemblyLocationsByFilename[filename] = foundDirectory;
                 }
                 else
                 {
-                    AssemblyLocationsByFilename.Add(filename, foundDirectory);
+                    AssemblyLocationsByFilename[filename] = foundDirectory;
                 }
-
-                loadContexts.Add(new BepInExPluginLoadContext
+                
+                loadContexts.Add(new DefaultPluginLoadContext
                 {
                     AssemblyHash = File.GetLastWriteTimeUtc(dll).ToString("O"),
                     AssemblyIdentifier = dll
@@ -56,7 +68,7 @@ internal class BepInExPluginProvider : BasePluginProvider
         return loadContexts;
     }
 
-    public override Assembly ResolveAssembly(string name)
+    private Assembly ResolveAssembly(string name)
     {
         if (!AssemblyLocationsByFilename.TryGetValue(name, out var location))
             return null;

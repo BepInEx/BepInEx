@@ -29,7 +29,7 @@ internal static class UnityPreloaderRunner
         Preloader.Run();
     }
 
-    internal static Assembly LocalResolve(object sender, ResolveEventArgs args)
+    private static Assembly LocalResolve(object sender, ResolveEventArgs args)
     {
         var assemblyName = new AssemblyName(args.Name);
 
@@ -40,7 +40,6 @@ internal static class UnityPreloaderRunner
             return foundAssembly;
 
         if (Utility.TryResolveDllAssembly(assemblyName, Paths.BepInExAssemblyDirectory, out foundAssembly)
-         || Utility.TryResolveDllAssembly(assemblyName, Paths.PatcherPluginPath, out foundAssembly)
          || Utility.TryResolveDllAssembly(assemblyName, Paths.PluginPath, out foundAssembly))
             return foundAssembly;
 

@@ -7,15 +7,15 @@ using BepInEx.Bootstrap;
 namespace BepInEx;
 
 /// <summary>
-///     Data class that represents information about a loadable BepInEx plugin.
-///     Contains all metadata and additional info required for plugin loading by <see cref="Chainloader" />.
+///     Data class that represents information about a <see cref="Plugin"/>.
+///     Contains all metadata and additional info required for plugin loading by <see cref="PluginManager"/>.
 /// </summary>
 public class PluginInfo : ICacheable
 {
     /// <summary>
     ///     General metadata about a plugin.
     /// </summary>
-    public BepInPlugin Metadata { get; internal set; }
+    public BepInMetadataAttribute Metadata { get; internal set; }
     
     /// <summary>
     ///     The <see cref="PluginInfo"/> of the plugin provider that loaded this plugin.
@@ -44,6 +44,9 @@ public class PluginInfo : ICacheable
     /// </summary>
     public IEnumerable<BepInIncompatibility> Incompatibilities { get; internal set; }
 
+    /// <summary>
+    ///     The name of the type that inherits from <see cref="Plugin"/>
+    /// </summary>
     public string TypeName { get; internal set; }
     
     /// <summary>
@@ -51,12 +54,9 @@ public class PluginInfo : ICacheable
     /// </summary>
     public object Instance { get; internal set; }
     
-    internal Version TargettedBepInExVersion { get; set; }
-    
-    [Obsolete("Use LoadContext.AssemblyIdentifier instead", true)]
-    public string Location => LoadContext?.AssemblyIdentifier;
-    
-    internal string _location { get; set; }
+    internal Version TargetedBepInExVersion { get; set; }
+
+    internal string Location { get; set; }
     
     /// <inheritdoc />
     public override string ToString() => $"{Metadata?.Name} {Metadata?.Version}";
@@ -65,7 +65,7 @@ public class PluginInfo : ICacheable
     {
         bw.Write(TypeName);
 
-        bw.Write(Metadata.GUID);
+        bw.Write(Metadata.Guid);
         bw.Write(Metadata.Name);
         bw.Write(Metadata.Version.ToString());
 
@@ -84,14 +84,14 @@ public class PluginInfo : ICacheable
         foreach (var bepInIncompatibility in incList)
             ((ICacheable) bepInIncompatibility).Save(bw);
 
-        bw.Write(TargettedBepInExVersion.ToString(4));
+        bw.Write(TargetedBepInExVersion.ToString(4));
     }
 
     void ICacheable.Load(BinaryReader br)
     {
         TypeName = br.ReadString();
 
-        Metadata = new BepInPlugin(br.ReadString(), br.ReadString(), br.ReadString());
+        Metadata = new BepInMetadataAttribute(br.ReadString(), br.ReadString(), br.ReadString());
 
         var processListCount = br.ReadInt32();
         var processList = new List<BepInProcess>(processListCount);
@@ -121,6 +121,6 @@ public class PluginInfo : ICacheable
 
         Incompatibilities = incList;
 
-        TargettedBepInExVersion = new Version(br.ReadString());
+        TargetedBepInExVersion = new Version(br.ReadString());
     }
 }

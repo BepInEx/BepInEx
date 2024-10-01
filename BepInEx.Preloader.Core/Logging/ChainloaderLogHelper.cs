@@ -8,7 +8,7 @@ using MonoMod.Utils;
 
 namespace BepInEx.Preloader.Core.Logging;
 
-public static class ChainloaderLogHelper
+internal static class ChainloaderLogHelper
 {
     private static Dictionary<string, string> MacOSVersions { get; } = new()
     {
@@ -33,9 +33,9 @@ public static class ChainloaderLogHelper
         ["21.2.0"] = "12.1",
     };
 
-    public static void PrintLogInfo(ManualLogSource log)
+    internal static void PrintLogInfo(ManualLogSource log)
     {
-        var bepinVersion = Paths.BepInExVersion;
+        var bepinVersion = Utility.BepInExVersion;
         var versionMini = new SemanticVersioning.Version(bepinVersion.Major, bepinVersion.Minor, bepinVersion.Patch,
                                                          bepinVersion.PreRelease);
         var consoleTitle = $"BepInEx {versionMini} - {Paths.ProcessName}";
@@ -142,7 +142,7 @@ public static class ChainloaderLogHelper
         return builder.ToString();
     }
 
-    public static void RewritePreloaderLogs()
+    internal static void RewritePreloaderLogs()
     {
         if (PreloaderConsoleListener.LogEvents == null || PreloaderConsoleListener.LogEvents.Count == 0)
             return;

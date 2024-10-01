@@ -11,4 +11,7 @@
         <PackageReference Include="MonoMod.Utils" Version="22.7.31.1"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\..\..\BepInEx.Core\BepInEx.Core.csproj" />
+    </ItemGroup>
 </Project>

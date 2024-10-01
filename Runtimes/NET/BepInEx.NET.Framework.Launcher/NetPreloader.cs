@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using BepInEx.Bootstrap;
 using BepInEx.Configuration;
+using BepInEx.Core.Bootstrap;
 using BepInEx.Logging;
 using BepInEx.NET.Common;
 using BepInEx.NET.Framework.Launcher.RuntimeFixes;
@@ -18,7 +19,7 @@ using MonoMod.Utils;
 
 namespace BepInEx.NET.Framework.Launcher;
 
-public static class NetPreloader
+internal static class NetPreloader
 {
     private static readonly ManualLogSource Log = PreloaderLogger.Log;
 
@@ -106,21 +107,15 @@ public static class NetPreloader
 
         Log.Log(LogLevel.Message, "Preloader started");
 
+        PluginManager.Instance.Initialize();
+        PhaseManager.Instance.StartPhase(BepInPhases.Entrypoint);
+
         Assembly entrypointAssembly;
 
-        using (var assemblyPatcher = new AssemblyPatcher((data, _) => Assembly.Load(data)))
+        using (var assemblyPatcher = new AssemblyPatcher([Paths.GameRootPath], ["dll", "exe"], (data, _) => Assembly.Load(data)))
         {
-            assemblyPatcher.AddPatchersFromProviders();
-
-            Log.Log(LogLevel.Info,
-                    $"{assemblyPatcher.PatcherContext.PatchDefinitions.Count} patcher definition(s) loaded");
-
-            assemblyPatcher.LoadAssemblyDirectories(new[] { Paths.GameRootPath }, new[] { "dll", "exe" });
-
-            Log.Log(LogLevel.Info, $"{assemblyPatcher.PatcherContext.AvailableAssemblies.Count} assemblies discovered");
-
+            PhaseManager.Instance.StartPhase(BepInPhases.BeforeGameAssembliesLoaded);
             assemblyPatcher.PatchAndLoad();
-
 
             var assemblyName = AssemblyName.GetAssemblyName(executablePath);
 
@@ -154,8 +149,9 @@ public static class NetPreloader
 
         var chainloader = new NetChainloader();
         chainloader.Initialize();
-        chainloader.Execute();
 
+        PhaseManager.Instance.StartPhase(BepInPhases.AfterGameAssembliesLoaded);
+        PhaseManager.Instance.StartPhase(BepInPhases.GameInitialised);
 
         AssemblyFixes.Execute(entrypointAssembly);
 
