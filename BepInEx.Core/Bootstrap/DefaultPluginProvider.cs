@@ -33,7 +33,7 @@ internal class DefaultPluginProvider
                 var filename = Path.GetFileNameWithoutExtension(dll);
                 var foundDirectory = Path.GetDirectoryName(dll);
                 
-                // Prioritize the shallowest path of each assembly name
+                // Prioritize the shallowest path of each assembly name, but only resolve the conflict once on the first phase
                 if (PhaseManager.Instance.CurrentPhase == BepInPhases.Entrypoint
                  && AssemblyLocationsByFilename.TryGetValue(filename, out var existingDirectory))
                 {
