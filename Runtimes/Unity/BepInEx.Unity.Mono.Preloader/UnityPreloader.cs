@@ -78,7 +78,7 @@ internal static class UnityPreloader
             Log.Log(LogLevel.Message, "Preloader started");
 
             PluginManager.Instance.Initialize();
-            PhaseManager.Instance.StartPhase(BepInPhases.EntrypointPhase);
+            PhaseManager.Instance.StartPhase(BepInPhases.Entrypoint);
 
             // Set up the chainloader entrypoint which harmony patches the main Unity assembly as soon as possible and
             // unpatch it in our hooking method before calling the chainloader init method
@@ -88,7 +88,7 @@ internal static class UnityPreloader
 
             using (var assemblyPatcher = new AssemblyPatcher(Paths.DllSearchPaths, ["dll"], MonoAssemblyHelper.LoadFromMemory))
             {
-                PhaseManager.Instance.StartPhase(BepInPhases.BeforeGameAssembliesLoadedPhase);
+                PhaseManager.Instance.StartPhase(BepInPhases.BeforeGameAssembliesLoaded);
 
                 Log.Log(LogLevel.Info,
                         $"{assemblyPatcher.PatcherContext.AvailableAssemblies.Count} assemblies discovered");

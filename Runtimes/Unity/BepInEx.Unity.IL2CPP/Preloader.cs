@@ -62,13 +62,13 @@ internal static class Preloader
             NativeLibrary.SetDllImportResolver(typeof(Il2CppInterop.Runtime.IL2CPP).Assembly, DllImportResolver);
 
             PluginManager.Instance.Initialize();
-            PhaseManager.Instance.StartPhase(BepInPhases.EntrypointPhase);
+            PhaseManager.Instance.StartPhase(BepInPhases.Entrypoint);
             
             Il2CppInteropManager.Initialize();
 
             using (var assemblyPatcher = new AssemblyPatcher([Il2CppInteropManager.IL2CPPInteropAssemblyPath], ["dll"], (data, _) => Assembly.Load(data)))
             {
-                PhaseManager.Instance.StartPhase(BepInPhases.BeforeGameAssembliesLoadedPhase);
+                PhaseManager.Instance.StartPhase(BepInPhases.BeforeGameAssembliesLoaded);
                 assemblyPatcher.PatchAndLoad();
             }
 

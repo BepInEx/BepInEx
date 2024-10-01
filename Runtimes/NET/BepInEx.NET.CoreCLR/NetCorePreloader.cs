@@ -53,11 +53,11 @@ namespace BepInEx.NET.CoreCLR
             Log.LogMessage("Preloader started");
 
             PluginManager.Instance.Initialize();
-            PhaseManager.Instance.StartPhase(BepInPhases.EntrypointPhase);
+            PhaseManager.Instance.StartPhase(BepInPhases.Entrypoint);
 
             using (var assemblyPatcher = new AssemblyPatcher([Paths.GameRootPath], ["dll", "exe"], (data, _) => Assembly.Load(data)))
             {
-                PhaseManager.Instance.StartPhase(BepInPhases.BeforeGameAssembliesLoadedPhase);
+                PhaseManager.Instance.StartPhase(BepInPhases.BeforeGameAssembliesLoaded);
                 assemblyPatcher.PatchAndLoad();
             }
 
@@ -68,8 +68,8 @@ namespace BepInEx.NET.CoreCLR
             var chainloader = new NetChainloader();
             chainloader.Initialize();
 
-            PhaseManager.Instance.StartPhase(BepInPhases.AfterGameAssembliesLoadedPhase);
-            PhaseManager.Instance.StartPhase(BepInPhases.GameInitialisedPhase);
+            PhaseManager.Instance.StartPhase(BepInPhases.AfterGameAssembliesLoaded);
+            PhaseManager.Instance.StartPhase(BepInPhases.GameInitialised);
         }
     }
 }

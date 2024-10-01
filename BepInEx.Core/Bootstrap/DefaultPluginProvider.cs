@@ -34,7 +34,7 @@ internal class DefaultPluginProvider
                 var foundDirectory = Path.GetDirectoryName(dll);
                 
                 // Prioritize the shallowest path of each assembly name
-                if (PhaseManager.Instance.CurrentPhase == BepInPhases.EntrypointPhase
+                if (PhaseManager.Instance.CurrentPhase == BepInPhases.Entrypoint
                  && AssemblyLocationsByFilename.TryGetValue(filename, out var existingDirectory))
                 {
                     int levelExistingDirectory = existingDirectory?.Count(x => x == Path.DirectorySeparatorChar) ?? 0;

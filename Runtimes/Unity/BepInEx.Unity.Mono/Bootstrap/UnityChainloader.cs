@@ -69,8 +69,8 @@ internal class UnityChainloader : Chainloader
 
             Instance = new UnityChainloader();
             Instance.Initialize(gameExePath);
-            PhaseManager.Instance.StartPhase(BepInPhases.AfterGameAssembliesLoadedPhase);
-            PhaseManager.Instance.StartPhase(BepInPhases.GameInitialisedPhase);
+            PhaseManager.Instance.StartPhase(BepInPhases.AfterGameAssembliesLoaded);
+            PhaseManager.Instance.StartPhase(BepInPhases.GameInitialised);
 
             Logger.Log(LogLevel.Debug, "Exiting chainloader StaticStart");
         }

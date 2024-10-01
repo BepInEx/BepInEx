@@ -59,8 +59,8 @@ internal class IL2CPPChainloader : Chainloader
 
                 Il2CppInteropManager.PreloadInteropAssemblies();
 
-                PhaseManager.Instance.StartPhase(BepInPhases.AfterGameAssembliesLoadedPhase);
-                PhaseManager.Instance.StartPhase(BepInPhases.GameInitialisedPhase);
+                PhaseManager.Instance.StartPhase(BepInPhases.AfterGameAssembliesLoaded);
+                PhaseManager.Instance.StartPhase(BepInPhases.GameInitialised);
             }
             catch (Exception ex)
             {
