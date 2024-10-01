@@ -210,15 +210,15 @@ public class AssemblyPatcher : IDisposable
                         if (targetType == null)
                         {
                             Logger
-                                .LogWarning($"Unable to find type [{patchDefinition.TargetType}] defined in {patchDefinition.TypePatcher.Method.Name}. Skipping patcher");
+                                .LogWarning($"Unable to find type [{patchDefinition.TargetType}] defined in {patchDefinition.TypePatcherMethod.Method.Name}. Skipping patcher");
                             return false;
                         }
 
-                        patched = patchDefinition.TypePatcher.Invoke(PatcherContext, targetType, targetDll);
+                        patched = patchDefinition.TypePatcherMethod.Invoke(PatcherContext, targetType, targetDll);
                     }
                     else
                     {
-                        patched = patchDefinition.AssemblyPatcher.Invoke(PatcherContext, assembly, targetDll);
+                        patched = patchDefinition.AssemblyPatcherMethod.Invoke(PatcherContext, assembly, targetDll);
                     }
 
                     if (patched)

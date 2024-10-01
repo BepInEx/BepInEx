@@ -73,11 +73,16 @@ public sealed class PluginManager
             Logger.Log(LogLevel.Error, $"Error occurred loading plugins: {ex}");
         }
     }
+    
+    /// <summary>
+    ///     A method that provides a list of load context used to provide other plugins
+    /// </summary>
+    public delegate IList<IPluginLoadContext> PluginProvider();
 
     /// <summary>
     ///     The list of all plugin providers whose key is the <see cref="PluginInfo"/> of the source plugin
     /// </summary>
-    public Dictionary<PluginInfo, Func<IList<IPluginLoadContext>>> Providers { get; } = new();
+    public Dictionary<PluginInfo, PluginProvider> Providers { get; } = new();
 
     private Dictionary<string, PluginInfo> SourcePlugins { get; } = new();
     

@@ -6,7 +6,7 @@ using Mono.Cecil;
 namespace BepInEx.Preloader.Core.Patching;
 
 /// <summary>
-///     A definition of an individual patch for use by <see cref="AssemblyPatcher" />.
+///     A definition of an individual patch for use by <see cref="AssemblyPatcherMethod" />.
 /// </summary>
 public class PatchDefinition
 {
@@ -16,13 +16,13 @@ public class PatchDefinition
     /// <param name="targetAssembly">The name of the assembly</param>
     /// <param name="instance">The plugin instance of this patch definition</param>
     /// <param name="assemblyPatcher">The patching method</param>
-    public PatchDefinition(string targetAssembly, Plugin instance, Func<PatcherContext, AssemblyDefinition, string, bool> assemblyPatcher)
+    public PatchDefinition(string targetAssembly, Plugin instance, AssemblyPatcher assemblyPatcher)
     {
         TargetAssembly = targetAssembly;
         TargetType = null;
         Instance = instance;
-        AssemblyPatcher = assemblyPatcher;
-        TypePatcher = null;
+        AssemblyPatcherMethod = assemblyPatcher;
+        TypePatcherMethod = null;
 
         FullName = $"{instance.Info.Metadata.Name}/{assemblyPatcher.Method.Name} -> {TargetAssembly}";
     }
@@ -34,13 +34,13 @@ public class PatchDefinition
     /// <param name="targetType">The name of the type</param>
     /// <param name="instance">The plugin instance of this patch definition</param>
     /// <param name="typePatcher">The patching method</param>
-    public PatchDefinition(string targetAssembly, string targetType, Plugin instance, Func<PatcherContext, TypeDefinition, string, bool> typePatcher)
+    public PatchDefinition(string targetAssembly, string targetType, Plugin instance, TypePatcher typePatcher)
     {
         TargetAssembly = targetAssembly;
         TargetType = targetType;
         Instance = instance;
-        AssemblyPatcher = null;
-        TypePatcher = typePatcher;
+        AssemblyPatcherMethod = null;
+        TypePatcherMethod = typePatcher;
 
         FullName =
             $"{instance.Info.Metadata.Name}/{typePatcher.Method.Name} -> {targetAssembly}/{TargetType}";
@@ -62,14 +62,26 @@ public class PatchDefinition
     public Plugin Instance { get; }
 
     /// <summary>
+    ///     A method that patches an assembly given a <see cref="PatcherContext"/> and an <see cref="AssemblyDefinition"/>.
+    ///     Also receives the .dll filename of the assembly and returns whether the assembly was patched
+    /// </summary>
+    public delegate bool AssemblyPatcher(PatcherContext context, AssemblyDefinition assemblyDefinition, string targetDll);
+    
+    /// <summary>
     ///     The method that will perform the patching logic defined by this <see cref="PatchDefinition" /> instance on an assembly.
     /// </summary>
-    public Func<PatcherContext, AssemblyDefinition, string, bool> AssemblyPatcher { get; }
+    public AssemblyPatcher AssemblyPatcherMethod { get; }
+
+    /// <summary>
+    ///     A method that patches an assembly given a <see cref="PatcherContext"/> and an <see cref="AssemblyDefinition"/>.
+    ///     Also receives the .dll filename of the assembly and returns whether the assembly was patched
+    /// </summary>
+    public delegate bool TypePatcher(PatcherContext context, TypeDefinition assemblyDefinition, string targetDll);
 
     /// <summary>
     ///     The method that will perform the patching logic defined by this <see cref="PatchDefinition" /> instance on a type.
     /// </summary>
-    public Func<PatcherContext, TypeDefinition, string, bool> TypePatcher { get; }
+    public TypePatcher TypePatcherMethod { get; }
 
     /// <summary>
     ///     A friendly name for this patch definition, for use in logging and error tracking.
