@@ -137,6 +137,8 @@ internal static partial class Il2CppInteropManager
 
     internal static string IL2CPPInteropAssemblyPath => Path.Combine(IL2CPPBasePath, "interop");
 
+    private static string RenameMapPath => Path.Combine(Paths.BepInExRootPath, "DeobfuscationMap.csv.gz");
+
     private static ILoggerFactory LoggerFactory { get; } = MSLoggerFactory.Create(b =>
     {
         b.AddProvider(new BepInExLoggerProvider())
@@ -172,6 +174,11 @@ internal static partial class Il2CppInteropManager
                 HashString(md5, Path.GetFileName(file));
                 HashFile(md5, file);
             }
+
+        if (File.Exists(RenameMapPath))
+        {
+            HashFile(md5, RenameMapPath);
+        }
 
         // Hash some common dependencies as they can affect output
         HashString(md5, typeof(InteropAssemblyGenerator).Assembly.GetName().Version.ToString());
@@ -361,11 +368,10 @@ internal static partial class Il2CppInteropManager
                                        : null,
         };
 
-        var renameMapLocation = Path.Combine(Paths.BepInExRootPath, "DeobfuscationMap.csv.gz");
-        if (File.Exists(renameMapLocation))
+        if (File.Exists(RenameMapPath))
         {
             Logger.LogInfo("Parsing deobfuscation rename mappings");
-            opts.ReadRenameMap(renameMapLocation);
+            opts.ReadRenameMap(RenameMapPath);
         }
 
         Logger.LogInfo("Generating interop assemblies");
