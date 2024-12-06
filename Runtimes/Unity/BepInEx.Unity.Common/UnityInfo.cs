@@ -123,8 +123,19 @@ public static class UnityInfo
                 fs.Position = offset;
 
                 byte b;
-                while ((b = (byte) fs.ReadByte()) != 0)
-                    sb.Append((char) b);
+                var isPrintable = true;
+                while ((b = (byte)fs.ReadByte()) != 0)
+                {
+                    var ch = (char)b;
+                    if (char.IsControl(ch))
+                    {
+                        isPrintable = false;
+                        break;
+                    }
+                    sb.Append(ch);
+                }
+                if (!isPrintable)
+                    continue;
 
                 try
                 {
