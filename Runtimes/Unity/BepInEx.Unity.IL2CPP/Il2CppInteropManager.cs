@@ -295,7 +295,7 @@ internal static partial class Il2CppInteropManager
             using var zipArchive = new ZipArchive(fStream, ZipArchiveMode.Read);
             zipArchive.ExtractToDirectory(UnityBaseLibsDirectory);
         } else {
-            var source = UnityBaseLibrariesSource.Value + file;
+            var source = UnityBaseLibrariesSource.Value.Replace("{VERSION}.zip", file);
             Logger.LogMessage($"Downloading unity base libraries {source}");
             using var httpClient = new HttpClient();
             using var zipStream = httpClient.GetStreamAsync(source).GetAwaiter().GetResult();
