@@ -296,6 +296,7 @@ internal static partial class Il2CppInteropManager
         baseFolder.EnumerateFiles("*.dll").Do(a=>a.Delete());
         var target = baseFolder.GetFiles(file).FirstOrDefault();
         if (target != null) {
+            Logger.LogMessage($"Reading unity base libraries from file {source}");
             using var fStream = target.OpenRead();
             using var zipArchive = new ZipArchive(fStream, ZipArchiveMode.Read);
             zipArchive.ExtractToDirectory(UnityBaseLibsDirectory);
