@@ -287,6 +287,8 @@ internal static partial class Il2CppInteropManager
         var unityVersion = UnityInfo.Version;
         var version = $"{unityVersion.Major}.{unityVersion.Minor}.{unityVersion.Build}";
         var source = UnityBaseLibrariesSource.Value.Replace("{VERSION}", version);
+        if (string.IsNullOrEmpty(source)) return;
+
         var uri = new Uri(source);
         string file = Path.GetFileName(uri.AbsolutePath);
 
