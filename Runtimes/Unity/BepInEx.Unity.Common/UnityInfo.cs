@@ -4,6 +4,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
 using AssetRipper.Primitives;
+using BepInEx.Configuration;
 using MonoMod.Utils;
 
 [assembly: InternalsVisibleTo("BepInEx.Unity.Mono.Preloader")]
@@ -46,6 +47,13 @@ public static class UnityInfo
     /// </remarks>
     public static UnityVersion Version { get; private set; }
 
+    private static readonly ConfigEntry<string> ConfigUnityVersion = ConfigFile.CoreConfig.Bind(
+        "General",
+        "UnityVersion",
+        "",
+        "Unity player version. Leave it empty to let BepInEx determine the version automatically"
+    );
+
     internal static void Initialize(string unityPlayerPath, string gameDataPath)
     {
         if (initialized)
@@ -53,7 +61,22 @@ public static class UnityInfo
         PlayerPath = Path.GetFullPath(unityPlayerPath ?? throw new ArgumentNullException(nameof(unityPlayerPath)));
         GameDataPath = Path.GetFullPath(gameDataPath ?? throw new ArgumentNullException(nameof(gameDataPath)));
 
-        DetermineVersion();
+        if (!string.IsNullOrEmpty(ConfigUnityVersion.Value))
+        {
+            try
+            {
+                Version = UnityVersion.Parse(ConfigUnityVersion.Value);
+            }
+            catch (Exception)
+            {
+                DetermineVersion();
+            }
+        }
+        else
+        {
+            DetermineVersion();
+        }
+
         initialized = true;
     }
 
@@ -76,8 +99,8 @@ public static class UnityInfo
                 var version = FileVersionInfo.GetVersionInfo(PlayerPath);
                 // Parse manually because some games can also wipe the file version (so it's an empty string)
                 var simpleVersion = new Version(version.FileVersion);
-                Version = new UnityVersion((ushort) simpleVersion.Major, (ushort) simpleVersion.Minor,
-                                           (ushort) simpleVersion.Build);
+                Version = new UnityVersion((ushort)simpleVersion.Major, (ushort)simpleVersion.Minor,
+                                           (ushort)simpleVersion.Build);
                 return;
             }
             catch (Exception)
@@ -134,6 +157,8 @@ public static class UnityInfo
                     }
                     sb.Append(ch);
                 }
+                // if there is a non-printable character in the version string
+                // there is definitely something wrong
                 if (!isPrintable)
                     continue;
 
