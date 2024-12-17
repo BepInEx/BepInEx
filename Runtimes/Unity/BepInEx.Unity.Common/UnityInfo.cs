@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using AssetRipper.Primitives;
 using BepInEx.Configuration;
+using BepInEx.Logging;
 using MonoMod.Utils;
 
 [assembly: InternalsVisibleTo("BepInEx.Unity.Mono.Preloader")]
@@ -49,10 +50,12 @@ public static class UnityInfo
 
     private static readonly ConfigEntry<string> ConfigUnityVersion = ConfigFile.CoreConfig.Bind(
         "General",
-        "UnityVersion",
+        "UnityVersionOverride",
         "",
-        "Unity player version. Leave it empty to let BepInEx determine the version automatically"
+        "Unity player version override. Leave it empty to let BepInEx determine the version automatically"
     );
+
+    private static readonly ManualLogSource Logger = Logging.Logger.CreateLogSource("UnityInfo");
 
     internal static void Initialize(string unityPlayerPath, string gameDataPath)
     {
@@ -69,6 +72,7 @@ public static class UnityInfo
             }
             catch (Exception)
             {
+                Logger.LogError(string.Format("Could not parse \"{0}\" as a unity player version. Fallback to automatic version determination.", ConfigUnityVersion.Value));
                 DetermineVersion();
             }
         }
