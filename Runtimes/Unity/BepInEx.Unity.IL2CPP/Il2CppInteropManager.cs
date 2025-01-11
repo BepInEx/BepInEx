@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Security.Cryptography;
@@ -282,25 +283,29 @@ internal static partial class Il2CppInteropManager
         }
     }
 
-    private static void DownloadUnityAssemblies()
-    {
+    private static void DownloadUnityAssemblies() {
         var unityVersion = UnityInfo.Version;
-        var source =
-            UnityBaseLibrariesSource.Value.Replace("{VERSION}",
-                                                   $"{unityVersion.Major}.{unityVersion.Minor}.{unityVersion.Build}");
+        var version = $"{unityVersion.Major}.{unityVersion.Minor}.{unityVersion.Build}";
+        var source = UnityBaseLibrariesSource.Value.Replace("{VERSION}", version);
+        if (string.IsNullOrEmpty(source)) return;
 
-        if (!string.IsNullOrEmpty(source))
-        {
-            Logger.LogMessage("Downloading unity base libraries");
+        var uri = new Uri(source);
+        string file = Path.GetFileName(uri.AbsolutePath);
 
-            Directory.CreateDirectory(UnityBaseLibsDirectory);
-            Directory.EnumerateFiles(UnityBaseLibsDirectory, "*.dll").Do(File.Delete);
-
+        var baseFolder = Directory.CreateDirectory(UnityBaseLibsDirectory);
+        baseFolder.EnumerateFiles("*.dll").Do(a=>a.Delete());
+        var target = baseFolder.GetFiles(file).FirstOrDefault();
+        if (target != null) {
+            Logger.LogMessage($"Reading unity base libraries from file {source}");
+            using var fStream = target.OpenRead();
+            using var zipArchive = new ZipArchive(fStream, ZipArchiveMode.Read);
+            zipArchive.ExtractToDirectory(UnityBaseLibsDirectory);
+        } else {
+            Logger.LogMessage($"Downloading unity base libraries {source}");
             using var httpClient = new HttpClient();
             using var zipStream = httpClient.GetStreamAsync(source).GetAwaiter().GetResult();
-            using var zipArchive = new ZipArchive(zipStream, ZipArchiveMode.Read);
-
             Logger.LogMessage("Extracting downloaded unity base libraries");
+            using var zipArchive = new ZipArchive(zipStream, ZipArchiveMode.Read);
             zipArchive.ExtractToDirectory(UnityBaseLibsDirectory);
         }
     }
