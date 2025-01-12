@@ -27,7 +27,6 @@ public static class Preloader
         {
             HarmonyBackendFix.Initialize();
             ConsoleSetOutFix.Apply();
-            UnityInfo.Initialize(Paths.ExecutablePath, Paths.GameDataPath);
 
             ConsoleManager.Initialize(false, true);
 
@@ -43,6 +42,8 @@ public static class Preloader
             RedirectStdErrFix.Apply();
 
             ChainloaderLogHelper.PrintLogInfo(Log);
+            
+            UnityInfo.Initialize(Paths.ExecutablePath, Paths.GameDataPath);
 
             Logger.Log(LogLevel.Info, $"Running under Unity {UnityInfo.Version}");
             Logger.Log(LogLevel.Info, $"Runtime version: {Environment.Version}");
