@@ -51,7 +51,7 @@ jobs:
                 id: generate_changelog
                 if: ${{ steps.info.outputs.build_type == 'BleedingEdge' }}
                 run: |
-                    changelog=$(git --no-pager log --no-merges --pretty="format:- (\`%h\`) [%an] %s" ${{ steps.last_successful_commit.outputs.commit_hash }}..HEAD | sed ':a;N;$!ba;s/"/\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
+                    changelog=$(git --no-pager log --no-merges --pretty="format:- (\`%h\`) [%an] %s" ${{ steps.last_successful_commit.outputs.commit_hash }}..HEAD | sed ':a;N;$!ba;s/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
                     echo "::set-output name=changelog::$changelog"
             -   name: Notify success
                 uses: joelwmale/webhook-action@2.4.1
