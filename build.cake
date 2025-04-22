@@ -6,7 +6,7 @@
 
 const string DOORSTOP_VER = "4.4.0";
 
-var target = Argument("target", "Pack");
+var target = Argument("target", "Build");
 var isBleedingEdge = Argument("bleeding_edge", false);
 var buildId = Argument("build_id", 0);
 var lastBuildCommit = Argument("last_build_commit", "");
