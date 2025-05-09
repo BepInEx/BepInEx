@@ -40,7 +40,6 @@ internal static class UnityPreloader
         try
         {
             HarmonyBackendFix.Initialize();
-            UnityInfo.Initialize(Paths.ExecutablePath, Paths.GameDataPath);
 
             ConsoleManager.Initialize(false, false);
             AllocateConsole();
@@ -58,6 +57,9 @@ internal static class UnityPreloader
             Logger.Listeners.Add(PreloaderLog);
 
             ChainloaderLogHelper.PrintLogInfo(Log);
+
+            UnityInfo.Initialize(Paths.ExecutablePath, Paths.GameDataPath);
+            
             Log.Log(LogLevel.Info, $"Running under Unity {UnityInfo.Version}");
             Log.Log(LogLevel.Info, $"CLR runtime version: {Environment.Version}");
             Log.Log(LogLevel.Info, $"Supports SRE: {Utility.CLRSupportsDynamicAssemblies}");
