@@ -263,17 +263,16 @@ internal static partial class Il2CppInteropManager
             AppDomain.CurrentDomain.AddCecilPlatformAssemblies(UnityBaseLibsDirectory);
             DownloadUnityAssemblies();
             var asmResolverAssemblies = RunCpp2Il();
-            var cecilAssemblies = new AsmToCecilConverter(asmResolverAssemblies).ConvertAll();
 
             if (DumpDummyAssemblies.Value)
             {
                 var dummyPath = Path.Combine(Paths.BepInExRootPath, "dummy");
                 Directory.CreateDirectory(dummyPath);
-                foreach (var assemblyDefinition in cecilAssemblies)
-                    assemblyDefinition.Write(Path.Combine(dummyPath, $"{assemblyDefinition.Name.Name}.dll"));
+                foreach (var assemblyDefinition in asmResolverAssemblies)
+                    assemblyDefinition.Write(Path.Combine(dummyPath, $"{assemblyDefinition.Name}.dll"));
             }
 
-            RunIl2CppInteropGenerator(cecilAssemblies);
+            RunIl2CppInteropGenerator(asmResolverAssemblies);
 
             File.WriteAllText(HashPath, ComputeHash());
         }
@@ -360,7 +359,7 @@ internal static partial class Il2CppInteropManager
         return assemblies;
     }
 
-    private static void RunIl2CppInteropGenerator(List<AssemblyDefinition> sourceAssemblies)
+    private static void RunIl2CppInteropGenerator(List<AsmResolver.DotNet.AssemblyDefinition> sourceAssemblies)
     {
         var opts = new GeneratorOptions
         {
@@ -387,8 +386,6 @@ internal static partial class Il2CppInteropManager
                               .AddLogger(logger)
                               .AddInteropAssemblyGenerator()
                               .Run();
-
-        sourceAssemblies.Do(x => x.Dispose());
     }
 
     internal static void PreloadInteropAssemblies()
