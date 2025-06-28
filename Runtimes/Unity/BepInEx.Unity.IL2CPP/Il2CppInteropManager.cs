@@ -91,7 +91,7 @@ internal static partial class Il2CppInteropManager
          .AppendLine("{BepInEx} - Path to the BepInEx folder.")
          .AppendLine("{ProcessName} - Name of the current process")
          .ToString());
-    
+
     private static readonly ConfigEntry<bool> PreloadIL2CPPInteropAssemblies = ConfigFile.CoreConfig.Bind(
      "IL2CPP", "PreloadIL2CPPInteropAssemblies",
      true,
@@ -111,6 +111,14 @@ internal static partial class Il2CppInteropManager
          .AppendLine("{GameDataPath} - Path to the game's Data folder.")
          .ToString());
 
+    private static readonly ConfigEntry<GeneratorOptions.PrefixMode> Il2CppPrefixMode = ConfigFile.CoreConfig.Bind(
+     "IL2CPP", "Il2CppPrefixMode",
+     GeneratorOptions.PrefixMode.OptIn,
+     new StringBuilder()
+        .AppendLine("When to assign the \"Il2Cpp\" prefix to interop assemblies.")
+        .AppendLine("Either OptIn (default) or OptOut")
+        .ToString());
+
     private static readonly ManualLogSource Logger = BepInEx.Logging.Logger.CreateLogSource("InteropManager");
 
     private static string il2cppInteropBasePath;
@@ -123,8 +131,10 @@ internal static partial class Il2CppInteropManager
 
     private static string HashPath => Path.Combine(IL2CPPInteropAssemblyPath, "assembly-hash.txt");
 
-    private static string IL2CPPBasePath {
-        get {
+    private static string IL2CPPBasePath
+    {
+        get
+        {
             if (il2cppInteropBasePath != null)
                 return il2cppInteropBasePath;
             var path = Utility.GetCommandLineArgValue("--unhollowed-path") ?? IL2CPPInteropAssembliesPath.Value;
@@ -241,10 +251,10 @@ internal static partial class Il2CppInteropManager
 
         var unityVersion = UnityInfo.Version;
         Il2CppInteropRuntime.Create(new RuntimeConfiguration
-                            {
-                                UnityVersion = new Version(unityVersion.Major, unityVersion.Minor, unityVersion.Build),
-                                DetourProvider = new Il2CppInteropDetourProvider()
-                            })
+        {
+            UnityVersion = new Version(unityVersion.Major, unityVersion.Minor, unityVersion.Build),
+            DetourProvider = new Il2CppInteropDetourProvider()
+        })
                             .AddLogger(interopLogger)
                             .AddHarmonySupport()
                             .Start();
@@ -282,7 +292,8 @@ internal static partial class Il2CppInteropManager
         }
     }
 
-    private static void DownloadUnityAssemblies() {
+    private static void DownloadUnityAssemblies()
+    {
         var unityVersion = UnityInfo.Version;
         var version = $"{unityVersion.Major}.{unityVersion.Minor}.{unityVersion.Build}";
         var source = UnityBaseLibrariesSource.Value.Replace("{VERSION}", version);
@@ -292,14 +303,17 @@ internal static partial class Il2CppInteropManager
         string file = Path.GetFileName(uri.AbsolutePath);
 
         var baseFolder = Directory.CreateDirectory(UnityBaseLibsDirectory);
-        baseFolder.EnumerateFiles("*.dll").Do(a=>a.Delete());
+        baseFolder.EnumerateFiles("*.dll").Do(a => a.Delete());
         var target = baseFolder.GetFiles(file).FirstOrDefault();
-        if (target != null) {
+        if (target != null)
+        {
             Logger.LogMessage($"Reading unity base libraries from file {source}");
             using var fStream = target.OpenRead();
             using var zipArchive = new ZipArchive(fStream, ZipArchiveMode.Read);
             zipArchive.ExtractToDirectory(UnityBaseLibsDirectory);
-        } else {
+        }
+        else
+        {
             Logger.LogMessage($"Downloading unity base libraries {source}");
             using var httpClient = new HttpClient();
             using var zipStream = httpClient.GetStreamAsync(source).GetAwaiter().GetResult();
@@ -316,7 +330,7 @@ internal static partial class Il2CppInteropManager
                                                           .Replace("{BepInEx}", Paths.BepInExRootPath)
                                                           .Replace("{ProcessName}", Paths.ProcessName)
                                                           .Replace("{GameDataPath}", Paths.GameDataPath));
-        
+
         Logger.LogMessage("Running Cpp2IL to generate dummy assemblies from " + metadataPath);
 
         var stopwatch = new Stopwatch();
@@ -370,6 +384,7 @@ internal static partial class Il2CppInteropManager
             ObfuscatedNamesRegex = !string.IsNullOrEmpty(ConfigUnhollowerDeobfuscationRegex.Value)
                                        ? new Regex(ConfigUnhollowerDeobfuscationRegex.Value)
                                        : null,
+            Il2CppPrefixMode = Il2CppPrefixMode.Value,
         };
 
         if (File.Exists(RenameMapPath))
