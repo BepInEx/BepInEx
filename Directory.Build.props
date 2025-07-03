@@ -1,0 +1,5 @@
+<Project>
+    <PropertyGroup>
+        <BepInExVersionPrefix>5.4.23.3</BepInExVersionPrefix>
+    </PropertyGroup>
+</Project>

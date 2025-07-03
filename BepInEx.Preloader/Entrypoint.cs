@@ -2,7 +2,9 @@
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using BepInEx.Preloader;
 using BepInEx.Preloader.RuntimeFixes;
+using Doorstop;
 
 namespace BepInEx.Preloader
 {
@@ -97,7 +99,10 @@ namespace BepInEx.Preloader
 			return null;
 		}
 	}
+}
 
+namespace Doorstop
+{
 	internal static class Entrypoint
 	{
 		private static string preloaderPath;
@@ -105,7 +110,7 @@ namespace BepInEx.Preloader
 		/// <summary>
 		///     The main entrypoint of BepInEx, called from Doorstop.
 		/// </summary>
-		public static void Main()
+		public static void Start()
 		{
 			// We set it to the current directory first as a fallback, but try to use the same location as the .exe file.
 			string silentExceptionLog = $"preloader_{DateTime.Now:yyyyMMdd_HHmmss_fff}.log";
@@ -152,6 +157,5 @@ namespace BepInEx.Preloader
 				return null;
 			}
 		}
-
 	}
 }

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
+﻿using System.Reflection;
 using BepInEx.Bootstrap;
 using BepInEx.Logging;
 using HarmonyLib;
@@ -14,7 +11,7 @@ namespace BepInEx.Preloader.RuntimeFixes
 		public static void Apply()
 		{
 			HarmonyInterop.Initialize(Paths.CachePath);
-			Harmony.CreateAndPatchAll(typeof(HarmonyInteropFix), "org.bepinex.fixes.harmonyinterop");
+			HarmonyLib.Harmony.CreateAndPatchAll(typeof(HarmonyInteropFix), "org.bepinex.fixes.harmonyinterop");
 		}
 
 		[HarmonyReversePatch]
