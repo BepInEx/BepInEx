@@ -462,6 +462,26 @@ namespace BepInEx.Bootstrap
 			Logger.LogMessage("Chainloader startup complete");
 
 			_loaded = true;
+
+			SetIsModdedTrue();
+		}
+		private static void SetIsModdedTrue()
+		{
+			Type gameType = AccessTools.TypeByName("Game");
+			if (gameType == null)
+			{
+				Logger.LogWarning("Game type not found.");
+				return;
+			}
+			
+			FieldInfo isModdedField = AccessTools.Field(gameType, "isModded");
+			if (isModdedField == null)
+			{
+				Logger.LogWarning("Game.isModded field not found.");
+				return;
+			}
+
+			isModdedField.SetValue(null, true); // Static field => pass null as instance
 		}
 
 		#region Config
