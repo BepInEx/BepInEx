@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -111,7 +111,7 @@ public abstract class BaseChainloader<TPlugin>
 
     #region Contract
 
-    protected virtual string ConsoleTitle => $"BepInEx {Paths.BepInExVersion} - {Paths.ProcessName}";
+    protected virtual string ConsoleTitle => $"BepInEx {Utility.BepInExVersion} - {Paths.ProcessName}";
 
     private bool _initialized;
 

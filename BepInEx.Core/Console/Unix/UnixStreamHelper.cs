@@ -1,7 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.IO;
-using MonoMod.Utils;
+using System.Runtime.InteropServices;
+using BepInEx.Core;
 
 namespace BepInEx.Unix;
 
@@ -21,40 +21,56 @@ internal static class UnixStreamHelper
 
     public delegate int isattyDelegate(int fd);
 
-    [DynDllImport("libc")]
     public static dupDelegate dup;
 
-    [DynDllImport("libc")]
     public static fdopenDelegate fdopen;
 
-    [DynDllImport("libc")]
     public static freadDelegate fread;
 
-    [DynDllImport("libc")]
     public static fwriteDelegate fwrite;
 
-    [DynDllImport("libc")]
     public static fcloseDelegate fclose;
 
-    [DynDllImport("libc")]
     public static fflushDelegate fflush;
 
-    [DynDllImport("libc")]
     public static isattyDelegate isatty;
 
     static UnixStreamHelper()
     {
-        var libcMapping = new Dictionary<string, List<DynDllMapping>>
-        {
-            ["libc"] = new()
-            {
+        string[] libcCandidates = [
                 "libc.so.6",               // Ubuntu glibc
                 "libc",                    // Linux glibc
                 "/usr/lib/libSystem.dylib" // OSX POSIX
-            }
-        };
+        ];
 
-        typeof(UnixStreamHelper).ResolveDynDllImports(libcMapping);
+        IntPtr libcHandle = IntPtr.Zero;
+        foreach (var libcCandidate in libcCandidates)
+        {
+            try
+            {
+                libcHandle = NativeLibrary.Load(libcCandidate);
+                if (libcHandle != IntPtr.Zero)
+                    break;
+            }
+            catch { }
+        }
+
+        if (libcHandle == IntPtr.Zero)
+            throw new DllNotFoundException("Could not load libc.");
+
+        dup = GetDelegate<dupDelegate>(libcHandle, "dup");
+        fdopen = GetDelegate<fdopenDelegate>(libcHandle, "fdopen");
+        fread = GetDelegate<freadDelegate>(libcHandle, "fread");
+        fwrite = GetDelegate<fwriteDelegate>(libcHandle, "fwrite");
+        fclose = GetDelegate<fcloseDelegate>(libcHandle, "fclose");
+        fflush = GetDelegate<fflushDelegate>(libcHandle, "fflush");
+        isatty = GetDelegate<isattyDelegate>(libcHandle, "isatty");
+    }
+    private static T GetDelegate<T>(IntPtr lib, string name) where T : Delegate
+    {
+        // TODO: Use dlsym for .net framework compatibility
+        // https://github.com/MonoMod/MonoMod.Common/blob/d679ae74d002e513bd88e52091b66283d8537d83/Utils/DynDll.Manual.cs#L257
+        return NativeLibrary.GetExport(lib, name).AsDelegate<T>();
     }
 
     public static Stream CreateDuplicateStream(int fileDescriptor)

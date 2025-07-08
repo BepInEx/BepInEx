@@ -2,11 +2,11 @@
 
     <PropertyGroup>
         <Description>BepInEx common code for .NET-based games</Description>
-        <TargetFrameworks>netstandard2.1;net40</TargetFrameworks>
+        <TargetFrameworks>net9.0</TargetFrameworks>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="HarmonyX" Version="2.10.2" />
+        <PackageReference Include="HarmonyX" Version="2.14.0" />
         <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="All"/>
     </ItemGroup>
 

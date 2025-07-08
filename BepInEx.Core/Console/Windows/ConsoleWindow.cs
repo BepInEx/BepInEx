@@ -1,4 +1,4 @@
-﻿// --------------------------------------------------
+// --------------------------------------------------
 // UnityInjector - ConsoleWindow.cs
 // Copyright (c) Usagirei 2015 - 2015
 // --------------------------------------------------
@@ -8,7 +8,7 @@ using System.ComponentModel;
 using System.Runtime.InteropServices;
 using BepInEx;
 using BepInEx.ConsoleUtil;
-using MonoMod.Utils;
+using static BepInEx.Core.PlatformUtils;
 
 namespace UnityInjector.ConsoleUtil;
 

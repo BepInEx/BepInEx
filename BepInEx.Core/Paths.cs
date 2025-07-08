@@ -1,6 +1,7 @@
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using BepInEx.Core;
 using MonoMod.Utils;
 using SemanticVersioning;
 
@@ -11,14 +12,6 @@ namespace BepInEx;
 /// </summary>
 public static class Paths
 {
-    // TODO: Why is this in Paths?
-    /// <summary>
-    ///    BepInEx version.
-    /// </summary>
-    public static Version BepInExVersion { get; } =
-        Version.Parse(MetadataHelper.GetAttributes<AssemblyInformationalVersionAttribute>(typeof(Paths).Assembly)[0]
-                                    .InformationalVersion);
-
     /// <summary>
     ///     The path to the Managed folder that contains the main managed assemblies.
     /// </summary>
@@ -102,7 +95,7 @@ public static class Paths
         ExecutablePath = executablePath;
         ProcessName = Path.GetFileNameWithoutExtension(executablePath);
 
-        GameRootPath = PlatformHelper.Is(Platform.MacOS)
+        GameRootPath = PlatformUtils.Is(Platform.MacOS)
                            ? Utility.ParentDirectory(executablePath, 4)
                            : Path.GetDirectoryName(executablePath);
 

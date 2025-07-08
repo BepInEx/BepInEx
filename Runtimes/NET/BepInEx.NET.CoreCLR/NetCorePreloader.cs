@@ -1,6 +1,5 @@
 using System;
 using System.Diagnostics;
-using System.IO;
 using System.Reflection;
 using BepInEx.Bootstrap;
 using BepInEx.Logging;

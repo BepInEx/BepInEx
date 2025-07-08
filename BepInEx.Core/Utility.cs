@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -15,6 +15,13 @@ namespace BepInEx;
 /// </summary>
 public static class Utility
 {
+    /// <summary>
+    ///    BepInEx version.
+    /// </summary>
+    public static SemanticVersioning.Version BepInExVersion =
+        SemanticVersioning.Version.Parse(MetadataHelper.GetAttributes<AssemblyInformationalVersionAttribute>(typeof(Paths).Assembly)[0]
+                                    .InformationalVersion);
+
     private const string TRUSTED_PLATFORM_ASSEMBLIES = "TRUSTED_PLATFORM_ASSEMBLIES";
     private static bool? sreEnabled;
 

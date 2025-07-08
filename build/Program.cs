@@ -41,19 +41,19 @@ public class BuildContext : FrostingContext
 
     internal readonly DistributionTarget[] Distributions =
     {
-        new("Unity.Mono", "win-x86"),
-        new("Unity.Mono", "win-x64"),
-        new("Unity.Mono", "linux-x86"),
-        new("Unity.Mono", "linux-x64"),
-        new("Unity.Mono", "macos-x64"),
-        new("Unity.IL2CPP", "win-x86"),
-        new("Unity.IL2CPP", "win-x64"),
-        new("Unity.IL2CPP", "linux-x64"),
-        new("Unity.IL2CPP", "macos-x64"),
-        new("NET.Framework", "win-x86", "net40"),
-        new("NET.Framework", "win-x86", "net452"),
-        new("NET.CoreCLR", "win-x64", "netcoreapp3.1"),
-        new("NET.CoreCLR", "win-x64", "net6.0")
+        //new("Unity.Mono", "win-x86"),
+        //new("Unity.Mono", "win-x64"),
+        //new("Unity.Mono", "linux-x86"),
+        //new("Unity.Mono", "linux-x64"),
+        //new("Unity.Mono", "macos-x64"),
+        //new("Unity.IL2CPP", "win-x86"),
+        //new("Unity.IL2CPP", "win-x64"),
+        //new("Unity.IL2CPP", "linux-x64"),
+        //new("Unity.IL2CPP", "macos-x64"),
+        //new("NET.Framework", "win-x86", "net40"),
+        //new("NET.Framework", "win-x86", "net452"),
+        //new("NET.CoreCLR", "win-x64", "netcoreapp3.1"),
+        new("NET.CoreCLR", "win-x64", "net9.0")
     };
 
 

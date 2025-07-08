@@ -2,12 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using BepInEx.Core;
 using BepInEx.Logging;
 using BepInEx.NET.CoreCLR;
 using BepInEx.NET.Shared;
 using BepInEx.Preloader.Core;
 
-internal class StartupHook
+public class StartupHook
 {
     public static List<string> ResolveDirectories = new();
 
@@ -15,25 +16,31 @@ internal class StartupHook
 
     public static void Initialize()
     {
+        var executableFilename = Process.GetCurrentProcess().MainModule.FileName;
+
+        var assemblyFilename = TryDetermineAssemblyNameFromDotnet(executableFilename)
+                            ?? TryDetermineAssemblyNameFromStubExecutable(executableFilename)
+                            ?? TryDetermineAssemblyNameFromCurrentAssembly(executableFilename);
+
+        Initialize(assemblyFilename);
+    }
+
+    public static void Initialize(string assemblyFilename)
+    {
         var silentExceptionLog = $"bepinex_preloader_{DateTime.Now:yyyyMMdd_HHmmss_fff}.log";
 
         try
         {
-//#if DEBUG
-//          filename =
-//              Path.Combine(Directory.GetCurrentDirectory(),
-//                           Path.GetFileName(Process.GetCurrentProcess().MainModule.FileName));
-//          ResolveDirectories.Add(Path.GetDirectoryName(filename));
+            //#if DEBUG
+            //          filename =
+            //              Path.Combine(Directory.GetCurrentDirectory(),
+            //                           Path.GetFileName(Process.GetCurrentProcess().MainModule.FileName));
+            //          ResolveDirectories.Add(Path.GetDirectoryName(filename));
 
-//          // for debugging within VS
-//          ResolveDirectories.Add(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName));
-//#else
-            
-            var executableFilename = Process.GetCurrentProcess().MainModule.FileName;
-            
-            var assemblyFilename = TryDetermineAssemblyNameFromDotnet(executableFilename)
-                                ?? TryDetermineAssemblyNameFromStubExecutable(executableFilename)
-                                ?? TryDetermineAssemblyNameFromCurrentAssembly(executableFilename);
+            //          // for debugging within VS
+            //          ResolveDirectories.Add(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName));
+            //#else
+
 
             string gameDirectory = null;
 
@@ -49,11 +56,11 @@ internal class StartupHook
             {
                 throw new Exception("Could not determine game location, or BepInEx install location");
             }
-            
+
             silentExceptionLog = Path.Combine(gameDirectory, silentExceptionLog);
-            
+
             ResolveDirectories.Add(bepinexCoreDirectory);
-//#endif
+            //#endif
 
             AppDomain.CurrentDomain.AssemblyResolve += SharedEntrypoint.RemoteResolve(ResolveDirectories);
 

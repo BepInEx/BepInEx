@@ -1,15 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <Description>Core classes and utilities for BepInEx Preloader</Description>
-        <TargetFrameworks>net35;netstandard2.0</TargetFrameworks>
+        <TargetFrameworks>net9.0</TargetFrameworks>
     </PropertyGroup>
     <ItemGroup>
         <ProjectReference Include="..\BepInEx.Core\BepInEx.Core.csproj"/>
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="All"/>
-        <PackageReference Include="HarmonyX" Version="2.10.2" />
-        <PackageReference Include="MonoMod.RuntimeDetour" Version="22.7.31.1"/>
-        <PackageReference Include="MonoMod.Utils" Version="22.7.31.1"/>
+        <PackageReference Include="HarmonyX" Version="2.14.0" />
+        <PackageReference Include="MonoMod.RuntimeDetour" Version="25.2.2"/>
+        <PackageReference Include="MonoMod.Utils" Version="25.0.8"/>
     </ItemGroup>
 </Project>
