@@ -1,6 +1,6 @@
 using System;
 using System.Diagnostics;
-using System.Reflection;
+using System.IO;
 using BepInEx.Bootstrap;
 using BepInEx.Logging;
 using BepInEx.NET.Common;
@@ -23,7 +23,7 @@ namespace BepInEx.NET.CoreCLR
             string entrypointAssemblyPath = !Paths.ExecutablePath.EndsWith(StartupHook.DoesNotExistPath) ? Paths.ExecutablePath : null;
 
             TypeLoader.SearchDirectories.Add(Paths.GameRootPath);
-            
+
             Logger.Sources.Add(TraceLogSource.CreateSource());
 
             ChainloaderLogHelper.PrintLogInfo(Log);
@@ -51,7 +51,12 @@ namespace BepInEx.NET.CoreCLR
 
             Log.LogMessage("Preloader started");
 
-            using (var assemblyPatcher = new AssemblyPatcher((data, _) => Assembly.Load(data)))
+            using (var assemblyPatcher = new AssemblyPatcher((data, _) =>
+            {
+                // TODO: could change the patcher to send a MemoryStream instead of byte[], it only has 1 callsite anyway
+                using var ms = new MemoryStream(data);
+                return Utility.LoadContext.LoadFromStream(ms);
+            }))
             {
                 assemblyPatcher.AddPatchersFromDirectory(Paths.PatcherPluginPath);
 

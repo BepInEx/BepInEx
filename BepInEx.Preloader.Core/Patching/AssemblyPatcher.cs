@@ -496,7 +496,7 @@ public class AssemblyPatcher : IDisposable
                 if (ConfigLoadDumpedAssemblies.Value &&
                     dumpedAssemblyPaths.TryGetValue(filename, out var dumpedAssemblyPath))
                 {
-                    loadedAssembly = Assembly.LoadFrom(dumpedAssemblyPath);
+                    loadedAssembly = Utility.LoadContext.LoadFromAssemblyPath(dumpedAssemblyPath);
                 }
                 else
                 {

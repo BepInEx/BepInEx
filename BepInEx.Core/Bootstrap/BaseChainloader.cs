@@ -404,7 +404,7 @@ public abstract class BaseChainloader<TPlugin>
                 Logger.Log(LogLevel.Info, $"Loading [{plugin}]");
 
                 if (!loadedAssemblies.TryGetValue(plugin.Location, out var ass))
-                    loadedAssemblies[plugin.Location] = ass = Assembly.LoadFrom(plugin.Location);
+                    loadedAssemblies[plugin.Location] = ass = Utility.LoadContext.LoadFromAssemblyPath(plugin.Location);
 
                 Plugins[plugin.Metadata.GUID] = plugin;
                 TryRunModuleCtor(plugin, ass);

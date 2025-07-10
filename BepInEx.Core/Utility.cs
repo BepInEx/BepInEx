@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Runtime.Loader;
 using System.Security.Cryptography;
 using System.Text;
 using Mono.Cecil;
@@ -16,10 +17,15 @@ namespace BepInEx;
 public static class Utility
 {
     /// <summary>
+    /// Assembly Load Context for BepInEx, all game assemblies should be loaded here.
+    /// </summary>
+    public static AssemblyLoadContext LoadContext = null!;
+
+    /// <summary>
     ///    BepInEx version.
     /// </summary>
     public static SemanticVersioning.Version BepInExVersion =
-        SemanticVersioning.Version.Parse(MetadataHelper.GetAttributes<AssemblyInformationalVersionAttribute>(typeof(Paths).Assembly)[0]
+        SemanticVersioning.Version.Parse(MetadataHelper.GetAttributes<AssemblyInformationalVersionAttribute>(typeof(Utility).Assembly)[0]
                                     .InformationalVersion);
 
     private const string TRUSTED_PLATFORM_ASSEMBLIES = "TRUSTED_PLATFORM_ASSEMBLIES";

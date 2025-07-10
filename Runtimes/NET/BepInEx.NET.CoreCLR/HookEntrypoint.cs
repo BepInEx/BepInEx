@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.Loader;
 using BepInEx.Core;
 using BepInEx.Logging;
 using BepInEx.NET.CoreCLR;
@@ -25,7 +26,7 @@ public class StartupHook
         Initialize(assemblyFilename);
     }
 
-    public static void Initialize(string assemblyFilename)
+    public static void Initialize(string assemblyFilename, AssemblyLoadContext alc = null)
     {
         var silentExceptionLog = $"bepinex_preloader_{DateTime.Now:yyyyMMdd_HHmmss_fff}.log";
 
@@ -64,7 +65,7 @@ public class StartupHook
 
             AppDomain.CurrentDomain.AssemblyResolve += SharedEntrypoint.RemoteResolve(ResolveDirectories);
 
-            NetCorePreloaderRunner.OuterMain(assemblyFilename);
+            NetCorePreloaderRunner.OuterMain(assemblyFilename, alc);
         }
         catch (Exception ex)
         {
@@ -169,13 +170,15 @@ namespace BepInEx.NET.CoreCLR
             }
         }
 
-        internal static void OuterMain(string filename)
+        internal static void OuterMain(string filename, AssemblyLoadContext alc)
         {
             PlatformUtils.SetPlatform();
 
             Paths.SetExecutablePath(filename);
 
             AppDomain.CurrentDomain.AssemblyResolve += SharedEntrypoint.LocalResolve;
+
+            Utility.LoadContext = alc ?? AssemblyLoadContext.Default;
 
             PreloaderMain();
         }
