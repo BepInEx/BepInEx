@@ -147,7 +147,7 @@ public class AssemblyPatcher : IDisposable
             if (patcherCollection.Count == 0)
                 continue;
 
-            var ass = Assembly.LoadFrom(assemblyPath);
+            var ass = Utility.LoadContext.LoadFromAssemblyPath(assemblyPath);
 
             foreach (var patcherPlugin in patcherCollection)
                 try

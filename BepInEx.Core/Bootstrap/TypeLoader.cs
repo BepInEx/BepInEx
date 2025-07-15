@@ -89,8 +89,7 @@ public static class TypeLoader
         {
             Paths.BepInExAssemblyDirectory,
             Paths.PluginPath,
-            Paths.PatcherPluginPath,
-            Paths.ManagedPath
+            Paths.PatcherPluginPath
         }.Concat(SearchDirectories);
 
         foreach (var dir in resolveDirs)

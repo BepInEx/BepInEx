@@ -1,9 +1,6 @@
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using BepInEx.Core;
-using MonoMod.Utils;
-using SemanticVersioning;
 
 namespace BepInEx;
 
@@ -12,16 +9,6 @@ namespace BepInEx;
 /// </summary>
 public static class Paths
 {
-    /// <summary>
-    ///     The path to the Managed folder that contains the main managed assemblies.
-    /// </summary>
-    public static string ManagedPath { get; private set; }
-
-    /// <summary>
-    ///     The path to the game data folder of the currently running Unity game.
-    /// </summary>
-    public static string GameDataPath { get; private set; }
-
     /// <summary>
     ///     The directory that the core BepInEx DLLs reside in.
     /// </summary>
@@ -99,24 +86,6 @@ public static class Paths
                            ? Utility.ParentDirectory(executablePath, 4)
                            : Path.GetDirectoryName(executablePath);
 
-        if (managedPath != null && gameDataRelativeToManaged)
-        {
-            GameDataPath = Path.GetDirectoryName(managedPath);
-        }
-        else
-        {
-            // According to some experiments, Unity checks whether globalgamemanagers/data.unity3d exists in the data folder before picking it.
-            // 'ProcessName_Data' folder is checked first, then if that fails 'Data' folder is checked. If neither is valid, the player crashes.
-            // A simple Directory.Exists check is accurate enough while being less likely to break in case these conditions change.
-            GameDataPath = Path.Combine(GameRootPath, $"{ProcessName}_Data");
-            if (!Directory.Exists(GameDataPath))
-                GameDataPath = Path.Combine(GameRootPath, "Data");
-        }
-        
-        if (string.IsNullOrEmpty(GameDataPath) || !Directory.Exists(GameDataPath))
-            throw new DirectoryNotFoundException("Failed to extract valid GameDataPath from executablePath: " + executablePath);
-
-        ManagedPath = managedPath ?? Path.Combine(GameDataPath, "Managed");
         BepInExRootPath = bepinRootPath ?? Path.Combine(GameRootPath, "BepInEx");
         ConfigPath = Path.Combine(BepInExRootPath, "config");
         BepInExConfigPath = Path.Combine(ConfigPath, "BepInEx.cfg");
@@ -126,7 +95,7 @@ public static class Paths
         BepInExAssemblyPath = Path.Combine(BepInExAssemblyDirectory,
                                            $"{Assembly.GetExecutingAssembly().GetName().Name}.dll");
         CachePath = Path.Combine(BepInExRootPath, "cache");
-        DllSearchPaths = (dllSearchPath ?? new string[0]).Concat(new[] { ManagedPath }).Distinct().ToArray();
+        DllSearchPaths = new string[0];
     }
 
     internal static void SetPluginPath(string pluginPath) =>
