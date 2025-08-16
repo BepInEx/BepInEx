@@ -17,6 +17,9 @@ namespace BepInEx.NET.CoreCLR
 
         public static void Start()
         {
+            var chainloader = new NetChainloader();
+            chainloader.Initialize();
+            
             var preloaderListener = new PreloaderConsoleListener();
             Logger.Listeners.Add(preloaderListener);
 
@@ -73,8 +76,6 @@ namespace BepInEx.NET.CoreCLR
 
             Logger.Listeners.Remove(preloaderListener);
 
-            var chainloader = new NetChainloader();
-            chainloader.Initialize();
             chainloader.Execute();
         }
     }
