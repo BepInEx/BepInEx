@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(chmod:*)",
+      "Bash(/mnt/c/Users/haz/dev/BepInEx/build.sh:*)",
+      "Bash(./build.sh:*)",
+      "Bash(grep:*)",
+      "Bash(rm:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

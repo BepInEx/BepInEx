@@ -1,7 +1,7 @@
 <Project>
     <PropertyGroup>
         <VersionPrefix>6.0.0</VersionPrefix>
-        <Authors>BepInEx</Authors>
+        <Authors>ResoniteModding</Authors>
         <LangVersion>latest</LangVersion>
         <Nullable>disable</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -9,10 +9,10 @@
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <DebugType>embedded</DebugType>
         <Configurations>Debug;Release</Configurations>
-        <PackageProjectUrl>https://github.com/BepInEx/BepInEx</PackageProjectUrl>
-        <RepositoryUrl>https://github.com/BepInEx/BepInEx</RepositoryUrl>
+        <PackageProjectUrl>https://github.com/ResoniteModding/BepInEx</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/ResoniteModding/BepInEx</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
-        <Copyright>Copyright © 2022 BepInEx Team</Copyright>
+        <Copyright>Copyright © 2025 ResoniteModding Team</Copyright>
         <BuildDir>$(SolutionDir)bin</BuildDir>
         <PackageOutputPath>$(BuildDir)/NuGet</PackageOutputPath>
         <PackageIcon>logo.png</PackageIcon>

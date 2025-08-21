@@ -28,9 +28,7 @@ A more comprehensive comparison list of features and compatibility is available 
 
 ## Resources
 
-**[Latest releases](https://github.com/BepInEx/BepInEx/releases)**
-
-**[Bleeding Edge builds](https://builds.bepinex.dev/projects/bepinex_be)**
+**[Latest releases](https://github.com/ResoniteModding/BepInEx/releases)**
 
 **[How to install (latest releases)](https://docs.bepinex.dev/articles/user_guide/installation/index.html)**
 

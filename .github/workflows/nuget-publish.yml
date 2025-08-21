@@ -1,0 +1,132 @@
+name: Publish NuGet Packages
+
+on:
+  push:
+    branches: [master]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: 'Publish packages to registry'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+
+env:
+  DOTNET_VERSION: '9.0.x'
+  NUGET_REGISTRY: https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Needed for version calculation from git
+      
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      
+      - name: Calculate version
+        id: version
+        run: |
+          # Get base version from Directory.Build.props
+          VERSION_PREFIX=$(grep -oPm1 "(?<=<VersionPrefix>)[^<]+" Directory.Build.props)
+          
+          # Determine version suffix based on trigger
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            # Release version from tag
+            VERSION_SUFFIX=""
+            PACKAGE_VERSION="${GITHUB_REF#refs/tags/v}"
+          elif [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
+            # Nightly build version for master branch
+            VERSION_SUFFIX="nightly.$(date +%Y%m%d).${{ github.run_number }}"
+            PACKAGE_VERSION="${VERSION_PREFIX}-${VERSION_SUFFIX}"
+          else
+            # Development version for other branches/PRs
+            BRANCH_NAME=$(echo ${GITHUB_REF#refs/heads/} | sed 's/[^a-zA-Z0-9]/-/g')
+            VERSION_SUFFIX="dev.${BRANCH_NAME}.${{ github.run_number }}"
+            PACKAGE_VERSION="${VERSION_PREFIX}-${VERSION_SUFFIX}"
+          fi
+          
+          echo "VERSION_PREFIX=${VERSION_PREFIX}" >> $GITHUB_OUTPUT
+          echo "VERSION_SUFFIX=${VERSION_SUFFIX}" >> $GITHUB_OUTPUT
+          echo "PACKAGE_VERSION=${PACKAGE_VERSION}" >> $GITHUB_OUTPUT
+          
+          echo "Package version: ${PACKAGE_VERSION}"
+      
+      - name: Restore dependencies
+        run: dotnet restore
+      
+      - name: Build
+        run: |
+          if [ -z "${{ steps.version.outputs.VERSION_SUFFIX }}" ]; then
+            dotnet build --configuration Release --no-restore \
+              -p:VersionPrefix=${{ steps.version.outputs.VERSION_PREFIX }}
+          else
+            dotnet build --configuration Release --no-restore \
+              -p:VersionPrefix=${{ steps.version.outputs.VERSION_PREFIX }} \
+              -p:VersionSuffix=${{ steps.version.outputs.VERSION_SUFFIX }}
+          fi
+      
+      - name: Run tests
+        run: |
+          if [ -d "tests" ] || [ -d "Tests" ]; then
+            dotnet test --configuration Release --no-build --verbosity normal
+          else
+            echo "No tests directory found, skipping tests"
+          fi
+      
+      - name: Pack NuGet packages
+        run: |
+          if [ -z "${{ steps.version.outputs.VERSION_SUFFIX }}" ]; then
+            dotnet pack --configuration Release --no-build \
+              -p:VersionPrefix=${{ steps.version.outputs.VERSION_PREFIX }} \
+              --output ./artifacts
+          else
+            dotnet pack --configuration Release --no-build \
+              -p:VersionPrefix=${{ steps.version.outputs.VERSION_PREFIX }} \
+              -p:VersionSuffix=${{ steps.version.outputs.VERSION_SUFFIX }} \
+              --output ./artifacts
+          fi
+      
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-packages-${{ steps.version.outputs.PACKAGE_VERSION }}
+          path: ./artifacts/*.nupkg
+          retention-days: ${{ github.ref == 'refs/heads/master' && 30 || 7 }}
+      
+      - name: Determine if should publish
+        id: should_publish
+        run: |
+          # Publish only if:
+          # - It's a tag release
+          # - Manual workflow with publish=true
+          if [[ "${{ github.ref }}" == refs/tags/v* ]] || \
+             [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ github.event.inputs.publish }}" == "true" ]]; then
+            echo "SHOULD_PUBLISH=true" >> $GITHUB_OUTPUT
+          else
+            echo "SHOULD_PUBLISH=false" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Publish to GitHub Packages
+        if: steps.should_publish.outputs.SHOULD_PUBLISH == 'true'
+        run: |
+          dotnet nuget push ./artifacts/*.nupkg \
+            --source ${{ env.NUGET_REGISTRY }} \
+            --api-key ${{ secrets.GITHUB_TOKEN }} \
+            --skip-duplicate
