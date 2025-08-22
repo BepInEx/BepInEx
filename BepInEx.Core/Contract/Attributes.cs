@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -65,7 +65,7 @@ public class BepInPlugin : Attribute
 
     internal static BepInPlugin FromCecilType(TypeDefinition td)
     {
-        var attr = MetadataHelper.GetCustomAttributes<BepInPlugin>(td, false).FirstOrDefault();
+        var attr = MetadataHelper.GetCustomAttributes<BepInPlugin>(td, false, true).FirstOrDefault();
 
         if (attr == null)
             return null;
@@ -242,7 +242,23 @@ public class BepInProcess : Attribute
 /// </summary>
 public static class MetadataHelper
 {
-    internal static IEnumerable<CustomAttribute> GetCustomAttributes<T>(TypeDefinition td, bool inherit)
+    internal static bool TypeInheretsFrom(TypeReference derived, Type type)
+    {
+        var td = derived.Resolve();
+        while (td != null)
+        {
+            if (td.FullName == type.FullName)
+                return true;
+            td = td.BaseType?.Resolve();
+        }
+        return false;
+    }
+
+
+    /// <param name="td">type to get attributes from</param>
+    /// <param name="inheritType"> allow types that inherit td</param>
+    /// <param name="inheritAttribute"> allow attributes that inherit T</param>
+    internal static IEnumerable<CustomAttribute> GetCustomAttributes<T>(TypeDefinition td, bool inheritType, bool inheritAttribute = false)
         where T : Attribute
     {
         var result = new List<CustomAttribute>();
@@ -250,10 +266,10 @@ public static class MetadataHelper
         var currentType = td;
 
         do
-        {
-            result.AddRange(currentType.CustomAttributes.Where(ca => ca.AttributeType.FullName == type.FullName));
+        {           
+            result.AddRange(currentType.CustomAttributes.Where(inheritAttribute ? (ca => TypeInheretsFrom(ca.AttributeType, type)) : (ca => ca.AttributeType.FullName == type.FullName)));
             currentType = currentType.BaseType?.Resolve();
-        } while (inherit && currentType?.FullName != "System.Object");
+        } while (inheritType && currentType?.FullName != "System.Object");
 
 
         return result;

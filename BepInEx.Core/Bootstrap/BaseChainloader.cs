@@ -16,7 +16,7 @@ public abstract class BaseChainloader<TPlugin>
 {
     protected static readonly string CurrentAssemblyName = Assembly.GetExecutingAssembly().GetName().Name;
     protected static readonly Version CurrentAssemblyVersion = Assembly.GetExecutingAssembly().GetName().Version;
-
+    private static readonly Dictionary<string, bool> RefCache = new();
     private static Regex allowedGuidRegex { get; } = new(@"^[a-zA-Z0-9\._\-]+$");
 
     /// <summary>
@@ -88,14 +88,34 @@ public abstract class BaseChainloader<TPlugin>
             Location = assemblyLocation
         };
     }
+    static bool ReferencesThisAssembly(AssemblyDefinition ass, HashSet<string>? seen = null)
+    {
+        seen ??= new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
+        var key = ass.Name.FullName;
+        if (RefCache.TryGetValue(key, out var hit)) return hit;
+
+        if (!seen.Add(ass.Name.Name)) return RefCache[key] = false;
+
+        if (ass.MainModule.AssemblyReferences.Any(r => r.Name == CurrentAssemblyName)) return RefCache[key] = true;
+
+        foreach (var r in ass.MainModule.AssemblyReferences)
+        {
+            var dep = ass.MainModule.AssemblyResolver.Resolve(r);
+            if (dep != null && ReferencesThisAssembly(dep, seen))
+                return RefCache[key] = true;
+        }
+        return RefCache[key] = false;
+    }
     protected static bool HasBepinPlugins(AssemblyDefinition ass)
     {
-        if (ass.MainModule.AssemblyReferences.All(r => r.Name != CurrentAssemblyName))
+        if (!ReferencesThisAssembly(ass))
             return false;
-        if (ass.MainModule.GetTypeReferences().All(r => r.FullName != typeof(BepInPlugin).FullName))
+        if (ass.MainModule.GetTypeReferences().All(r => r.FullName != typeof(BepInPlugin).FullName)) {
+            if (ass.MainModule.GetTypeReferences().Any(r => MetadataHelper.TypeInheretsFrom(r, typeof(BepInPlugin))))
+                return true;
             return false;
-
+        }
         return true;
     }
 
