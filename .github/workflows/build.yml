@@ -15,7 +15,7 @@ jobs:
                 with:
                     script: |
                         let buildType = "Development";
-                        if (context.ref == "refs/heads/master" && context.repo.owner == "BepInEx") {
+                        if (context.ref == "refs/heads/master" && context.repo.owner == "ResoniteModding") {
                             buildType = "BleedingEdge";
                         }
                         core.setOutput("build_type", buildType);
