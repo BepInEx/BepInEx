@@ -27,19 +27,19 @@ jobs:
                         });
                         core.setOutput("sha_short", shortHash);
                         core.setOutput("build_id", context.runNumber + 600); // builds.bepinex.dev build numbers start at 500
-            -   uses: nrwl/last-successful-commit-action@v1
-                id: last_successful_commit
+            -   name: Derive appropriate SHAs for base and head
+                id: setSHAs
+                uses: nrwl/nx-set-shas@v4
                 if: ${{ steps.info.outputs.build_type == 'BleedingEdge' }}
                 with:
-                    branch: master
-                    workflow_id: build.yml
-                    github_token: ${{ secrets.GITHUB_TOKEN }}
+                    main-branch-name: master
+                    workflow-id: build.yml
             -   uses: actions/setup-dotnet@v4
                 with:
                     dotnet-version: "9.0.x"
             -   name: Build
                 run: |
-                    ./build.sh --target Publish --build-type ${{ steps.info.outputs.build_type }} --build-id ${{ steps.info.outputs.build_id }} --last-build-commit \"${{ steps.last_successful_commit.outputs.commit_hash }}\" --nuget-api-key \"${{ secrets.NUGET_API_KEY }}\" --nuget-source https://nuget-modding.resonite.net/v3/index.json
+                    ./build.sh --target Publish --build-type ${{ steps.info.outputs.build_type }} --build-id ${{ steps.info.outputs.build_id }} --last-build-commit \"${{ steps.setSHAs.outputs.base }}\" --nuget-api-key \"${{ secrets.NUGET_API_KEY }}\" --nuget-source https://nuget-modding.resonite.net/v3/index.json
             -   name: Upload to BepinBuilds
                 env:
                     BEPISBUILDS_HOST: ${{ secrets.BEPISBUILDS_HOST }}
@@ -51,7 +51,7 @@ jobs:
                 id: generate_changelog
                 if: ${{ steps.info.outputs.build_type == 'BleedingEdge' }}
                 run: |
-                    changelog=$(git --no-pager log --no-merges --pretty="format:- (\`%h\`) [%an] %s" ${{ steps.last_successful_commit.outputs.commit_hash }}..HEAD | sed ':a;N;$!ba;s/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
+                    changelog=$(git --no-pager log --no-merges --pretty="format:- (\`%h\`) [%an] %s" ${{ steps.setSHAs.outputs.base }}..HEAD | sed ':a;N;$!ba;s/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
                     echo "::set-output name=changelog::$changelog"
             -   name: Notify success
                 uses: joelwmale/webhook-action@2.4.1
