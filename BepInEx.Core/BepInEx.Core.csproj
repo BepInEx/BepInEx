@@ -13,6 +13,7 @@
         <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="All"/>
         <PackageReference Include="SemanticVersioning" Version="2.0.2"/>
         <PackageReference Include="MonoMod.Utils" Version="25.0.8"/>
+        <PackageReference Include="Mono.Cecil" Version="0.11.6" />
     </ItemGroup>
     <ItemGroup>
         <Compile Remove="Contract\IPlugin.cs"/>
