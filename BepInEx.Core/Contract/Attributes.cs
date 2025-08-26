@@ -14,6 +14,7 @@ namespace BepInEx;
 
 /// <summary>
 ///     This attribute denotes that a class is a plugin, and specifies the required metadata.
+///     If you Inherit this class, the first 3 arguments of your constructor must be unchanged - (GUID, Name, Version)
 /// </summary>
 [AttributeUsage(AttributeTargets.Class)]
 public class BepInPlugin : Attribute
