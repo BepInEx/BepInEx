@@ -26,7 +26,7 @@ public class StartupHook
         Initialize(assemblyFilename);
     }
 
-    public static void Initialize(string assemblyFilename, AssemblyLoadContext alc = null)
+    public static void Initialize(string assemblyFilename, string bepinRootPath = null, AssemblyLoadContext alc = null)
     {
         var silentExceptionLog = $"bepinex_preloader_{DateTime.Now:yyyyMMdd_HHmmss_fff}.log";
 
@@ -50,7 +50,10 @@ public class StartupHook
 
             string bepinexCoreDirectory = null;
 
-            if (gameDirectory != null)
+            if (bepinRootPath != null)
+                bepinexCoreDirectory = Path.Combine(bepinRootPath, "core");
+
+            if (bepinexCoreDirectory == null && gameDirectory != null)
                 bepinexCoreDirectory = Path.Combine(gameDirectory, "BepInEx", "core");
 
             if (assemblyFilename == null || gameDirectory == null || !Directory.Exists(bepinexCoreDirectory))
@@ -65,7 +68,7 @@ public class StartupHook
 
             AppDomain.CurrentDomain.AssemblyResolve += SharedEntrypoint.RemoteResolve(ResolveDirectories);
 
-            NetCorePreloaderRunner.OuterMain(assemblyFilename, alc);
+            NetCorePreloaderRunner.OuterMain(assemblyFilename, bepinRootPath, alc);
         }
         catch (Exception ex)
         {
@@ -166,11 +169,11 @@ namespace BepInEx.NET.CoreCLR
             }
         }
 
-        internal static void OuterMain(string filename, AssemblyLoadContext alc)
+        internal static void OuterMain(string filename, string bepinRootPath, AssemblyLoadContext alc)
         {
             PlatformUtils.SetPlatform();
 
-            Paths.SetExecutablePath(filename);
+            Paths.SetExecutablePath(filename, bepinRootPath);
 
             AppDomain.CurrentDomain.AssemblyResolve += SharedEntrypoint.LocalResolve;
 
