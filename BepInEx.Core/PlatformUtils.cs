@@ -65,7 +65,7 @@ public enum Platform : int
     /// </summary>
     iOS = MacOS | (1 << 9),
 }
-internal static class PlatformUtils
+public static class PlatformUtils
 {
     public static readonly bool ProcessIs64Bit = IntPtr.Size >= 8;
     public static Version WindowsVersion { get; set; }

@@ -21,6 +21,20 @@ readonly struct DistributionTarget
         Target = $"{DistributionIdentifier}-{FrameworkTarget}-{RuntimeIdentifier}";
     }
 
+    public DistributionTarget(string engine, string runtime, string runtimeIdentifier, string frameworkTarget)
+    {
+        DistributionIdentifier = runtime;
+        RuntimeIdentifier = runtimeIdentifier;
+        FrameworkTarget = frameworkTarget;
+
+        Os = RuntimeIdentifier.Split('-')[0];
+        Arch = RuntimeIdentifier.Split('-')[1];
+
+        Engine = engine;
+        Runtime = runtime;
+        Target = $"{DistributionIdentifier}-{RuntimeIdentifier}";
+    }
+
     public readonly string DistributionIdentifier;
     public readonly string RuntimeIdentifier;
     public readonly string FrameworkTarget;

@@ -27,6 +27,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{12081C
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Build", "build\Build.csproj", "{0C38DDF2-EAAA-43FA-BA0A-985636AC6040}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BepisLoader", "Runtimes\NET\BepisLoader\BepisLoader.csproj", "{0C729EA7-A634-AFFF-6D19-20C29787045C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -73,6 +75,14 @@ Global
 		{0C38DDF2-EAAA-43FA-BA0A-985636AC6040}.Release_Unity|Any CPU.ActiveCfg = Debug|Any CPU
 		{0C38DDF2-EAAA-43FA-BA0A-985636AC6040}.Release_Unity|Any CPU.Build.0 = Debug|Any CPU
 		{0C38DDF2-EAAA-43FA-BA0A-985636AC6040}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0C729EA7-A634-AFFF-6D19-20C29787045C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0C729EA7-A634-AFFF-6D19-20C29787045C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0C729EA7-A634-AFFF-6D19-20C29787045C}.Release_NetFramework|Any CPU.ActiveCfg = Release|Any CPU
+		{0C729EA7-A634-AFFF-6D19-20C29787045C}.Release_NetFramework|Any CPU.Build.0 = Release|Any CPU
+		{0C729EA7-A634-AFFF-6D19-20C29787045C}.Release_Unity|Any CPU.ActiveCfg = Release|Any CPU
+		{0C729EA7-A634-AFFF-6D19-20C29787045C}.Release_Unity|Any CPU.Build.0 = Release|Any CPU
+		{0C729EA7-A634-AFFF-6D19-20C29787045C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0C729EA7-A634-AFFF-6D19-20C29787045C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -82,12 +92,14 @@ Global
 		{76EB1952-7826-471C-9CF3-815D094DA077} = {6EC98884-A3DC-4828-85EF-5F10F7519429}
 		{08083F40-98AA-4176-BA01-817C18C35C7F} = {6EC98884-A3DC-4828-85EF-5F10F7519429}
 		{067BCC8C-FC25-4929-B4F4-C6A5A7496994} = {6EC98884-A3DC-4828-85EF-5F10F7519429}
+		{0C729EA7-A634-AFFF-6D19-20C29787045C} = {6EC98884-A3DC-4828-85EF-5F10F7519429}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {55AC11EF-F568-4C79-A356-7ED9510145B1}
 	EndGlobalSection
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Runtimes\NET\BepInEx.NET.Shared\BepInEx.NET.Shared.projitems*{08083f40-98aa-4176-ba01-817c18c35c7f}*SharedItemsImports = 5
+		Runtimes\NET\BepInEx.NET.Shared\BepInEx.NET.Shared.projitems*{0c729ea7-a634-afff-6d19-20c29787045c}*SharedItemsImports = 5
 		BepInEx.Shared\BepInEx.Shared.projitems*{15f8bc38-a761-4f93-8903-1b531ac5d9f9}*SharedItemsImports = 5
 		BepInEx.Shared\BepInEx.Shared.projitems*{4ffba620-f5ed-47f9-b90c-dad1316fd9b9}*SharedItemsImports = 5
 	EndGlobalSection

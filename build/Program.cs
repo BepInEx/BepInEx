@@ -53,7 +53,8 @@ public class BuildContext : FrostingContext
         //new("NET.Framework", "win-x86", "net40"),
         //new("NET.Framework", "win-x86", "net452"),
         //new("NET.CoreCLR", "win-x64", "netcoreapp3.1"),
-        new("NET.CoreCLR", "win-x64", "net9.0")
+        //new("NET.CoreCLR", "win-x64", "net9.0"),
+        new("NET", "BepisLoader", "win-x64", "net9.0-windows")
     };
 
 
@@ -290,6 +291,12 @@ public sealed class MakeDistTask : FrostingTask<BuildContext>
                 else if (dist.Runtime == "CoreCLR")
                 {
                     foreach (var filePath in ctx.GetFiles(bepInExCoreDir.Combine("BepInEx.NET.CoreCLR.*").FullPath))
+                        ctx.MoveFileToDirectory(filePath, targetDir);
+                }
+                else if (dist.Runtime == "BepisLoader")
+                {
+                    ctx.DeleteFile(bepInExCoreDir.GetFilePath("BepisLoader.exe"));
+                    foreach (var filePath in ctx.GetFiles(bepInExCoreDir.Combine("BepisLoader.*").FullPath))
                         ctx.MoveFileToDirectory(filePath, targetDir);
                 }
             }
