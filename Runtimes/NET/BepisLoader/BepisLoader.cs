@@ -34,9 +34,6 @@ internal class BepisLoader
 
             alc = new BepisLoadContext();
 
-            // TODO: removing this breaks stuff, idk why
-            AppDomain.CurrentDomain.AssemblyResolve += ResolveGameDll;
-
             var bepinPath = Path.Combine(resoDir, "BepInEx");
             var bepinArg = Array.IndexOf(args.Select(x => x?.ToLowerInvariant()).ToArray(), "--bepinex-target");
             if (bepinArg != -1 && args.Length > bepinArg + 1)
@@ -45,10 +42,16 @@ internal class BepisLoader
             }
 
             ResolveDirectories.Add(Path.Combine(bepinPath, "core"));
-            AppDomain.CurrentDomain.AssemblyResolve += SharedEntrypoint.RemoteResolve(ResolveDirectories);
+            AppDomain.CurrentDomain.AssemblyResolve += RemoteResolve;
+            AppDomain.CurrentDomain.AssemblyResolve += ResolveGameDll;
 
             var resoDllPath = Path.Combine(resoDir, "Renderite.Host.dll");
             if (!File.Exists(resoDllPath)) resoDllPath = Path.Combine(resoDir, "Resonite.dll");
+
+            // Call BepInEx preloader
+            Console.WriteLine($"[BepisLoader] Initializing BepInEx");
+            Console.WriteLine($"[BepisLoader] BepInEx path: {bepinPath}");
+            Console.WriteLine($"[BepisLoader] Resolve directories: {string.Join(", ", ResolveDirectories)}");
 
             NetCorePreloaderRunner.OuterMain(resoDllPath, bepinPath, alc);
 
@@ -88,10 +91,47 @@ internal class BepisLoader
         }
     }
 
-    static Assembly? ResolveGameDll(object? sender, ResolveEventArgs args)
+
+    static Assembly? RemoteResolve(object? sender, ResolveEventArgs args)
     {
         var assemblyName = new AssemblyName(args.Name);
 
+        foreach (var directory in ResolveDirectories)
+        {
+            if (!Directory.Exists(directory))
+                continue;
+
+            var potentialDirectories = new List<string> { directory };
+            potentialDirectories.AddRange(Directory.GetDirectories(directory, "*", SearchOption.AllDirectories));
+
+            var potentialFiles = potentialDirectories.Select(x => Path.Combine(x, $"{assemblyName.Name}.dll"))
+                                                     .Concat(potentialDirectories.Select(x =>
+                                                                 Path.Combine(x, $"{assemblyName.Name}.exe")));
+
+            foreach (var path in potentialFiles)
+            {
+                if (!File.Exists(path))
+                    continue;
+
+                try
+                {
+                    var assembly = Assembly.LoadFrom(path);
+                    if (assembly.GetName().Name == assemblyName.Name)
+                        return assembly;
+                }
+                catch (Exception)
+                {
+                    continue;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    static Assembly? ResolveGameDll(object? sender, ResolveEventArgs args)
+    {
+        var assemblyName = new AssemblyName(args.Name);
         return ResolveInternal(assemblyName);
     }
 
@@ -128,7 +168,7 @@ internal class BepisLoader
 
             var nativeLibs = Path.Join(resoDir, "runtimes", rid, "native");
             IEnumerable<string> potentialPaths = [unmanagedDllName, Path.Combine(nativeLibs, GetUnmanagedLibraryName(unmanagedDllName))];
-            if (unmanagedDllName.EndsWith("steam_api64.so")) potentialPaths = ((IEnumerable<string>) ["libsteam_api.so"]).Concat(potentialPaths);
+            if (unmanagedDllName.EndsWith("steam_api64.so")) potentialPaths = ((IEnumerable<string>)["libsteam_api.so"]).Concat(potentialPaths);
 
             foreach (var path in potentialPaths)
             {
@@ -144,7 +184,6 @@ internal class BepisLoader
 
             return IntPtr.Zero;
         }
-
 
         private static string GetRuntimeIdentifier()
         {
@@ -218,4 +257,3 @@ internal static class NetCorePreloaderRunner
         PreloaderMain();
     }
 }
-

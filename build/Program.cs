@@ -54,7 +54,7 @@ public class BuildContext : FrostingContext
         //new("NET.Framework", "win-x86", "net452"),
         //new("NET.CoreCLR", "win-x64", "netcoreapp3.1"),
         //new("NET.CoreCLR", "win-x64", "net9.0"),
-        new("NET", "BepisLoader", "win-x64", "net9.0-windows")
+        new("NET", "BepisLoader", "win-x64", "net9.0")
     };
 
 
@@ -93,17 +93,17 @@ public class BuildContext : FrostingContext
 
     public string VersionSuffix => BuildType switch
     {
-        ProjectBuildType.Release      => "",
-        ProjectBuildType.Development  => "dev",
+        ProjectBuildType.Release => "",
+        ProjectBuildType.Development => "dev",
         ProjectBuildType.BleedingEdge => $"be.{BuildId}",
-        var _                         => throw new ArgumentOutOfRangeException()
+        var _ => throw new ArgumentOutOfRangeException()
     };
 
     public string BuildPackageVersion =>
         VersionPrefix + BuildType switch
         {
             ProjectBuildType.Release => "",
-            var _                    => $"-{VersionSuffix}+{this.GitShortenSha(RootDirectory, CurrentCommit)}",
+            var _ => $"-{VersionSuffix}+{this.GitShortenSha(RootDirectory, CurrentCommit)}",
         };
 
     public static string DoorstopZipUrl(string arch) =>
@@ -249,8 +249,12 @@ public sealed class MakeDistTask : FrostingTask<BuildContext>
             if (dist.FrameworkTarget != null)
                 sourceDirectory = sourceDirectory.Combine(dist.FrameworkTarget);
 
-            foreach (var filePath in ctx.GetFiles(sourceDirectory.Combine("*.*").FullPath))
-                ctx.CopyFileToDirectory(filePath, bepInExCoreDir);
+            // Copy distribution files to BepInEx/core (except BepisLoader which goes to root)
+            if (dist.Runtime != "BepisLoader")
+            {
+                foreach (var filePath in ctx.GetFiles(sourceDirectory.Combine("*.*").FullPath))
+                    ctx.CopyFileToDirectory(filePath, bepInExCoreDir);
+            }
 
             if (dist.Engine == "Unity")
             {
@@ -295,9 +299,30 @@ public sealed class MakeDistTask : FrostingTask<BuildContext>
                 }
                 else if (dist.Runtime == "BepisLoader")
                 {
-                    ctx.DeleteFile(bepInExCoreDir.GetFilePath("BepisLoader.exe"));
-                    foreach (var filePath in ctx.GetFiles(bepInExCoreDir.Combine("BepisLoader.*").FullPath))
-                        ctx.MoveFileToDirectory(filePath, targetDir);
+                    ctx.DeleteFile(sourceDirectory.CombineWithFilePath("BepisLoader.exe"));
+
+                    foreach (var filePath in ctx.GetFiles(sourceDirectory.Combine("BepisLoader.*").FullPath))
+                        ctx.CopyFileToDirectory(filePath, targetDir);
+
+                    var perfCounterPath = sourceDirectory.CombineWithFilePath("System.Diagnostics.PerformanceCounter.dll");
+                    if (ctx.FileExists(perfCounterPath))
+                    {
+                        ctx.CopyFileToDirectory(perfCounterPath, bepInExCoreDir);
+                    }
+
+                    var netCoreCLRSource = ctx.OutputDirectory.Combine("NET.CoreCLR").Combine("net9.0");
+                    if (ctx.DirectoryExists(netCoreCLRSource))
+                    {
+                        foreach (var filePath in ctx.GetFiles(netCoreCLRSource.Combine("*.*").FullPath))
+                        {
+                            ctx.CopyFileToDirectory(filePath, bepInExCoreDir);
+                        }
+                    }
+                    else
+                    {
+                        ctx.Log.Warning($"NET.CoreCLR output directory not found: {netCoreCLRSource}");
+                        ctx.Log.Warning("Make sure to build NET.CoreCLR target first if you want BepInEx support");
+                    }
                 }
             }
         }

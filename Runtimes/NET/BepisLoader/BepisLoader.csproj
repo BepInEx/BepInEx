@@ -2,17 +2,39 @@
 
     <PropertyGroup>
         <Description>BepInEx support library for Resonite</Description>
-        <TargetFrameworks>net9.0-windows</TargetFrameworks>
+        <TargetFrameworks>net9.0</TargetFrameworks>
         <OutputPath>$(BuildDir)/BepisLoader</OutputPath>
-        <OutputType>WinExe</OutputType>
-        <UseWindowsForms>true</UseWindowsForms>
+        <OutputType>Exe</OutputType>
+        <!-- <UseWindowsForms>true</UseWindowsForms> -->
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
         <AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
+        <Version>1.3.1</Version>
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\BepInEx.NET.Common\BepInEx.NET.Common.csproj"/>
-        <ProjectReference Include="..\..\..\BepInEx.Preloader.Core\BepInEx.Preloader.Core.csproj"/>
+        <Compile Remove="..\..\..\Hardware.Info\**" />
+        <EmbeddedResource Remove="..\..\..\Hardware.Info\**" />
+        <None Remove="..\..\..\Hardware.Info\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\..\Hardware.Info\Hardware.Info\Hardware.Info.csproj" />
+    </ItemGroup>
+
+    <!-- BepInEx project references but don't copy to output -->
+    <ItemGroup>
+        <ProjectReference Include="..\BepInEx.NET.Common\BepInEx.NET.Common.csproj">
+            <Private>false</Private>
+            <ExcludeAssets>runtime</ExcludeAssets>
+        </ProjectReference>
+        <ProjectReference Include="..\..\..\BepInEx.Preloader.Core\BepInEx.Preloader.Core.csproj">
+            <Private>false</Private>
+            <ExcludeAssets>runtime</ExcludeAssets>
+        </ProjectReference>
+        <ProjectReference Include="..\..\..\BepInEx.Core\BepInEx.Core.csproj">
+            <Private>false</Private>
+            <ExcludeAssets>runtime</ExcludeAssets>
+        </ProjectReference>
     </ItemGroup>
 
     <Import Project="..\BepInEx.NET.Shared\BepInEx.NET.Shared.projitems" Label="Shared"/>
