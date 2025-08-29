@@ -96,6 +96,7 @@ namespace BepInEx.Bootstrap
 		/// </summary>
 		public static void Initialize(string gameExePath, bool startConsole = true, ICollection<LogEventArgs> preloaderLogEvents = null)
 		{
+			Logger.LogMessage($"Valheim Version: {GetValheimVersion()}");
 			if (_initialized)
 				return;
 
@@ -465,6 +466,169 @@ namespace BepInEx.Bootstrap
 
 			SetIsModdedTrue();
 		}
+
+		/// <summary>
+		/// Uses reflection to safely get the version of Valheim the user is running.
+		/// </summary>
+		/// <returns></returns>
+		private static string GetValheimVersion()
+		{
+			try
+			{
+				var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+				System.Reflection.Assembly gameAsm = null;
+				
+				for (int i = 0; i < assemblies.Length; i++)
+				{
+					var n = assemblies[i].GetName().Name;
+					if (string.Equals(n, "assembly_valheim", StringComparison.Ordinal))
+					{
+						gameAsm = assemblies[i];
+						break;
+					}
+				}
+				
+				Type versionType = null;
+				if (gameAsm != null)
+				{
+					versionType = gameAsm.GetType("Version", false);
+				}
+
+				if (versionType == null)
+				{
+					for (int i = 0; i < assemblies.Length; i++)
+					{
+						var a = assemblies[i];
+						var name = a.GetName().Name;
+						if (name != null && name.StartsWith("assembly_valheim", StringComparison.Ordinal))
+						{
+							var t = a.GetType("Version", false);
+							if (t != null)
+							{
+								versionType = t;
+								break;
+							}
+						}
+					}
+				}
+
+				if (versionType == null)
+					return "Unknown";
+
+				// 2) Preferred: Version.GetVersionString(false)
+				string versionString = null;
+				var getVersionString = versionType.GetMethod(
+					"GetVersionString",
+					System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static,
+					null,
+					new[] { typeof(bool) },
+					null);
+
+				if (getVersionString != null)
+				{
+					var s = getVersionString.Invoke(null, new object[] { false }) as string;
+					if (!string.IsNullOrEmpty(s))
+						versionString = s;
+				}
+
+				// 3) Fallback: Version.CurrentVersion.ToString()
+				if (string.IsNullOrEmpty(versionString))
+				{
+					var prop = versionType.GetProperty("CurrentVersion", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+
+					if (prop != null)
+					{
+						var gv = prop.GetValue(null, null);
+						if (gv != null)
+						{
+							var toString = gv.GetType().GetMethod("ToString", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance, null, Type.EmptyTypes, null);
+
+							if (toString != null)
+							{
+								var s = toString.Invoke(gv, null) as string;
+								if (!string.IsNullOrEmpty(s))
+									versionString = s;
+							}
+						}
+					}
+				}
+
+				// 4) Append network version: public const uint m_networkVersion = 35;
+				string networkSuffix = null;
+				var netField = versionType.GetField("m_networkVersion", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+
+				if (netField == null)
+				{
+					// Case-insensitive fallback names
+					var fields = versionType.GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+					for (int i = 0; i < fields.Length; i++)
+					{
+						var fname = fields[i].Name;
+						if (fname != null)
+						{
+							var lower = fname.ToLowerInvariant();
+							if (lower == "m_networkversion" || lower == "networkversion")
+							{
+								netField = fields[i];
+								break;
+							}
+						}
+					}
+				}
+
+				if (netField != null)
+				{
+					object raw = null;
+					try
+					{
+						raw = netField.GetRawConstantValue();
+					}
+					catch
+					{
+						/* not literal? */
+					}
+
+					if (raw == null)
+					{
+						try
+						{
+							raw = netField.GetValue(null);
+						}
+						catch
+						{
+							/* ignore */
+						}
+					}
+
+					if (raw != null)
+					{
+						uint netVer;
+						try
+						{
+							netVer = raw is uint ? (uint)raw : Convert.ToUInt32(raw);
+						}
+						catch
+						{
+							netVer = 0;
+						}
+
+						if (netVer != 0)
+							networkSuffix = " (network version " + netVer.ToString(System.Globalization.CultureInfo.InvariantCulture) + ")";
+					}
+				}
+
+				if (!string.IsNullOrEmpty(versionString))
+					return networkSuffix != null ? versionString + networkSuffix : versionString;
+			}
+			catch (Exception ex)
+			{
+				Logger.LogDebug("GetValheimVersion() failed: " + ex.Message);
+			}
+
+			return "Unknown";
+		}
+
+
 		private static void SetIsModdedTrue()
 		{
 			Type gameType = AccessTools.TypeByName("Game");

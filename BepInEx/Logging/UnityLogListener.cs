@@ -15,19 +15,68 @@ namespace BepInEx.Logging
 
 		static UnityLogListener()
 		{
-			foreach (MethodInfo methodInfo in typeof(UnityEngine.UnityLogWriter).GetMethods(BindingFlags.Static | BindingFlags.Public))
+			// IMPORTANT: Resolve Unity's real UnityLogWriter type from CoreModule to avoid our stub.
+			Type realUnityLogWriter = null;
+			try
 			{
+				// typeof(UnityEngine.Debug).Assembly == UnityEngine.CoreModule
+				var coreModule = typeof(UnityEngine.Debug).Assembly;
+				realUnityLogWriter = coreModule.GetType("UnityEngine.UnityLogWriter", false);
+			}
+			catch
+			{
+				// ignore, we'll fall back below
+			}
+
+			// Probe the REAL engine type first (Unity 6+ has a managed WriteStringToUnityLog(string))
+			if (realUnityLogWriter != null)
+			{
+				
 				try
 				{
-					methodInfo.Invoke(null, new object[] { "" });
+					var writeMethod = realUnityLogWriter.GetMethod("WriteStringToUnityLog",
+						BindingFlags.Static | BindingFlags.Public,
+						null,
+						new[] { typeof(string) },
+						null);
+
+					if (writeMethod != null)
+					{
+						// Harmless probe: if the icall/managed bridge isn't bound, this will throw.
+						writeMethod.Invoke(null, new object[] { "" });
+
+						WriteStringToUnityLog = (Action<string>)Delegate.CreateDelegate(typeof(Action<string>), writeMethod);
+					}
 				}
 				catch
 				{
-					continue;
+					// fall through to legacy probing below
 				}
+			}
 
-				WriteStringToUnityLog = (Action<string>)Delegate.CreateDelegate(typeof(Action<string>), methodInfo);
-				break;
+			// Legacy fallback: reflect over whatever UnityEngine.UnityLogWriter we see statically
+			// (this will hit our stub on older Unity where it matched; safe no-op on Unity 6 if above succeeded)
+			if (WriteStringToUnityLog == null)
+			{
+				foreach (MethodInfo methodInfo in typeof(UnityEngine.UnityLogWriter).GetMethods(BindingFlags.Static | BindingFlags.Public))
+				{
+					// We only want methods that take a single string, to avoid accidental binds.
+					var ps = methodInfo.GetParameters();
+					if (ps.Length != 1 || ps[0].ParameterType != typeof(string))
+						continue;
+
+					try
+					{
+						methodInfo.Invoke(null, new object[] { "" });
+					}
+					catch
+					{
+						continue;
+					}
+
+					WriteStringToUnityLog = (Action<string>)Delegate.CreateDelegate(typeof(Action<string>), methodInfo);
+					break;
+				}
 			}
 
 			if (WriteStringToUnityLog == null)
@@ -39,7 +88,7 @@ namespace BepInEx.Logging
 		{
 			if (eventArgs.Source is UnityLogSource)
 				return;
-			
+
 			// Special case: don't write console twice since Unity can already do that
 			if (LogConsoleToUnity.Value || eventArgs.Source.SourceName != "Console")
 				WriteStringToUnityLog?.Invoke(eventArgs.ToStringLine());
@@ -58,6 +107,8 @@ namespace BepInEx.Logging
 
 namespace UnityEngine
 {
+	// Keep this stub for older engine versions / compatibility.
+	// We intentionally do NOT try to reflect it first on Unity 6; the listener resolves the real type from CoreModule.
 	internal sealed class UnityLogWriter
 	{
 		[MethodImpl(MethodImplOptions.InternalCall)]
