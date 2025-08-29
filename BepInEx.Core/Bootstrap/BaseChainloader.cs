@@ -191,6 +191,33 @@ public abstract class BaseChainloader<TPlugin>
                 Logger.Listeners.Add(new ConsoleLogListener());
 
             ConsoleManager.SetConsoleTitle(ConsoleTitle);
+
+            var assembly = Assembly.GetExecutingAssembly();
+            var resourceName = "icon.ico";
+
+            using (var stream = assembly.GetManifestResourceStream(resourceName))
+            {
+                if (stream != null && stream.Length > 0)
+                {
+                    try
+                    {
+                        ConsoleManager.SetConsoleIcon(stream);
+                    }
+                    catch (InvalidOperationException ex)
+                    {
+                        Logger.Log(LogLevel.Warning, $"Failed to set console icon: {ex.Message}");
+                    }
+                    catch (ArgumentException ex)
+                    {
+                        Logger.Log(LogLevel.Warning, $"Invalid icon data: {ex.Message}");
+                    }
+                }
+                else
+                {
+                    Logger.Log(LogLevel.Warning, "Could not find icon resource to set console icon");
+                }
+            }
+
         }
 
         if (ConfigDiskLogging.Value)

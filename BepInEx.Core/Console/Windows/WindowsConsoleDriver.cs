@@ -1,7 +1,9 @@
 using System;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Versioning;
 using BepInEx.ConsoleUtil;
 using BepInEx.Core;
 using HarmonyLib;
@@ -140,6 +142,18 @@ internal class WindowsConsoleDriver : IConsoleDriver
     }
 
     public void SetConsoleTitle(string title) => ConsoleWindow.Title = title;
+
+    [SupportedOSPlatform("windows6.1")]
+    public void SetConsoleIcon(Stream iconStream)
+    {
+        if (iconStream == null)
+            throw new ArgumentNullException(nameof(iconStream));
+        
+        if (iconStream.Length == 0)
+            throw new ArgumentException("Icon stream is empty", nameof(iconStream));
+        
+        ConsoleWindow.Icon = new Icon(iconStream);
+    }
 
     private static Stream OpenFileStream(IntPtr handle)
     {

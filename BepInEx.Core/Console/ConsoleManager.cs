@@ -147,6 +147,12 @@ public static class ConsoleManager
 
         Driver.SetConsoleTitle(title);
     }
+    public static void SetConsoleIcon(Stream iconStream)
+    {
+        DriverCheck();
+
+        Driver.SetConsoleIcon(iconStream);
+    }
 
     public static void SetConsoleColor(ConsoleColor color)
     {

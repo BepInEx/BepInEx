@@ -5,7 +5,9 @@
 
 using System;
 using System.ComponentModel;
+using System.Drawing;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using BepInEx;
 using BepInEx.ConsoleUtil;
 using static BepInEx.Core.PlatformUtils;
@@ -17,6 +19,9 @@ internal class ConsoleWindow
     private const int STD_OUTPUT_HANDLE = -11;
     private const uint SC_CLOSE = 0xF060;
     private const uint MF_BYCOMMAND = 0x00000000;
+    private const uint WM_SETICON = 0x0080;
+    private const int ICON_SMALL = 0;
+    private const int ICON_BIG = 1;
 
     private const uint LOAD_LIBRARY_SEARCH_SYSTEM32 = 0x00000800;
     public static IntPtr ConsoleOutHandle;
@@ -44,6 +49,44 @@ internal class ConsoleWindow
 
             if (!SetConsoleTitle(value))
                 throw new InvalidOperationException("Console title invalid");
+        }
+    }
+
+    [SupportedOSPlatform("windows6.1")]
+    public static Icon Icon
+    {
+        set
+        {
+            if (!IsAttached)
+                return;
+
+            if (value == null || value.Handle == IntPtr.Zero)
+                throw new ArgumentNullException(nameof(value), "Icon handle is null or invalid");
+
+            IntPtr consoleWindow = IntPtr.Zero;
+            const int maxRetries = 10;
+            const int retryDelayMs = 50;
+            
+            // Retry getting the console window handle to account for race condition
+            // where the window may not be fully created yet
+            for (int i = 0; i < maxRetries; i++)
+            {
+                consoleWindow = GetConsoleWindow();
+                if (consoleWindow != IntPtr.Zero)
+                    break;
+                    
+                System.Threading.Thread.Sleep(retryDelayMs);
+            }
+            
+            if (consoleWindow != IntPtr.Zero)
+            {
+                SendMessage(consoleWindow, WM_SETICON, ICON_SMALL, value.Handle);
+                SendMessage(consoleWindow, WM_SETICON, ICON_BIG, value.Handle);
+            }
+            else
+            {
+                throw new InvalidOperationException("Console window handle is null after retries");
+            }
         }
     }
 
@@ -166,6 +209,9 @@ internal class ConsoleWindow
 
     [DllImport("kernel32.dll", SetLastError = true)]
     private static extern IntPtr LoadLibraryEx(string lpLibFileName, IntPtr hFile, uint dwFlags);
+
+    [DllImport("user32.dll", CharSet = CharSet.Auto)]
+    private static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, int wParam, IntPtr lParam);
 
 
     [UnmanagedFunctionPointer(CallingConvention.Winapi)]
