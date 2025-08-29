@@ -8,6 +8,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
+using System.Threading;
 using BepInEx;
 using BepInEx.ConsoleUtil;
 using static BepInEx.Core.PlatformUtils;
@@ -65,8 +66,8 @@ internal class ConsoleWindow
 
             IntPtr consoleWindow = IntPtr.Zero;
             const int maxRetries = 10;
-            const int retryDelayMs = 50;
-            
+            var spinWait = new SpinWait();
+
             // Retry getting the console window handle to account for race condition
             // where the window may not be fully created yet
             for (int i = 0; i < maxRetries; i++)
@@ -74,10 +75,10 @@ internal class ConsoleWindow
                 consoleWindow = GetConsoleWindow();
                 if (consoleWindow != IntPtr.Zero)
                     break;
-                    
-                System.Threading.Thread.Sleep(retryDelayMs);
+
+                spinWait.SpinOnce();
             }
-            
+
             if (consoleWindow != IntPtr.Zero)
             {
                 SendMessage(consoleWindow, WM_SETICON, ICON_SMALL, value.Handle);
