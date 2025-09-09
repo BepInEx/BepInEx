@@ -23,8 +23,10 @@ internal class ConsoleWindow
     private const uint WM_SETICON = 0x0080;
     private const int ICON_SMALL = 0;
     private const int ICON_BIG = 1;
-
     private const uint LOAD_LIBRARY_SEARCH_SYSTEM32 = 0x00000800;
+    private const uint EVENT_OBJECT_CREATE = 0x8000;
+    private const uint WINEVENT_OUTOFCONTEXT = 0x0000;
+    private const int OBJID_WINDOW = 0;
     public static IntPtr ConsoleOutHandle;
     public static IntPtr OriginalStdoutHandle;
 
@@ -33,6 +35,15 @@ internal class ConsoleWindow
     private static GetForegroundWindowDelegate getForeground;
     private static GetSystemMenuDelegate getSystemMenu;
     private static DeleteMenuDelegate deleteMenu;
+    private static SetWinEventHookDelegate setWinEventHook;
+    private static UnhookWinEventDelegate unhookWinEvent;
+    private static GetCurrentProcessIdDelegate getCurrentProcessId;
+
+    private static IntPtr winEventHook;
+    private static IntPtr consoleWindowHandle;
+    private static ManualResetEventSlim consoleWindowReady;
+    private static WinEventProc winEventProc;
+
     public static bool IsAttached { get; private set; }
 
     public static string Title
@@ -64,30 +75,37 @@ internal class ConsoleWindow
             if (value == null || value.Handle == IntPtr.Zero)
                 throw new ArgumentNullException(nameof(value), "Icon handle is null or invalid");
 
-            IntPtr consoleWindow = IntPtr.Zero;
-            const int maxRetries = 10;
-            var spinWait = new SpinWait();
+            IntPtr consoleWindow = GetConsoleWindow();
 
-            // Retry getting the console window handle to account for race condition
-            // where the window may not be fully created yet
-            for (int i = 0; i < maxRetries; i++)
+            if (consoleWindow == IntPtr.Zero)
             {
-                consoleWindow = GetConsoleWindow();
-                if (consoleWindow != IntPtr.Zero)
-                    break;
+                using (consoleWindowReady = new ManualResetEventSlim(false))
+                {
+                    winEventProc = WinEventCallback;
+                    var processId = getCurrentProcessId();
+                    winEventHook = setWinEventHook(
+                        EVENT_OBJECT_CREATE, EVENT_OBJECT_CREATE,
+                        IntPtr.Zero, winEventProc,
+                        processId, 0, WINEVENT_OUTOFCONTEXT);
 
-                spinWait.SpinOnce();
+                    if (winEventHook == IntPtr.Zero)
+                        throw new InvalidOperationException("Failed to set WinEvent hook");
+
+                    try
+                    {
+                        consoleWindowReady.Wait();
+                        consoleWindow = consoleWindowHandle;
+                    }
+                    finally
+                    {
+                        unhookWinEvent(winEventHook);
+                        winEventHook = IntPtr.Zero;
+                    }
+                }
             }
 
-            if (consoleWindow != IntPtr.Zero)
-            {
-                SendMessage(consoleWindow, WM_SETICON, ICON_SMALL, value.Handle);
-                SendMessage(consoleWindow, WM_SETICON, ICON_BIG, value.Handle);
-            }
-            else
-            {
-                throw new InvalidOperationException("Console window handle is null after retries");
-            }
+            SendMessage(consoleWindow, WM_SETICON, ICON_SMALL, value.Handle);
+            SendMessage(consoleWindow, WM_SETICON, ICON_BIG, value.Handle);
         }
     }
 
@@ -173,6 +191,25 @@ internal class ConsoleWindow
         getForeground = GetProcAddress(user32Dll, "GetForegroundWindow").AsDelegate<GetForegroundWindowDelegate>();
         getSystemMenu = GetProcAddress(user32Dll, "GetSystemMenu").AsDelegate<GetSystemMenuDelegate>();
         deleteMenu = GetProcAddress(user32Dll, "DeleteMenu").AsDelegate<DeleteMenuDelegate>();
+        setWinEventHook = GetProcAddress(user32Dll, "SetWinEventHook").AsDelegate<SetWinEventHookDelegate>();
+        unhookWinEvent = GetProcAddress(user32Dll, "UnhookWinEvent").AsDelegate<UnhookWinEventDelegate>();
+
+        var kernel32Dll = LoadLibraryEx("kernel32.dll", IntPtr.Zero, LOAD_LIBRARY_SEARCH_SYSTEM32);
+        getCurrentProcessId = GetProcAddress(kernel32Dll, "GetCurrentProcessId").AsDelegate<GetCurrentProcessIdDelegate>();
+    }
+
+    private static void WinEventCallback(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject,
+        int idChild, uint idEventThread, uint dwmsEventTime)
+    {
+        if (eventType == EVENT_OBJECT_CREATE && idObject == OBJID_WINDOW)
+        {
+            var consoleWnd = GetConsoleWindow();
+            if (consoleWnd != IntPtr.Zero && consoleWnd == hwnd)
+            {
+                consoleWindowHandle = hwnd;
+                consoleWindowReady?.Set();
+            }
+        }
     }
 
     [DllImport("kernel32.dll", SetLastError = true)]
@@ -214,6 +251,9 @@ internal class ConsoleWindow
     [DllImport("user32.dll", CharSet = CharSet.Auto)]
     private static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, int wParam, IntPtr lParam);
 
+    [DllImport("kernel32.dll")]
+    private static extern uint GetCurrentProcessId();
+
 
     [UnmanagedFunctionPointer(CallingConvention.Winapi)]
     [return: MarshalAs(UnmanagedType.Bool)]
@@ -227,4 +267,18 @@ internal class ConsoleWindow
 
     [UnmanagedFunctionPointer(CallingConvention.Winapi)]
     private delegate bool DeleteMenuDelegate(IntPtr hMenu, uint uPosition, uint uFlags);
+
+    [UnmanagedFunctionPointer(CallingConvention.Winapi)]
+    private delegate void WinEventProc(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject,
+        int idChild, uint idEventThread, uint dwmsEventTime);
+
+    [UnmanagedFunctionPointer(CallingConvention.Winapi)]
+    private delegate IntPtr SetWinEventHookDelegate(uint eventMin, uint eventMax, IntPtr hmodWinEventProc,
+        WinEventProc lpfnWinEventProc, uint idProcess, uint idThread, uint dwFlags);
+
+    [UnmanagedFunctionPointer(CallingConvention.Winapi)]
+    private delegate bool UnhookWinEventDelegate(IntPtr hWinEventHook);
+
+    [UnmanagedFunctionPointer(CallingConvention.Winapi)]
+    private delegate uint GetCurrentProcessIdDelegate();
 }
