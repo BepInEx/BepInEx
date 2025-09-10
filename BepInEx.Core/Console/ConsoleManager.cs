@@ -28,7 +28,7 @@ public static class ConsoleManager
 
     public static readonly ConfigEntry<bool> ConfigConsoleEnabled = ConfigFile.CoreConfig.Bind(
      "Logging.Console", "Enabled",
-     true,
+     false,
      "Enables showing a console for log output.");
 
     public static readonly ConfigEntry<bool> ConfigPreventClose = ConfigFile.CoreConfig.Bind(
