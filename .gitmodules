@@ -1,3 +1,4 @@
 [submodule "HarmonyX"]
 	path = HarmonyX
-	url = https://github.com/art0007i/HarmonyX/
+	url = https://github.com/ResoniteModding/HarmonyX.git
+	branch = patchy
