@@ -9,7 +9,6 @@
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="All"/>
-        <PackageReference Include="MonoMod.RuntimeDetour" Version="25.2.3"/>
         <PackageReference Include="MonoMod.Utils" Version="25.0.8"/>
     </ItemGroup>
 </Project>
