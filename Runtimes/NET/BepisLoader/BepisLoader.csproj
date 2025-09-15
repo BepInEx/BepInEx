@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Description>BepInEx support library for Resonite</Description>
+        <TargetFrameworks>net9.0</TargetFrameworks>
+        <OutputPath>$(BuildDir)/BepisLoader</OutputPath>
+        <OutputType>Exe</OutputType>
+        <Version>1.3.1</Version>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+        <DebugType>embedded</DebugType>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Remove="..\..\..\Hardware.Info\**" />
+        <EmbeddedResource Remove="..\..\..\Hardware.Info\**" />
+        <None Remove="..\..\..\Hardware.Info\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\..\Hardware.Info\Hardware.Info\Hardware.Info.csproj" />
+    </ItemGroup>
+
+    <Target Name="RemoveExeAfterBuild" AfterTargets="Build">
+        <Delete Condition="Exists('$(TargetDir)$(AssemblyName).exe')" Files="$(TargetDir)$(AssemblyName).exe" />
+        <Delete Condition="Exists('$(TargetDir)$(AssemblyName)')"  Files="$(TargetDir)$(AssemblyName)" />
+    </Target>
+
+    <Target Name="RemoveExeAfterPublish" AfterTargets="Publish">
+        <Delete Condition="Exists('$(PublishDir)$(AssemblyName).exe')" Files="$(PublishDir)$(AssemblyName).exe" />
+        <Delete Condition="Exists('$(PublishDir)$(AssemblyName)')"  Files="$(PublishDir)$(AssemblyName)" />
+    </Target>
+
+    <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
+      <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    </PropertyGroup>
+</Project>

@@ -88,7 +88,7 @@ public abstract class BaseChainloader<TPlugin>
             Location = assemblyLocation
         };
     }
-    static bool ReferencesThisAssembly(AssemblyDefinition ass, HashSet<string>? seen = null)
+    static bool ReferencesThisAssembly(AssemblyDefinition ass, HashSet<string> seen = null)
     {
         seen ??= new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
