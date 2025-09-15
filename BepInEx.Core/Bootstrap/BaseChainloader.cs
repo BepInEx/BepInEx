@@ -192,30 +192,38 @@ public abstract class BaseChainloader<TPlugin>
 
             ConsoleManager.SetConsoleTitle(ConsoleTitle);
 
+            // Load icon from file relative to assembly location
             var assembly = Assembly.GetExecutingAssembly();
-            var resourceName = "icon.ico";
+            var assemblyLocation = assembly.Location;
+            var assemblyDirectory = Path.GetDirectoryName(assemblyLocation);
+            var iconPath = Path.Combine(assemblyDirectory, "..", "icon.ico");
+            iconPath = Path.GetFullPath(iconPath);
 
-            using (var stream = assembly.GetManifestResourceStream(resourceName))
+            if (File.Exists(iconPath))
             {
-                if (stream != null && stream.Length > 0)
+                try
                 {
-                    try
+                    using (var stream = File.OpenRead(iconPath))
                     {
                         ConsoleManager.SetConsoleIcon(stream);
                     }
-                    catch (InvalidOperationException ex)
-                    {
-                        Logger.Log(LogLevel.Warning, $"Failed to set console icon: {ex.Message}");
-                    }
-                    catch (ArgumentException ex)
-                    {
-                        Logger.Log(LogLevel.Warning, $"Invalid icon data: {ex.Message}");
-                    }
                 }
-                else
+                catch (InvalidOperationException ex)
                 {
-                    Logger.Log(LogLevel.Warning, "Could not find icon resource to set console icon");
+                    Logger.Log(LogLevel.Warning, $"Failed to set console icon: {ex.Message}");
                 }
+                catch (ArgumentException ex)
+                {
+                    Logger.Log(LogLevel.Warning, $"Invalid icon data: {ex.Message}");
+                }
+                catch (IOException ex)
+                {
+                    Logger.Log(LogLevel.Warning, $"Failed to read icon file: {ex.Message}");
+                }
+            }
+            else
+            {
+                Logger.Log(LogLevel.Warning, $"Icon file not found at: {iconPath}");
             }
 
         }

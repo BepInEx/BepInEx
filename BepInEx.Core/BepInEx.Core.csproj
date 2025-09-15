@@ -19,11 +19,6 @@
     <ItemGroup>
         <Compile Remove="Contract\IPlugin.cs"/>
     </ItemGroup>
-    <ItemGroup>
-        <EmbeddedResource Include="..\icon.ico" Condition="Exists('..\icon.ico')">
-            <LogicalName>icon.ico</LogicalName>
-        </EmbeddedResource>
-    </ItemGroup>
 
     <!-- CopyLocalLockFileAssemblies causes to also output shared assemblies: https://github.com/NuGet/Home/issues/4837#issuecomment-354536302 -->
     <!-- Since all core assemblies usually follow naming of System.*, we just delete them for now -->
