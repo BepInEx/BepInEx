@@ -1,0 +1,41 @@
+# This file is used by the Thunderstore CLI to build and publish your mod to Thunderstore. https://github.com/thunderstore-io/thunderstore-cli
+
+[config]
+schemaVersion = "0.0.1"
+
+[package]
+namespace = "ResoniteModding"
+name = "BepisLoader"
+versionNumber = "1.3.1"
+description = "A mod loader which allows using BepInEx with Resonite"
+websiteUrl = "https://github.com/ResoniteModding/BepInEx/tree/master/Runtimes/NET/BepisLoader"
+containsNsfwContent = false
+
+[package.dependencies]
+ResoniteModding-BepInExResoniteShim = "0.8.2"
+
+[build]
+icon = "./icon.png"
+readme = "./README.md"
+outdir = "../../../bin/dist/thunderstore-package"
+
+# Copy the compiled DLL to the plugins folder in the mod package
+[[build.copy]]
+source = "../../../bin/dist/BepisLoader-win-x64"
+target = "/BepInExPack/"
+
+# Uncomment the following lines to include CHANGELOG file in your mod package. https://wiki.thunderstore.io/mods/updating-a-package#changelog
+# [[build.copy]]
+# source = "./CHANGELOG.md"
+# target = "/"
+
+[[build.copy]]
+source = "./LICENSE"
+target = "/"
+
+[publish]
+repository = "https://thunderstore.io"
+communities = ["resonite"]
+
+[publish.categories]
+resonite = ["libraries"]

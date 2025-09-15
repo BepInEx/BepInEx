@@ -1,0 +1,41 @@
+name: Publish to Thunderstore
+
+on:
+  workflow_dispatch:
+
+jobs:
+    release:
+        runs-on: ubuntu-latest
+        steps:
+            -   uses: actions/checkout@v3
+                with:
+                    submodules: 'true'
+                    fetch-depth: 0 # Need to fetch all for proper history
+            -   name: Collect build info
+                id: info
+                uses: actions/github-script@v6
+                with:
+                    script: |
+                        let buildType = "Release";
+                        core.setOutput("build_type", buildType);
+                        let shortHash = "";
+                        await exec.exec("git", ["rev-parse", "--short", "HEAD"], {
+                            listeners: {
+                                stdout: d => shortHash += d.toString().trim(),
+                            }
+                        });
+                        core.setOutput("sha_short", shortHash);
+                        core.setOutput("build_id", context.runNumber);
+            -   uses: actions/setup-dotnet@v4
+                with:
+                    dotnet-version: "9.0.x"
+            -   name: Install dotnet Tools
+                run: dotnet tool restore
+            -   name: Build with Cake
+                run: ./build.sh --target Publish --build-type ${{ steps.info.outputs.build_type }} --build-id ${{ steps.info.outputs.build_id }} --last-build-commit \"${{ steps.setSHAs.outputs.base }}\"
+            -   name: Publish to Thunderstore
+                run: |
+                    ZIP_FILE=$(ls ./dist/thunderstore-package/*.zip | head -1)
+                    dotnet tcli publish --file "$ZIP_FILE"
+                env:
+                    TCLI_AUTH_TOKEN: ${{ secrets.TCLI_AUTH_TOKEN }}

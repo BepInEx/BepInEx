@@ -50,7 +50,7 @@ namespace BepInEx.NET.Shared
                     {
                         assembly = Assembly.LoadFrom(path);
                     }
-                    catch (Exception ex)
+                    catch (Exception)
                     {
                         continue;
                     }

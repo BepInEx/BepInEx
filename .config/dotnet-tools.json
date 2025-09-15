@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "isRoot": true,
+  "tools": {
+    "tcli": {
+      "version": "0.2.4",
+      "commands": [
+        "tcli"
+      ],
+      "rollForward": false
+    }
+  }
+}
