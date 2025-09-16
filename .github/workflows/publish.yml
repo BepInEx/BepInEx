@@ -35,7 +35,7 @@ jobs:
                 run: ./build.sh --target Publish --build-type ${{ steps.info.outputs.build_type }} --build-id ${{ steps.info.outputs.build_id }} --last-build-commit \"${{ steps.setSHAs.outputs.base }}\"
             -   name: Publish to Thunderstore
                 run: |
-                    ZIP_FILE=$(ls ./dist/thunderstore-package/*.zip | head -1)
+                    ZIP_FILE=$(ls ./bin/dist/thunderstore-package/*.zip | head -1)
                     dotnet tcli publish --file "$ZIP_FILE" --config-path Runtimes/NET/BepisLoader/thunderstore.toml
                 env:
                     TCLI_AUTH_TOKEN: ${{ secrets.TCLI_AUTH_TOKEN }}
