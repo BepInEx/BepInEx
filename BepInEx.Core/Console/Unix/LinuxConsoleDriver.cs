@@ -110,4 +110,8 @@ internal class LinuxConsoleDriver : IConsoleDriver
         else
             ConsoleOut.Write($"\u001B]2;{title.Replace("\\", "\\\\")}\u0007");
     }
+    public void SetConsoleIcon(Stream iconStream)
+    {
+        return; // Not supported on Unix
+    }
 }
