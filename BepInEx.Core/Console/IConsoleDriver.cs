@@ -23,4 +23,5 @@ internal interface IConsoleDriver
     void SetConsoleColor(ConsoleColor color);
 
     void SetConsoleTitle(string title);
+    void SetConsoleIcon(Stream iconStream);
 }

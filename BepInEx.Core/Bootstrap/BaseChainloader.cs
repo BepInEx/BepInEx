@@ -191,6 +191,41 @@ public abstract class BaseChainloader<TPlugin>
                 Logger.Listeners.Add(new ConsoleLogListener());
 
             ConsoleManager.SetConsoleTitle(ConsoleTitle);
+
+            // Load icon from file relative to assembly location
+            var assembly = Assembly.GetExecutingAssembly();
+            var assemblyLocation = assembly.Location;
+            var assemblyDirectory = Path.GetDirectoryName(assemblyLocation);
+            var iconPath = Path.Combine(assemblyDirectory, "..", "icon.ico");
+            iconPath = Path.GetFullPath(iconPath);
+
+            if (File.Exists(iconPath))
+            {
+                try
+                {
+                    using (var stream = File.OpenRead(iconPath))
+                    {
+                        ConsoleManager.SetConsoleIcon(stream);
+                    }
+                }
+                catch (InvalidOperationException ex)
+                {
+                    Logger.Log(LogLevel.Warning, $"Failed to set console icon: {ex.Message}");
+                }
+                catch (ArgumentException ex)
+                {
+                    Logger.Log(LogLevel.Warning, $"Invalid icon data: {ex.Message}");
+                }
+                catch (IOException ex)
+                {
+                    Logger.Log(LogLevel.Warning, $"Failed to read icon file: {ex.Message}");
+                }
+            }
+            else
+            {
+                Logger.Log(LogLevel.Warning, $"Icon file not found at: {iconPath}");
+            }
+
         }
 
         if (ConfigDiskLogging.Value)

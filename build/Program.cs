@@ -499,6 +499,17 @@ public sealed class MakeDistTask : FrostingTask<BuildContext>
                         ctx.Log.Warning($"BepisLoader.runtimeconfig.json not found at: {runtimeConfigPath}");
                     }
 
+                    // Copy icon.ico from BepisLoader project directory to BepInEx folder
+                    var iconPath = ctx.RootDirectory.CombineWithFilePath("Runtimes/NET/BepisLoader/icon.ico");
+                    if (ctx.FileExists(iconPath))
+                    {
+                        ctx.CopyFileToDirectory(iconPath, bepInExDir);
+                        ctx.Log.Information("Copied icon.ico to BepInEx folder");
+                    }
+                    else
+                    {
+                        ctx.Log.Warning("icon.ico not found at: " + iconPath);
+                    }
                 }
             }
         }
