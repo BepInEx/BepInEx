@@ -36,6 +36,6 @@ jobs:
             -   name: Publish to Thunderstore
                 run: |
                     ZIP_FILE=$(ls ./dist/thunderstore-package/*.zip | head -1)
-                    dotnet tcli publish --file "$ZIP_FILE"
+                    dotnet tcli publish --file "$ZIP_FILE" --config-path Runtimes/NET/BepisLoader/thunderstore.toml
                 env:
                     TCLI_AUTH_TOKEN: ${{ secrets.TCLI_AUTH_TOKEN }}
