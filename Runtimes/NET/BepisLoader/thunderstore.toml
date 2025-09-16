@@ -7,7 +7,7 @@ schemaVersion = "0.0.1"
 namespace = "ResoniteModding"
 name = "BepisLoader"
 description = "A mod loader which allows using BepInEx with Resonite"
-websiteUrl = "https://github.com/ResoniteModding/BepInEx/tree/master/Runtimes/NET/BepisLoader"
+websiteUrl = "https://github.com/ResoniteModding/BepisLoader/tree/master/Runtimes/NET/BepisLoader"
 containsNsfwContent = false
 
 [package.dependencies]
