@@ -56,6 +56,9 @@ public class PluginInfo : ICacheable
         bw.Write(Metadata.Name);
         bw.Write(Metadata.Version.ToString());
 
+        bw.Write(Metadata.Author ?? string.Empty);
+        bw.Write(Metadata.Link ?? string.Empty);
+
         var processList = Processes.ToList();
         bw.Write(processList.Count);
         foreach (var bepInProcess in processList)
@@ -79,7 +82,12 @@ public class PluginInfo : ICacheable
         TypeName = br.ReadString();
         Location = br.ReadString();
 
-        Metadata = new BepInPlugin(br.ReadString(), br.ReadString(), br.ReadString());
+        Metadata = new BepInPlugin(
+            br.ReadString(),
+            br.ReadString(),
+            br.ReadString(),
+            br.ReadString(),
+            br.ReadString());
 
         var processListCount = br.ReadInt32();
         var processList = new List<BepInProcess>(processListCount);

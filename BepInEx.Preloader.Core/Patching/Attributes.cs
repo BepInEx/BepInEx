@@ -14,11 +14,15 @@ public class PatcherPluginInfoAttribute : Attribute
     /// <param name="GUID">The unique identifier of the plugin. Should not change between plugin versions.</param>
     /// <param name="Name">The user friendly name of the plugin. Is able to be changed between versions.</param>
     /// <param name="Version">The specific version of the plugin.</param>
-    public PatcherPluginInfoAttribute(string GUID, string Name, string Version)
+    /// <param name="Author">The author of the plugin.</param>
+    /// <param name="Link">The link to the plugin's website or repository.</param>
+    public PatcherPluginInfoAttribute(string GUID, string Name, string Version, string Author = null, string Link = null)
     {
         this.GUID = GUID;
         this.Name = Name;
         this.Version = TryParseLongVersion(Version);
+        this.Author = Author;
+        this.Link = Link;
     }
 
     /// <summary>
@@ -37,6 +41,16 @@ public class PatcherPluginInfoAttribute : Attribute
     ///     The specific version of the plugin.
     /// </summary>
     public Version Version { get; protected set; }
+
+    /// <summary>
+    ///     The author of the plugin.
+    /// </summary>
+    public string Author { get; protected set; }
+
+    /// <summary>
+    ///     The link to the plugin's website or repository.
+    /// </summary>
+    public string Link { get; protected set; }
 
     private static Version TryParseLongVersion(string version)
     {
@@ -63,9 +77,12 @@ public class PatcherPluginInfoAttribute : Attribute
         if (attr == null)
             return null;
 
-        return new PatcherPluginInfoAttribute((string) attr.ConstructorArguments[0].Value,
-                                              (string) attr.ConstructorArguments[1].Value,
-                                              (string) attr.ConstructorArguments[2].Value);
+        return new PatcherPluginInfoAttribute(
+            (string) attr.ConstructorArguments[0].Value,
+            (string) attr.ConstructorArguments[1].Value,
+            (string) attr.ConstructorArguments[2].Value,
+            attr.ConstructorArguments.Count > 3 ? (string) attr.ConstructorArguments[3].Value : null,
+            attr.ConstructorArguments.Count > 4 ? (string) attr.ConstructorArguments[4].Value : null);
     }
 
     internal static PatcherPluginInfoAttribute FromType(Type type)
