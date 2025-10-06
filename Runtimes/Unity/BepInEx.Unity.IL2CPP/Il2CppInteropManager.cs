@@ -112,8 +112,9 @@ internal static partial class Il2CppInteropManager
          .ToString());
 
     private static readonly ManualLogSource Logger = BepInEx.Logging.Logger.CreateLogSource("InteropManager");
-
-    private static string il2cppInteropBasePath;
+    
+    private static string _il2cppInteropAssemblyPath;
+    private static string _il2cppBasePath;
 
     private static bool initialized;
 
@@ -123,21 +124,36 @@ internal static partial class Il2CppInteropManager
 
     private static string HashPath => Path.Combine(IL2CPPInteropAssemblyPath, "assembly-hash.txt");
 
-    private static string IL2CPPBasePath {
-        get {
-            if (il2cppInteropBasePath != null)
-                return il2cppInteropBasePath;
-            var path = Utility.GetCommandLineArgValue("--unhollowed-path") ?? IL2CPPInteropAssembliesPath.Value;
-            il2cppInteropBasePath = path.Replace("{BepInEx}", Paths.BepInExRootPath)
-                                     .Replace("{ProcessName}", Paths.ProcessName);
-            return il2cppInteropBasePath;
+    private static string IL2CPPBasePath
+    {
+        get
+        {
+            if (_il2cppBasePath != null)
+                return _il2cppBasePath;
+            _il2cppBasePath = Path.GetDirectoryName(IL2CPPInteropAssemblyPath);
+            return _il2cppBasePath;
         }
     }
 
     private static string UnityBaseLibsDirectory => Path.Combine(IL2CPPBasePath, "unity-libs");
 
-    internal static string IL2CPPInteropAssemblyPath => Path.Combine(IL2CPPBasePath, "interop");
-
+    internal static string IL2CPPInteropAssemblyPath
+    {
+        get
+        {
+            if (_il2cppInteropAssemblyPath != null)
+                return _il2cppInteropAssemblyPath;
+            var path = Utility.GetCommandLineArgValue("--unhollowed-path") ?? IL2CPPInteropAssembliesPath.Value;
+            _il2cppInteropAssemblyPath = path.Replace("{BepInEx}", Paths.BepInExRootPath)
+                                              .Replace("{ProcessName}", Paths.ProcessName);
+            if (IL2CPPInteropAssembliesPath.Value.Trim() == "{BepInEx}")
+            {
+                _il2cppInteropAssemblyPath = Path.Combine(_il2cppInteropAssemblyPath, "interop");
+            }
+            return _il2cppInteropAssemblyPath;
+        }
+    }
+    
     private static string RenameMapPath => Path.Combine(Paths.BepInExRootPath, "DeobfuscationMap.csv.gz");
 
     private static ILoggerFactory LoggerFactory { get; } = MSLoggerFactory.Create(b =>
