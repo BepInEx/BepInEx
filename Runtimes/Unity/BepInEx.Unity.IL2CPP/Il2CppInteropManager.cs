@@ -113,8 +113,8 @@ internal static partial class Il2CppInteropManager
 
     private static readonly ManualLogSource Logger = BepInEx.Logging.Logger.CreateLogSource("InteropManager");
     
-    private static string _il2cppInteropAssemblyPath;
     private static string _il2cppBasePath;
+    private static string _il2cppInteropAssemblyPath;
 
     private static bool initialized;
 
@@ -130,12 +130,14 @@ internal static partial class Il2CppInteropManager
         {
             if (_il2cppBasePath != null)
                 return _il2cppBasePath;
-            _il2cppBasePath = Path.GetDirectoryName(IL2CPPInteropAssemblyPath);
+
+            var path = Utility.GetCommandLineArgValue("--unhollowed-path") ?? IL2CPPInteropAssembliesPath.Value;
+            _il2cppBasePath = path.Replace("{BepInEx}", Paths.BepInExRootPath)
+                                  .Replace("{ProcessName}", Paths.ProcessName);
+    
             return _il2cppBasePath;
         }
     }
-
-    private static string UnityBaseLibsDirectory => Path.Combine(IL2CPPBasePath, "unity-libs");
 
     internal static string IL2CPPInteropAssemblyPath
     {
@@ -143,16 +145,17 @@ internal static partial class Il2CppInteropManager
         {
             if (_il2cppInteropAssemblyPath != null)
                 return _il2cppInteropAssemblyPath;
-            var path = Utility.GetCommandLineArgValue("--unhollowed-path") ?? IL2CPPInteropAssembliesPath.Value;
-            _il2cppInteropAssemblyPath = path.Replace("{BepInEx}", Paths.BepInExRootPath)
-                                              .Replace("{ProcessName}", Paths.ProcessName);
+    
+            _il2cppInteropAssemblyPath = IL2CPPBasePath;
+    
             if (IL2CPPInteropAssembliesPath.Value.Trim() == "{BepInEx}")
-            {
                 _il2cppInteropAssemblyPath = Path.Combine(_il2cppInteropAssemblyPath, "interop");
-            }
+    
             return _il2cppInteropAssemblyPath;
         }
     }
+
+    private static string UnityBaseLibsDirectory => Path.Combine(IL2CPPBasePath, "unity-libs");
     
     private static string RenameMapPath => Path.Combine(Paths.BepInExRootPath, "DeobfuscationMap.csv.gz");
 
