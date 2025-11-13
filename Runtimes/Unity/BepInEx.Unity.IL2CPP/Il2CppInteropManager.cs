@@ -400,12 +400,13 @@ internal static partial class Il2CppInteropManager
         Parallel.ForEach(files, file =>
         {
             if (!file.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)) return;
-            if (file.Equals("netstandard.dll", StringComparison.OrdinalIgnoreCase)) return;
-            if (file.Equals("Il2Cppnetstandard.dll", StringComparison.OrdinalIgnoreCase)) return;
+            var name = Path.GetFileNameWithoutExtension(file);
+            if (name.Equals("netstandard", StringComparison.OrdinalIgnoreCase)) return;
+            if (name.Equals("Il2Cppnetstandard", StringComparison.OrdinalIgnoreCase)) return;
             try
             {
                 // Do not use LoadFrom since it overrides preloader patches
-                Assembly.Load(AssemblyDefinition.ReadAssembly(file).FullName);
+                Assembly.Load(name);
                 Interlocked.Increment(ref loaded);
             }
             catch (Exception e)
