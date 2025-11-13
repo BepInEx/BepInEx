@@ -404,7 +404,8 @@ internal static partial class Il2CppInteropManager
             if (file.Equals("Il2Cppnetstandard.dll", StringComparison.OrdinalIgnoreCase)) return;
             try
             {
-                Assembly.LoadFrom(file);
+                // Do not use LoadFrom since it overrides preloader patches
+                Assembly.Load(AssemblyDefinition.ReadAssembly(file).FullName);
                 Interlocked.Increment(ref loaded);
             }
             catch (Exception e)
