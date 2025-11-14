@@ -61,6 +61,7 @@ internal static partial class Il2CppInteropManager
          .AppendLine("URL to the ZIP of managed Unity base libraries.")
          .AppendLine("The base libraries are used by Il2CppInterop to generate interop assemblies.")
          .AppendLine("The URL can include {VERSION} template which will be replaced with the game's Unity engine version.")
+         .AppendLine("If a zip file with the specified name already exists in unity-libs, it will be used instead of downloading a new copy.")
          .ToString());
 
     private static readonly ConfigEntry<string> ConfigUnhollowerDeobfuscationRegex = ConfigFile.CoreConfig.Bind(
@@ -293,20 +294,21 @@ internal static partial class Il2CppInteropManager
 
         var baseFolder = Directory.CreateDirectory(UnityBaseLibsDirectory);
         baseFolder.EnumerateFiles("*.dll").Do(a=>a.Delete());
-        var target = baseFolder.GetFiles(file).FirstOrDefault();
-        if (target != null) {
-            Logger.LogMessage($"Reading unity base libraries from file {source}");
-            using var fStream = target.OpenRead();
-            using var zipArchive = new ZipArchive(fStream, ZipArchiveMode.Read);
-            zipArchive.ExtractToDirectory(UnityBaseLibsDirectory);
-        } else {
-            Logger.LogMessage($"Downloading unity base libraries {source}");
+
+        var zipFilePath = Path.Combine(baseFolder.FullName, file);
+        if (!File.Exists(zipFilePath))
+        {
+            Logger.LogMessage($"Downloading unity base libraries from {source}");
             using var httpClient = new HttpClient();
             using var zipStream = httpClient.GetStreamAsync(source).GetAwaiter().GetResult();
-            Logger.LogMessage("Extracting downloaded unity base libraries");
-            using var zipArchive = new ZipArchive(zipStream, ZipArchiveMode.Read);
-            zipArchive.ExtractToDirectory(UnityBaseLibsDirectory);
+            using var writeStream = new FileStream(zipFilePath, FileMode.Create, FileAccess.Write, FileShare.None);
+            zipStream.CopyTo(writeStream);
         }
+
+        Logger.LogMessage($"Extracting unity base libraries from {zipFilePath}");
+        using var readStream = File.OpenRead(zipFilePath);
+        using var zipArchive = new ZipArchive(readStream, ZipArchiveMode.Read);
+        zipArchive.ExtractToDirectory(UnityBaseLibsDirectory);
     }
 
     private static List<AsmResolver.DotNet.AssemblyDefinition> RunCpp2Il()
