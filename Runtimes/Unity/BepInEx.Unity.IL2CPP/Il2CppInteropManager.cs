@@ -58,9 +58,10 @@ internal static partial class Il2CppInteropManager
      "IL2CPP", "UnityBaseLibrariesSource",
      "https://unity.bepinex.dev/libraries/{VERSION}.zip",
      new StringBuilder()
-         .AppendLine("URL to the ZIP of managed Unity base libraries.")
-         .AppendLine("The base libraries are used by Il2CppInterop to generate interop assemblies.")
+         .AppendLine("URL to a ZIP file with managed Unity base libraries. They are used by Il2CppInterop to generate interop assemblies.")
          .AppendLine("The URL can include {VERSION} template which will be replaced with the game's Unity engine version.")
+         .AppendLine("If a .zip file with the specified name already exists in unity-libs, it will be used instead of downloading a new copy.")
+         .AppendLine("If you want to ensure BepInEx doesn't try to connect to the internet set this to only contain the .zip file name.")
          .ToString());
 
     private static readonly ConfigEntry<string> ConfigUnhollowerDeobfuscationRegex = ConfigFile.CoreConfig.Bind(
@@ -288,25 +289,25 @@ internal static partial class Il2CppInteropManager
         var source = UnityBaseLibrariesSource.Value.Replace("{VERSION}", version);
         if (string.IsNullOrEmpty(source)) return;
 
-        var uri = new Uri(source);
-        string file = Path.GetFileName(uri.AbsolutePath);
-
         var baseFolder = Directory.CreateDirectory(UnityBaseLibsDirectory);
         baseFolder.EnumerateFiles("*.dll").Do(a=>a.Delete());
-        var target = baseFolder.GetFiles(file).FirstOrDefault();
-        if (target != null) {
-            Logger.LogMessage($"Reading unity base libraries from file {source}");
-            using var fStream = target.OpenRead();
-            using var zipArchive = new ZipArchive(fStream, ZipArchiveMode.Read);
-            zipArchive.ExtractToDirectory(UnityBaseLibsDirectory);
-        } else {
-            Logger.LogMessage($"Downloading unity base libraries {source}");
+
+        var zipFilePath = Path.Combine(baseFolder.FullName, Path.GetFileName(source));
+        if (!File.Exists(zipFilePath))
+        {
+            // Check if URI is valid before attempting download
+            var uri = new Uri(source);
+            Logger.LogMessage($"Downloading unity base libraries from {source}");
             using var httpClient = new HttpClient();
-            using var zipStream = httpClient.GetStreamAsync(source).GetAwaiter().GetResult();
-            Logger.LogMessage("Extracting downloaded unity base libraries");
-            using var zipArchive = new ZipArchive(zipStream, ZipArchiveMode.Read);
-            zipArchive.ExtractToDirectory(UnityBaseLibsDirectory);
+            using var zipStream = httpClient.GetStreamAsync(uri).GetAwaiter().GetResult();
+            using var writeStream = new FileStream(zipFilePath, FileMode.Create, FileAccess.Write, FileShare.None);
+            zipStream.CopyTo(writeStream);
         }
+
+        Logger.LogMessage($"Extracting unity base libraries from {zipFilePath}");
+        using var readStream = File.OpenRead(zipFilePath);
+        using var zipArchive = new ZipArchive(readStream, ZipArchiveMode.Read);
+        zipArchive.ExtractToDirectory(UnityBaseLibsDirectory);
     }
 
     private static List<AsmResolver.DotNet.AssemblyDefinition> RunCpp2Il()
