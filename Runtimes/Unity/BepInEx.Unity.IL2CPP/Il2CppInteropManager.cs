@@ -58,10 +58,10 @@ internal static partial class Il2CppInteropManager
      "IL2CPP", "UnityBaseLibrariesSource",
      "https://unity.bepinex.dev/libraries/{VERSION}.zip",
      new StringBuilder()
-         .AppendLine("URL to the ZIP of managed Unity base libraries.")
-         .AppendLine("The base libraries are used by Il2CppInterop to generate interop assemblies.")
+         .AppendLine("URL to a ZIP file with managed Unity base libraries. They are used by Il2CppInterop to generate interop assemblies.")
          .AppendLine("The URL can include {VERSION} template which will be replaced with the game's Unity engine version.")
-         .AppendLine("If a zip file with the specified name already exists in unity-libs, it will be used instead of downloading a new copy.")
+         .AppendLine("If a .zip file with the specified name already exists in unity-libs, it will be used instead of downloading a new copy.")
+         .AppendLine("If you want to ensure BepInEx doesn't try to connect to the internet set this to only contain the .zip file name.")
          .ToString());
 
     private static readonly ConfigEntry<string> ConfigUnhollowerDeobfuscationRegex = ConfigFile.CoreConfig.Bind(
@@ -289,18 +289,17 @@ internal static partial class Il2CppInteropManager
         var source = UnityBaseLibrariesSource.Value.Replace("{VERSION}", version);
         if (string.IsNullOrEmpty(source)) return;
 
-        var uri = new Uri(source);
-        string file = Path.GetFileName(uri.AbsolutePath);
-
         var baseFolder = Directory.CreateDirectory(UnityBaseLibsDirectory);
         baseFolder.EnumerateFiles("*.dll").Do(a=>a.Delete());
 
-        var zipFilePath = Path.Combine(baseFolder.FullName, file);
+        var zipFilePath = Path.Combine(baseFolder.FullName, Path.GetFileName(source));
         if (!File.Exists(zipFilePath))
         {
+            // Check if URI is valid before attempting download
+            var uri = new Uri(source);
             Logger.LogMessage($"Downloading unity base libraries from {source}");
             using var httpClient = new HttpClient();
-            using var zipStream = httpClient.GetStreamAsync(source).GetAwaiter().GetResult();
+            using var zipStream = httpClient.GetStreamAsync(uri).GetAwaiter().GetResult();
             using var writeStream = new FileStream(zipFilePath, FileMode.Create, FileAccess.Write, FileShare.None);
             zipStream.CopyTo(writeStream);
         }
