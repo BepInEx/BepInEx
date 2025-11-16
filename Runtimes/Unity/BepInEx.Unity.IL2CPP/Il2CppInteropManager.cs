@@ -60,7 +60,7 @@ internal static partial class Il2CppInteropManager
      new StringBuilder()
          .AppendLine("URL to a ZIP file with managed Unity base libraries. They are used by Il2CppInterop to generate interop assemblies.")
          .AppendLine("The URL can include {VERSION} template which will be replaced with the game's Unity engine version.")
-         .AppendLine("If a .zip file with the specified name already exists in unity-libs, it will be used instead of downloading a new copy.")
+         .AppendLine("If a .zip file with the same filename as the URL (after template replacement) already exists in unity-libs, it will be used instead of downloading a new copy.")
          .AppendLine("If you want to ensure BepInEx doesn't try to connect to the internet set this to only contain the .zip file name.")
          .ToString());
 
