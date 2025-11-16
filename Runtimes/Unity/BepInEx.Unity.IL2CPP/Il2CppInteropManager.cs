@@ -312,7 +312,7 @@ internal static partial class Il2CppInteropManager
             catch
             {
                 // Delete the incomplete file to avoid issues on next startup
-                File.Delete(zipFilePath);
+                try { File.Delete(zipFilePath); } catch { }
                 throw;
             }
         }
