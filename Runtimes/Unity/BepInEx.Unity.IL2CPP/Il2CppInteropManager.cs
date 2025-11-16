@@ -292,21 +292,29 @@ internal static partial class Il2CppInteropManager
         var baseFolder = Directory.CreateDirectory(UnityBaseLibsDirectory);
         baseFolder.EnumerateFiles("*.dll").Do(a=>a.Delete());
 
-        string fileName;
-        if (Uri.TryCreate(source, UriKind.Absolute, out var uri) && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
-            fileName = Path.GetFileName(uri.AbsolutePath);
-        else
-            fileName = Path.GetFileName(source);
+        var uriIsValid = Uri.TryCreate(source, UriKind.Absolute, out var uri) && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+        var fileName = Path.GetFileName(uriIsValid ? uri.AbsolutePath : source);
         var zipFilePath = Path.Combine(baseFolder.FullName, fileName);
         if (!File.Exists(zipFilePath))
         {
             // Check if URI is valid before attempting download
-            var uri = new Uri(source);
+            if(!uriIsValid)
+                throw new ArgumentException($"Unity base libraries source \"{source}\" is not a valid URL. Please provide a valid HTTP or HTTPS URL in the configuration. Filenames are not supported for downloads.");
+
             Logger.LogMessage($"Downloading unity base libraries from {source}");
             using var httpClient = new HttpClient();
             using var zipStream = httpClient.GetStreamAsync(uri).GetAwaiter().GetResult();
-            using var writeStream = new FileStream(zipFilePath, FileMode.Create, FileAccess.Write, FileShare.None);
-            zipStream.CopyTo(writeStream);
+            try
+            {
+                using var writeStream = new FileStream(zipFilePath, FileMode.Create, FileAccess.Write, FileShare.None);
+                zipStream.CopyTo(writeStream);
+            }
+            catch
+            {
+                // Delete the incomplete file to avoid issues on next startup
+                File.Delete(zipFilePath);
+                throw;
+            }
         }
 
         Logger.LogMessage($"Extracting unity base libraries from {zipFilePath}");
