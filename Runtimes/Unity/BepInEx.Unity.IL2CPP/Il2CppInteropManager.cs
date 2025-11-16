@@ -292,7 +292,12 @@ internal static partial class Il2CppInteropManager
         var baseFolder = Directory.CreateDirectory(UnityBaseLibsDirectory);
         baseFolder.EnumerateFiles("*.dll").Do(a=>a.Delete());
 
-        var zipFilePath = Path.Combine(baseFolder.FullName, Path.GetFileName(source));
+        string fileName;
+        if (Uri.TryCreate(source, UriKind.Absolute, out var uri) && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
+            fileName = Path.GetFileName(uri.AbsolutePath);
+        else
+            fileName = Path.GetFileName(source);
+        var zipFilePath = Path.Combine(baseFolder.FullName, fileName);
         if (!File.Exists(zipFilePath))
         {
             // Check if URI is valid before attempting download
