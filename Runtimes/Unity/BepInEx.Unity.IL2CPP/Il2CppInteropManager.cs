@@ -298,7 +298,7 @@ internal static partial class Il2CppInteropManager
         if (!File.Exists(zipFilePath))
         {
             // Check if URI is valid before attempting download
-            if(!uriIsValid)
+            if (!uriIsValid)
                 throw new ArgumentException($"Unity base libraries source \"{source}\" is not a valid URL. Please provide a valid HTTP or HTTPS URL in the configuration. Filenames are not supported for downloads.");
 
             Logger.LogMessage($"Downloading unity base libraries from {source}");
