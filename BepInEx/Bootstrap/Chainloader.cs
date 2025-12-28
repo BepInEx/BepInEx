@@ -48,7 +48,11 @@ namespace BepInEx.Bootstrap
 				var prop = AccessTools.PropertyGetter(typeof(Application), "isBatchMode");
 				if (prop != null)
 					return (bool) prop.Invoke(null, null);
-				return SystemInfo.graphicsDeviceID == 0;
+				try {
+					return SystemInfo.graphicsDeviceID == 0;
+				} catch(Exception e) {
+					return false; //Unity 2022.3.62f3 for example doesn't have such method
+				}
 			}
 		}
 
