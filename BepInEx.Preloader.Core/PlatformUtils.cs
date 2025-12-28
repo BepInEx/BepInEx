@@ -127,7 +127,11 @@ internal static class PlatformUtils
                 current |= Platform.ARM;
         }
 
-        PlatformHelper.Current = current;
+        try {
+            PlatformHelper.Current = current;
+        } catch(Exception e) {
+            // TODO: monomod complains otherwise (on wine/proton)
+        }
     }
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
