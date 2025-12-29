@@ -48,21 +48,13 @@ namespace BepInEx.Bootstrap
 				var prop = AccessTools.PropertyGetter(typeof(Application), "isBatchMode");
 				if (prop != null)
 					return (bool) prop.Invoke(null, null);
-				try {
-					return SystemInfo.graphicsDeviceID == 0;
-				}
-				catch (MissingMethodException)
-				{
-					return false; // Unity 2022.3.62f3 for example doesn't have such method
-				}
-				catch (MissingFieldException)
-				{
-					return false; // Unity 2022.3.62f3 for example doesn't have such field
-				}
-				catch (MissingMemberException)
-				{
-					return false; // Unity 2022.3.62f3 for example doesn't have such member
-				}
+				// Some Unity builds may miss this property, see 
+				// https://docs.unity3d.com/2022.3/Documentation/ScriptReference/SystemInfo-graphicsDeviceID.html
+				var prop2 = AccessTools.PropertyGetter(typeof(SystemInfo), "graphicsDeviceID");
+				if (prop2 != null)
+					return ((int) prop2.Invoke(null, null)) == 0;
+				
+				return false;
 			}
 		}
 
