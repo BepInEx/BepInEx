@@ -50,8 +50,18 @@ namespace BepInEx.Bootstrap
 					return (bool) prop.Invoke(null, null);
 				try {
 					return SystemInfo.graphicsDeviceID == 0;
-				} catch(Exception e) {
-					return false; //Unity 2022.3.62f3 for example doesn't have such method
+				}
+				catch (MissingMethodException)
+				{
+					return false; // Unity 2022.3.62f3 for example doesn't have such method
+				}
+				catch (MissingFieldException)
+				{
+					return false; // Unity 2022.3.62f3 for example doesn't have such field
+				}
+				catch (MissingMemberException)
+				{
+					return false; // Unity 2022.3.62f3 for example doesn't have such member
 				}
 			}
 		}
