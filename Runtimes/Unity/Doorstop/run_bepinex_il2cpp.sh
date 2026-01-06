@@ -263,7 +263,11 @@ while :; do
             if [ -z "$1" ]; then
                 break
             fi
-            rest_args="$rest_args $1"
+            # Wrap all passed-through arguments in double quotes.
+            # This is a lazy but effective means of preventing the shell
+            # from splitting spaces where it shouldn't (such as spaces
+            # in a path).
+            rest_args="$rest_args \"$1\""
         ;;
     esac
     shift
@@ -300,4 +304,5 @@ else
 fi
 
 # shellcheck disable=SC2086
-exec "$executable_path" $rest_args
+eval "$executable_path" "$rest_args"
+exit $?
