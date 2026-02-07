@@ -31,8 +31,10 @@ namespace BepInEx.Logging
 			}
 
 			// Fix for Unity 6. Both methods previously targeted no longer use internal calls
-			if (WriteStringToUnityLog == null) {
-				try {
+			if (WriteStringToUnityLog == null) 
+			{
+				try 
+				{
 					var type = Type.GetType("UnityEngine.UnityLogWriter, UnityEngine.CoreModule");
 					var methodInfo = type.GetMethod("WriteStringToUnityLogImpl", 
 						BindingFlags.Static | BindingFlags.NonPublic, 
