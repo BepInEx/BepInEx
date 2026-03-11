@@ -73,6 +73,12 @@ namespace BepInEx.Preloader
 				Logger.LogInfo($"Supports SRE: {Utility.CLRSupportsDynamicAssemblies}");
 				Logger.LogInfo($"System platform: {PlatformHelper.Current}");
 
+				if (PreloaderRunner.XTermFixException != null)
+					Logger.LogWarning($"Failed to apply XTermFix runtime patch. See more info in the output log. Error message: {PreloaderRunner.XTermFixException.Message}");
+
+				if (PreloaderRunner.ConsoleSetOutFixException != null)
+					Logger.LogWarning($"Failed to apply ConsoleSetOutFix runtime patch. See more info in the output log. Error message: {PreloaderRunner.ConsoleSetOutFixException.Message}");
+
 				if (runtimePatchException != null)
 					Logger.LogWarning($"Failed to apply runtime patches for Mono. See more info in the output log. Error message: {runtimePatchException.Message}");
 
