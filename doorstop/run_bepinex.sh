@@ -321,7 +321,7 @@ else
 fi
 
 if [ -n "${is_apple_silicon}" ]; then
-    export ARCHPREFERENCE="arm64,x86_64"
+    export ARCHPREFERENCE="arm64e,arm64,x86_64"
 
     # We need to use arch for Apple Silicon to allow the executable to be run natively as otherwise if
     # the executable is universal, supporting both x86_64 and arm64, MacOs will still run it as x86_64

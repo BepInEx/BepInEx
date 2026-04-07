@@ -5,6 +5,7 @@
 #addin nuget:?package=Newtonsoft.Json&version=13.0.3
 
 const string DOORSTOP_VER = "4.5.0";
+var customMacDoorstopDir = EnvironmentVariable("BEPINEX_MACOS_DOORSTOP_DIR");
 
 var target = Argument("target", "Build");
 var isBleedingEdge = Argument("bleeding_edge", false);
@@ -104,16 +105,29 @@ Task("DownloadDoorstop")
     var doorstopWinPath = doorstopPath + File("doorstop_win.zip");
     var doorstopLinuxPath = doorstopPath + File("doorstop_linux.zip");
     var doorstopMacPath = doorstopPath + File("doorstop_macos.zip");
+    var doorstopMacOutputPath = doorstopPath + Directory("macos") + Directory("universal");
     CreateDirectory(doorstopPath);
+    CreateDirectory(doorstopMacOutputPath);
 
     DownloadFile($"https://github.com/NeighTools/UnityDoorstop/releases/download/v{DOORSTOP_VER}/doorstop_win_release_{DOORSTOP_VER}.zip", doorstopWinPath);
     DownloadFile($"https://github.com/NeighTools/UnityDoorstop/releases/download/v{DOORSTOP_VER}/doorstop_linux_release_{DOORSTOP_VER}.zip", doorstopLinuxPath);
-    DownloadFile($"https://github.com/NeighTools/UnityDoorstop/releases/download/v{DOORSTOP_VER}/doorstop_macos_release_{DOORSTOP_VER}.zip", doorstopMacPath);
+
+    if (!string.IsNullOrWhiteSpace(customMacDoorstopDir))
+    {
+        Information($"Using custom macOS Doorstop from {customMacDoorstopDir}");
+        CopyFileToDirectory(File(System.IO.Path.Combine(customMacDoorstopDir, "libdoorstop.dylib")), doorstopMacOutputPath);
+        CopyFileToDirectory(File(System.IO.Path.Combine(customMacDoorstopDir, ".doorstop_version")), doorstopMacOutputPath);
+    }
+    else
+    {
+        DownloadFile($"https://github.com/NeighTools/UnityDoorstop/releases/download/v{DOORSTOP_VER}/doorstop_macos_release_{DOORSTOP_VER}.zip", doorstopMacPath);
+    }
 
     Information("Extracting Doorstop");
     ZipUncompress(doorstopWinPath, doorstopPath + Directory("win"));
     ZipUncompress(doorstopLinuxPath, doorstopPath + Directory("linux"));
-    ZipUncompress(doorstopMacPath, doorstopPath + Directory("macos"));
+    if (string.IsNullOrWhiteSpace(customMacDoorstopDir))
+        ZipUncompress(doorstopMacPath, doorstopPath + Directory("macos"));
 });
 
 Task("MakeDist")

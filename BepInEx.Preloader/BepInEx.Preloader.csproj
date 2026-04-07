@@ -15,10 +15,10 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="HarmonyX" Version="2.9.0"/>
+        <PackageReference Include="HarmonyX" Version="2.16.1"/>
         <PackageReference Include="Mono.Cecil" Version="0.10.4"/>
-        <PackageReference Include="MonoMod.RuntimeDetour" Version="22.1.29.1"/>
-        <PackageReference Include="MonoMod.Utils" Version="22.1.29.1"/>
+        <PackageReference Include="MonoMod.RuntimeDetour" Version="25.3.4"/>
+        <PackageReference Include="MonoMod.Utils" Version="25.0.12"/>
     </ItemGroup>
 
     <Target Name="DeletePdbFromPublish" AfterTargets="Publish">

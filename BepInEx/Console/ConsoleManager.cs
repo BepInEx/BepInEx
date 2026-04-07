@@ -54,9 +54,9 @@ namespace BepInEx
 
 		public static void Initialize(bool alreadyActive)
 		{
-			if (PlatformHelper.Is(Platform.Unix))
+			if (PlatformDetection.OS.Is(OSKind.Posix))
 				Driver = new LinuxConsoleDriver();
-			else if (PlatformHelper.Is(Platform.Windows))
+			else if (PlatformDetection.OS.Is(OSKind.Windows))
 				Driver = new WindowsConsoleDriver();
 
 			Driver.Initialize(alreadyActive);

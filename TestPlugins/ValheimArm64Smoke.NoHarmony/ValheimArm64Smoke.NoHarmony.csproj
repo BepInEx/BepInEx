@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net35</TargetFramework>
+    <LangVersion>8</LangVersion>
+    <AssemblyName>ValheimArm64Smoke.NoHarmony</AssemblyName>
+    <RootNamespace>ValheimArm64Smoke.NoHarmony</RootNamespace>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\BepInEx\BepInEx.csproj" />
+    <PackageReference Include="UnityEngine" Version="5.6.1" IncludeAssets="compile" />
+  </ItemGroup>
+</Project>
