@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -77,6 +77,22 @@ namespace BepInEx.Logging
 					WriteStringToUnityLog = (Action<string>)Delegate.CreateDelegate(typeof(Action<string>), methodInfo);
 					break;
 				}
+			}
+
+			// Fix for Unity 6. Both methods previously targeted no longer use internal calls
+			if (WriteStringToUnityLog == null) 
+			{
+				try 
+				{
+					var type = Type.GetType("UnityEngine.UnityLogWriter, UnityEngine.CoreModule");
+					var methodInfo = type.GetMethod("WriteStringToUnityLogImpl", 
+						BindingFlags.Static | BindingFlags.NonPublic, 
+						null, 
+						new Type[] { typeof(string) }, 
+						null);
+					methodInfo.Invoke(null, new object[] { "" });
+					WriteStringToUnityLog = (Action<string>)Delegate.CreateDelegate(typeof(Action<string>), methodInfo);
+				} catch { }
 			}
 
 			if (WriteStringToUnityLog == null)
