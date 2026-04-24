@@ -45,7 +45,7 @@ namespace BepInEx.Configuration
 		/// If you want to access and modify an existing setting then use <see cref="AddSetting{T}(ConfigDefinition,T,ConfigDescription)"/> 
 		/// instead with no description.
 		/// </summary>
-		[Obsolete("Use Values instead")]
+		[Obsolete("Use ((IDictionary<ConfigDefinition, ConfigEntryBase>)configFile).Values instead")]
 		public ConfigEntryBase[] GetConfigEntries()
 		{
 			lock (_ioLock)
