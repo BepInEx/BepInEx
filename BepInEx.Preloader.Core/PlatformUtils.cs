@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using BepInEx.Logging;
 using MonoMod.Utils;
 
 namespace BepInEx.Preloader.Core;
@@ -132,7 +133,25 @@ internal static class PlatformUtils
                 current |= Platform.ARM;
         }
 
-        PlatformHelper.Current = current;
+        // Set via reflection so that a runtime MonoMod.Utils whose PlatformHelper.Current setter
+        // is inaccessible to this assembly does not throw MethodAccessException at a direct call
+        // site (a version mismatch between the compiled and loaded MonoMod.Utils). Informing
+        // MonoMod of the platform is best-effort -- it falls back to its own detection -- so this
+        // must never take down the preloader.
+        try
+        {
+            typeof(PlatformHelper)
+                .GetProperty("Current", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)
+                ?.GetSetMethod(true)
+                ?.Invoke(null, new object[] { current });
+        }
+        catch (Exception e)
+        {
+            // Non-fatal: MonoMod falls back to its own platform detection if this assignment fails.
+            // Logged (not silently swallowed) so the cause is visible when debugging.
+            PreloaderLogger.Log.Log(LogLevel.Debug,
+                                    $"Could not set MonoMod PlatformHelper.Current ({e.GetType().Name}); MonoMod will detect the platform itself.");
+        }
     }
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
