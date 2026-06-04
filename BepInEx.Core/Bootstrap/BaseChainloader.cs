@@ -315,7 +315,15 @@ public abstract class BaseChainloader<TPlugin>
             var plugins = DiscoverPlugins();
             Logger.Log(LogLevel.Info, $"{plugins.Count} plugin{(plugins.Count == 1 ? "" : "s")} to load");
             LoadPlugins(plugins);
-            Finished?.Invoke();
+
+            try
+            {
+                Finished?.Invoke();
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(LogLevel.Error, $"Error occurred in a Chainloader.Finished event handler: {ex}");
+            }
         }
         catch (Exception ex)
         {
