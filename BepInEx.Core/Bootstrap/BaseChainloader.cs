@@ -344,6 +344,7 @@ public abstract class BaseChainloader<TPlugin>
         {
             var dependsOnInvalidPlugin = false;
             var missingDependencies = new List<BepInDependency>();
+            var incompatibleDependencies = new List<KeyValuePair<BepInDependency, string>>();
             foreach (var dependency in plugin.Dependencies)
             {
                 static bool IsHardDependency(BepInDependency dep) =>
@@ -359,12 +360,19 @@ public abstract class BaseChainloader<TPlugin>
                     pluginVersion = pluginInfo?.Metadata.Version;
                 }
 
-                if (!dependencyExists || dependency.VersionRange != null &&
-                    !dependency.VersionRange.IsSatisfied(pluginVersion))
+                // The dependency is not installed at all.
+                if (!dependencyExists)
                 {
-                    // If the dependency is hard, collect it into a list to show
                     if (IsHardDependency(dependency))
                         missingDependencies.Add(dependency);
+                    continue;
+                }
+
+                // The dependency is installed, but its version does not satisfy the requested range.
+                if (dependency.VersionRange != null && !dependency.VersionRange.IsSatisfied(pluginVersion))
+                {
+                    if (IsHardDependency(dependency))
+                        incompatibleDependencies.Add(new KeyValuePair<BepInDependency, string>(dependency, pluginVersion?.ToString()));
                     continue;
                 }
 
@@ -387,13 +395,25 @@ public abstract class BaseChainloader<TPlugin>
                 continue;
             }
 
-            if (missingDependencies.Count != 0)
+            if (missingDependencies.Count != 0 || incompatibleDependencies.Count != 0)
             {
-                var message = $@"Could not load [{plugin}] because it has missing dependencies: {
-                    string.Join(", ", missingDependencies.Select(s => s.VersionRange == null ? s.DependencyGUID : $"{s.DependencyGUID} ({s.VersionRange})").ToArray())
-                }";
-                DependencyErrors.Add(message);
-                Logger.Log(LogLevel.Error, message);
+                if (missingDependencies.Count != 0)
+                {
+                    var message = $@"Could not load [{plugin}] because it has missing dependencies: {
+                        string.Join(", ", missingDependencies.Select(s => s.VersionRange == null ? s.DependencyGUID : $"{s.DependencyGUID} ({s.VersionRange})").ToArray())
+                    }. Install the listed plugin(s) and restart the game.";
+                    DependencyErrors.Add(message);
+                    Logger.Log(LogLevel.Error, message);
+                }
+
+                if (incompatibleDependencies.Count != 0)
+                {
+                    var message = $@"Could not load [{plugin}] because the following dependencies are installed with an incompatible version: {
+                        string.Join(", ", incompatibleDependencies.Select(s => $"{s.Key.DependencyGUID} (found {s.Value}, requires {s.Key.VersionRange})").ToArray())
+                    }. Update the listed plugin(s) to a version that satisfies the requirement.";
+                    DependencyErrors.Add(message);
+                    Logger.Log(LogLevel.Error, message);
+                }
 
                 invalidPlugins.Add(plugin.Metadata.GUID);
                 continue;
