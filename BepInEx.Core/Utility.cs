@@ -330,7 +330,12 @@ public static class Utility
         using var md5 = MD5.Create();
 
         foreach (var str in strings)
-            md5.TransformBlock(Encoding.UTF8.GetBytes(str), 0, str.Length, null, 0);
+        {
+            // Count UTF-8 bytes, not UTF-16 chars: str.Length under-counts for any non-ASCII
+            // input, so only a prefix of the bytes would be hashed (a silently wrong hash).
+            var bytes = Encoding.UTF8.GetBytes(str);
+            md5.TransformBlock(bytes, 0, bytes.Length, null, 0);
+        }
 
         md5.TransformFinalBlock(new byte[0], 0, 0);
 
