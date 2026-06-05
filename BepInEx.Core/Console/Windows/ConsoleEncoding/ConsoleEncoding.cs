@@ -41,7 +41,7 @@ internal partial class ConsoleEncoding : Encoding
     public override int GetByteCount(char[] chars, int index, int count)
     {
         WriteCharBuffer(chars, index, count);
-        var result = WideCharToMultiByte(_codePage, 0, chars, count, _zeroByte, 0, IntPtr.Zero, IntPtr.Zero);
+        var result = WideCharToMultiByte(_codePage, 0, _charBuffer, count, _zeroByte, 0, IntPtr.Zero, IntPtr.Zero);
         return result;
     }
 
@@ -50,7 +50,7 @@ internal partial class ConsoleEncoding : Encoding
         var byteCount = GetByteCount(chars, charIndex, charCount);
         WriteCharBuffer(chars, charIndex, charCount);
         ExpandByteBuffer(byteCount);
-        _ = WideCharToMultiByte(_codePage, 0, chars, charCount, _byteBuffer, byteCount, IntPtr.Zero,
+        _ = WideCharToMultiByte(_codePage, 0, _charBuffer, charCount, _byteBuffer, byteCount, IntPtr.Zero,
                                 IntPtr.Zero);
         var readCount = Math.Min(bytes.Length, byteCount);
         ReadByteBuffer(bytes, byteIndex, readCount);
@@ -60,7 +60,7 @@ internal partial class ConsoleEncoding : Encoding
     public override int GetCharCount(byte[] bytes, int index, int count)
     {
         WriteByteBuffer(bytes, index, count);
-        var result = MultiByteToWideChar(_codePage, 0, bytes, count, _zeroChar, 0);
+        var result = MultiByteToWideChar(_codePage, 0, _byteBuffer, count, _zeroChar, 0);
         return result;
     }
 
@@ -69,7 +69,7 @@ internal partial class ConsoleEncoding : Encoding
         var charCount = GetCharCount(bytes, byteIndex, byteCount);
         WriteByteBuffer(bytes, byteIndex, byteCount);
         ExpandCharBuffer(charCount);
-        _ = MultiByteToWideChar(_codePage, 0, bytes, byteCount, _charBuffer, charCount);
+        _ = MultiByteToWideChar(_codePage, 0, _byteBuffer, byteCount, _charBuffer, charCount);
         var readCount = Math.Min(chars.Length, charCount);
         ReadCharBuffer(chars, charIndex, readCount);
         return readCount;
