@@ -174,7 +174,7 @@ public static class TypeLoader
             }
             catch (Exception e)
             {
-                Logger.Log(LogLevel.Error, e);
+                Logger.Log(LogLevel.Error, $"Error examining '{dll}': {e}");
             }
 
         if (cacheName != null)
@@ -231,6 +231,9 @@ public static class TypeLoader
         {
             Logger.Log(LogLevel.Warning,
                        $"Failed to load cache \"{cacheName}\"; skipping loading cache. Reason: {e.Message}.");
+            // A read failure may have left `result` partially populated; the contract is to
+            // return null so the caller does a full disk re-scan rather than trust a partial cache.
+            return null;
         }
 
         return result;
@@ -258,7 +261,9 @@ public static class TypeLoader
 
             var path = Path.Combine(Paths.CachePath, $"{cacheName}_typeloader.dat");
 
-            using var bw = new BinaryWriter(File.OpenWrite(path));
+            // FileMode.Create truncates an existing file; File.OpenWrite does not, so a shorter
+            // new cache would leave stale tail bytes that corrupt the next read.
+            using var bw = new BinaryWriter(new FileStream(path, FileMode.Create, FileAccess.Write));
             bw.Write(entries.Count);
 
             foreach (var kv in entries)
