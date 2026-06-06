@@ -83,15 +83,13 @@ public class IL2CPPChainloader : BaseChainloader<BasePlugin>
         if (methodName == "Internal_ActiveSceneChanged")
             try
             {
-                if (ConfigUnityLogging.Value)
-                {
-                    Logger.Sources.Add(new IL2CPPUnityLogSource());
-
-                    Application.CallLogCallback("Test call after applying unity logging hook", "", LogType.Assert,
-                                                true);
-                }
-
+                // Unhook up front so the detour fires once even if setup below throws.
                 unhook = true;
+
+                // Isolated into its own method so OnInvokeMethod holds no interop type reference of its own: when the
+                // interop assemblies are missing, only this call fails to JIT -- inside the try, so it is caught --
+                // instead of OnInvokeMethod failing to JIT, which throws before the try is entered and crashes the game.
+                SetupUnityLogging();
 
                 Il2CppInteropManager.PreloadInteropAssemblies();
 
@@ -99,7 +97,7 @@ public class IL2CPPChainloader : BaseChainloader<BasePlugin>
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Fatal, "Unable to execute IL2CPP chainloader");
+                Logger.Log(LogLevel.Fatal, "Unable to execute IL2CPP chainloader -- continuing unmodded so the game still runs.");
                 Logger.Log(LogLevel.Error, ex);
             }
 
@@ -113,6 +111,18 @@ public class IL2CPPChainloader : BaseChainloader<BasePlugin>
         }
 
         return result;
+    }
+
+    // Holds the interop type references (UnityEngine.Application/LogType) so OnInvokeMethod itself can be JIT-compiled
+    // without the interop assemblies present; this method is JIT-compiled only when called, inside the try above.
+    private static void SetupUnityLogging()
+    {
+        if (!ConfigUnityLogging.Value)
+            return;
+
+        Logger.Sources.Add(new IL2CPPUnityLogSource());
+
+        Application.CallLogCallback("Test call after applying unity logging hook", "", LogType.Assert, true);
     }
 
     protected override void InitializeLoggers()
