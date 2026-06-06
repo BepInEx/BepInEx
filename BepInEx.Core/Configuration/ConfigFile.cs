@@ -34,7 +34,7 @@ public class ConfigFile : IDictionary<ConfigDefinition, ConfigEntryBase>
 
         if (File.Exists(ConfigFilePath))
             Reload();
-        else if (saveOnInit) Save();
+        else if (saveOnInit) TrySave();
     }
 
     public static ConfigFile CoreConfig { get; } = new(Paths.BepInExConfigPath, true);
@@ -352,6 +352,24 @@ public class ConfigFile : IDictionary<ConfigDefinition, ConfigEntryBase>
         }
     }
 
+    /// <summary>
+    ///     Writes the config to disk like <see cref="Save" />, but logs and swallows I/O failures (e.g. a read-only
+    ///     or locked config file) instead of throwing. Used for the automatic saves so an unwritable config degrades
+    ///     to the in-memory configuration rather than aborting startup.
+    /// </summary>
+    private void TrySave()
+    {
+        try
+        {
+            Save();
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            Logger.Log(LogLevel.Warning,
+                $"Could not write config file {ConfigFilePath}: {e.Message}. Continuing with the in-memory configuration.");
+        }
+    }
+
     #endregion
 
     #region Wraps
@@ -452,7 +470,7 @@ public class ConfigFile : IDictionary<ConfigDefinition, ConfigEntryBase>
             }
 
             if (SaveOnConfigSet)
-                Save();
+                TrySave();
 
             return entry;
         }
@@ -573,7 +591,7 @@ public class ConfigFile : IDictionary<ConfigDefinition, ConfigEntryBase>
         if (changedEntryBase == null) throw new ArgumentNullException(nameof(changedEntryBase));
 
         if (SaveOnConfigSet)
-            Save();
+            TrySave();
 
         var settingChanged = SettingChanged;
         if (settingChanged == null) return;
