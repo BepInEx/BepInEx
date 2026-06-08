@@ -120,8 +120,18 @@ public class BepInDependency : Attribute, ICacheable
     ///     not load and an error will be logged instead.
     /// </summary>
     /// <param name="guid">The GUID of the referenced plugin.</param>
-    /// <param name="version">The version range of the referenced plugin.</param>
-    /// <remarks>When version is supplied the dependency is always treated as HardDependency</remarks>
+    /// <param name="version">
+    ///     The version requirement of the referenced plugin, parsed as a SemVer range
+    ///     (see <see href="https://github.com/adamreeve/semver.net#ranges" />). A plain version such as
+    ///     <c>1.2.0</c> requires that exact version; use a range such as <c>&gt;=1.2.0</c>, <c>1.2.*</c>,
+    ///     <c>~1.2.0</c> or <c>^1.2.0</c> to accept more than one version.
+    /// </param>
+    /// <remarks>
+    ///     When a version is supplied the dependency is always treated as a hard dependency.
+    ///     Plugins migrating from BepInEx 5 should note a behaviour change: a bare version was previously
+    ///     treated as a minimum (<c>&gt;=</c>), whereas in BepInEx 6 it is an exact match. Use
+    ///     <c>&gt;=1.2.0</c> to keep the old behaviour.
+    /// </remarks>
     public BepInDependency(string guid, string version) : this(guid)
     {
         VersionRange = Range.Parse(version);
