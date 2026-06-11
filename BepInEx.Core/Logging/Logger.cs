@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using BepInEx.Core.Logging.Interpolation;
@@ -25,7 +26,7 @@ public static class Logger
     /// <summary>
     ///     Log levels that are currently listened to by at least one listener.
     /// </summary>
-    public static LogLevel ListenedLogLevels => listeners.activeLogLevels;
+    public static LogLevel ListenedLogLevels => listeners.ActiveLogLevels;
 
     /// <summary>
     ///     Collection of all log listeners that receive log events.
@@ -39,10 +40,7 @@ public static class Logger
 
     internal static void InternalLogEvent(object sender, LogEventArgs eventArgs)
     {
-        // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator Prevent extra allocations
-        foreach (var listener in listeners)
-            if ((eventArgs.Level & listener.LogLevelFilter) != LogLevel.None)
-                listener?.LogEvent(sender, eventArgs);
+        listeners.SendLogEvent(sender, eventArgs);
     }
 
     /// <summary>
@@ -74,69 +72,190 @@ public static class Logger
         return source;
     }
 
-    private class LogListenerCollection : List<ILogListener>, ICollection<ILogListener>
+    private class LogListenerCollection : ThreadSafeCollection<ILogListener>
     {
-        public LogLevel activeLogLevels = LogLevel.None;
+        internal LogLevel ActiveLogLevels = LogLevel.None;
 
-        void ICollection<ILogListener>.Add(ILogListener item)
+        internal void SendLogEvent(object sender, LogEventArgs eventArgs)
+        {
+            // Do this instead of foreach to avoid boxing, also very slightly faster
+            var aListInTime = BaseList;
+            // ReSharper disable once ForCanBeConvertedToForeach
+            for (int i = 0; i < aListInTime.Count; i++)
+            {
+                if ((eventArgs.Level & aListInTime[i].LogLevelFilter) != LogLevel.None)
+                    aListInTime[i].LogEvent(sender, eventArgs);
+            }
+        }
+
+        public override void Add(ILogListener item)
         {
             if (item == null)
                 throw new ArgumentNullException(nameof(item));
 
-            activeLogLevels |= item.LogLevelFilter;
-
-            base.Add(item);
+            lock (SpinLock)
+            {
+                ActiveLogLevels |= item.LogLevelFilter;
+                base.Add(item);
+            }
         }
 
-        void ICollection<ILogListener>.Clear()
+        public override void Clear()
         {
-            activeLogLevels = LogLevel.None;
-            base.Clear();
+            lock (SpinLock)
+            {
+                ActiveLogLevels = LogLevel.None;
+                base.Clear();
+            }
         }
 
-        bool ICollection<ILogListener>.Remove(ILogListener item)
+        public override bool Remove(ILogListener item)
         {
             if (item == null || !base.Remove(item))
                 return false;
 
-            activeLogLevels = LogLevel.None;
+            lock (SpinLock)
+            {
+                ActiveLogLevels = LogLevel.None;
 
-            foreach (var i in this)
-                activeLogLevels |= i.LogLevelFilter;
+                foreach (var i in this)
+                    ActiveLogLevels |= i.LogLevelFilter;
 
-            return true;
+                return true;
+            }
         }
     }
 
 
-    private class LogSourceCollection : List<ILogSource>, ICollection<ILogSource>
+    private class LogSourceCollection : ThreadSafeCollection<ILogSource>
     {
-        void ICollection<ILogSource>.Add(ILogSource item)
+        public override void Add(ILogSource item)
         {
             if (item == null)
                 throw new ArgumentNullException(nameof(item),
                                                 "Log sources cannot be null when added to the source list.");
 
-            item.LogEvent += InternalLogEvent;
-
-            base.Add(item);
+            lock (SpinLock)
+            {
+                item.LogEvent += InternalLogEvent;
+                base.Add(item);
+                var copy = new List<ILogSource>(BaseList.Count + 1);
+                copy.AddRange(BaseList);
+                copy.Add(item);
+                BaseList = copy;
+            }
         }
 
-        void ICollection<ILogSource>.Clear()
+        public override void Clear()
         {
-            foreach (var item in this)
-                item.LogEvent -= InternalLogEvent;
+            if (Count == 0)
+                return;
 
-            base.Clear();
+            lock (SpinLock)
+            {
+                for (var i = 0; i < BaseList.Count; i++)
+                    BaseList[i].LogEvent -= InternalLogEvent;
+
+                BaseList = [];
+            }
         }
 
-        bool ICollection<ILogSource>.Remove(ILogSource item)
+        public override bool Remove(ILogSource item)
         {
-            if (item == null || !Remove(item))
+            if (item == null)
                 return false;
 
-            item.LogEvent -= InternalLogEvent;
-            return true;
+            lock (SpinLock)
+            {
+                var wasPresent = base.Remove(item);
+                if (wasPresent)
+                    item.LogEvent -= InternalLogEvent;
+                return wasPresent;
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Simple thread safe list that prioritizes read speed over write speed.
+    /// Read is the same as a normal list, while write locks and allocates a copy of the list.
+    /// Logger lists are rarely updated so this tradeoff should be fine.
+    /// </summary>
+    /// <inheritdoc />
+    private class ThreadSafeCollection<T> : ICollection<T> where T : class
+    {
+        protected readonly object SpinLock = new();
+        protected List<T> BaseList = [];
+
+        public int Count => BaseList.Count;
+
+        public bool IsReadOnly => false;
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            // Can't avoid boxing
+            return BaseList.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            // Can't avoid boxing
+            return BaseList.GetEnumerator();
+        }
+
+        public virtual void Add(T item)
+        {
+            if (item == null)
+                throw new ArgumentNullException(nameof(item), "item can't be null");
+
+            lock (SpinLock)
+            {
+                var copy = new List<T>(BaseList.Count + 1);
+                copy.AddRange(BaseList);
+                copy.Add(item);
+                BaseList = copy;
+            }
+        }
+
+        public virtual void Clear()
+        {
+            if (Count == 0)
+                return;
+
+            lock (SpinLock)
+                BaseList = [];
+        }
+
+        public bool Contains(T item)
+        {
+            return BaseList.Contains(item);
+        }
+
+        public void CopyTo(T[] array, int arrayIndex)
+        {
+            BaseList.CopyTo(array, arrayIndex);
+        }
+
+        public virtual bool Remove(T item)
+        {
+            if (item == null)
+                return false;
+
+            lock (SpinLock)
+            {
+                var copy = new List<T>(BaseList.Count);
+                var any = false;
+                for (int i = 0; i < BaseList.Count; i++)
+                {
+                    var existingItem = BaseList[i];
+                    if (existingItem.Equals(item))
+                        any = true;
+                    else
+                        copy.Add(existingItem);
+                }
+
+                BaseList = copy;
+                return any;
+            }
         }
     }
 }

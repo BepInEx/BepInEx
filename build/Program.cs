@@ -32,9 +32,9 @@ public class BuildContext : FrostingContext
         BleedingEdge
     }
 
-    public const string DoorstopVersion = "4.0.0";
+    public const string DoorstopVersion = "4.5.0";
     public const string DotnetRuntimeVersion = "6.0.7";
-    public const string DobbyVersion = "1.0.2";
+    public const string DobbyVersion = "1.0.5";
 
     public const string DotnetRuntimeZipUrl =
         $"https://github.com/BepInEx/dotnet-runtime/releases/download/{DotnetRuntimeVersion}/mini-coreclr-Release.zip";
@@ -50,8 +50,10 @@ public class BuildContext : FrostingContext
         new("Unity.IL2CPP", "win-x64"),
         new("Unity.IL2CPP", "linux-x64"),
         new("Unity.IL2CPP", "macos-x64"),
-        new("NET.Framework", "win-x64"),
-        new("NET.CoreCLR", "win-x64")
+        new("NET.Framework", "win-x86", "net40"),
+        new("NET.Framework", "win-x86", "net452"),
+        new("NET.CoreCLR", "win-x64", "netcoreapp3.1"),
+        new("NET.CoreCLR", "win-x64", "net6.0")
     };
 
 
@@ -241,14 +243,19 @@ public sealed class MakeDistTask : FrostingTask<BuildContext>
             ctx.CreateDirectory(bepInExDir.Combine("patchers"));
 
             File.WriteAllText(targetDir.CombineWithFilePath("changelog.txt").FullPath, changelog);
-            foreach (var filePath in ctx.GetFiles(ctx.OutputDirectory.Combine(dist.DistributionIdentifier)
-                                                     .Combine("*.*").FullPath))
+
+            var sourceDirectory = ctx.OutputDirectory.Combine(dist.DistributionIdentifier);
+            if (dist.FrameworkTarget != null)
+                sourceDirectory = sourceDirectory.Combine(dist.FrameworkTarget);
+
+            foreach (var filePath in ctx.GetFiles(sourceDirectory.Combine("*.*").FullPath))
                 ctx.CopyFileToDirectory(filePath, bepInExCoreDir);
 
             if (dist.Engine == "Unity")
             {
-                var doorstopPath =
-                    ctx.CacheDirectory.Combine("doorstop").Combine($"doorstop_{dist.Os}").Combine(dist.Arch);
+                var doorstopPath = dist.Os == "macos"
+                    ? ctx.CacheDirectory.Combine("doorstop").Combine("doorstop_macos").Combine("universal")
+                    : ctx.CacheDirectory.Combine("doorstop").Combine($"doorstop_{dist.Os}").Combine(dist.Arch);
                 foreach (var filePath in ctx.GetFiles(doorstopPath.Combine($"*.{dist.DllExtension}").FullPath))
                     ctx.CopyFileToDirectory(filePath, targetDir);
                 ctx.CopyFileToDirectory(doorstopPath.CombineWithFilePath(".doorstop_version"), targetDir);
@@ -269,21 +276,24 @@ public sealed class MakeDistTask : FrostingTask<BuildContext>
                 {
                     ctx.CopyFile(ctx.CacheDirectory.Combine("dobby").Combine($"dobby_{dist.Os}").CombineWithFilePath($"{dist.DllPrefix}dobby_{dist.Arch}.{dist.DllExtension}"),
                                  bepInExCoreDir.CombineWithFilePath($"{dist.DllPrefix}dobby.{dist.DllExtension}"));
-                    ctx.CopyDirectory(ctx.CacheDirectory.Combine("dotnet").Combine(dist.RuntimeIndentifier),
+                    ctx.CopyDirectory(ctx.CacheDirectory.Combine("dotnet").Combine(dist.RuntimeIdentifier),
                                       targetDir.Combine("dotnet"));
                 }
             }
-
-            if (dist.DistributionIdentifier == "NET.Framework")
+            else if (dist.Engine == "NET")
             {
-                ctx.DeleteFile(bepInExCoreDir.CombineWithFilePath("BepInEx.NET.Framework.Launcher.exe.config"));
-                foreach (var filePath in ctx.GetFiles(bepInExCoreDir.Combine("BepInEx.NET.*").FullPath))
-                    ctx.MoveFileToDirectory(filePath, targetDir);
-            }
+                if (dist.Runtime == "Framework")
+                {
+                    ctx.DeleteFile(bepInExCoreDir.CombineWithFilePath("BepInEx.NET.Framework.Launcher.exe.config"));
 
-            if (dist.DistributionIdentifier == "NET.CoreCLR")
-                foreach (var filePath in ctx.GetFiles(bepInExCoreDir.Combine("BepInEx.NET.CoreCLR.*").FullPath))
-                    ctx.MoveFileToDirectory(filePath, targetDir);
+                    ctx.MoveFileToDirectory(bepInExCoreDir.CombineWithFilePath("BepInEx.NET.Framework.Launcher.exe"), targetDir);
+                }
+                else if (dist.Runtime == "CoreCLR")
+                {
+                    foreach (var filePath in ctx.GetFiles(bepInExCoreDir.Combine("BepInEx.NET.CoreCLR.*").FullPath))
+                        ctx.MoveFileToDirectory(filePath, targetDir);
+                }
+            }
         }
     }
 }
@@ -347,7 +357,7 @@ public sealed class PublishTask : FrostingTask<BuildContext>
                                           {
                                               ["file"] = $"BepInEx-{d.Target}-{ctx.BuildPackageVersion}.zip",
                                               ["description"] =
-                                                  $"BepInEx {d.Engine} ({d.Runtime}) for {d.ClearOsName} ({d.Arch}) games"
+                                                  $"BepInEx {d.Engine} ({d.Runtime}{(d.FrameworkTarget == null ? "" : " " + d.FrameworkTarget)}) for {d.ClearOsName} ({d.Arch}) games"
                                           }).ToArray()
                                       });
     }

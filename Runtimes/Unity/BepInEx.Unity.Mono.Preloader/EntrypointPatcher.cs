@@ -31,9 +31,9 @@ internal class EntrypointPatcher : BasePatcher
      "The name of the method in the specified entrypoint assembly and type to hook and load Chainloader from.");
 
     private static string DefaultEntrypointAssembly =>
-        UnityInfo.Version.IsLess(2017) ? "UnityEngine.dll" : "UnityEngine.CoreModule.dll";
+        UnityInfo.Version.LessThan(2017) ? "UnityEngine.dll" : "UnityEngine.CoreModule.dll";
 
-    private static string DefaultEntrypointType => UnityInfo.Version.IsLess(5) ? "MonoBehaviour" : "Application";
+    private static string DefaultEntrypointType => UnityInfo.Version.LessThan(5) ? "MonoBehaviour" : "Application";
 
     private bool HasLoaded { get; set; }
 

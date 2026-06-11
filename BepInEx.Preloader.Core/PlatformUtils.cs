@@ -10,7 +10,7 @@ internal static class PlatformUtils
 {
     public static readonly bool ProcessIs64Bit = IntPtr.Size >= 8;
     public static Version WindowsVersion { get; set; }
-    public static Version WineVersion { get; set; }
+    public static string WineVersion { get; set; }
 
     public static string LinuxArchitecture { get; set; }
     public static string LinuxKernelVersion { get; set; }
@@ -80,8 +80,13 @@ internal static class PlatformUtils
                 if (wineGetVersion != IntPtr.Zero)
                 {
                     current |= Platform.Wine;
-                    var getVersion = wineGetVersion.AsDelegate<GetWineVersionDelegate>();
-                    WineVersion = new Version(getVersion());
+                    // It's not safe to use the AsDelegate() extension method here because:
+                    //  - It comes from the MonoMod.Utils.DynDll class, defined in MonoMod.Common.
+                    //  - The DynDll class has a static constructor that reads PlatformHelper.Current.
+                    //  - Reading from that property freezes it: subsequent writes will throw an exception.
+                    //  - This method only sets PlatformHelper.Current at the very end.
+                    var getVersion = Marshal.GetDelegateForFunctionPointer(wineGetVersion, typeof(GetWineVersionDelegate)) as GetWineVersionDelegate;
+                    WineVersion = getVersion();
                 }
             }
         }
