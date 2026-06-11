@@ -82,7 +82,7 @@ public class PatcherPluginInfoAttribute : Attribute
 /// <summary>
 ///     Defines an assembly that a patch method will target.
 /// </summary>
-[AttributeUsage(AttributeTargets.Method)]
+[AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
 public class TargetAssemblyAttribute : Attribute
 {
     /// <summary>
@@ -108,7 +108,7 @@ public class TargetAssemblyAttribute : Attribute
 /// <summary>
 ///     Defines a type that a patch method will target.
 /// </summary>
-[AttributeUsage(AttributeTargets.Method)]
+[AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
 public class TargetTypeAttribute : Attribute
 {
     /// <param name="targetAssembly">The short filename of the assembly of which <paramref name="targetType" /> belongs to.</param>
