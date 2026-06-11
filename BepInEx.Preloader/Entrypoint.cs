@@ -10,6 +10,12 @@ namespace BepInEx.Preloader
 {
 	internal static class PreloaderRunner
 	{
+		/// <summary>
+		///     Exceptions thrown by XTermFix.Apply() and ConsoleSetOutFix.Apply() during early preloader init,
+		///     stored for deferred logging in <see cref="Preloader.Run"/> once the logger is available.
+		/// </summary>
+		internal static Exception XTermFixException;
+		internal static Exception ConsoleSetOutFixException;
 		// This is a list of important assemblies in BepInEx core folder that should be force-loaded
 		// Some games can ship these assemblies in Managed folder, in which case assembly resolving bypasses our LocalResolve
 		// On the other hand, renaming these assemblies is not viable because 3rd party assemblies
@@ -62,8 +68,14 @@ namespace BepInEx.Preloader
 		{
 			if (Preloader.ConfigApplyRuntimePatches.Value)
 			{
-				XTermFix.Apply();
-				ConsoleSetOutFix.Apply();
+				// These fixes must run before ConsoleManager.Initialize (which opens the terminal),
+				// so they cannot be placed inside Preloader.Run(). Wrap them individually so that
+				// a failure on one platform (e.g. macOS arm64, where MonoMod's ILHook throws a
+				// NullReferenceException in DetourHelper.GetIdentifiable) does not prevent BepInEx
+				// from initializing at all. Exceptions are stored for deferred logging once the
+				// BepInEx logger is available in Preloader.Run().
+				Utility.TryDo(() => XTermFix.Apply(), out XTermFixException);
+				Utility.TryDo(() => ConsoleSetOutFix.Apply(), out ConsoleSetOutFixException);
 			}
 
 			Preloader.Run();
