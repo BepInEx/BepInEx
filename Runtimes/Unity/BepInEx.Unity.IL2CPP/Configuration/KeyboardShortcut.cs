@@ -6,7 +6,7 @@ using BepInEx.Logging;
 using UnityEngine;
 using Logger = BepInEx.Logging.Logger;
 
-namespace BepInEx.Unity.Mono.Configuration;
+namespace BepInEx.Unity.IL2CPP.Configuration;
 
 /// <summary>
 ///     A keyboard shortcut that can be used in Update method to check if user presses a key combo. The shortcut is only

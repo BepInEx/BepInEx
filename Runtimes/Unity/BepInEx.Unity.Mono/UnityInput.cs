@@ -9,7 +9,7 @@ using UnityEngine.InputSystem.Controls;
 
 // ReSharper disable InconsistentNaming
 
-namespace BepInEx.Unity.Mono
+namespace BepInEx
 {
     /// <summary>
     /// Abstraction layer over Unity's input systems for use in universal plugins that need to use hotkeys.
