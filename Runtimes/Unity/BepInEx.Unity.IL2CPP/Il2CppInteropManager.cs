@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Security.Cryptography;
@@ -57,9 +58,10 @@ internal static partial class Il2CppInteropManager
      "IL2CPP", "UnityBaseLibrariesSource",
      "https://unity.bepinex.dev/libraries/{VERSION}.zip",
      new StringBuilder()
-         .AppendLine("URL to the ZIP of managed Unity base libraries.")
-         .AppendLine("The base libraries are used by Il2CppInterop to generate interop assemblies.")
+         .AppendLine("URL to a ZIP file with managed Unity base libraries. They are used by Il2CppInterop to generate interop assemblies.")
          .AppendLine("The URL can include {VERSION} template which will be replaced with the game's Unity engine version.")
+         .AppendLine("If a .zip file with the same filename as the URL (after template replacement) already exists in unity-libs, it will be used instead of downloading a new copy.")
+         .AppendLine("If you want to ensure BepInEx doesn't try to connect to the internet, set this to only the .zip filename (without a URL) and manually place the file in the unity-libs directory.")
          .ToString());
 
     private static readonly ConfigEntry<string> ConfigUnhollowerDeobfuscationRegex = ConfigFile.CoreConfig.Bind(
@@ -137,6 +139,8 @@ internal static partial class Il2CppInteropManager
 
     internal static string IL2CPPInteropAssemblyPath => Path.Combine(IL2CPPBasePath, "interop");
 
+    private static string RenameMapPath => Path.Combine(Paths.BepInExRootPath, "DeobfuscationMap.csv.gz");
+
     private static ILoggerFactory LoggerFactory { get; } = MSLoggerFactory.Create(b =>
     {
         b.AddProvider(new BepInExLoggerProvider())
@@ -172,6 +176,11 @@ internal static partial class Il2CppInteropManager
                 HashString(md5, Path.GetFileName(file));
                 HashFile(md5, file);
             }
+
+        if (File.Exists(RenameMapPath))
+        {
+            HashFile(md5, RenameMapPath);
+        }
 
         // Hash some common dependencies as they can affect output
         HashString(md5, typeof(InteropAssemblyGenerator).Assembly.GetName().Version.ToString());
@@ -255,17 +264,16 @@ internal static partial class Il2CppInteropManager
             AppDomain.CurrentDomain.AddCecilPlatformAssemblies(UnityBaseLibsDirectory);
             DownloadUnityAssemblies();
             var asmResolverAssemblies = RunCpp2Il();
-            var cecilAssemblies = new AsmToCecilConverter(asmResolverAssemblies).ConvertAll();
 
             if (DumpDummyAssemblies.Value)
             {
                 var dummyPath = Path.Combine(Paths.BepInExRootPath, "dummy");
                 Directory.CreateDirectory(dummyPath);
-                foreach (var assemblyDefinition in cecilAssemblies)
-                    assemblyDefinition.Write(Path.Combine(dummyPath, $"{assemblyDefinition.Name.Name}.dll"));
+                foreach (var assemblyDefinition in asmResolverAssemblies)
+                    assemblyDefinition.Write(Path.Combine(dummyPath, $"{assemblyDefinition.Name}.dll"));
             }
 
-            RunIl2CppInteropGenerator(cecilAssemblies);
+            RunIl2CppInteropGenerator(asmResolverAssemblies);
 
             File.WriteAllText(HashPath, ComputeHash());
         }
@@ -275,27 +283,61 @@ internal static partial class Il2CppInteropManager
         }
     }
 
-    private static void DownloadUnityAssemblies()
-    {
+    private static void DownloadUnityAssemblies() {
         var unityVersion = UnityInfo.Version;
-        var source =
-            UnityBaseLibrariesSource.Value.Replace("{VERSION}",
-                                                   $"{unityVersion.Major}.{unityVersion.Minor}.{unityVersion.Build}");
+        var version = $"{unityVersion.Major}.{unityVersion.Minor}.{unityVersion.Build}";
+        var source = UnityBaseLibrariesSource.Value.Replace("{VERSION}", version);
+        if (string.IsNullOrEmpty(source)) return;
 
-        if (!string.IsNullOrEmpty(source))
+        var baseFolder = Directory.CreateDirectory(UnityBaseLibsDirectory);
+        baseFolder.EnumerateFiles("*.dll").Do(a=>a.Delete());
+
+        var uriIsValid = Uri.TryCreate(source, UriKind.Absolute, out var uri) && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+        var fileName = Path.GetFileName(uriIsValid ? uri.AbsolutePath : source);
+        var zipFilePath = Path.Combine(baseFolder.FullName, fileName);
+        if (!File.Exists(zipFilePath))
         {
-            Logger.LogMessage("Downloading unity base libraries");
+            // Check if URI is valid before attempting download
+            if (!uriIsValid)
+                throw new ArgumentException($"Unity base libraries source \"{source}\" is not a valid URL and the .zip file does not exist locally. Either provide a valid HTTP/HTTPS URL, or place the .zip file in the unity-libs directory.");
 
-            Directory.CreateDirectory(UnityBaseLibsDirectory);
-            Directory.EnumerateFiles(UnityBaseLibsDirectory, "*.dll").Do(File.Delete);
-
+            Logger.LogMessage($"Downloading unity base libraries from {source}");
             using var httpClient = new HttpClient();
-            using var zipStream = httpClient.GetStreamAsync(source).GetAwaiter().GetResult();
-            using var zipArchive = new ZipArchive(zipStream, ZipArchiveMode.Read);
 
-            Logger.LogMessage("Extracting downloaded unity base libraries");
-            zipArchive.ExtractToDirectory(UnityBaseLibsDirectory);
+            Stream zipStream;
+            try
+            {
+                zipStream = httpClient.GetStreamAsync(uri).GetAwaiter().GetResult();
+            }
+            catch (Exception e)
+            {
+                throw new IOException(
+                    $"Failed to download Unity base libraries for Unity {unityVersion} from {source}: {e.Message}. " +
+                    $"Base libraries for this Unity version may not be available on the server yet. Download a matching " +
+                    $"base-libraries .zip and place it in the \"{UnityBaseLibsDirectory}\" (unity-libs) directory, or set " +
+                    $"the [IL2CPP] UnityBaseLibrariesSource config option to a valid URL.", e);
+            }
+
+            using (zipStream)
+            {
+                try
+                {
+                    using var writeStream = new FileStream(zipFilePath, FileMode.Create, FileAccess.Write, FileShare.None);
+                    zipStream.CopyTo(writeStream);
+                }
+                catch
+                {
+                    // Delete the incomplete file to avoid issues on next startup
+                    try { File.Delete(zipFilePath); } catch { }
+                    throw;
+                }
+            }
         }
+
+        Logger.LogMessage($"Extracting unity base libraries from {zipFilePath}");
+        using var readStream = File.OpenRead(zipFilePath);
+        using var zipArchive = new ZipArchive(readStream, ZipArchiveMode.Read);
+        zipArchive.ExtractToDirectory(UnityBaseLibsDirectory);
     }
 
     private static List<AsmResolver.DotNet.AssemblyDefinition> RunCpp2Il()
@@ -348,7 +390,7 @@ internal static partial class Il2CppInteropManager
         return assemblies;
     }
 
-    private static void RunIl2CppInteropGenerator(List<AssemblyDefinition> sourceAssemblies)
+    private static void RunIl2CppInteropGenerator(List<AsmResolver.DotNet.AssemblyDefinition> sourceAssemblies)
     {
         var opts = new GeneratorOptions
         {
@@ -361,11 +403,10 @@ internal static partial class Il2CppInteropManager
                                        : null,
         };
 
-        var renameMapLocation = Path.Combine(Paths.BepInExRootPath, "DeobfuscationMap.csv.gz");
-        if (File.Exists(renameMapLocation))
+        if (File.Exists(RenameMapPath))
         {
             Logger.LogInfo("Parsing deobfuscation rename mappings");
-            opts.ReadRenameMap(renameMapLocation);
+            opts.ReadRenameMap(RenameMapPath);
         }
 
         Logger.LogInfo("Generating interop assemblies");
@@ -376,8 +417,6 @@ internal static partial class Il2CppInteropManager
                               .AddLogger(logger)
                               .AddInteropAssemblyGenerator()
                               .Run();
-
-        sourceAssemblies.Do(x => x.Dispose());
     }
 
     internal static void PreloadInteropAssemblies()
@@ -392,11 +431,13 @@ internal static partial class Il2CppInteropManager
         Parallel.ForEach(files, file =>
         {
             if (!file.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)) return;
-            if (file.Equals("netstandard.dll", StringComparison.OrdinalIgnoreCase)) return;
-            if (file.Equals("Il2Cppnetstandard.dll", StringComparison.OrdinalIgnoreCase)) return;
+            var name = Path.GetFileNameWithoutExtension(file);
+            if (name.Equals("netstandard", StringComparison.OrdinalIgnoreCase)) return;
+            if (name.Equals("Il2Cppnetstandard", StringComparison.OrdinalIgnoreCase)) return;
             try
             {
-                Assembly.LoadFrom(file);
+                // Do not use LoadFrom since it overrides preloader patches
+                Assembly.Load(name);
                 Interlocked.Increment(ref loaded);
             }
             catch (Exception e)
