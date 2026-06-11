@@ -53,7 +53,9 @@ public class BepInPlugin : Attribute
         // no System.Version.TryParse() on .NET 3.5
         try
         {
-            var longVersion = new System.Version(version);
+            // System.Version can't parse a SemVer build-metadata suffix (e.g. 1.2.3.4+sha); drop it first.
+            var plus = version.IndexOf('+');
+            var longVersion = new System.Version(plus >= 0 ? version.Substring(0, plus) : version);
 
             return new Version(longVersion.Major, longVersion.Minor,
                                longVersion.Build != -1 ? longVersion.Build : 0);
