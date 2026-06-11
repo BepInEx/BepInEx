@@ -20,6 +20,12 @@ public static class Paths
                                     .InformationalVersion);
 
     /// <summary>
+    ///    BepInEx version without the build suffix.
+    /// </summary>
+    public static Version DisplayBepInExVersion { get; } =
+        new(BepInExVersion.Major, BepInExVersion.Minor, BepInExVersion.Patch, BepInExVersion.PreRelease);
+
+    /// <summary>
     ///     The path to the Managed folder that contains the main managed assemblies.
     /// </summary>
     public static string ManagedPath { get; private set; }
