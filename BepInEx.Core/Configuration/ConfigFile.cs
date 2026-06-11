@@ -354,8 +354,8 @@ public class ConfigFile : IDictionary<ConfigDefinition, ConfigEntryBase>
 
     /// <summary>
     ///     Writes the config to disk like <see cref="Save" />, but logs and swallows I/O failures (e.g. a read-only
-    ///     or locked config file) instead of throwing. Used for the automatic saves so an unwritable config degrades
-    ///     to the in-memory configuration rather than aborting startup.
+    ///     or locked config file) instead of throwing. Used only for the creation-time saves (initial file write and
+    ///     new-entry binds), which can run before logging is up; explicit saves and setting changes still throw.
     /// </summary>
     private void TrySave()
     {
@@ -591,7 +591,7 @@ public class ConfigFile : IDictionary<ConfigDefinition, ConfigEntryBase>
         if (changedEntryBase == null) throw new ArgumentNullException(nameof(changedEntryBase));
 
         if (SaveOnConfigSet)
-            TrySave();
+            Save();
 
         var settingChanged = SettingChanged;
         if (settingChanged == null) return;
