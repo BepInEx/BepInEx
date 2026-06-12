@@ -52,7 +52,7 @@ public class ManualLogSource : ILogSource
     //     Internal method to allow for inheritance classes to have their own invocation logic.
     // </summary>
     /// <param name="arguments">Arguments to invoke the log event with.</param>
-    protected virtual void OnLogEvent(LogEventArgs arguments) => LogEvent?.Invoke(this, arguments));
+    protected virtual void OnLogEvent(LogEventArgs arguments) => LogEvent?.Invoke(this, arguments);
 
     /// <summary>
     ///     Logs a message with <see cref="LogLevel.Fatal" /> level.
