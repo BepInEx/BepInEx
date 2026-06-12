@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.CompilerServices;
 using BepInEx.Core.Logging.Interpolation;
 
@@ -32,20 +32,27 @@ public class ManualLogSource : ILogSource
     /// </summary>
     /// <param name="level">Log levels to attach to the message. Multiple can be used with bitwise ORing.</param>
     /// <param name="data">Data to log.</param>
-    public void Log(LogLevel level, object data) => LogEvent?.Invoke(this, new LogEventArgs(data, level, this));
+    public virtual void Log(LogLevel level, object data) => OnLogEvent(new LogEventArgs(data, level, this));
 
     /// <summary>
     ///     Logs an interpolated string with the specified log level.
     /// </summary>
     /// <param name="level">Log levels to attach to the message. Multiple can be used with bitwise ORing.</param>
     /// <param name="logHandler">Handler for the interpolated string.</param>
-    public void Log(LogLevel level,
+    public virtual void Log(LogLevel level,
                     [InterpolatedStringHandlerArgument("level")]
                     BepInExLogInterpolatedStringHandler logHandler)
     {
         if (logHandler.Enabled)
-            LogEvent?.Invoke(this, new LogEventArgs(logHandler.ToString(), level, this));
+            OnLogEvent(new LogEventArgs(logHandler.ToString(), level, this));
     }
+
+    // <summary>
+    //     Invokes the log event with the provided arguments.
+    //     Internal method to allow for inheritance classes to have their own invocation logic.
+    // </summary>
+    /// <param name="arguments">Arguments to invoke the log event with.</param>
+    protected virtual void OnLogEvent(LogEventArgs arguments) => LogEvent?.Invoke(this, arguments));
 
     /// <summary>
     ///     Logs a message with <see cref="LogLevel.Fatal" /> level.
