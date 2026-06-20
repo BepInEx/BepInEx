@@ -92,9 +92,12 @@ public class ConfigFile : IDictionary<ConfigDefinition, ConfigEntryBase>
     public ConfigEntryBase this[string section, string key] => this[new ConfigDefinition(section, key)];
 
     /// <inheritdoc />
-    public IEnumerator<KeyValuePair<ConfigDefinition, ConfigEntryBase>> GetEnumerator() =>
-        // We can't really do a read lock for this
-        Entries.GetEnumerator();
+    public IEnumerator<KeyValuePair<ConfigDefinition, ConfigEntryBase>> GetEnumerator()
+    {
+        // Enumerate a snapshot taken under the lock so a concurrent mutation cannot invalidate the iterator.
+        lock (_ioLock)
+            return Entries.ToList().GetEnumerator();
+    }
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
