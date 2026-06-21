@@ -36,6 +36,9 @@ public static class InputConsole
 
     public static void Start(FilteredConsoleLogListener listener)
     {
+        if (listener == null)
+            throw new ArgumentNullException(nameof(listener));
+
         if (_running)
             return;
 
@@ -61,6 +64,10 @@ public static class InputConsole
     public static void Stop()
     {
         _running = false;
+
+        if (_inputThread != null && _inputThread.IsAlive)
+            _inputThread.Join(1000);
+
         _inputThread = null;
         _listener = null;
 
@@ -75,9 +82,7 @@ public static class InputConsole
     {
         lock (_consoleLock)
         {
-            bool hasInput = _inputBuffer.Length > 0;
-
-            if (hasInput)
+            if (_running)
                 EraseInputLine();
 
             ConsoleManager.SetConsoleColor(color);
@@ -85,7 +90,7 @@ public static class InputConsole
             ConsoleWriter.Flush();
             ConsoleManager.SetConsoleColor(ConsoleColor.Gray);
 
-            if (hasInput)
+            if (_running)
                 RedrawInputLine();
         }
     }
@@ -302,6 +307,8 @@ public static class InputConsole
                 break;
 
             case "/show":
+                if (_listener == null)
+                    return;
                 if (string.IsNullOrEmpty(arg))
                 {
                     _listener.SourceFilter = null;
