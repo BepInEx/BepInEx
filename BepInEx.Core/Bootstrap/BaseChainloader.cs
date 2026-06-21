@@ -167,8 +167,12 @@ public abstract class BaseChainloader<TPlugin>
 
         if (ConsoleManager.ConsoleActive)
         {
-            if (!Logger.Listeners.Any(x => x is ConsoleLogListener))
-                Logger.Listeners.Add(new ConsoleLogListener());
+            if (!Logger.Listeners.Any(x => x is FilteredConsoleLogListener))
+            {
+                var consoleListener = new FilteredConsoleLogListener();
+                Logger.Listeners.Add(consoleListener);
+                InputConsole.Start(consoleListener);
+            }
 
             ConsoleManager.SetConsoleTitle(ConsoleTitle);
         }
@@ -437,6 +441,7 @@ public abstract class BaseChainloader<TPlugin>
                 Plugins[plugin.Metadata.GUID] = plugin;
                 TryRunModuleCtor(plugin, ass);
                 plugin.Instance = LoadPlugin(plugin, ass);
+                InputConsole.RegisterPluginSource(plugin.Metadata.GUID, plugin.Metadata.Name);
                 loadedPlugins.Add(plugin);
 
                 PluginLoaded?.Invoke(plugin);
