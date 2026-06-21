@@ -45,7 +45,7 @@ namespace BepInEx
                     catch (Exception ex)
                     {
                         current = new NullInputSystem();
-                        BepInEx.Logging.Logger.Log(LogLevel.Debug, "[UnityInput] Failed to detect available input systems - " + ex);
+                        BepInEx.Logging.Logger.Log(LogLevel.Warning, "[UnityInput] Failed to detect available input systems - " + ex);
                     }
                 }
                 return current;
