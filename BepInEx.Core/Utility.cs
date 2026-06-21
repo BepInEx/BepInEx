@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Security.Cryptography;
 using System.Text;
+using BepInEx.Logging;
 using Mono.Cecil;
 
 namespace BepInEx;
@@ -416,11 +417,21 @@ public static class Utility
     {
         var result = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
         foreach (var directory in directories)
-        foreach (var file in Directory.GetFiles(directory, pattern))
         {
-            var fileName = Path.GetFileName(file);
-            if (!result.ContainsKey(fileName))
-                result[fileName] = file;
+            // A configured search directory (e.g. a missing unstripped_corlib) may not exist; warn and skip it
+            // instead of letting Directory.GetFiles throw DirectoryNotFoundException.
+            if (!Directory.Exists(directory))
+            {
+                Logger.Log(LogLevel.Warning, $"Skipping search directory that does not exist: {directory}");
+                continue;
+            }
+
+            foreach (var file in Directory.GetFiles(directory, pattern))
+            {
+                var fileName = Path.GetFileName(file);
+                if (!result.ContainsKey(fileName))
+                    result[fileName] = file;
+            }
         }
 
         return result.Values;

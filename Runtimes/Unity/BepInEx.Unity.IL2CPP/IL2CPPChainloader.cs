@@ -83,15 +83,11 @@ public class IL2CPPChainloader : BaseChainloader<BasePlugin>
         if (methodName == "Internal_ActiveSceneChanged")
             try
             {
-                if (ConfigUnityLogging.Value)
-                {
-                    Logger.Sources.Add(new IL2CPPUnityLogSource());
-
-                    Application.CallLogCallback("Test call after applying unity logging hook", "", LogType.Assert,
-                                                true);
-                }
-
+                // Unhook up front so the detour fires once even if setup below throws.
                 unhook = true;
+
+                // Isolated so a missing-interop JIT failure happens inside the try (caught), not in OnInvokeMethod itself.
+                SetupUnityLogging();
 
                 Il2CppInteropManager.PreloadInteropAssemblies();
 
@@ -99,7 +95,7 @@ public class IL2CPPChainloader : BaseChainloader<BasePlugin>
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Fatal, "Unable to execute IL2CPP chainloader");
+                Logger.Log(LogLevel.Fatal, "Unable to execute IL2CPP chainloader, no plugins will be loaded");
                 Logger.Log(LogLevel.Error, ex);
             }
 
@@ -113,6 +109,17 @@ public class IL2CPPChainloader : BaseChainloader<BasePlugin>
         }
 
         return result;
+    }
+
+    // JIT-compiled only when called here, so OnInvokeMethod needs no interop assemblies present to JIT.
+    private static void SetupUnityLogging()
+    {
+        if (!ConfigUnityLogging.Value)
+            return;
+
+        Logger.Sources.Add(new IL2CPPUnityLogSource());
+
+        Application.CallLogCallback("Test call after applying unity logging hook", "", LogType.Assert, true);
     }
 
     protected override void InitializeLoggers()
