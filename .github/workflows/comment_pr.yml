@@ -40,9 +40,28 @@ jobs:
                         const {owner, repo} = context.repo;
                         const run_id = ${{github.event.workflow_run.id}};
                         
-                        const pull_requests = ${{ toJSON(github.event.workflow_run.pull_requests) }};
+                        let pull_requests = ${{ toJSON(github.event.workflow_run.pull_requests) }};
+
                         if (!pull_requests.length) {
-                          return core.error("This workflow doesn't match any pull requests!");
+                          core.info("No PRs in workflow_run payload; resolving by branch head");
+                          const headBranch = context.payload.workflow_run.head_branch;
+
+                          // Search open PRs in base repo and match by branch name (works for many fork cases)
+                          const { data } = await github.rest.pulls.list({
+                            owner,
+                            repo,
+                            state: "open",
+                            per_page: 100,
+                          });
+
+                          pull_requests = data.filter(pr => {
+                            // pr.head.ref is branch name; for forks also check same branch name
+                            return pr.head.ref === headBranch;
+                          });
+                        }
+
+                        if (!pull_requests.length) {
+                          return core.error("Could not resolve pull request for this workflow run.");
                         }
                         
                         const artifacts = await github.paginate(
