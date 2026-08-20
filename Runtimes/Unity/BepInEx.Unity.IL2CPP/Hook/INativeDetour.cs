@@ -73,7 +73,7 @@ public interface INativeDetour : IDetour
 
             if (op == 0xFF && Marshal.ReadByte(fn + 1) == 0x25)
             {
-                if (nint.Size == 8)
+                if (IntPtr.Size == 8)
                     fn = Marshal.ReadIntPtr(fn + 6 + Marshal.ReadInt32(fn + 2));
                 else
                     fn = Marshal.ReadIntPtr((nint)(uint)Marshal.ReadInt32(fn + 2));
