@@ -289,7 +289,7 @@ namespace BepInEx.Preloader
 
 		private static readonly ConfigEntry<string> ConfigEntrypointType = ConfigFile.CoreConfig.Bind(
 			"Preloader.Entrypoint", "Type",
-			"Application",
+			"MonoBehaviour",
 			"The name of the type in the entrypoint assembly to search for the entrypoint method.");
 
 		private static readonly ConfigEntry<string> ConfigEntrypointMethod = ConfigFile.CoreConfig.Bind(
