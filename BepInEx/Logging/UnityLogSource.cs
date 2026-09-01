@@ -59,6 +59,20 @@ namespace BepInEx.Logging
 			else
 			{
 				MethodInfo registerLogCallback = typeof(Application).GetMethod("RegisterLogCallback", BindingFlags.Public | BindingFlags.Static);
+
+				// Unity's managed code stripper can remove both Application.logMessageReceived and the
+				// legacy Application.RegisterLogCallback. Invoking a null MethodInfo here throws out of
+				// this static constructor, which propagates through Chainloader.Initialize and silently
+				// prevents the chainloader (and therefore every plugin) from starting. Unity log
+				// forwarding is optional, so degrade instead of taking the whole loader down.
+				if (registerLogCallback == null)
+				{
+					Logger.LogWarning("Unity log forwarding is unavailable: neither Application.logMessageReceived " +
+					                  "nor Application.RegisterLogCallback exist in this build (they were most likely " +
+					                  "stripped). Unity log messages will not appear in the BepInEx log.");
+					return;
+				}
+
 				registerLogCallback.Invoke(null, new object[] { callback });
 				//UnsubscribeAction = () => registerLogCallback.Invoke(null, new object[] { null });
 			}
