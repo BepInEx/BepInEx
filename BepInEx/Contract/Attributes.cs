@@ -32,6 +32,11 @@ namespace BepInEx
 		/// </summary>
 		public Version Version { get; protected set; }
 
+		/// <summary>
+		/// The version suffix of the plugin (anything trailing a - or + in the version info).
+		/// </summary>
+		public string VersionExtra { get; protected set; }
+
 		/// <param name="GUID">The unique identifier of the plugin. Should not change between plugin versions.</param>
 		/// <param name="Name">The user friendly name of the plugin. Is able to be changed between versions.</param>
 		/// <param name="Version">The specfic version of the plugin.</param>
@@ -40,6 +45,16 @@ namespace BepInEx
 			this.GUID = GUID;
 			this.Name = Name;
 
+			int suffix = Version.IndexOfAny(new [] { '-', '+' });
+			if (suffix >= 0)
+			{
+				VersionExtra = Version.Substring(suffix);
+				Version = Version.Substring(0, suffix);
+			}
+			else
+			{
+				VersionExtra = "";
+			}
 			try
 			{
 				this.Version = new Version(Version);

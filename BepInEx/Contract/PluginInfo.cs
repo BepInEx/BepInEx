@@ -53,7 +53,7 @@ namespace BepInEx
 
 			bw.Write(Metadata.GUID);
 			bw.Write(Metadata.Name);
-			bw.Write(Metadata.Version.ToString());
+			bw.Write(Metadata.Version + Metadata.VersionExtra);
 
 			var processList = Processes.ToList();
 			bw.Write(processList.Count);
@@ -111,6 +111,6 @@ namespace BepInEx
 		}
 
 		/// <inheritdoc />
-		public override string ToString() => $"{Metadata?.Name} {Metadata?.Version}";
+		public override string ToString() => $"{Metadata?.Name} {Metadata?.Version}{Metadata?.VersionExtra}";
 	}
 }

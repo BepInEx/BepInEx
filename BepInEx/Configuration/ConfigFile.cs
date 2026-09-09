@@ -153,7 +153,7 @@ namespace BepInEx.Configuration
 				{
 					if (_ownerMetadata != null)
 					{
-						writer.WriteLine($"## Settings file was created by plugin {_ownerMetadata.Name} v{_ownerMetadata.Version}");
+						writer.WriteLine($"## Settings file was created by plugin {_ownerMetadata.Name} v{_ownerMetadata.Version}{_ownerMetadata.VersionExtra}");
 						writer.WriteLine($"## Plugin GUID: {_ownerMetadata.GUID}");
 						writer.WriteLine();
 					}
