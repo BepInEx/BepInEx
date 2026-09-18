@@ -79,6 +79,9 @@ namespace BepInEx.Preloader
 				if (PreloaderRunner.ConsoleSetOutFixException != null)
 					Logger.LogWarning($"Failed to apply ConsoleSetOutFix runtime patch. See more info in the output log. Error message: {PreloaderRunner.ConsoleSetOutFixException.Message}");
 
+				if (AppleSiliconDetourFix.Exception != null)
+					Logger.LogWarning($"Failed to install the Apple Silicon detour platform, so no Harmony patch will apply. Error message: {AppleSiliconDetourFix.Exception.Message}");
+
 				if (runtimePatchException != null)
 					Logger.LogWarning($"Failed to apply runtime patches for Mono. See more info in the output log. Error message: {runtimePatchException.Message}");
 

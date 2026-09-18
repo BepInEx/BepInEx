@@ -31,9 +31,13 @@ namespace BepInEx.Preloader.RuntimeFixes
 			// Apparently on older Unity versions (4.x), using Process.Start can run Console..cctor
 			// And since MonoMod's PlatformHelper (used by DetourHelper.Native) runs Process.Start to determine ARM/x86 platform,
 			// this causes a crash owing to TermInfoReader running before it can be patched and fixed
-			// Because Doorstop does not support ARM at the moment, we can get away with just forcing x86 detour platform.
+			// so we can get away with just forcing the x86 detour platform.
 			// TODO: Figure out a way to detect ARM on Unix without running Process.Start
-			DetourHelper.Native = new DetourNativeX86Platform();
+			// Never do this on Apple Silicon: the process really is ARM, and AppleSiliconDetourFix has
+			// already installed a platform that can write to MAP_JIT pages. Forcing x86 here would encode
+			// x86 branches into arm64 method bodies and reinstate the mprotect that fails with EACCES.
+			if (!AppleSiliconDetourFix.Applies)
+				DetourHelper.Native = new DetourNativeX86Platform();
 			
 			var harmony = new HarmonyLib.Harmony("com.bepinex.xtermfix");
 

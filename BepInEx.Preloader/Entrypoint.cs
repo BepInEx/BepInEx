@@ -53,6 +53,11 @@ namespace BepInEx.Preloader
 		{
 			PlatformUtils.SetPlatform();
 
+			// After SetPlatform, because reading PlatformHelper.Current locks it and SetPlatform must write it
+			// first. Before everything else, because DetourHelper caches its native platform on first use and
+			// will not retry if that first attempt throws.
+			AppleSiliconDetourFix.Apply();
+
 			string bepinPath = Utility.ParentDirectory(Path.GetFullPath(EnvVars.DOORSTOP_INVOKE_DLL_PATH), 2);
 
 			Paths.SetExecutablePath(EnvVars.DOORSTOP_PROCESS_PATH, bepinPath, EnvVars.DOORSTOP_MANAGED_FOLDER_DIR, EnvVars.DOORSTOP_DLL_SEARCH_DIRS);
