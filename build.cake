@@ -222,4 +222,7 @@ Task("Pack")
     }
 });
 
+Task("Publish")
+    .IsDependentOn("Pack");
+
 RunTarget(target);
