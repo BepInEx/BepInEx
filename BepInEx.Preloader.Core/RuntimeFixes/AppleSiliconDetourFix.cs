@@ -10,23 +10,21 @@ namespace BepInEx.Preloader.RuntimeFixes;
 ///     Lets MonoMod write detours when the game runs as a native arm64 process on Apple Silicon.
 /// </summary>
 /// <remarks>
-///     Unity has the <c>allow-jit</c> entitlement but not <c>allow-unsigned-executable-memory</c>, so its
-///     code sits in a MAP_JIT region: <c>mprotect</c> returns EACCES and <c>mach_vm_write</c> returns
-///     KERN_INVALID_ADDRESS. Only <c>pthread_jit_write_protect_np</c> gets in, and it cannot be called from
-///     managed code, because it drops execute permission for the calling thread and that thread is running
-///     JIT-compiled code. The toggle and the write must share one native frame, which is what doorstop's
-///     <c>doorstop_jit_memcpy</c> is for.
+///     Unity's code sits in a MAP_JIT region, which refuses <c>mprotect</c> with EACCES and
+///     <c>mach_vm_write</c> with KERN_INVALID_ADDRESS. Only <c>pthread_jit_write_protect_np</c> gets in, and
+///     managed code cannot call it: it drops execute permission for the calling thread, which is running
+///     JIT-compiled code. Doorstop's <c>doorstop_jit_memcpy</c> keeps the toggle and the write in one frame.
 /// </remarks>
 public static class AppleSiliconDetourFix
 {
-    /// <summary>Why the fix could not install. Logged by the preloader once its logger exists.</summary>
+    /// <summary>Why the fix could not install. Logged once the preloader has a logger.</summary>
     public static Exception Exception { get; private set; }
 
-    /// <summary>Whether this process is a 64-bit arm64 macOS process, and so needs the fix.</summary>
+    /// <summary>Whether this process is 64-bit arm64 macOS.</summary>
     public static bool Applies =>
         IntPtr.Size == 8 && PlatformHelper.Is(Platform.MacOS) && PlatformHelper.Is(Platform.ARM);
 
-    /// <summary>Installs the platform. Call before anything reads <see cref="DetourHelper" />.</summary>
+    /// <summary>Installs the platform. Call before any <see cref="DetourHelper" /> read.</summary>
     public static void Apply()
     {
         if (!Applies)
@@ -42,15 +40,15 @@ public static class AppleSiliconDetourFix
         }
     }
 
-    /// <summary>Replaces only the memory and code-writing operations; encoding stays with the inner platform.</summary>
+    /// <summary>Replaces the write operations only; the inner platform still encodes.</summary>
     private sealed class AppleSiliconNativePlatform : IDetourNativePlatform
     {
         private const string LibSystem = "/usr/lib/libSystem.dylib";
 
-        /// <summary>RTLD_DEFAULT on macOS. Searches every image already loaded into the process.</summary>
+        /// <summary>RTLD_DEFAULT: every loaded image.</summary>
         private static readonly IntPtr RtldDefault = new(-2);
 
-        /// <summary>Mirrors DetourNativeARMPlatform.DetourSizes (MonoMod.RuntimeDetour 22.7.31.1), which is private.</summary>
+        /// <summary>Mirrors private DetourNativeARMPlatform.DetourSizes (MonoMod 22.7.31.1).</summary>
         private static readonly uint[] DetourSizes = { 4 + 4, 4 + 2 + 2 + 4, 4 + 4, 4 + 4 + 4, 4 + 4 + 8 };
 
         private readonly IDetourNativePlatform inner;
@@ -70,8 +68,7 @@ public static class AppleSiliconDetourFix
             jitMemCpy = (JitMemCpy) Marshal.GetDelegateForFunctionPointer(symbol, typeof(JitMemCpy));
         }
 
-        // doorstop_jit_memcpy handles permissions and the icache around its own write. The inner platform's
-        // FlushICache would execute shellcode out of a managed byte[], which this process also may not do.
+        // doorstop_jit_memcpy handles permissions and icache.
         public void MakeWritable(IntPtr src, uint size) { }
         public void MakeReadWriteExecutable(IntPtr src, uint size) { }
         public void MakeExecutable(IntPtr src, uint size) { }
@@ -79,7 +76,7 @@ public static class AppleSiliconDetourFix
 
         public void Apply(NativeDetourData detour)
         {
-            // The AArch64 detour is position independent, so encode it into scratch and copy it over whole.
+            // Position independent, so encode then copy whole.
             var scratch = new byte[detour.Size];
             var pin = GCHandle.Alloc(scratch, GCHandleType.Pinned);
 

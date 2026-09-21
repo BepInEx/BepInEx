@@ -32,9 +32,7 @@ internal static class XTermFix
         // this causes a crash owing to TermInfoReader running before it can be patched and fixed
         // so we can get away with just forcing the x86 detour platform.
         // TODO: Figure out a way to detect ARM on Unix without running Process.Start
-        // Never do this on Apple Silicon: the process really is ARM, and AppleSiliconDetourFix has
-        // already installed a platform that can write to MAP_JIT pages. Forcing x86 here would encode
-        // x86 branches into arm64 method bodies and reinstate the mprotect that fails with EACCES.
+        // Apple Silicon really is ARM, so keep its platform.
         var previousNative = DetourHelper.Native;
 
         if (!AppleSiliconDetourFix.Applies)

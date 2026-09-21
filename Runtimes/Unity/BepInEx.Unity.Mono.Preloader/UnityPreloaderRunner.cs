@@ -46,9 +46,7 @@ internal static class UnityPreloaderRunner
     {
         PlatformUtils.SetPlatform();
 
-        // After SetPlatform, because reading PlatformHelper.Current locks it and SetPlatform must write it
-        // first. Before everything else, because DetourHelper caches its native platform on first use and
-        // will not retry if that first attempt throws.
+        // After SetPlatform, before any DetourHelper read.
         AppleSiliconDetourFix.Apply();
 
         var bepinPath = Utility.ParentDirectory(Path.GetFullPath(EnvVars.DOORSTOP_INVOKE_DLL_PATH), 2);
