@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.Runtime.InteropServices;
 using MonoMod.RuntimeDetour;
 using MonoMod.RuntimeDetour.Platforms;
 using MonoMod.Utils;
 
-namespace BepInEx.Unity.Mono.Preloader.RuntimeFixes;
+namespace BepInEx.Preloader.RuntimeFixes;
 
 /// <summary>
 ///     Lets MonoMod write detours when the game runs as a native arm64 process on Apple Silicon.
@@ -17,14 +17,16 @@ namespace BepInEx.Unity.Mono.Preloader.RuntimeFixes;
 ///     JIT-compiled code. The toggle and the write must share one native frame, which is what doorstop's
 ///     <c>doorstop_jit_memcpy</c> is for.
 /// </remarks>
-internal static class AppleSiliconDetourFix
+public static class AppleSiliconDetourFix
 {
     /// <summary>Why the fix could not install. Logged by the preloader once its logger exists.</summary>
     public static Exception Exception { get; private set; }
 
+    /// <summary>Whether this process is a 64-bit arm64 macOS process, and so needs the fix.</summary>
     public static bool Applies =>
         IntPtr.Size == 8 && PlatformHelper.Is(Platform.MacOS) && PlatformHelper.Is(Platform.ARM);
 
+    /// <summary>Installs the platform. Call before anything reads <see cref="DetourHelper" />.</summary>
     public static void Apply()
     {
         if (!Applies)
@@ -48,7 +50,7 @@ internal static class AppleSiliconDetourFix
         /// <summary>RTLD_DEFAULT on macOS. Searches every image already loaded into the process.</summary>
         private static readonly IntPtr RtldDefault = new(-2);
 
-        /// <summary>Mirrors DetourNativeARMPlatform.DetourSizes, which is private.</summary>
+        /// <summary>Mirrors DetourNativeARMPlatform.DetourSizes (MonoMod.RuntimeDetour 22.7.31.1), which is private.</summary>
         private static readonly uint[] DetourSizes = { 4 + 4, 4 + 2 + 2 + 4, 4 + 4, 4 + 4 + 4, 4 + 4 + 8 };
 
         private readonly IDetourNativePlatform inner;

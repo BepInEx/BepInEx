@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Emit;
+using BepInEx.Preloader.RuntimeFixes;
 using HarmonyLib;
 using MonoMod.RuntimeDetour;
 using MonoMod.RuntimeDetour.Platforms;
