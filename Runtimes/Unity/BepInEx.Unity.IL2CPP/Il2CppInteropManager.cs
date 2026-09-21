@@ -127,7 +127,7 @@ internal static partial class Il2CppInteropManager
         {
             var fileName = "GameAssembly." + PlatformHelper.LibrarySuffix;
             var path = Path.Combine(Paths.GameRootPath, fileName);
-            // macOS players keep their native libraries inside the app bundle, in Contents/Frameworks.
+            // macOS bundles libraries in Contents/Frameworks.
             if (!File.Exists(path) && PlatformHelper.Is(Platform.MacOS))
                 path = Path.Combine(Utility.ParentDirectory(Paths.ExecutablePath, 2), "Frameworks", fileName);
             return path;

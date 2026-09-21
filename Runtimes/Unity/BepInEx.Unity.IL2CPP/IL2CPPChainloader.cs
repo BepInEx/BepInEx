@@ -58,9 +58,7 @@ public class IL2CPPChainloader : BaseChainloader<BasePlugin>
         base.Initialize(gameExePath);
         Instance = this;
 
-        // The by-name load is unchanged. It fails on macOS, where the library sits inside the app bundle,
-        // off the default search path, and TryLoad(name) does not consult Preloader's DllImportResolver.
-        // The fallback only runs where this was already fatal, and asks for the same path Cpp2IL uses.
+        // Fallback: macOS bundles are off the search path.
         if (!NativeLibrary.TryLoad("GameAssembly", typeof(IL2CPPChainloader).Assembly, null, out var il2CppHandle)
             && !NativeLibrary.TryLoad(Il2CppInteropManager.GameAssemblyPath, out il2CppHandle))
         {

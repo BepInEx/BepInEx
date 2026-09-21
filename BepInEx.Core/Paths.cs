@@ -124,7 +124,7 @@ public static class Paths
             GameDataPath = Path.Combine(GameRootPath, $"{ProcessName}_Data");
             if (!Directory.Exists(GameDataPath))
                 GameDataPath = Path.Combine(GameRootPath, "Data");
-            // macOS players keep their data inside the app bundle, beside the Contents/MacOS folder that holds the executable.
+            // macOS keeps data inside the app bundle.
             if (!Directory.Exists(GameDataPath) && PlatformHelper.Is(Platform.MacOS))
                 GameDataPath = Utility.CombinePaths(Utility.ParentDirectory(executablePath, 2), "Resources", "Data");
         }
