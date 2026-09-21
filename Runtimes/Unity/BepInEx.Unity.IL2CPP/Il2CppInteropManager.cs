@@ -119,8 +119,20 @@ internal static partial class Il2CppInteropManager
     private static bool initialized;
 
     public static string GameAssemblyPath => Environment.GetEnvironmentVariable("BEPINEX_GAME_ASSEMBLY_PATH") ??
-                                             Path.Combine(Paths.GameRootPath,
-                                                          "GameAssembly." + PlatformHelper.LibrarySuffix);
+                                             DefaultGameAssemblyPath;
+
+    private static string DefaultGameAssemblyPath
+    {
+        get
+        {
+            var fileName = "GameAssembly." + PlatformHelper.LibrarySuffix;
+            var path = Path.Combine(Paths.GameRootPath, fileName);
+            // macOS players keep their native libraries inside the app bundle, in Contents/Frameworks.
+            if (!File.Exists(path) && PlatformHelper.Is(Platform.MacOS))
+                path = Path.Combine(Utility.ParentDirectory(Paths.ExecutablePath, 2), "Frameworks", fileName);
+            return path;
+        }
+    }
 
     private static string HashPath => Path.Combine(IL2CPPInteropAssemblyPath, "assembly-hash.txt");
 
