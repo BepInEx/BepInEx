@@ -99,7 +99,8 @@ internal static class PlatformUtils
         else
             current |= IntPtr.Size >= 8 ? Platform.Bits64 : 0;
 
-        if ((current.Is(Platform.MacOS) || current.Is(Platform.Linux)) && Type.GetType("Mono.Runtime") != null)
+        // The GetPEKind fallback below never matches arm64.
+        if (current.Is(Platform.MacOS) || current.Is(Platform.Linux))
         {
             string arch;
             IntPtr result;
