@@ -58,9 +58,11 @@ public class IL2CPPChainloader : BaseChainloader<BasePlugin>
         base.Initialize(gameExePath);
         Instance = this;
 
-        // Load by resolved path: the "GameAssembly" name only resolves through Preloader's DllImportResolver,
-        // which NativeLibrary.TryLoad does not consult, and on macOS the library is not on the default search path.
-        if (!NativeLibrary.TryLoad(Il2CppInteropManager.GameAssemblyPath, out var il2CppHandle))
+        // The by-name load is unchanged. It fails on macOS, where the library sits inside the app bundle,
+        // off the default search path, and TryLoad(name) does not consult Preloader's DllImportResolver.
+        // The fallback only runs where this was already fatal, and asks for the same path Cpp2IL uses.
+        if (!NativeLibrary.TryLoad("GameAssembly", typeof(IL2CPPChainloader).Assembly, null, out var il2CppHandle)
+            && !NativeLibrary.TryLoad(Il2CppInteropManager.GameAssemblyPath, out il2CppHandle))
         {
             Logger.Log(LogLevel.Fatal,
                        "Could not locate Il2Cpp game assembly (GameAssembly.dll, UserAssembly.dll or libil2cpp.so). The game might be obfuscated or use a yet unsupported build of Unity.");
