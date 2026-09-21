@@ -25,6 +25,8 @@ public static class Preloader
     {
         try
         {
+            // Must precede any DetourHelper.Runtime read.
+            AppleSiliconDetourFix.Apply();
             HarmonyBackendFix.Initialize();
             ConsoleSetOutFix.Apply();
             UnityInfo.Initialize(Paths.ExecutablePath, Paths.GameDataPath);
@@ -43,6 +45,10 @@ public static class Preloader
             RedirectStdErrFix.Apply();
 
             ChainloaderLogHelper.PrintLogInfo(Log);
+
+            if (AppleSiliconDetourFix.Exception != null)
+                Logger.Log(LogLevel.Warning,
+                           $"Could not enable arm64 macOS detours, patching will fail: {AppleSiliconDetourFix.Exception.Message}");
 
             Logger.Log(LogLevel.Info, $"Running under Unity {UnityInfo.Version}");
             Logger.Log(LogLevel.Info, $"Runtime version: {Environment.Version}");
