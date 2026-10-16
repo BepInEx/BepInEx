@@ -66,6 +66,11 @@ internal static class UnityPreloader
             Log.Log(LogLevel.Debug, $"Unity Managed directory: {Paths.ManagedPath}");
             Log.Log(LogLevel.Debug, $"BepInEx root path: {Paths.BepInExRootPath}");
 
+            if (AppleSiliconDetourFix.Exception != null)
+                Log.Log(LogLevel.Warning,
+                        "Failed to install the Apple Silicon detour platform, so no Harmony patch will apply. "
+                        + $"Error message: {AppleSiliconDetourFix.Exception.Message}");
+
             if (runtimePatchException != null)
                 Log.Log(LogLevel.Warning,
                         $"Failed to apply runtime patches for Mono. See more info in the output log. Error message: {runtimePatchException.Message}");
