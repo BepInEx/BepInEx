@@ -125,11 +125,11 @@ public static class Paths
             if (!Directory.Exists(GameDataPath))
                 GameDataPath = Path.Combine(GameRootPath, "Data");
         }
-        
-        if (string.IsNullOrEmpty(GameDataPath) || !Directory.Exists(GameDataPath))
-            throw new DirectoryNotFoundException("Failed to extract valid GameDataPath from executablePath: " + executablePath);
 
-        ManagedPath = managedPath ?? Path.Combine(GameDataPath, "Managed");
+        if (string.IsNullOrEmpty(GameDataPath) || !Directory.Exists(GameDataPath))
+            GameDataPath = null;
+
+        ManagedPath = managedPath ?? (GameDataPath != null ? Path.Combine(GameDataPath, "Managed") : null);
         BepInExRootPath = bepinRootPath ?? Path.Combine(GameRootPath, "BepInEx");
         ConfigPath = Path.Combine(BepInExRootPath, "config");
         BepInExConfigPath = Path.Combine(ConfigPath, "BepInEx.cfg");
@@ -139,7 +139,7 @@ public static class Paths
         BepInExAssemblyPath = Path.Combine(BepInExAssemblyDirectory,
                                            $"{Assembly.GetExecutingAssembly().GetName().Name}.dll");
         CachePath = Path.Combine(BepInExRootPath, "cache");
-        DllSearchPaths = (dllSearchPath ?? new string[0]).Concat(new[] { ManagedPath }).Distinct().ToArray();
+        DllSearchPaths = (dllSearchPath ?? new string[0]).Concat(new[] { ManagedPath }).Where(p => p != null).Distinct().ToArray();
     }
 
     internal static void SetPluginPath(string pluginPath) =>
