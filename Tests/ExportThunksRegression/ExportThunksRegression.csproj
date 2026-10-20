@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net6.0</TargetFramework>
+        <AssemblyName>ExportThunksRegression</AssemblyName>
+        <RootNamespace>ExportThunksRegression</RootNamespace>
+        <IsPackable>false</IsPackable>
+        <Description>Architecture-gate regression tests for INativeDetour.FollowExportThunks</Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!-- References the real production assembly; the test exercises the actual method via reflection. -->
+        <ProjectReference Include="..\..\Runtimes\Unity\BepInEx.Unity.IL2CPP\BepInEx.Unity.IL2CPP.csproj" />
+    </ItemGroup>
+
+</Project>
