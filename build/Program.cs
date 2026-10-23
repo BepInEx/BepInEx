@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using Cake.Common;
@@ -329,10 +330,18 @@ public sealed class PublishTask : FrostingTask<BuildContext>
         foreach (var dist in ctx.Distributions)
         {
             var targetZipName = $"BepInEx-{dist.Target}-{ctx.BuildPackageVersion}.zip";
+            var targetZipPath = ctx.DistributionDirectory.CombineWithFilePath(targetZipName);
             ctx.Log.Information($"Packing {targetZipName}");
-            ctx.Zip(ctx.DistributionDirectory.Combine(dist.Target),
-                    ctx.DistributionDirectory
-                       .CombineWithFilePath(targetZipName));
+            ctx.Zip(ctx.DistributionDirectory.Combine(dist.Target), targetZipPath);
+
+            // Cake's Zip doesn't keep file modes, so mark the start script as executable by hand
+            if (dist.Os is "linux" or "macos")
+            {
+                using var archive = ZipFile.Open(targetZipPath.FullPath, ZipArchiveMode.Update);
+                var startScript = archive.GetEntry("run_bepinex.sh");
+                if (startScript != null)
+                    startScript.ExternalAttributes = Convert.ToInt32("100755", 8) << 16;
+            }
         }
 
 
