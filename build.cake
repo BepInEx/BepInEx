@@ -124,6 +124,7 @@ Task("MakeDist")
     var distDir = Directory("./bin/dist");
     var distPatcherDir = distDir + Directory("patcher");
     var doorstopPath = Directory("./bin/doorstop");
+    var doorstopConfigPath = Directory("./doorstop");
 
     CreateDirectory(distDir);
     CreateDirectory(distPatcherDir);
@@ -134,36 +135,36 @@ Task("MakeDist")
                         .WithToken("commit_log", RunGit($"--no-pager log --no-merges --pretty=\"format:* (%h) [%an] %s\" {latestTag}..HEAD", "\r\n"))
                         .ToString();
 
-    void PackageBepin(string os, string arch, string copyPattern, string doorstopConfigPattern, bool ensureLf = false) 
+    void PackageBepin(string arch)
     {
-        var distArchDir = distDir + Directory($"{os}_{arch}");
+        var archDir = Directory(arch);
+        var distArchDir = distDir + archDir;
         var bepinDir = distArchDir + Directory("BepInEx");
         var doorstopTargetDir = distArchDir;
-        var doorstopOsArchDir = doorstopPath + Directory(os) + Directory(arch);
-
-        var doorstopFiles = doorstopOsArchDir + File(copyPattern);
-        var doorstopVersionFiles = doorstopOsArchDir + File(".doorstop_version");
+        var doorstopWinDir = doorstopPath + Directory("win");
+        var doorstopLinuxDir = doorstopPath + Directory("linux");
+        var doorstopMacDir = doorstopPath + Directory("macos") + Directory("universal");
 
         CreateDirectory(distArchDir);
-        CreateDirectory(doorstopTargetDir);
         CreateDirectory(bepinDir + Directory("core"));
         CreateDirectory(bepinDir + Directory("plugins"));
         CreateDirectory(bepinDir + Directory("patchers"));
 
-        CopyFiles($"./doorstop/{doorstopConfigPattern}", distArchDir);
-        if(ensureLf)
-            ReplaceTextInFiles($"{distArchDir}/{doorstopConfigPattern}", "\r\n", "\n");
+        CopyFileToDirectory(doorstopConfigPath + File("doorstop_config.ini"), doorstopTargetDir);
+        CopyFileToDirectory(doorstopConfigPath + File("run_bepinex.sh"), doorstopTargetDir);
+        ReplaceTextInFiles(doorstopTargetDir + File("run_bepinex.sh"), "\r\n", "\n");
+        
+        CopyFileToDirectory(doorstopWinDir + archDir + File("winhttp.dll"), doorstopTargetDir);
+        CopyFileToDirectory(doorstopLinuxDir + archDir + File("libdoorstop.so"), doorstopTargetDir);
+        CopyFileToDirectory(doorstopMacDir + File("libdoorstop.dylib"), doorstopTargetDir);
+        CopyFileToDirectory(doorstopMacDir + File(".doorstop_version"), doorstopTargetDir);
+        
         CopyFiles("./bin/*.*", bepinDir + Directory("core"));
-        CopyFiles(doorstopFiles.ToString(), doorstopTargetDir);
-        CopyFiles(doorstopVersionFiles.ToString(), doorstopTargetDir);
-        FileWriteText(distArchDir + File("changelog.txt"), changelog);
+        FileWriteText(bepinDir + File("changelog.txt"), changelog);
     }
 
-    PackageBepin("win", "x64", "winhttp.dll", "doorstop_config.ini");
-    PackageBepin("win", "x86", "winhttp.dll", "doorstop_config.ini");
-    PackageBepin("linux", "x64", "libdoorstop.so", "run_bepinex.sh", true);
-    PackageBepin("linux", "x86", "libdoorstop.so", "run_bepinex.sh", true);
-    PackageBepin("macos", "universal", "libdoorstop.dylib", "run_bepinex.sh", true);
+    PackageBepin("x64");
+    PackageBepin("x86");
     CopyFileToDirectory(File("./bin/patcher/BepInEx.Patcher.exe"), distPatcherDir);
 });
 
@@ -175,11 +176,8 @@ Task("Pack")
     var commitPrefix = isBleedingEdge ? $"_{currentCommitShort}_" : "_";
 
     Information("Packing BepInEx");
-    ZipCompress(distDir + Directory("win_x86"), distDir + File($"BepInEx_win_x86{commitPrefix}{buildVersion}.zip"));
-    ZipCompress(distDir + Directory("win_x64"), distDir + File($"BepInEx_win_x64{commitPrefix}{buildVersion}.zip"));
-    ZipCompress(distDir + Directory("linux_x86"), distDir + File($"BepInEx_linux_x86{commitPrefix}{buildVersion}.zip"));
-    ZipCompress(distDir + Directory("linux_x64"), distDir + File($"BepInEx_linux_x64{commitPrefix}{buildVersion}.zip"));
-    ZipCompress(distDir + Directory("macos_universal"), distDir + File($"BepInEx_macos_universal{commitPrefix}{buildVersion}.zip"));
+    ZipCompress(distDir + Directory("x86"), distDir + File($"BepInEx_x86{commitPrefix}{buildVersion}.zip"));
+    ZipCompress(distDir + Directory("x64"), distDir + File($"BepInEx_x64{commitPrefix}{buildVersion}.zip"));
 
     Information("Packing BepInEx.Patcher");
     ZipCompress(distDir + Directory("patcher"), distDir + File($"BepInEx_Patcher{commitPrefix}{buildVersion}.zip"));
