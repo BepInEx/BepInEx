@@ -32,6 +32,9 @@ public class IL2CPPUnityLogSource : ILogSource
             LogType.Exception => LogLevel.Error,
             _                 => LogLevel.Message
         };
+        if (type is LogType.Exception or LogType.Error && !string.IsNullOrEmpty(exception))
+            logLine += $"\nStack trace:\n{exception}";
+
         LogEvent?.Invoke(this, new LogEventArgs(logLine, level, this));
     }
 
