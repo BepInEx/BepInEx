@@ -3,14 +3,24 @@
 #
 # Run the script to start the game with BepInEx enabled
 #
-# There are two ways to use this script
+# There are three ways to use this script
 #
 # 1. Via CLI: Run ./run_bepinex.sh <path to game> [doorstop arguments] [game arguments]
 # 2. Via config: edit the options below and run ./run.sh without any arguments
+# 3. Via Game Launcher: Set the launcher to use the script and pass the game
+#      executable and arguemnts. Steam example: ./run.sh %command%
 
 # LINUX: name of Unity executable
 # MACOS: name of the .app directory
 executable_name=""
+
+# MACOS: architectures to run the game as, most preferred first
+# arch runs the game as the first one the executable actually has, so an
+# x86_64-only game still starts under Rosetta with the default below.
+# Set this to "x86_64" or "x86_64,arm64" for a game or a loader whose native
+# dependencies have no arm64 build. It must name at least one architecture:
+# arch exits with "Can't find any plists" on an empty value.
+archpreference="arm64,x86_64"
 
 # All of the below can be overriden with command line args
 
@@ -140,14 +150,6 @@ case ${os_type} in
             ;;
         esac
         lib_extension="dylib"
-
-        # CPUs for Apple Silicon are in the format "Apple M.."
-        cpu_type="$(sysctl -n machdep.cpu.brand_string)"
-        case "${cpu_type}" in
-            Apple*)
-                is_apple_silicon=1
-            ;;
-        esac
     ;;
     *)
         # alright whos running games on freebsd
@@ -306,28 +308,43 @@ export DOORSTOP_CLR_CORLIB_DIR="$corlib_dir"
 doorstop_directory="${BASEDIR}/"
 doorstop_name="libdoorstop.${lib_extension}"
 
-export LD_LIBRARY_PATH="${doorstop_directory}:${corlib_dir}:${LD_LIBRARY_PATH}"
-if [ -z "$LD_PRELOAD" ]; then
-    export LD_PRELOAD="${doorstop_name}"
-else
-    export LD_PRELOAD="${doorstop_name}:${LD_PRELOAD}"
-fi
+case ${os_type} in
+    Linux*)
+        export LD_LIBRARY_PATH="${doorstop_directory}:${corlib_dir}:${LD_LIBRARY_PATH}"
+        if [ -z "$LD_PRELOAD" ]; then
+            export LD_PRELOAD="${doorstop_name}"
+        else
+            export LD_PRELOAD="${doorstop_name}:${LD_PRELOAD}"
+        fi
 
-export DYLD_LIBRARY_PATH="${doorstop_directory}:${DYLD_LIBRARY_PATH}"
-if [ -z "$DYLD_INSERT_LIBRARIES" ]; then
-    export DYLD_INSERT_LIBRARIES="${doorstop_name}"
-else
-    export DYLD_INSERT_LIBRARIES="${doorstop_name}:${DYLD_INSERT_LIBRARIES}"
-fi
+        exec "$executable_path" "$@"
+    ;;
+    Darwin*)
+        dyld_library_path="${doorstop_directory}:${DYLD_LIBRARY_PATH}"
 
-if [ -n "${is_apple_silicon}" ]; then
-    export ARCHPREFERENCE="arm64,x86_64"
+        # This script runs under /bin/sh, which is a platform binary, so a
+        # DYLD_INSERT_LIBRARIES that Steam sets for the game (its loader and
+        # overlay) is stripped before we get here. Steam passes the same list
+        # as STEAM_DYLD_INSERT_LIBRARIES for launch scripts like this one; keep
+        # it after Doorstop so the Steam overlay still works.
+        inherited_libraries="${DYLD_INSERT_LIBRARIES:-${STEAM_DYLD_INSERT_LIBRARIES}}"
+        if [ -z "$inherited_libraries" ]; then
+            dyld_insert_libraries="${doorstop_name}"
+        else
+            dyld_insert_libraries="${doorstop_name}:${inherited_libraries}"
+        fi
 
-    # We need to use arch for Apple Silicon to allow the executable to be run natively as otherwise if
-    # the executable is universal, supporting both x86_64 and arm64, MacOs will still run it as x86_64
-    # if the parent process is running as x86.
-    # arch also strips the DYLD_INSERT_LIBRARIES env var so we have to pass that in manually
-    exec arch -e DYLD_INSERT_LIBRARIES="${DYLD_INSERT_LIBRARIES}" "$executable_path" "$@"
-else
-    exec "$executable_path" "$@"
-fi
+        # Always go through arch. A universal executable runs as x86_64 whenever
+        # its parent does, and the parent is out of our hands when Steam or a
+        # launcher starts the script.
+        export ARCHPREFERENCE="${archpreference}"
+
+        # arch is a platform binary, so dyld strips every DYLD_* variable from
+        # its environment before it runs. Never export these: pass them to the
+        # game on the exec instead.
+        exec arch \
+            -e DYLD_LIBRARY_PATH="${dyld_library_path}" \
+            -e DYLD_INSERT_LIBRARIES="${dyld_insert_libraries}" \
+            "$executable_path" "$@"
+    ;;
+esac
