@@ -46,6 +46,9 @@ internal static class UnityPreloaderRunner
     {
         PlatformUtils.SetPlatform();
 
+        // After SetPlatform, before any DetourHelper read.
+        AppleSiliconDetourFix.Apply();
+
         var bepinPath = Utility.ParentDirectory(Path.GetFullPath(EnvVars.DOORSTOP_INVOKE_DLL_PATH), 2);
 
         Paths.SetExecutablePath(EnvVars.DOORSTOP_PROCESS_PATH,
