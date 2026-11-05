@@ -58,6 +58,12 @@ public interface INativeDetour : IDetour
     private static nint FollowExportThunks(nint func)
     {
         if (func == 0) return func;
+
+        // These encodings identify export thunks only on x86/x64. Leave pointers on
+        // other architectures unchanged for the selected detour provider.
+        if (RuntimeInformation.ProcessArchitecture is not (Architecture.X86 or Architecture.X64))
+            return func;
+
         var fn = func;
         for (var hops = 0; hops < 8; hops++)
         {
